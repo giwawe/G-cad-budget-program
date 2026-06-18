@@ -1,0 +1,58 @@
+from server.app.models import OpeningInput, ProjectDefaults, ReviewStatus, SpaceInput
+from server.app.quantity.calculator import calculate_quantity_row, resolve_height
+from server.app.quantity.classification import classify_space_type, is_excluded_space
+from server.app.quantity.geometry import contains_point, polygon_area, polyline_length
+
+
+def test_polygon_area_and_closed_length():
+    points = [(0, 0), (4, 0), (4, 3), (0, 3)]
+
+    assert polygon_area(points) == 12
+    assert polyline_length(points, closed=True) == 14
+    assert contains_point(points, (2, 2)) is True
+    assert contains_point(points, (5, 2)) is False
+
+
+def test_latex_area_deducts_windows_but_not_doors():
+    defaults = ProjectDefaults(project_height_m=2.8, default_window_height_m=1.5, default_door_height_m=2.1)
+    space = SpaceInput(
+        floor="一层",
+        name="一层-客厅",
+        boundary_points_m=[(0, 0), (6, 0), (6, 5), (0, 5)],
+        wall_lengths_m=[6, 5, 4],
+        windows=[OpeningInput(width_m=3.2)],
+        doors=[OpeningInput(width_m=0.9)],
+    )
+
+    row = calculate_quantity_row(space, defaults)
+
+    assert row.floor_area_m2 == 30
+    assert row.wall_measure_length_m == 15
+    assert row.wall_gross_area_m2 == 42
+    assert row.window_area_m2 == 4.8
+    assert row.door_width_total_m == 0.9
+    assert row.latex_paint_area_m2 == 37.2
+    assert row.status == ReviewStatus.pending_review
+    assert "门洞默认不扣减" in row.evidence
+
+
+def test_height_priority_space_then_floor_then_project():
+    defaults = ProjectDefaults(project_height_m=2.8)
+
+    assert resolve_height(defaults, SpaceInput(name="卧室", boundary_points_m=[], height_m=3.0)) == 3.0
+    assert resolve_height(defaults, SpaceInput(name="卧室", boundary_points_m=[], floor_default_height_m=2.9)) == 2.9
+    assert resolve_height(defaults, SpaceInput(name="卧室", boundary_points_m=[])) == 2.8
+
+
+def test_classification_and_excluded_spaces():
+    assert classify_space_type("一层-主卧") == "卧室"
+    assert classify_space_type("二层-楼梯过道") == "楼梯过道"
+    assert is_excluded_space("一层-电梯井") is True
+
+    row = calculate_quantity_row(
+        SpaceInput(name="一层-电梯井", boundary_points_m=[(0, 0), (1, 0), (1, 1), (0, 1)]),
+        ProjectDefaults(),
+    )
+
+    assert row.status == ReviewStatus.excluded
+
