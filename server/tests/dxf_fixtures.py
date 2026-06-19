@@ -37,6 +37,21 @@ def build_closed_window_polyline_dxf() -> bytes:
     return _save_doc(doc)
 
 
+def build_insert_door_dxf() -> bytes:
+    doc = ezdxf.new("R2010")
+    msp = doc.modelspace()
+    for layer in ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_DOOR", "QUOTE_TEXT"]:
+        doc.layers.add(layer)
+    block = doc.blocks.new(name="door_model")
+    block.add_line((-450, 0), (450, 0))
+    block.add_line((-450, 130), (450, 130))
+    msp.add_lwpolyline([(0, 0), (5000, 0), (5000, 4000), (0, 4000), (0, 0)], dxfattribs={"layer": "QUOTE_ROOM"})
+    msp.add_line((0, 0), (5000, 0), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_blockref("door_model", (2500, 0), dxfattribs={"layer": "QUOTE_DOOR", "rotation": 0})
+    msp.add_text("客厅", dxfattribs={"layer": "QUOTE_TEXT", "insert": (2500, 2000)})
+    return _save_doc(doc)
+
+
 def build_two_room_quote_dxf_with_duplicate_close_point() -> bytes:
     doc = ezdxf.new("R2010")
     msp = doc.modelspace()

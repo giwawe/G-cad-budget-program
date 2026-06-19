@@ -98,7 +98,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         elif layer == "QUOTE_WINDOW":
             windows.extend(_entity_segments(entity, defaults.unit_scale_to_m))
         elif layer == "QUOTE_DOOR":
-            doors.extend(_entity_segments(entity, defaults.unit_scale_to_m))
+            doors.extend(_door_segments(entity, defaults.unit_scale_to_m))
         elif layer in {"QUOTE_TEXT", "QUOTE_FLOOR", "QUOTE_HEIGHT"} and entity.dxftype() in {"TEXT", "MTEXT"}:
             text = _text_content(entity)
             point = _text_point(entity, defaults.unit_scale_to_m)
@@ -176,6 +176,92 @@ def _entity_segments(entity, scale: float) -> list[tuple[Point, Point]]:
     if _entity_is_closed_polyline(entity) and points[0] != points[-1]:
         segments.append((points[-1], points[0]))
     return segments
+
+
+def _door_segments(entity, scale: float) -> list[tuple[Point, Point]]:
+    if entity.dxftype() != "INSERT":
+        return _entity_segments(entity, scale)
+    virtual_centerline = _door_insert_centerline_from_virtual_entities(entity, scale)
+    if virtual_centerline:
+        return [virtual_centerline]
+    width_m = _door_insert_width_m(entity, scale)
+    insert = _scale_point((entity.dxf.insert.x, entity.dxf.insert.y), scale)
+    rotation = math.radians(float(getattr(entity.dxf, "rotation", 0) or 0))
+    direction = (math.cos(rotation), math.sin(rotation))
+    half_width = width_m / 2
+    return [
+        (
+            (round(insert[0] - direction[0] * half_width, 3), round(insert[1] - direction[1] * half_width, 3)),
+            (round(insert[0] + direction[0] * half_width, 3), round(insert[1] + direction[1] * half_width, 3)),
+        )
+    ]
+
+
+def _door_insert_centerline_from_virtual_entities(entity, scale: float) -> tuple[Point, Point] | None:
+    insert = _scale_point((entity.dxf.insert.x, entity.dxf.insert.y), scale)
+    rotation = math.radians(float(getattr(entity.dxf, "rotation", 0) or 0))
+    direction = (math.cos(rotation), math.sin(rotation))
+    candidates: list[tuple[float, tuple[Point, Point]]] = []
+    try:
+        virtual_entities = list(entity.virtual_entities())
+    except Exception:
+        return None
+
+    for virtual_entity in virtual_entities:
+        for segment in _drawable_segments(virtual_entity, scale):
+            length = line_length(segment[0], segment[1])
+            if not 0.45 <= length <= 2.2:
+                continue
+            segment_direction = _segment_unit_direction(segment)
+            if abs(segment_direction[0] * direction[0] + segment_direction[1] * direction[1]) < 0.9:
+                continue
+            midpoint = _segment_midpoint(segment)
+            if line_length(insert, midpoint) > 2.0:
+                continue
+            candidates.append((length, _oriented_segment(segment, direction)))
+
+    if not candidates:
+        return None
+    longest = max(length for length, _ in candidates)
+    longest_segments = [segment for length, segment in candidates if abs(length - longest) <= 0.03]
+    start = (
+        round(sum(segment[0][0] for segment in longest_segments) / len(longest_segments), 3),
+        round(sum(segment[0][1] for segment in longest_segments) / len(longest_segments), 3),
+    )
+    end = (
+        round(sum(segment[1][0] for segment in longest_segments) / len(longest_segments), 3),
+        round(sum(segment[1][1] for segment in longest_segments) / len(longest_segments), 3),
+    )
+    return (start, end)
+
+
+def _segment_unit_direction(segment: tuple[Point, Point]) -> tuple[float, float]:
+    length = line_length(segment[0], segment[1])
+    if length == 0:
+        return (0, 0)
+    return ((segment[1][0] - segment[0][0]) / length, (segment[1][1] - segment[0][1]) / length)
+
+
+def _segment_midpoint(segment: tuple[Point, Point]) -> Point:
+    return ((segment[0][0] + segment[1][0]) / 2, (segment[0][1] + segment[1][1]) / 2)
+
+
+def _oriented_segment(segment: tuple[Point, Point], direction: tuple[float, float]) -> tuple[Point, Point]:
+    segment_direction = _segment_unit_direction(segment)
+    if segment_direction[0] * direction[0] + segment_direction[1] * direction[1] < 0:
+        return (segment[1], segment[0])
+    return segment
+
+
+def _door_insert_width_m(entity, scale: float) -> float:
+    match = re.search(r"yqd_\d+_(\d{3,4})(?:_|$)", entity.dxf.name)
+    if match:
+        return round(int(match.group(1)) * scale, 3)
+    scale_widths = [abs(float(value)) * scale for value in (getattr(entity.dxf, "xscale", 0), getattr(entity.dxf, "yscale", 0))]
+    plausible_widths = [value for value in scale_widths if 0.3 <= value <= 3.0]
+    if plausible_widths:
+        return round(max(plausible_widths), 3)
+    return 0.9
 
 
 def _entity_is_closed_polyline(entity) -> bool:

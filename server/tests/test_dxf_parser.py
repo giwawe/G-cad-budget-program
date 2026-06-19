@@ -2,7 +2,12 @@ from pathlib import Path
 
 from server.app.dxf import parser
 from server.app.models import ProjectDefaults
-from server.tests.dxf_fixtures import build_closed_window_polyline_dxf, build_simple_quote_dxf, build_two_room_quote_dxf_with_duplicate_close_point
+from server.tests.dxf_fixtures import (
+    build_closed_window_polyline_dxf,
+    build_insert_door_dxf,
+    build_simple_quote_dxf,
+    build_two_room_quote_dxf_with_duplicate_close_point,
+)
 
 
 def test_parse_standard_quote_dxf_into_space_input():
@@ -44,6 +49,14 @@ def test_closed_quote_window_polyline_keeps_closing_segment_in_review_drawing():
     review = parser.parse_dxf_review(build_closed_window_polyline_dxf(), ProjectDefaults())
 
     assert len(review.drawing.windows) == 4
+
+
+def test_quote_door_insert_is_recognized_as_one_door_opening():
+    review = parser.parse_dxf_review(build_insert_door_dxf(), ProjectDefaults())
+
+    assert len(review.drawing.doors) == 1
+    assert [door.width_m for door in review.spaces[0].doors] == [0.9]
+    assert review.drawing.doors[0] == ((2.05, 0.065), (2.95, 0.065))
 
 
 def test_mtext_format_codes_are_removed():
