@@ -60,4 +60,3 @@ export function QuantityTable({ rows }: { rows: QuantityRow[] }) {
     </div>
   );
 }
-

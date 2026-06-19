@@ -1,0 +1,51 @@
+from io import StringIO
+
+import ezdxf
+
+
+def _save_doc(doc) -> bytes:
+    stream = StringIO()
+    doc.write(stream)
+    return stream.getvalue().encode("utf-8")
+
+
+def build_simple_quote_dxf() -> bytes:
+    doc = ezdxf.new("R2010")
+    msp = doc.modelspace()
+    for layer in ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_WINDOW", "QUOTE_DOOR", "QUOTE_TEXT"]:
+        doc.layers.add(layer)
+    msp.add_lwpolyline([(0, 0), (6000, 0), (6000, 5000), (0, 5000), (0, 0)], dxfattribs={"layer": "QUOTE_ROOM"})
+    msp.add_line((0, 0), (6000, 0), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((6000, 0), (6000, 5000), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((0, 5000), (4000, 5000), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((1000, 0), (4200, 0), dxfattribs={"layer": "QUOTE_WINDOW"})
+    msp.add_line((5000, 0), (5900, 0), dxfattribs={"layer": "QUOTE_DOOR"})
+    msp.add_text("一层-客厅", dxfattribs={"layer": "QUOTE_TEXT", "insert": (3000, 2500)})
+    return _save_doc(doc)
+
+
+def build_closed_window_polyline_dxf() -> bytes:
+    doc = ezdxf.new("R2010")
+    msp = doc.modelspace()
+    for layer in ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_WINDOW", "QUOTE_TEXT"]:
+        doc.layers.add(layer)
+    msp.add_lwpolyline([(0, 0), (5000, 0), (5000, 4000), (0, 4000), (0, 0)], dxfattribs={"layer": "QUOTE_ROOM"})
+    msp.add_line((0, 0), (5000, 0), dxfattribs={"layer": "QUOTE_WALL"})
+    window = msp.add_lwpolyline([(1000, 0), (3000, 0), (3000, 240), (1000, 240)], dxfattribs={"layer": "QUOTE_WINDOW"})
+    window.closed = True
+    msp.add_text("客厅", dxfattribs={"layer": "QUOTE_TEXT", "insert": (2500, 2000)})
+    return _save_doc(doc)
+
+
+def build_two_room_quote_dxf_with_duplicate_close_point() -> bytes:
+    doc = ezdxf.new("R2010")
+    msp = doc.modelspace()
+    for layer in ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_TEXT"]:
+        doc.layers.add(layer)
+    msp.add_lwpolyline([(0, 0), (3000, 0), (3000, 2000), (0, 2000), (0, 0)], dxfattribs={"layer": "QUOTE_ROOM"})
+    msp.add_lwpolyline([(5000, 0), (8000, 0), (8000, 2000), (5000, 2000), (5000, 0)], dxfattribs={"layer": "QUOTE_ROOM"})
+    msp.add_line((0, 0), (3000, 0), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((3000, 0), (3000, 2000), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_text("房间A", dxfattribs={"layer": "QUOTE_TEXT", "insert": (1500, 1000)})
+    msp.add_text("房间B", dxfattribs={"layer": "QUOTE_TEXT", "insert": (6500, 1000)})
+    return _save_doc(doc)

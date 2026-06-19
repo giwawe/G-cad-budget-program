@@ -1,11 +1,26 @@
 from dataclasses import asdict
 
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 
+from server.app.dxf.parser import DrawingGeometry, parse_dxf_review, parse_dxf_spaces
 from server.app.models import OpeningInput, ProjectDefaults, SpaceInput
 from server.app.quantity.calculator import calculate_quantity_row
 
 app = FastAPI(title="CAD Budget Quantity Validation API")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://127.0.0.1:3000",
+        "http://localhost:3000",
+        "http://127.0.0.1:3010",
+        "http://localhost:3010",
+    ],
+    allow_origin_regex=r"^http://((localhost)|(127\.0\.0\.1)|(10\.\d{1,3}\.\d{1,3}\.\d{1,3})|(192\.168\.\d{1,3}\.\d{1,3})|(172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3})):(3000|3010)$",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/health")
@@ -40,3 +55,50 @@ def sample_quantities():
         ),
     ]
     return [asdict(calculate_quantity_row(space, defaults)) for space in spaces]
+
+
+@app.post("/api/parse-dxf")
+async def parse_dxf(file: UploadFile):
+    defaults = ProjectDefaults()
+    spaces = parse_dxf_spaces(await file.read(), defaults)
+    return [asdict(calculate_quantity_row(space, defaults)) for space in spaces]
+
+
+@app.post("/api/parse-dxf-review")
+async def parse_dxf_review_endpoint(file: UploadFile):
+    defaults = ProjectDefaults()
+    parsed = parse_dxf_review(await file.read(), defaults)
+    rows = [asdict(calculate_quantity_row(space, defaults)) for space in parsed.spaces]
+    return {"rows": rows, "drawing": _serialize_drawing(parsed.drawing), "summary": _summarize_rows(rows)}
+
+
+def _serialize_drawing(drawing: DrawingGeometry) -> dict:
+    return {
+        "spaces": [{"name": space.name, "points": [_point_to_dict(point) for point in space.points]} for space in drawing.spaces],
+        "walls": [_segment_to_dict(segment) for segment in drawing.walls],
+        "measured_walls": [_segment_to_dict(segment) for segment in drawing.measured_walls],
+        "windows": [_segment_to_dict(segment) for segment in drawing.windows],
+        "doors": [_segment_to_dict(segment) for segment in drawing.doors],
+        "base_segments": [_segment_to_dict(segment) for segment in drawing.base_segments],
+        "base_texts": [{"text": item.text, "point": _point_to_dict(item.point)} for item in drawing.base_texts],
+        "bbox": drawing.bbox,
+    }
+
+
+def _point_to_dict(point: tuple[float, float]) -> dict[str, float]:
+    return {"x": float(point[0]), "y": float(point[1])}
+
+
+def _segment_to_dict(segment: tuple[tuple[float, float], tuple[float, float]]) -> dict:
+    start, end = segment
+    return {"start": _point_to_dict(start), "end": _point_to_dict(end)}
+
+
+def _summarize_rows(rows: list[dict]) -> dict[str, float | int]:
+    return {
+        "space_count": len(rows),
+        "floor_area_total_m2": round(sum(row["floor_area_m2"] for row in rows), 2),
+        "wall_measure_length_total_m": round(sum(row["wall_measure_length_m"] for row in rows), 2),
+        "window_area_total_m2": round(sum(row["window_area_m2"] for row in rows), 2),
+        "latex_paint_area_total_m2": round(sum(row["latex_paint_area_m2"] for row in rows), 2),
+    }

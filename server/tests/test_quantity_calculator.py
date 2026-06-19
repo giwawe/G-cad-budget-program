@@ -55,4 +55,3 @@ def test_classification_and_excluded_spaces():
     )
 
     assert row.status == ReviewStatus.excluded
-

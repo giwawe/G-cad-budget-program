@@ -74,6 +74,39 @@ button {
   cursor: pointer;
 }
 
+button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.fileInput {
+  display: none;
+}
+
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+
+.metricLabel {
+  margin-bottom: 10px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.errorText {
+  display: block;
+  margin-top: 10px;
+  color: var(--danger);
+}
+
+.infoText {
+  display: block;
+  margin-top: 10px;
+  color: var(--accent);
+}
+
 .summaryGrid {
   display: grid;
   grid-template-columns: 1.5fr 1.2fr 0.8fr;
@@ -152,6 +185,190 @@ code {
 
 .reviewSection {
   overflow: hidden;
+}
+
+.drawingReview {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.summaryCards {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.summaryCards div {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 12px;
+}
+
+.summaryCards span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.summaryCards strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 18px;
+}
+
+.drawingToolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 8px 10px;
+}
+
+.drawingToolbar button {
+  min-height: 32px;
+  min-width: 34px;
+  padding: 0 10px;
+}
+
+.drawingToolbar input[type="range"] {
+  width: min(260px, 40vw);
+  min-height: 24px;
+  padding: 0;
+}
+
+.drawingToolbar span {
+  min-width: 46px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.drawingLayerToggle {
+  display: inline-flex;
+  grid-template-columns: none;
+  align-items: center;
+  gap: 5px;
+  min-height: 28px;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.drawingLayerToggle input {
+  width: 14px;
+  min-height: 14px;
+  accent-color: var(--accent);
+}
+
+.drawingCanvas {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #1f2933;
+  cursor: grab;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+}
+
+.drawingCanvas svg {
+  display: block;
+  width: 100%;
+  height: min(58vh, 620px);
+}
+
+.drawingCanvas:active {
+  cursor: grabbing;
+}
+
+.svgBase {
+  stroke: #00c8d7;
+  stroke-width: 0.032;
+  opacity: 0.88;
+  vector-effect: non-scaling-stroke;
+}
+
+.svgWall {
+  stroke: #94a3b8;
+  stroke-width: 0.045;
+  vector-effect: non-scaling-stroke;
+}
+
+.svgMeasuredWall {
+  stroke: #fff06a;
+  stroke-linecap: round;
+  stroke-width: 0.42;
+  opacity: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.svgSpace {
+  fill-opacity: 0.18;
+  stroke-width: 0.09;
+  vector-effect: non-scaling-stroke;
+}
+
+.svgWindowBlock {
+  stroke: #00bfff;
+  stroke-linecap: round;
+  stroke-width: 0.62;
+  opacity: 0.72;
+  vector-effect: non-scaling-stroke;
+}
+
+.svgWindow {
+  stroke: #e7fbff;
+  stroke-linecap: round;
+  stroke-width: 0.18;
+  opacity: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.svgDoorBlock {
+  stroke: #ff6b00;
+  stroke-linecap: round;
+  stroke-width: 0.74;
+  opacity: 0.78;
+  vector-effect: non-scaling-stroke;
+}
+
+.svgDoor {
+  stroke: #fff2b8;
+  stroke-linecap: round;
+  stroke-width: 0.2;
+  opacity: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.svgSpaceLabelText {
+  cursor: text;
+  fill: #0f172a;
+  font-weight: 900;
+  paint-order: stroke;
+  stroke: rgba(255, 255, 255, 0.92);
+  stroke-linejoin: round;
+  stroke-width: 0.14em;
+  text-anchor: middle;
+}
+
+.svgNameEditorObject {
+  overflow: visible;
+}
+
+.svgNameEditor {
+  width: 100%;
+  min-height: 0;
+  border: 1px solid rgba(18, 108, 95, 0.8);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #0f172a;
+  font: 700 14px Arial, "Microsoft YaHei", sans-serif;
+  padding: 2px 4px;
+  text-align: center;
 }
 
 .sectionHeader {
@@ -237,8 +454,14 @@ td small {
   }
 
   .summaryGrid,
-  .fieldGrid {
+  .fieldGrid,
+  .summaryCards {
     grid-template-columns: 1fr;
   }
 }
 
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

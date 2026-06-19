@@ -60,4 +60,3 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
         anomalies=anomalies,
         status=status,
     )
-
