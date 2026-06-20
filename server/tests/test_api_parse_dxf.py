@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from fastapi.testclient import TestClient
@@ -35,6 +36,39 @@ def test_parse_real_dxf_upload_fixture_returns_rows():
     assert "厨房" in [row["space_name"] for row in rows]
 
 
+def test_parse_real_dxf_upload_matches_calibrated_golden_fixture():
+    client = TestClient(app)
+    fixture = Path(__file__).parent / "fixtures" / "test-case.dxf"
+    golden = Path(__file__).parent / "fixtures" / "test-case.golden.json"
+
+    response = client.post("/api/parse-dxf", files={"file": ("test-case.dxf", fixture.read_bytes(), "application/dxf")})
+
+    assert response.status_code == 200
+    assert _stable_quantity_rows(response.json()) == json.loads(golden.read_text(encoding="utf-8"))
+
+
+def test_compare_dxf_calibration_upload_returns_no_differences_for_golden_fixture():
+    client = TestClient(app)
+    fixture = Path(__file__).parent / "fixtures" / "test-case.dxf"
+    golden = Path(__file__).parent / "fixtures" / "test-case.golden.json"
+
+    response = client.post(
+        "/api/compare-dxf-calibration",
+        files={
+            "file": ("test-case.dxf", fixture.read_bytes(), "application/dxf"),
+            "calibration": ("test-case.golden.json", golden.read_bytes(), "application/json"),
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["summary"]["space_count"] == 9
+    assert payload["comparison"]["passed"] is True
+    assert payload["comparison"]["matched_count"] == 9
+    assert payload["comparison"]["failed_count"] == 0
+    assert payload["comparison"]["differences"] == []
+
+
 def test_lan_frontend_origin_is_allowed_for_dxf_upload():
     client = TestClient(app)
 
@@ -45,6 +79,26 @@ def test_lan_frontend_origin_is_allowed_for_dxf_upload():
 
     assert response.status_code == 200
     assert response.headers["access-control-allow-origin"] == "http://192.168.2.37:3010"
+
+
+def _stable_quantity_rows(rows: list[dict]) -> list[dict]:
+    return [
+        {
+            "space_name": row["space_name"],
+            "space_type": row["space_type"],
+            "floor_area_m2": row["floor_area_m2"],
+            "wall_measure_length_m": row["wall_measure_length_m"],
+            "window_width_total_m": row["window_width_total_m"],
+            "window_area_m2": row["window_area_m2"],
+            "door_width_total_m": row["door_width_total_m"],
+            "door_deduct_area_m2": row["door_deduct_area_m2"],
+            "wall_gross_area_m2": row["wall_gross_area_m2"],
+            "latex_paint_area_m2": row["latex_paint_area_m2"],
+            "status": row["status"],
+            "anomalies": row["anomalies"],
+        }
+        for row in rows
+    ]
 
 
 def test_parse_real_dxf_review_payload_includes_drawing_summary_and_measured_walls():

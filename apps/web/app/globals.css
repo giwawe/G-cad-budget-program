@@ -41,6 +41,13 @@ input {
   margin-bottom: 22px;
 }
 
+.topbarActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
 .topbar p,
 .reviewSection p {
   margin: 0;
@@ -185,6 +192,61 @@ code {
 
 .reviewSection {
   overflow: hidden;
+}
+
+.calibrationPanel {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-left-width: 5px;
+  border-radius: 8px;
+  background: var(--panel);
+  margin-bottom: 18px;
+  padding: 14px 16px;
+}
+
+.calibrationPanel.passed {
+  border-left-color: var(--accent);
+}
+
+.calibrationPanel.failed {
+  border-left-color: var(--danger);
+}
+
+.calibrationSummary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+}
+
+.calibrationSummary strong {
+  font-size: 18px;
+}
+
+.calibrationSummary span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.calibrationDifferences {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.calibrationDifferences div {
+  display: grid;
+  gap: 5px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #f9fafb;
+  padding: 10px;
+}
+
+.calibrationDifferences span {
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .drawingReview {
@@ -490,8 +552,13 @@ td small {
 
   .summaryGrid,
   .fieldGrid,
-  .summaryCards {
+  .summaryCards,
+  .calibrationDifferences {
     grid-template-columns: 1fr;
+  }
+
+  .topbarActions {
+    justify-content: flex-start;
   }
 }
 

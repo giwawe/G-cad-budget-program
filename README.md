@@ -17,19 +17,28 @@ DXF 空间算量准确性验证工具。
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r server\requirements.txt
 .\.venv\Scripts\python.exe -m pytest server\tests -v
-.\.venv\Scripts\python.exe -m uvicorn server.app.main:app --reload --host 127.0.0.1 --port 8000
+.\.venv\Scripts\python.exe -m uvicorn server.app.main:app --reload --host 127.0.0.1 --port 8010
 ```
 
 健康检查：
 
 ```text
-GET http://127.0.0.1:8000/health
+GET http://127.0.0.1:8010/health
 ```
 
 样例工程量：
 
 ```text
-GET http://127.0.0.1:8000/api/sample-quantities
+GET http://127.0.0.1:8010/api/sample-quantities
+```
+
+校准差异对比：
+
+```text
+POST http://127.0.0.1:8010/api/compare-dxf-calibration
+multipart/form-data:
+- file: DXF 文件
+- calibration: 校准 JSON，格式参考 server/tests/fixtures/test-case.golden.json
 ```
 
 ## 前端
@@ -49,4 +58,3 @@ npm run dev:web
 - `docs/mvp-requirements.md`
 - `docs/superpowers/specs/2026-06-18-dxf-space-quantity-validation-design.md`
 - `docs/superpowers/plans/2026-06-18-dxf-space-quantity-validation.md`
-

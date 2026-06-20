@@ -1,4 +1,5 @@
 from dataclasses import asdict
+import json
 
 from fastapi import FastAPI, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -6,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from server.app.dxf.parser import DrawingGeometry, parse_dxf_review, parse_dxf_spaces
 from server.app.models import OpeningInput, ProjectDefaults, SpaceInput
 from server.app.quantity.calculator import calculate_quantity_row
+from server.app.quantity.comparison import compare_quantity_rows
 
 app = FastAPI(title="CAD Budget Quantity Validation API")
 app.add_middleware(
@@ -72,6 +74,16 @@ async def parse_dxf_review_endpoint(file: UploadFile):
     return {"rows": rows, "drawing": _serialize_drawing(parsed.drawing), "summary": _summarize_rows(rows)}
 
 
+@app.post("/api/compare-dxf-calibration")
+async def compare_dxf_calibration(file: UploadFile, calibration: UploadFile):
+    defaults = ProjectDefaults()
+    expected_rows = json.loads((await calibration.read()).decode("utf-8"))
+    spaces = parse_dxf_spaces(await file.read(), defaults)
+    rows = [asdict(calculate_quantity_row(space, defaults)) for space in spaces]
+    stable_rows = [_stable_quantity_row(row) for row in rows]
+    return {"rows": rows, "summary": _summarize_rows(rows), "comparison": compare_quantity_rows(stable_rows, expected_rows)}
+
+
 def _serialize_drawing(drawing: DrawingGeometry) -> dict:
     return {
         "spaces": [{"name": space.name, "points": [_point_to_dict(point) for point in space.points]} for space in drawing.spaces],
@@ -124,4 +136,21 @@ def _summarize_rows(rows: list[dict]) -> dict[str, float | int]:
         "wall_measure_length_total_m": round(sum(row["wall_measure_length_m"] for row in rows), 2),
         "window_area_total_m2": round(sum(row["window_area_m2"] for row in rows), 2),
         "latex_paint_area_total_m2": round(sum(row["latex_paint_area_m2"] for row in rows), 2),
+    }
+
+
+def _stable_quantity_row(row: dict) -> dict:
+    return {
+        "space_name": row["space_name"],
+        "space_type": row["space_type"],
+        "floor_area_m2": row["floor_area_m2"],
+        "wall_measure_length_m": row["wall_measure_length_m"],
+        "window_width_total_m": row["window_width_total_m"],
+        "window_area_m2": row["window_area_m2"],
+        "door_width_total_m": row["door_width_total_m"],
+        "door_deduct_area_m2": row["door_deduct_area_m2"],
+        "wall_gross_area_m2": row["wall_gross_area_m2"],
+        "latex_paint_area_m2": row["latex_paint_area_m2"],
+        "status": row["status"],
+        "anomalies": row["anomalies"],
     }

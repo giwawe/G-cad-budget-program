@@ -87,3 +87,21 @@ export type QuantitySummary = {
   window_area_total_m2: number;
   latex_paint_area_total_m2: number;
 };
+
+export type CalibrationDifference = {
+  space_name: string;
+  field: string;
+  actual: number;
+  expected: number;
+  delta: number;
+  percent_delta: number;
+};
+
+export type CalibrationComparison = {
+  passed: boolean;
+  matched_count: number;
+  failed_count: number;
+  missing_spaces: string[];
+  unexpected_spaces: string[];
+  differences: CalibrationDifference[];
+};

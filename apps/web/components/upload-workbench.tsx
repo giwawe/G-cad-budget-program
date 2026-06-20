@@ -4,7 +4,7 @@ import { ChangeEvent, useMemo, useRef, useState } from "react";
 import { FileUp, Layers3, Loader2, Settings2 } from "lucide-react";
 import { DrawingReview } from "@/components/drawing-review";
 import { QuantityTable } from "@/components/quantity-table";
-import type { DrawingGeometry, QuantityRow, QuantitySummary, ReviewStatus } from "@/lib/types";
+import type { CalibrationComparison, DrawingGeometry, QuantityRow, QuantitySummary, ReviewStatus } from "@/lib/types";
 
 const DEFAULT_DOOR_HEIGHT_M = 2.1;
 
@@ -31,6 +31,12 @@ type ReviewResponse = {
   rows: ApiQuantityRow[];
   drawing: DrawingGeometry;
   summary: QuantitySummary;
+};
+
+type CompareResponse = {
+  rows: ApiQuantityRow[];
+  summary: QuantitySummary;
+  comparison: CalibrationComparison;
 };
 
 function getApiBaseUrl() {
@@ -84,13 +90,18 @@ function round2(value: number) {
 
 export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const calibrationInputRef = useRef<HTMLInputElement>(null);
   const [rows, setRows] = useState<QuantityRow[]>(initialRows);
+  const [currentDxfFile, setCurrentDxfFile] = useState<File | null>(null);
+  const [calibrationFileName, setCalibrationFileName] = useState("");
   const [fileName, setFileName] = useState("样例数据");
   const [isUploading, setIsUploading] = useState(false);
+  const [isComparing, setIsComparing] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [drawing, setDrawing] = useState<DrawingGeometry | null>(null);
   const [summary, setSummary] = useState<QuantitySummary | null>(null);
+  const [comparison, setComparison] = useState<CalibrationComparison | null>(null);
 
   const excludedCount = useMemo(() => rows.filter((row) => row.status === "excluded").length, [rows]);
 
@@ -102,6 +113,8 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
 
     setIsUploading(true);
     setError("");
+    setComparison(null);
+    setCalibrationFileName("");
     setMessage(`正在上传到 ${getApiBaseUrl()}`);
 
     try {
@@ -119,12 +132,54 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
       setDrawing(payload.drawing);
       setSummary(payload.summary);
       setFileName(file.name);
+      setCurrentDxfFile(file);
       setMessage(`解析完成：${payload.rows.length} 个空间`);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "DXF 解析失败");
       setMessage("");
     } finally {
       setIsUploading(false);
+      event.target.value = "";
+    }
+  }
+
+  async function handleCalibrationChange(event: ChangeEvent<HTMLInputElement>) {
+    const calibrationFile = event.target.files?.[0];
+    if (!calibrationFile) {
+      return;
+    }
+    if (!currentDxfFile) {
+      setError("请先上传 DXF 文件，再上传校准 JSON");
+      event.target.value = "";
+      return;
+    }
+
+    setIsComparing(true);
+    setError("");
+    setMessage(`正在对比校准文件 ${calibrationFile.name}`);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", currentDxfFile);
+      formData.append("calibration", calibrationFile);
+      const response = await fetch(`${getApiBaseUrl()}/api/compare-dxf-calibration`, { method: "POST", body: formData });
+
+      if (!response.ok) {
+        throw new Error(`校准对比失败：HTTP ${response.status}`);
+      }
+
+      const payload = (await response.json()) as CompareResponse;
+      const nextRows = payload.rows.map(toQuantityRow);
+      setRows(nextRows);
+      setSummary(payload.summary);
+      setComparison(payload.comparison);
+      setCalibrationFileName(calibrationFile.name);
+      setMessage(payload.comparison.passed ? "校准通过：系统算量与校准 JSON 一致" : `发现 ${payload.comparison.differences.length} 项差异`);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "校准对比失败");
+      setMessage("");
+    } finally {
+      setIsComparing(false);
       event.target.value = "";
     }
   }
@@ -245,15 +300,22 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
   return (
     <main>
       <input ref={inputRef} hidden className="fileInput" type="file" accept=".dxf" onChange={handleFileChange} />
+      <input ref={calibrationInputRef} hidden className="fileInput" type="file" accept=".json,application/json" onChange={handleCalibrationChange} />
       <section className="topbar">
         <div>
           <p>DXF 空间算量验证工具</p>
           <h1>CAD 工程量校对工作台</h1>
         </div>
-        <button type="button" disabled={isUploading} onClick={() => inputRef.current?.click()}>
-          {isUploading ? <Loader2 aria-hidden="true" className="spin" size={18} /> : <FileUp aria-hidden="true" size={18} />}
-          {isUploading ? "解析中" : "上传 DXF"}
-        </button>
+        <div className="topbarActions">
+          <button type="button" disabled={isUploading || isComparing} onClick={() => inputRef.current?.click()}>
+            {isUploading ? <Loader2 aria-hidden="true" className="spin" size={18} /> : <FileUp aria-hidden="true" size={18} />}
+            {isUploading ? "解析中" : "上传 DXF"}
+          </button>
+          <button type="button" disabled={!currentDxfFile || isUploading || isComparing} onClick={() => calibrationInputRef.current?.click()}>
+            {isComparing ? <Loader2 aria-hidden="true" className="spin" size={18} /> : <FileUp aria-hidden="true" size={18} />}
+            {isComparing ? "对比中" : "上传校准 JSON"}
+          </button>
+        </div>
       </section>
 
       <section className="summaryGrid">
@@ -284,8 +346,37 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
           <span>个空间，其中 {excludedCount} 个默认不计价</span>
           {message && <small className="infoText">{message}</small>}
           {error && <small className="errorText">{error}</small>}
+          {calibrationFileName && <small className="infoText">校准文件：{calibrationFileName}</small>}
         </div>
       </section>
+
+      {comparison && (
+        <section className={`calibrationPanel ${comparison.passed ? "passed" : "failed"}`}>
+          <div className="calibrationSummary">
+            <strong>{comparison.passed ? "校准通过" : "校准存在差异"}</strong>
+            <span>匹配 {comparison.matched_count} 个空间，差异空间 {comparison.failed_count} 个</span>
+            {(comparison.missing_spaces.length > 0 || comparison.unexpected_spaces.length > 0) && (
+              <span>
+                缺失 {comparison.missing_spaces.length} 个，多余 {comparison.unexpected_spaces.length} 个
+              </span>
+            )}
+          </div>
+          {comparison.differences.length > 0 && (
+            <div className="calibrationDifferences">
+              {comparison.differences.slice(0, 12).map((difference) => (
+                <div key={`${difference.space_name}-${difference.field}`}>
+                  <strong>{difference.space_name}</strong>
+                  <span>{difference.field}</span>
+                  <code>
+                    {difference.actual} / {difference.expected} ({difference.delta > 0 ? "+" : ""}
+                    {difference.delta}, {difference.percent_delta}%)
+                  </code>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       <DrawingReview
         drawing={drawing}
