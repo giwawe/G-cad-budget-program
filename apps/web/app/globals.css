@@ -595,6 +595,18 @@ td .differenceValue {
   color: var(--excluded);
 }
 
+.statusSelect {
+  width: 96px;
+  min-height: 30px;
+  margin-top: 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: white;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 @media (max-width: 960px) {
   main {
     width: min(100vw - 24px, 1360px);

@@ -32,7 +32,15 @@ function differenceClass(difference?: CalibrationDifference) {
   return difference ? "quantityDiffCell" : undefined;
 }
 
-export function QuantityTable({ rows, differences = [] }: { rows: QuantityRow[]; differences?: CalibrationDifference[] }) {
+export function QuantityTable({
+  rows,
+  differences = [],
+  onChangeStatus,
+}: {
+  rows: QuantityRow[];
+  differences?: CalibrationDifference[];
+  onChangeStatus?: (spaceName: string, status: ReviewStatus) => void;
+}) {
   const differencesByCell = indexDifferencesByCell(differences);
 
   return (
@@ -93,6 +101,19 @@ export function QuantityTable({ rows, differences = [] }: { rows: QuantityRow[];
                   {statusIcons[row.status]}
                   {statusLabels[row.status]}
                 </div>
+                {onChangeStatus && (
+                  <select
+                    aria-label={`${row.spaceName} 状态`}
+                    className="statusSelect"
+                    value={row.status}
+                    onChange={(event) => onChangeStatus(row.spaceName, event.target.value as ReviewStatus)}
+                  >
+                    <option value="pending_review">待确认</option>
+                    <option value="confirmed">已确认</option>
+                    <option value="needs_fix">需修图</option>
+                    <option value="excluded">不计价</option>
+                  </select>
+                )}
                 {row.anomalies.length > 0 && <small>{row.anomalies.join("；")}</small>}
               </td>
             </tr>

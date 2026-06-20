@@ -5,6 +5,7 @@ import { Download, FileUp, Layers3, Loader2, Settings2 } from "lucide-react";
 import { DrawingReview } from "@/components/drawing-review";
 import { QuantityTable } from "@/components/quantity-table";
 import { calibrationTemplateFileName, quantityRowsToCalibrationTemplate } from "@/lib/calibration-template";
+import { updateQuantityRowStatus } from "@/lib/quantity-row-status";
 import type { CalibrationComparison, DrawingGeometry, QuantityRow, QuantitySummary, ReviewStatus } from "@/lib/types";
 
 const DEFAULT_DOOR_HEIGHT_M = 2.1;
@@ -209,6 +210,11 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
     }
     await navigator.clipboard.writeText(generatedTemplate.content);
     setMessage(`已复制校准模板：${generatedTemplate.fileName}`);
+  }
+
+  function handleChangeStatus(spaceName: string, status: ReviewStatus) {
+    setRows((current) => updateQuantityRowStatus(current, spaceName, status));
+    setMessage(`${spaceName} 状态已更新为 ${statusLabels[status]}`);
   }
 
   function handleRenameSpace(index: number, name: string) {
@@ -441,10 +447,17 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
             <p>第一期重点验证 DXF 自动算出的空间面积、墙面计量长度、窗洞扣减和计算依据。</p>
           </div>
         </div>
-        <QuantityTable rows={rows} differences={comparison?.differences ?? []} />
+        <QuantityTable rows={rows} differences={comparison?.differences ?? []} onChangeStatus={handleChangeStatus} />
       </section>
     </main>
   );
 }
 
 const layers = ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_OPENING", "QUOTE_WINDOW", "QUOTE_DOOR", "QUOTE_FLOOR", "QUOTE_HEIGHT", "QUOTE_EXT_WALL"];
+
+const statusLabels: Record<ReviewStatus, string> = {
+  pending_review: "待确认",
+  confirmed: "已确认",
+  needs_fix: "需修图",
+  excluded: "不计价",
+};
