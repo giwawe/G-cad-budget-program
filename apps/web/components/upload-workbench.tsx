@@ -37,6 +37,8 @@ type ApiQuantityRow = {
   door_deduct_area_m2: number;
   wall_gross_area_m2: number;
   latex_paint_area_m2: number;
+  wall_tile_area_m2: number;
+  waterproof_area_m2: number;
   evidence: string;
   anomalies: string[];
   status: ReviewStatus;
@@ -83,6 +85,8 @@ function toQuantityRow(row: ApiQuantityRow): QuantityRow {
     doorDeductAreaM2: row.door_deduct_area_m2,
     wallGrossAreaM2: row.wall_gross_area_m2,
     latexPaintAreaM2: row.latex_paint_area_m2,
+    wallTileAreaM2: row.wall_tile_area_m2,
+    waterproofAreaM2: row.waterproof_area_m2,
     evidence: row.evidence,
     anomalies: row.anomalies,
     status: row.status,
@@ -101,6 +105,13 @@ function summarizeRows(rows: QuantityRow[]): QuantitySummary {
 
 function round2(value: number) {
   return Math.round(value * 100) / 100;
+}
+
+function calculateWallTileArea(row: QuantityRow, windowAreaM2 = row.windowAreaM2, doorWidthTotalM = row.doorWidthTotalM) {
+  if (row.spaceType !== "厨房" && row.spaceType !== "卫生间") {
+    return 0;
+  }
+  return round2(Math.max(row.wallMeasureLengthM * 2.5 - windowAreaM2 - doorWidthTotalM * DEFAULT_DOOR_HEIGHT_M, 0));
 }
 
 export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] }) {
@@ -409,10 +420,12 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
       }
       const doorDeductAreaM2 = round2(Math.max(row.doorDeductAreaM2 + delta, 0));
       const latexPaintAreaM2 = round2(Math.max(row.latexPaintAreaM2 - delta, 0));
+      const wallTileAreaM2 = calculateWallTileArea(row, row.windowAreaM2, row.doorWidthTotalM);
       return {
         ...row,
         doorDeductAreaM2,
         latexPaintAreaM2,
+        wallTileAreaM2,
         evidence: `墙面展开面积 ${row.wallMeasureLengthM.toFixed(2)}m * ${row.heightM.toFixed(2)}m = ${row.wallGrossAreaM2.toFixed(2)}m2；乳胶漆面积 ${row.wallGrossAreaM2.toFixed(2)}m2 - 窗洞 ${row.windowAreaM2.toFixed(2)}m2 - 门洞 ${doorDeductAreaM2.toFixed(2)}m2 = ${latexPaintAreaM2.toFixed(2)}m2；门洞扣减已人工调整。`,
       };
     });
@@ -473,10 +486,12 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
       }
       const windowAreaM2 = round2(Math.max(row.windowAreaM2 + delta, 0));
       const latexPaintAreaM2 = round2(Math.max(row.latexPaintAreaM2 - delta, 0));
+      const wallTileAreaM2 = calculateWallTileArea(row, windowAreaM2);
       return {
         ...row,
         windowAreaM2,
         latexPaintAreaM2,
+        wallTileAreaM2,
         evidence: `墙面展开面积 ${row.wallMeasureLengthM.toFixed(2)}m * ${row.heightM.toFixed(2)}m = ${row.wallGrossAreaM2.toFixed(2)}m2；乳胶漆面积 ${row.wallGrossAreaM2.toFixed(2)}m2 - 窗洞 ${windowAreaM2.toFixed(2)}m2 - 门洞 ${row.doorDeductAreaM2.toFixed(2)}m2 = ${latexPaintAreaM2.toFixed(2)}m2；${note}`,
       };
     });

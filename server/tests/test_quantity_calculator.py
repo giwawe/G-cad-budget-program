@@ -32,8 +32,59 @@ def test_latex_area_deducts_windows_but_not_doors():
     assert row.window_area_m2 == 4.8
     assert row.door_width_total_m == 0.9
     assert row.latex_paint_area_m2 == 37.2
+    assert row.wall_tile_area_m2 == 0
+    assert row.waterproof_area_m2 == 0
     assert row.status == ReviewStatus.pending_review
     assert "门洞默认不扣减" in row.evidence
+
+
+def test_kitchen_wall_tile_uses_default_tile_height_and_deducts_all_openings():
+    defaults = ProjectDefaults(project_height_m=2.8, default_window_height_m=1.5, default_door_height_m=2.1)
+    space = SpaceInput(
+        floor="一层",
+        name="一层-厨房",
+        boundary_points_m=[(0, 0), (2.8, 0), (2.8, 1.6), (0, 1.6)],
+        wall_lengths_m=[2.8, 1.6, 2.8, 1.92],
+        windows=[OpeningInput(width_m=0.8, height_m=1.0)],
+        doors=[OpeningInput(width_m=1.0)],
+    )
+
+    row = calculate_quantity_row(space, defaults)
+
+    assert row.wall_measure_length_m == 9.12
+    assert row.wall_tile_area_m2 == 19.9
+    assert row.waterproof_area_m2 == 7.22
+
+
+def test_bathroom_wall_tile_uses_default_tile_height_and_waterproof_uses_1_8m():
+    defaults = ProjectDefaults(project_height_m=2.8, default_window_height_m=1.5, default_door_height_m=2.1)
+    space = SpaceInput(
+        floor="一层",
+        name="一层-卫生间",
+        boundary_points_m=[(0, 0), (2.4, 0), (2.4, 2.2), (0, 2.2)],
+        wall_lengths_m=[2.4, 2.2, 2.4, 2.2],
+        windows=[OpeningInput(width_m=0.8, height_m=0.8)],
+        doors=[OpeningInput(width_m=0.8)],
+    )
+
+    row = calculate_quantity_row(space, defaults)
+
+    assert row.wall_tile_area_m2 == 20.68
+    assert row.waterproof_area_m2 == 21.84
+
+
+def test_balcony_has_waterproof_but_no_automatic_wall_tile():
+    space = SpaceInput(
+        floor="一层",
+        name="一层-阳台",
+        boundary_points_m=[(0, 0), (3, 0), (3, 2), (0, 2)],
+        wall_lengths_m=[3, 2, 3, 2],
+    )
+
+    row = calculate_quantity_row(space, ProjectDefaults())
+
+    assert row.wall_tile_area_m2 == 0
+    assert row.waterproof_area_m2 == 9
 
 
 def test_large_door_opening_deducts_latex_area():

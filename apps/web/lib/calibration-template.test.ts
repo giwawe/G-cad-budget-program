@@ -17,6 +17,8 @@ const rows: QuantityRow[] = [
     doorDeductAreaM2: 0,
     wallGrossAreaM2: 25.54,
     latexPaintAreaM2: 25.54,
+    wallTileAreaM2: 20.7,
+    waterproofAreaM2: 7.22,
     evidence: "not exported",
     anomalies: [],
     status: "pending_review",

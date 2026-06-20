@@ -63,6 +63,14 @@ export function parseReviewSnapshot(content: string): ReviewSnapshot {
     calibration_file: typeof snapshot.calibration_file === "string" ? snapshot.calibration_file : null,
     summary: snapshot.summary ?? null,
     comparison: snapshot.comparison ?? null,
-    rows: snapshot.rows,
+    rows: snapshot.rows.map(normalizeSnapshotRow),
+  };
+}
+
+function normalizeSnapshotRow(row: QuantityRow): QuantityRow {
+  return {
+    ...row,
+    wallTileAreaM2: typeof row.wallTileAreaM2 === "number" ? row.wallTileAreaM2 : 0,
+    waterproofAreaM2: typeof row.waterproofAreaM2 === "number" ? row.waterproofAreaM2 : 0,
   };
 }

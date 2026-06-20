@@ -2,6 +2,17 @@ from server.app.models import ProjectDefaults, QuantityRow, ReviewStatus, SpaceI
 from server.app.quantity.classification import classify_space_type, is_excluded_space
 from server.app.quantity.geometry import polygon_area
 
+WALL_TILE_SPACE_TYPES = {"厨房", "卫生间"}
+WATERPROOF_SPACE_TYPES = {"厨房", "卫生间", "阳台", "露台", "洗衣房"}
+WALL_TILE_HEIGHT_M = 2.5
+WATERPROOF_HEIGHT_BY_SPACE_TYPE = {
+    "卫生间": 1.8,
+    "厨房": 0.3,
+    "阳台": 0.3,
+    "露台": 0.3,
+    "洗衣房": 0.3,
+}
+
 
 def resolve_height(defaults: ProjectDefaults, space: SpaceInput) -> float:
     return space.height_m or space.floor_default_height_m or defaults.project_height_m
@@ -23,8 +34,11 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
         sum(door.width_m * (door.height_m or defaults.default_door_height_m) for door in space.doors if door.deduct_from_wall),
         2,
     )
+    door_area_for_wall_tile_m2 = round(sum(door.width_m * (door.height_m or defaults.default_door_height_m) for door in space.doors), 2)
     wall_gross_area_m2 = round(wall_measure_length_m * height_m, 2)
     latex_paint_area_m2 = round(max(wall_gross_area_m2 - window_area_m2 - door_deduct_area_m2, 0), 2)
+    wall_tile_area_m2 = calculate_wall_tile_area_m2(space_type, wall_measure_length_m, window_area_m2, door_area_for_wall_tile_m2)
+    waterproof_area_m2 = calculate_waterproof_area_m2(space_type, floor_area_m2, wall_measure_length_m, height_m)
 
     anomalies = list(space.anomalies)
     if len(space.boundary_points_m) < 3:
@@ -63,7 +77,22 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
         door_deduct_area_m2=door_deduct_area_m2,
         wall_gross_area_m2=wall_gross_area_m2,
         latex_paint_area_m2=latex_paint_area_m2,
+        wall_tile_area_m2=wall_tile_area_m2,
+        waterproof_area_m2=waterproof_area_m2,
         evidence=evidence,
         anomalies=anomalies,
         status=status,
     )
+
+
+def calculate_wall_tile_area_m2(space_type: str, wall_measure_length_m: float, window_area_m2: float, door_area_m2: float) -> float:
+    if space_type not in WALL_TILE_SPACE_TYPES:
+        return 0
+    return round(max(wall_measure_length_m * WALL_TILE_HEIGHT_M - window_area_m2 - door_area_m2, 0), 2)
+
+
+def calculate_waterproof_area_m2(space_type: str, floor_area_m2: float, wall_measure_length_m: float, height_m: float) -> float:
+    if space_type not in WATERPROOF_SPACE_TYPES:
+        return 0
+    waterproof_height_m = min(WATERPROOF_HEIGHT_BY_SPACE_TYPE[space_type], height_m)
+    return round(floor_area_m2 + wall_measure_length_m * waterproof_height_m, 2)

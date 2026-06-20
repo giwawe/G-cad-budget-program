@@ -54,6 +54,8 @@ class QuantityRow:
     door_deduct_area_m2: float
     wall_gross_area_m2: float
     latex_paint_area_m2: float
+    wall_tile_area_m2: float
+    waterproof_area_m2: float
     evidence: str
     anomalies: list[str]
     status: ReviewStatus

@@ -58,6 +58,8 @@ export function QuantityTable({
             <th>窗洞面积</th>
             <th>门洞扣减</th>
             <th>乳胶漆面积</th>
+            <th>墙砖面积</th>
+            <th>防水面积</th>
             <th>状态</th>
           </tr>
         </thead>
@@ -68,6 +70,8 @@ export function QuantityTable({
             const windowAreaDifference = differencesByCell.get(differenceKey(row.spaceName, "window_area_m2"));
             const doorDeductDifference = differencesByCell.get(differenceKey(row.spaceName, "door_deduct_area_m2"));
             const latexPaintDifference = differencesByCell.get(differenceKey(row.spaceName, "latex_paint_area_m2"));
+            const wallTileDifference = differencesByCell.get(differenceKey(row.spaceName, "wall_tile_area_m2"));
+            const waterproofDifference = differencesByCell.get(differenceKey(row.spaceName, "waterproof_area_m2"));
             return (
             <tr id={quantityRowAnchorId(row.spaceName)} key={`${row.floor}-${row.spaceName}`} className={differences.some((difference) => difference.space_name === row.spaceName) ? "quantityDiffRow" : undefined}>
               <td>{row.floor}</td>
@@ -96,6 +100,14 @@ export function QuantityTable({
               <td className={differenceClass(latexPaintDifference)}>
                 {row.latexPaintAreaM2.toFixed(2)} m2
                 <DifferenceValue difference={latexPaintDifference} />
+              </td>
+              <td className={differenceClass(wallTileDifference)}>
+                {row.wallTileAreaM2.toFixed(2)} m2
+                <DifferenceValue difference={wallTileDifference} />
+              </td>
+              <td className={differenceClass(waterproofDifference)}>
+                {row.waterproofAreaM2.toFixed(2)} m2
+                <DifferenceValue difference={waterproofDifference} />
               </td>
               <td>
                 <div className={`status ${row.status}`}>

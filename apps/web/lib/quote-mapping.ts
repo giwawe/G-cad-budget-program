@@ -1,7 +1,7 @@
 import type { QuantityRow } from "./types";
 
-type QuantityRowMetric = "latexPaintAreaM2" | "floorAreaM2" | "ceilingAreaM2";
-export type QuoteMetric = "latex_paint_area_m2" | "floor_area_m2" | "ceiling_area_m2";
+type QuantityRowMetric = "latexPaintAreaM2" | "floorAreaM2" | "ceilingAreaM2" | "wallTileAreaM2" | "waterproofAreaM2";
+export type QuoteMetric = "latex_paint_area_m2" | "floor_area_m2" | "ceiling_area_m2" | "wall_tile_area_m2" | "waterproof_area_m2";
 
 export type QuoteRule = {
   item_name: string;
@@ -45,6 +45,7 @@ export const DEFAULT_QUOTE_RULES_NAME = "商品房整装默认规则";
 const DRY_SPACE_TYPES = ["客厅", "餐厅", "卧室", "书房", "过道", "门厅", "楼梯过道", "衣帽间", "储物间", "露台"];
 const CEILING_SPACE_TYPES = ["客厅", "餐厅", "卧室", "书房", "过道", "门厅", "楼梯过道", "衣帽间", "储物间"];
 const WET_FLOOR_SPACE_TYPES = ["厨房", "卫生间", "阳台", "露台", "洗衣房"];
+const WALL_TILE_SPACE_TYPES = ["厨房", "卫生间"];
 
 const DEFAULT_RULES: QuoteRule[] = [
   { item_name: "墙面界面剂处理", metric: "latex_paint_area_m2", unit: "m2", unit_price: 7, space_types: DRY_SPACE_TYPES },
@@ -55,24 +56,18 @@ const DEFAULT_RULES: QuoteRule[] = [
   { item_name: "顶面乳胶漆", metric: "ceiling_area_m2", unit: "m2", unit_price: 20, space_types: DRY_SPACE_TYPES },
   { item_name: "地面找平", metric: "floor_area_m2", unit: "m2", unit_price: 56, space_types: WET_FLOOR_SPACE_TYPES },
   { item_name: "地面砖铺贴(750X1500)", metric: "floor_area_m2", unit: "m2", unit_price: 96, space_types: undefined },
+  { item_name: "墙面贴瓷砖(600X1200)", metric: "wall_tile_area_m2", unit: "m2", unit_price: 100, space_types: WALL_TILE_SPACE_TYPES },
+  { item_name: "墙地面防漏处理", metric: "waterproof_area_m2", unit: "m2", unit_price: 51.5, space_types: WET_FLOOR_SPACE_TYPES },
 ];
 
 const APARTMENT_PENDING_METRICS: PendingQuoteMetric[] = [
   {
-    item_name: "墙面贴瓷砖(600X1200)",
+    item_name: "阳台/露台/洗衣房墙砖",
     unit: "m2",
-    unit_price: 100,
-    reason: "墙砖面积需要区分厨房、卫生间、阳台等空间的墙面铺贴高度和扣减口径，不能直接等同乳胶漆面积。",
-    suggested_metric: "wall_tile_area_m2",
+    unit_price: 0,
+    reason: "这些空间不是所有墙面都贴砖，需要未来增加贴砖墙面标记或图层；若标记为贴砖墙面，再按实际层高计算。",
+    suggested_metric: "wall_tile_marked_area_m2",
     source_group: "墙砖",
-  },
-  {
-    item_name: "墙地面防漏处理",
-    unit: "m2",
-    unit_price: 51.5,
-    reason: "防水面积包含地面和墙面上翻高度，需按空间类型、淋浴区和门洞规则单独计量。",
-    suggested_metric: "waterproof_area_m2",
-    source_group: "防水",
   },
   {
     item_name: "窗台石铺贴",
@@ -184,6 +179,8 @@ const METRIC_TO_ROW_FIELD: Record<QuoteMetric, QuantityRowMetric> = {
   latex_paint_area_m2: "latexPaintAreaM2",
   floor_area_m2: "floorAreaM2",
   ceiling_area_m2: "ceilingAreaM2",
+  wall_tile_area_m2: "wallTileAreaM2",
+  waterproof_area_m2: "waterproofAreaM2",
 };
 
 export function defaultQuoteRules(): QuoteRule[] {
@@ -259,7 +256,7 @@ function normalizeQuoteRule(rule: unknown, index: number): QuoteRule {
   if (typeof candidate.item_name !== "string" || !candidate.item_name.trim()) {
     throw new Error(`报价规则第 ${index + 1} 项缺少 item_name`);
   }
-  if (candidate.metric !== "latex_paint_area_m2" && candidate.metric !== "floor_area_m2" && candidate.metric !== "ceiling_area_m2") {
+  if (!isQuoteMetric(candidate.metric)) {
     throw new Error(`报价规则 metric 无效：${String(candidate.metric)}`);
   }
   if (typeof candidate.unit !== "string" || !candidate.unit.trim()) {
@@ -275,6 +272,10 @@ function normalizeQuoteRule(rule: unknown, index: number): QuoteRule {
     unit_price: round2(candidate.unit_price),
     space_types: normalizeSpaceTypes(candidate.space_types),
   };
+}
+
+function isQuoteMetric(metric: unknown): metric is QuoteMetric {
+  return metric === "latex_paint_area_m2" || metric === "floor_area_m2" || metric === "ceiling_area_m2" || metric === "wall_tile_area_m2" || metric === "waterproof_area_m2";
 }
 
 function ruleAppliesToRow(rule: QuoteRule, row: QuantityRow) {

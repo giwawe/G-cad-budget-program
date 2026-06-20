@@ -53,5 +53,19 @@
     "metric": "floor_area_m2",
     "unit": "m2",
     "unit_price": 96
+  },
+  {
+    "item_name": "墙面贴瓷砖(600X1200)",
+    "metric": "wall_tile_area_m2",
+    "unit": "m2",
+    "unit_price": 100,
+    "space_types": ["厨房", "卫生间"]
+  },
+  {
+    "item_name": "墙地面防漏处理",
+    "metric": "waterproof_area_m2",
+    "unit": "m2",
+    "unit_price": 51.5,
+    "space_types": ["厨房", "卫生间", "阳台", "露台", "洗衣房"]
   }
 ]

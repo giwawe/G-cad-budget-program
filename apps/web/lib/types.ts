@@ -14,6 +14,8 @@ export type QuantityRow = {
   doorDeductAreaM2: number;
   wallGrossAreaM2: number;
   latexPaintAreaM2: number;
+  wallTileAreaM2: number;
+  waterproofAreaM2: number;
   evidence: string;
   anomalies: string[];
   status: ReviewStatus;
