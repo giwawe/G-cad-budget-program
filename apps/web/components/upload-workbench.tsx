@@ -1,12 +1,13 @@
 "use client";
 
 import { ChangeEvent, useMemo, useRef, useState } from "react";
-import { Download, FileUp, Layers3, Loader2, Settings2 } from "lucide-react";
+import { Download, FileUp, Layers3, Loader2, ReceiptText, Settings2 } from "lucide-react";
 import { DrawingReview } from "@/components/drawing-review";
 import { QuantityTable } from "@/components/quantity-table";
 import { calibrationTemplateFileName, quantityRowsToCalibrationTemplate } from "@/lib/calibration-template";
 import { quantityRowAnchorHref } from "@/lib/quantity-row-anchor";
 import { updateQuantityRowStatus } from "@/lib/quantity-row-status";
+import { buildQuoteMapping, quoteMappingFileName, type QuoteMapping } from "@/lib/quote-mapping";
 import { buildReviewSnapshot, parseReviewSnapshot, reviewSnapshotFileName } from "@/lib/review-snapshot";
 import type { CalibrationComparison, DrawingGeometry, QuantityRow, QuantitySummary, ReviewStatus } from "@/lib/types";
 
@@ -109,6 +110,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
   const [comparison, setComparison] = useState<CalibrationComparison | null>(null);
   const [generatedTemplate, setGeneratedTemplate] = useState<{ fileName: string; content: string } | null>(null);
   const [generatedSnapshot, setGeneratedSnapshot] = useState<{ fileName: string; content: string } | null>(null);
+  const [generatedQuoteMapping, setGeneratedQuoteMapping] = useState<{ fileName: string; content: string; mapping: QuoteMapping } | null>(null);
 
   const excludedCount = useMemo(() => rows.filter((row) => row.status === "excluded").length, [rows]);
 
@@ -124,6 +126,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
     setCalibrationFileName("");
     setGeneratedTemplate(null);
     setGeneratedSnapshot(null);
+    setGeneratedQuoteMapping(null);
     setMessage(`正在上传到 ${getApiBaseUrl()}`);
 
     try {
@@ -208,6 +211,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
       setCurrentDxfFile(null);
       setDrawing(null);
       setGeneratedTemplate(null);
+      setGeneratedQuoteMapping(null);
       setGeneratedSnapshot({ fileName: snapshotFile.name, content: `${JSON.stringify(snapshot, null, 2)}\n` });
       setError("");
       setMessage(`已恢复校对快照：${snapshotFile.name}`);
@@ -265,6 +269,31 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
     }
     await navigator.clipboard.writeText(generatedSnapshot.content);
     setMessage(`已复制校对快照：${generatedSnapshot.fileName}`);
+  }
+
+  function handleDownloadQuoteMapping() {
+    const mapping = buildQuoteMapping(rows);
+    const downloadName = quoteMappingFileName(fileName);
+    const content = `${JSON.stringify(mapping, null, 2)}\n`;
+    const blob = new Blob([content], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = downloadName;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setGeneratedQuoteMapping({ fileName: downloadName, content, mapping });
+    setMessage(`已生成报价映射：${downloadName}`);
+  }
+
+  async function handleCopyQuoteMapping() {
+    if (!generatedQuoteMapping) {
+      return;
+    }
+    await navigator.clipboard.writeText(generatedQuoteMapping.content);
+    setMessage(`已复制报价映射：${generatedQuoteMapping.fileName}`);
   }
 
   function handleChangeStatus(spaceName: string, status: ReviewStatus) {
@@ -412,6 +441,10 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
             <Download aria-hidden="true" size={18} />
             导出校对快照
           </button>
+          <button type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadQuoteMapping}>
+            <ReceiptText aria-hidden="true" size={18} />
+            导出报价映射
+          </button>
           <button type="button" disabled={isUploading || isComparing} onClick={() => snapshotInputRef.current?.click()}>
             <FileUp aria-hidden="true" size={18} />
             导入校对快照
@@ -478,6 +511,63 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
             </button>
           </div>
           <textarea readOnly value={generatedSnapshot.content} aria-label="校对快照 JSON" />
+        </section>
+      )}
+
+      {generatedQuoteMapping && (
+        <section className="quotePanel">
+          <div className="templateHeader">
+            <div>
+              <strong>报价映射已生成</strong>
+              <span>{generatedQuoteMapping.fileName}</span>
+            </div>
+            <button type="button" onClick={handleCopyQuoteMapping}>
+              复制 JSON
+            </button>
+          </div>
+          <div className="quoteSummary">
+            <div>
+              <span>计价空间</span>
+              <strong>{generatedQuoteMapping.mapping.summary.space_count}</strong>
+            </div>
+            <div>
+              <span>清单项</span>
+              <strong>{generatedQuoteMapping.mapping.summary.item_count}</strong>
+            </div>
+            <div>
+              <span>估算合计</span>
+              <strong>{generatedQuoteMapping.mapping.summary.total_amount.toFixed(2)}</strong>
+            </div>
+          </div>
+          <div className="quotePreview">
+            <table>
+              <thead>
+                <tr>
+                  <th>空间</th>
+                  <th>类型</th>
+                  <th>清单项</th>
+                  <th>工程量</th>
+                  <th>单价</th>
+                  <th>小计</th>
+                </tr>
+              </thead>
+              <tbody>
+                {generatedQuoteMapping.mapping.items.slice(0, 8).map((item) => (
+                  <tr key={`${item.space_name}-${item.item_name}`}>
+                    <td>{item.space_name}</td>
+                    <td>{item.space_type}</td>
+                    <td>{item.item_name}</td>
+                    <td>
+                      {item.quantity.toFixed(2)} {item.unit}
+                    </td>
+                    <td>{item.unit_price.toFixed(2)}</td>
+                    <td>{item.amount.toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <textarea readOnly value={generatedQuoteMapping.content} aria-label="报价映射 JSON" />
         </section>
       )}
 

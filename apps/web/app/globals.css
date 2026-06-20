@@ -235,6 +235,61 @@ code {
   resize: vertical;
 }
 
+.quotePanel {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  margin-bottom: 18px;
+  padding: 14px 16px;
+}
+
+.quoteSummary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.quoteSummary div {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #f9fafb;
+  padding: 10px 12px;
+}
+
+.quoteSummary span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.quoteSummary strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 20px;
+}
+
+.quotePreview {
+  overflow-x: auto;
+}
+
+.quotePreview table {
+  min-width: 760px;
+}
+
+.quotePanel textarea {
+  width: 100%;
+  min-height: 180px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #f9fafb;
+  color: #26323f;
+  font: 12px/1.55 Consolas, "Courier New", monospace;
+  padding: 10px;
+  resize: vertical;
+}
+
 .calibrationPanel {
   display: grid;
   gap: 12px;
@@ -632,7 +687,8 @@ td .differenceValue {
   .summaryGrid,
   .fieldGrid,
   .summaryCards,
-  .calibrationDifferences {
+  .calibrationDifferences,
+  .quoteSummary {
     grid-template-columns: 1fr;
   }
 
