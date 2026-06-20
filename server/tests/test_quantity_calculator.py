@@ -76,6 +76,10 @@ def test_height_priority_space_then_floor_then_project():
 def test_classification_and_excluded_spaces():
     assert classify_space_type("一层-主卧") == "卧室"
     assert classify_space_type("二层-楼梯过道") == "楼梯过道"
+    assert classify_space_type("衣帽间") == "衣帽间"
+    assert classify_space_type("储藏室") == "储物间"
+    assert classify_space_type("洗衣房") == "洗衣房"
+    assert classify_space_type("入户门厅") == "门厅"
     assert is_excluded_space("一层-电梯井") is True
 
     row = calculate_quantity_row(

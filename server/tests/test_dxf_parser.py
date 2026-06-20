@@ -63,6 +63,7 @@ def test_duplicate_close_point_does_not_assign_wall_to_every_room():
 def test_closed_quote_window_polyline_keeps_closing_segment_in_review_drawing():
     review = parser.parse_dxf_review(build_closed_window_polyline_dxf(), ProjectDefaults())
 
+    assert review.spaces[0].floor == "一层"
     assert len(review.drawing.window_openings) == 1
     assert len(review.drawing.windows) == 4
     assert review.drawing.window_openings[0].width_m == 2.0

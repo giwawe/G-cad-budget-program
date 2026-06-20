@@ -678,7 +678,7 @@ def _name_for_room(room: list[Point], texts: list[tuple[Point, str]]) -> str:
 def _floor_from_name(name: str) -> str:
     if "-" in name:
         return name.split("-", 1)[0]
-    return "未分层"
+    return "一层"
 
 
 def _segment_in_room(room: list[Point], start: Point, end: Point) -> bool:
