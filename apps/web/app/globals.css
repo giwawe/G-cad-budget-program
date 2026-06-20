@@ -194,6 +194,47 @@ code {
   overflow: hidden;
 }
 
+.templatePanel {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  margin-bottom: 18px;
+  padding: 14px 16px;
+}
+
+.templateHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.templateHeader strong,
+.templateHeader span {
+  display: block;
+}
+
+.templateHeader span {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.templatePanel textarea {
+  width: 100%;
+  min-height: 220px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #f9fafb;
+  color: #26323f;
+  font: 12px/1.55 Consolas, "Courier New", monospace;
+  padding: 10px;
+  resize: vertical;
+}
+
 .calibrationPanel {
   display: grid;
   gap: 12px;
@@ -516,6 +557,21 @@ td small {
   line-height: 1.45;
 }
 
+.quantityDiffRow td {
+  background: #fffaf0;
+}
+
+td.quantityDiffCell {
+  background: #fff3d7;
+  box-shadow: inset 4px 0 0 var(--warning);
+  font-weight: 700;
+}
+
+td .differenceValue {
+  color: var(--danger);
+  font-weight: 700;
+}
+
 .status {
   display: inline-flex;
   align-items: center;
@@ -559,6 +615,11 @@ td small {
 
   .topbarActions {
     justify-content: flex-start;
+  }
+
+  .templateHeader {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
 

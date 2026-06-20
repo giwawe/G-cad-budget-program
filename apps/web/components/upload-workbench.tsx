@@ -1,9 +1,10 @@
 "use client";
 
 import { ChangeEvent, useMemo, useRef, useState } from "react";
-import { FileUp, Layers3, Loader2, Settings2 } from "lucide-react";
+import { Download, FileUp, Layers3, Loader2, Settings2 } from "lucide-react";
 import { DrawingReview } from "@/components/drawing-review";
 import { QuantityTable } from "@/components/quantity-table";
+import { calibrationTemplateFileName, quantityRowsToCalibrationTemplate } from "@/lib/calibration-template";
 import type { CalibrationComparison, DrawingGeometry, QuantityRow, QuantitySummary, ReviewStatus } from "@/lib/types";
 
 const DEFAULT_DOOR_HEIGHT_M = 2.1;
@@ -102,6 +103,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
   const [drawing, setDrawing] = useState<DrawingGeometry | null>(null);
   const [summary, setSummary] = useState<QuantitySummary | null>(null);
   const [comparison, setComparison] = useState<CalibrationComparison | null>(null);
+  const [generatedTemplate, setGeneratedTemplate] = useState<{ fileName: string; content: string } | null>(null);
 
   const excludedCount = useMemo(() => rows.filter((row) => row.status === "excluded").length, [rows]);
 
@@ -115,6 +117,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
     setError("");
     setComparison(null);
     setCalibrationFileName("");
+    setGeneratedTemplate(null);
     setMessage(`正在上传到 ${getApiBaseUrl()}`);
 
     try {
@@ -182,6 +185,30 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
       setIsComparing(false);
       event.target.value = "";
     }
+  }
+
+  function handleDownloadCalibrationTemplate() {
+    const content = `${JSON.stringify(quantityRowsToCalibrationTemplate(rows), null, 2)}\n`;
+    const downloadName = calibrationTemplateFileName(fileName);
+    const blob = new Blob([content], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = downloadName;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setGeneratedTemplate({ fileName: downloadName, content });
+    setMessage(`已生成校准模板：${downloadName}`);
+  }
+
+  async function handleCopyCalibrationTemplate() {
+    if (!generatedTemplate) {
+      return;
+    }
+    await navigator.clipboard.writeText(generatedTemplate.content);
+    setMessage(`已复制校准模板：${generatedTemplate.fileName}`);
   }
 
   function handleRenameSpace(index: number, name: string) {
@@ -315,6 +342,10 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
             {isComparing ? <Loader2 aria-hidden="true" className="spin" size={18} /> : <FileUp aria-hidden="true" size={18} />}
             {isComparing ? "对比中" : "上传校准 JSON"}
           </button>
+          <button type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadCalibrationTemplate}>
+            <Download aria-hidden="true" size={18} />
+            下载校准模板
+          </button>
         </div>
       </section>
 
@@ -349,6 +380,21 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
           {calibrationFileName && <small className="infoText">校准文件：{calibrationFileName}</small>}
         </div>
       </section>
+
+      {generatedTemplate && (
+        <section className="templatePanel">
+          <div className="templateHeader">
+            <div>
+              <strong>校准模板已生成</strong>
+              <span>{generatedTemplate.fileName}</span>
+            </div>
+            <button type="button" onClick={handleCopyCalibrationTemplate}>
+              复制 JSON
+            </button>
+          </div>
+          <textarea readOnly value={generatedTemplate.content} aria-label="校准模板 JSON" />
+        </section>
+      )}
 
       {comparison && (
         <section className={`calibrationPanel ${comparison.passed ? "passed" : "failed"}`}>
@@ -395,7 +441,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
             <p>第一期重点验证 DXF 自动算出的空间面积、墙面计量长度、窗洞扣减和计算依据。</p>
           </div>
         </div>
-        <QuantityTable rows={rows} />
+        <QuantityTable rows={rows} differences={comparison?.differences ?? []} />
       </section>
     </main>
   );

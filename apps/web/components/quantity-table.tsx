@@ -1,5 +1,6 @@
 import { AlertTriangle, CheckCircle2, CircleDashed, MinusCircle } from "lucide-react";
-import type { QuantityRow, ReviewStatus } from "@/lib/types";
+import { differenceKey, indexDifferencesByCell } from "@/lib/calibration-differences";
+import type { CalibrationDifference, QuantityRow, ReviewStatus } from "@/lib/types";
 
 const statusLabels: Record<ReviewStatus, string> = {
   pending_review: "待确认",
@@ -15,7 +16,25 @@ const statusIcons: Record<ReviewStatus, React.ReactNode> = {
   excluded: <MinusCircle aria-hidden="true" size={16} />,
 };
 
-export function QuantityTable({ rows }: { rows: QuantityRow[] }) {
+function DifferenceValue({ difference }: { difference?: CalibrationDifference }) {
+  if (!difference) {
+    return null;
+  }
+  return (
+    <small className="differenceValue">
+      校准 {difference.expected}，差值 {difference.delta > 0 ? "+" : ""}
+      {difference.delta} ({difference.percent_delta}%)
+    </small>
+  );
+}
+
+function differenceClass(difference?: CalibrationDifference) {
+  return difference ? "quantityDiffCell" : undefined;
+}
+
+export function QuantityTable({ rows, differences = [] }: { rows: QuantityRow[]; differences?: CalibrationDifference[] }) {
+  const differencesByCell = indexDifferencesByCell(differences);
+
   return (
     <div className="tableWrap">
       <table>
@@ -34,20 +53,41 @@ export function QuantityTable({ rows }: { rows: QuantityRow[] }) {
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
-            <tr key={`${row.floor}-${row.spaceName}`}>
+          {rows.map((row) => {
+            const floorAreaDifference = differencesByCell.get(differenceKey(row.spaceName, "floor_area_m2"));
+            const wallLengthDifference = differencesByCell.get(differenceKey(row.spaceName, "wall_measure_length_m"));
+            const windowAreaDifference = differencesByCell.get(differenceKey(row.spaceName, "window_area_m2"));
+            const doorDeductDifference = differencesByCell.get(differenceKey(row.spaceName, "door_deduct_area_m2"));
+            const latexPaintDifference = differencesByCell.get(differenceKey(row.spaceName, "latex_paint_area_m2"));
+            return (
+            <tr key={`${row.floor}-${row.spaceName}`} className={differences.some((difference) => difference.space_name === row.spaceName) ? "quantityDiffRow" : undefined}>
               <td>{row.floor}</td>
               <td>
                 <strong>{row.spaceName}</strong>
                 <span>{row.evidence}</span>
               </td>
               <td>{row.spaceType}</td>
-              <td>{row.floorAreaM2.toFixed(2)} m2</td>
-              <td>{row.wallMeasureLengthM.toFixed(2)} m</td>
+              <td className={differenceClass(floorAreaDifference)}>
+                {row.floorAreaM2.toFixed(2)} m2
+                <DifferenceValue difference={floorAreaDifference} />
+              </td>
+              <td className={differenceClass(wallLengthDifference)}>
+                {row.wallMeasureLengthM.toFixed(2)} m
+                <DifferenceValue difference={wallLengthDifference} />
+              </td>
               <td>{row.heightM.toFixed(2)} m</td>
-              <td>{row.windowAreaM2.toFixed(2)} m2</td>
-              <td>{row.doorDeductAreaM2.toFixed(2)} m2</td>
-              <td>{row.latexPaintAreaM2.toFixed(2)} m2</td>
+              <td className={differenceClass(windowAreaDifference)}>
+                {row.windowAreaM2.toFixed(2)} m2
+                <DifferenceValue difference={windowAreaDifference} />
+              </td>
+              <td className={differenceClass(doorDeductDifference)}>
+                {row.doorDeductAreaM2.toFixed(2)} m2
+                <DifferenceValue difference={doorDeductDifference} />
+              </td>
+              <td className={differenceClass(latexPaintDifference)}>
+                {row.latexPaintAreaM2.toFixed(2)} m2
+                <DifferenceValue difference={latexPaintDifference} />
+              </td>
               <td>
                 <div className={`status ${row.status}`}>
                   {statusIcons[row.status]}
@@ -56,7 +96,8 @@ export function QuantityTable({ rows }: { rows: QuantityRow[] }) {
                 {row.anomalies.length > 0 && <small>{row.anomalies.join("；")}</small>}
               </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>
