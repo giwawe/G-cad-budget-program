@@ -7,6 +7,7 @@ import { QuantityTable } from "@/components/quantity-table";
 import { calibrationTemplateFileName, quantityRowsToCalibrationTemplate } from "@/lib/calibration-template";
 import { quantityRowAnchorHref } from "@/lib/quantity-row-anchor";
 import { updateQuantityRowStatus } from "@/lib/quantity-row-status";
+import { buildReviewSnapshot, reviewSnapshotFileName } from "@/lib/review-snapshot";
 import type { CalibrationComparison, DrawingGeometry, QuantityRow, QuantitySummary, ReviewStatus } from "@/lib/types";
 
 const DEFAULT_DOOR_HEIGHT_M = 2.1;
@@ -106,6 +107,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
   const [summary, setSummary] = useState<QuantitySummary | null>(null);
   const [comparison, setComparison] = useState<CalibrationComparison | null>(null);
   const [generatedTemplate, setGeneratedTemplate] = useState<{ fileName: string; content: string } | null>(null);
+  const [generatedSnapshot, setGeneratedSnapshot] = useState<{ fileName: string; content: string } | null>(null);
 
   const excludedCount = useMemo(() => rows.filter((row) => row.status === "excluded").length, [rows]);
 
@@ -120,6 +122,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
     setComparison(null);
     setCalibrationFileName("");
     setGeneratedTemplate(null);
+    setGeneratedSnapshot(null);
     setMessage(`正在上传到 ${getApiBaseUrl()}`);
 
     try {
@@ -211,6 +214,30 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
     }
     await navigator.clipboard.writeText(generatedTemplate.content);
     setMessage(`已复制校准模板：${generatedTemplate.fileName}`);
+  }
+
+  function handleDownloadReviewSnapshot() {
+    const downloadName = reviewSnapshotFileName(fileName);
+    const content = `${JSON.stringify(buildReviewSnapshot({ fileName, calibrationFileName, rows, summary, comparison }), null, 2)}\n`;
+    const blob = new Blob([content], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = downloadName;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setGeneratedSnapshot({ fileName: downloadName, content });
+    setMessage(`已生成校对快照：${downloadName}`);
+  }
+
+  async function handleCopyReviewSnapshot() {
+    if (!generatedSnapshot) {
+      return;
+    }
+    await navigator.clipboard.writeText(generatedSnapshot.content);
+    setMessage(`已复制校对快照：${generatedSnapshot.fileName}`);
   }
 
   function handleChangeStatus(spaceName: string, status: ReviewStatus) {
@@ -353,6 +380,10 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
             <Download aria-hidden="true" size={18} />
             下载校准模板
           </button>
+          <button type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadReviewSnapshot}>
+            <Download aria-hidden="true" size={18} />
+            导出校对快照
+          </button>
         </div>
       </section>
 
@@ -400,6 +431,21 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
             </button>
           </div>
           <textarea readOnly value={generatedTemplate.content} aria-label="校准模板 JSON" />
+        </section>
+      )}
+
+      {generatedSnapshot && (
+        <section className="templatePanel">
+          <div className="templateHeader">
+            <div>
+              <strong>校对快照已生成</strong>
+              <span>{generatedSnapshot.fileName}</span>
+            </div>
+            <button type="button" onClick={handleCopyReviewSnapshot}>
+              复制 JSON
+            </button>
+          </div>
+          <textarea readOnly value={generatedSnapshot.content} aria-label="校对快照 JSON" />
         </section>
       )}
 
