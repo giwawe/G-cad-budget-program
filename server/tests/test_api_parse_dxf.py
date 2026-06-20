@@ -62,6 +62,13 @@ def test_parse_real_dxf_review_payload_includes_drawing_summary_and_measured_wal
     assert len(payload["drawing"]["base_segments"]) > 200
     assert "客厅" in [space["name"] for space in payload["drawing"]["spaces"]]
 
+    assert payload["drawing"]["window_openings"]
+    first_window = payload["drawing"]["window_openings"][0]
+    assert first_window["width_m"] > 0
+    assert first_window["height_m"] == 1.5
+    assert first_window["included_in_wall_deduction"] is True
+    assert first_window["space_names"]
+
     measured_walls = payload["drawing"]["measured_walls"]
     measured_length = round(
         sum(round(line_length((segment["start"]["x"], segment["start"]["y"]), (segment["end"]["x"], segment["end"]["y"])), 2) for segment in measured_walls),

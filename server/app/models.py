@@ -21,6 +21,9 @@ class ProjectDefaults:
 class OpeningInput:
     width_m: float
     height_m: float | None = None
+    deduct_from_wall: bool = False
+    review_required: bool = False
+    opening_type: str = "normal_door"
 
 
 @dataclass(frozen=True)
@@ -48,6 +51,7 @@ class QuantityRow:
     window_width_total_m: float
     window_area_m2: float
     door_width_total_m: float
+    door_deduct_area_m2: float
     wall_gross_area_m2: float
     latex_paint_area_m2: float
     evidence: str

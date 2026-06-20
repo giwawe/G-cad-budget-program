@@ -6,6 +6,8 @@ import { DrawingReview } from "@/components/drawing-review";
 import { QuantityTable } from "@/components/quantity-table";
 import type { DrawingGeometry, QuantityRow, QuantitySummary, ReviewStatus } from "@/lib/types";
 
+const DEFAULT_DOOR_HEIGHT_M = 2.1;
+
 type ApiQuantityRow = {
   floor: string;
   space_name: string;
@@ -17,6 +19,7 @@ type ApiQuantityRow = {
   window_width_total_m: number;
   window_area_m2: number;
   door_width_total_m: number;
+  door_deduct_area_m2: number;
   wall_gross_area_m2: number;
   latex_paint_area_m2: number;
   evidence: string;
@@ -56,12 +59,27 @@ function toQuantityRow(row: ApiQuantityRow): QuantityRow {
     windowWidthTotalM: row.window_width_total_m,
     windowAreaM2: row.window_area_m2,
     doorWidthTotalM: row.door_width_total_m,
+    doorDeductAreaM2: row.door_deduct_area_m2,
     wallGrossAreaM2: row.wall_gross_area_m2,
     latexPaintAreaM2: row.latex_paint_area_m2,
     evidence: row.evidence,
     anomalies: row.anomalies,
     status: row.status,
   };
+}
+
+function summarizeRows(rows: QuantityRow[]): QuantitySummary {
+  return {
+    space_count: rows.length,
+    floor_area_total_m2: round2(rows.reduce((sum, row) => sum + row.floorAreaM2, 0)),
+    wall_measure_length_total_m: round2(rows.reduce((sum, row) => sum + row.wallMeasureLengthM, 0)),
+    window_area_total_m2: round2(rows.reduce((sum, row) => sum + row.windowAreaM2, 0)),
+    latex_paint_area_total_m2: round2(rows.reduce((sum, row) => sum + row.latexPaintAreaM2, 0)),
+  };
+}
+
+function round2(value: number) {
+  return Math.round(value * 100) / 100;
 }
 
 export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] }) {
@@ -96,7 +114,8 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
       }
 
       const payload = (await response.json()) as ReviewResponse;
-      setRows(payload.rows.map(toQuantityRow));
+      const nextRows = payload.rows.map(toQuantityRow);
+      setRows(nextRows);
       setDrawing(payload.drawing);
       setSummary(payload.summary);
       setFileName(file.name);
@@ -123,9 +142,104 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
       if (!current) {
         return current;
       }
-      return { ...current, spaces: current.spaces.map((space, spaceIndex) => (spaceIndex === index ? { ...space, name: trimmedName } : space)) };
+      return {
+        ...current,
+        spaces: current.spaces.map((space, spaceIndex) => (spaceIndex === index ? { ...space, name: trimmedName } : space)),
+        door_openings: current.door_openings.map((door) => ({
+          ...door,
+          space_names: door.space_names.map((spaceName) => (spaceName === previousName ? trimmedName : spaceName)),
+        })),
+        window_openings: current.window_openings.map((window) => ({
+          ...window,
+          space_names: window.space_names.map((spaceName) => (spaceName === previousName ? trimmedName : spaceName)),
+        })),
+      };
     });
     setRows((current) => current.map((row) => (row.spaceName === previousName ? { ...row, spaceName: trimmedName } : row)));
+  }
+
+  function handleToggleDoorDeduction(index: number) {
+    const door = drawing?.door_openings[index];
+    if (!drawing || !door) {
+      return;
+    }
+    const nextDeduct = !door.deduct_from_wall;
+    const delta = round2((nextDeduct ? 1 : -1) * door.width_m * DEFAULT_DOOR_HEIGHT_M);
+
+    const nextRows = rows.map((row) => {
+      if (!door.space_names.includes(row.spaceName)) {
+        return row;
+      }
+      const doorDeductAreaM2 = round2(Math.max(row.doorDeductAreaM2 + delta, 0));
+      const latexPaintAreaM2 = round2(Math.max(row.latexPaintAreaM2 - delta, 0));
+      return {
+        ...row,
+        doorDeductAreaM2,
+        latexPaintAreaM2,
+        evidence: `墙面展开面积 ${row.wallMeasureLengthM.toFixed(2)}m * ${row.heightM.toFixed(2)}m = ${row.wallGrossAreaM2.toFixed(2)}m2；乳胶漆面积 ${row.wallGrossAreaM2.toFixed(2)}m2 - 窗洞 ${row.windowAreaM2.toFixed(2)}m2 - 门洞 ${doorDeductAreaM2.toFixed(2)}m2 = ${latexPaintAreaM2.toFixed(2)}m2；门洞扣减已人工调整。`,
+      };
+    });
+
+    setRows(nextRows);
+    setSummary(summarizeRows(nextRows));
+    setDrawing({
+      ...drawing,
+      door_openings: drawing.door_openings.map((item, doorIndex) =>
+        doorIndex === index ? { ...item, deduct_from_wall: nextDeduct, review_required: false, opening_type: nextDeduct ? "manual_deduct" : "manual_no_deduct" } : item,
+      ),
+    });
+  }
+
+  function handleToggleWindowDeduction(index: number) {
+    const windowOpening = drawing?.window_openings[index];
+    if (!drawing || !windowOpening) {
+      return;
+    }
+    const nextIncluded = !windowOpening.included_in_wall_deduction;
+    const delta = round2((nextIncluded ? 1 : -1) * windowOpening.width_m * windowOpening.height_m);
+    const nextRows = applyWindowAreaDelta(rows, windowOpening.space_names, delta, "窗洞扣减已人工调整。");
+
+    setRows(nextRows);
+    setSummary(summarizeRows(nextRows));
+    setDrawing({
+      ...drawing,
+      window_openings: drawing.window_openings.map((item, windowIndex) =>
+        windowIndex === index ? { ...item, included_in_wall_deduction: nextIncluded } : item,
+      ),
+    });
+  }
+
+  function handleChangeWindowHeight(index: number, heightM: number) {
+    const windowOpening = drawing?.window_openings[index];
+    if (!drawing || !windowOpening) {
+      return;
+    }
+    const nextHeight = round2(heightM);
+    const delta = windowOpening.included_in_wall_deduction ? round2(windowOpening.width_m * (nextHeight - windowOpening.height_m)) : 0;
+    const nextRows = delta === 0 ? rows : applyWindowAreaDelta(rows, windowOpening.space_names, delta, "窗高已人工调整。");
+
+    setRows(nextRows);
+    setSummary(summarizeRows(nextRows));
+    setDrawing({
+      ...drawing,
+      window_openings: drawing.window_openings.map((item, windowIndex) => (windowIndex === index ? { ...item, height_m: nextHeight } : item)),
+    });
+  }
+
+  function applyWindowAreaDelta(currentRows: QuantityRow[], spaceNames: string[], delta: number, note: string) {
+    return currentRows.map((row) => {
+      if (!spaceNames.includes(row.spaceName)) {
+        return row;
+      }
+      const windowAreaM2 = round2(Math.max(row.windowAreaM2 + delta, 0));
+      const latexPaintAreaM2 = round2(Math.max(row.latexPaintAreaM2 - delta, 0));
+      return {
+        ...row,
+        windowAreaM2,
+        latexPaintAreaM2,
+        evidence: `墙面展开面积 ${row.wallMeasureLengthM.toFixed(2)}m * ${row.heightM.toFixed(2)}m = ${row.wallGrossAreaM2.toFixed(2)}m2；乳胶漆面积 ${row.wallGrossAreaM2.toFixed(2)}m2 - 窗洞 ${windowAreaM2.toFixed(2)}m2 - 门洞 ${row.doorDeductAreaM2.toFixed(2)}m2 = ${latexPaintAreaM2.toFixed(2)}m2；${note}`,
+      };
+    });
   }
 
   return (
@@ -173,7 +287,15 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
         </div>
       </section>
 
-      <DrawingReview drawing={drawing} rows={rows} summary={summary} onRenameSpace={handleRenameSpace} />
+      <DrawingReview
+        drawing={drawing}
+        rows={rows}
+        summary={summary}
+        onRenameSpace={handleRenameSpace}
+        onToggleDoorDeduction={handleToggleDoorDeduction}
+        onToggleWindowDeduction={handleToggleWindowDeduction}
+        onChangeWindowHeight={handleChangeWindowHeight}
+      />
 
       <section className="reviewSection">
         <div className="sectionHeader">

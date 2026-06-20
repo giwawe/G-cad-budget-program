@@ -313,34 +313,69 @@ code {
 }
 
 .svgWindowBlock {
-  stroke: #00bfff;
-  stroke-linecap: round;
-  stroke-width: 0.62;
-  opacity: 0.72;
+  fill: #d8dee8;
+  stroke: #eef3fa;
+  stroke-width: 0.018;
+  opacity: 0.52;
+  pointer-events: none;
   vector-effect: non-scaling-stroke;
 }
 
 .svgWindow {
-  stroke: #e7fbff;
+  stroke: #00bfff;
   stroke-linecap: round;
-  stroke-width: 0.18;
+  stroke-width: 0.42;
   opacity: 1;
+  pointer-events: none;
   vector-effect: non-scaling-stroke;
+}
+
+.svgWindowHitArea {
+  fill: transparent;
+  stroke: transparent;
+  pointer-events: all;
+  vector-effect: non-scaling-stroke;
+}
+
+.svgWindowGroup {
+  cursor: pointer;
 }
 
 .svgDoorBlock {
-  stroke: #ff6b00;
-  stroke-linecap: round;
-  stroke-width: 0.74;
-  opacity: 0.78;
+  fill: #18c37e;
+  stroke: #dfffee;
+  stroke-width: 0.025;
+  opacity: 0.38;
+  pointer-events: all;
   vector-effect: non-scaling-stroke;
 }
 
+.svgDoorBlock.deducted {
+  fill: #8f3dff;
+  stroke: #f3edff;
+  opacity: 0.44;
+}
+
+.svgDoorBlock.review {
+  fill: #ffe100;
+  stroke: #fff8a6;
+  opacity: 0.48;
+}
+
+.svgDoorGroup {
+  cursor: pointer;
+}
+
+.svgDoorGroup:hover .svgDoorBlock {
+  opacity: 0.7;
+}
+
 .svgDoor {
-  stroke: #fff2b8;
+  stroke: #f8fffb;
   stroke-linecap: round;
-  stroke-width: 0.2;
-  opacity: 1;
+  stroke-width: 0.035;
+  opacity: 0.9;
+  pointer-events: none;
   vector-effect: non-scaling-stroke;
 }
 

@@ -28,6 +28,7 @@ export function QuantityTable({ rows }: { rows: QuantityRow[] }) {
             <th>墙线长度</th>
             <th>层高</th>
             <th>窗洞面积</th>
+            <th>门洞扣减</th>
             <th>乳胶漆面积</th>
             <th>状态</th>
           </tr>
@@ -45,6 +46,7 @@ export function QuantityTable({ rows }: { rows: QuantityRow[] }) {
               <td>{row.wallMeasureLengthM.toFixed(2)} m</td>
               <td>{row.heightM.toFixed(2)} m</td>
               <td>{row.windowAreaM2.toFixed(2)} m2</td>
+              <td>{row.doorDeductAreaM2.toFixed(2)} m2</td>
               <td>{row.latexPaintAreaM2.toFixed(2)} m2</td>
               <td>
                 <div className={`status ${row.status}`}>

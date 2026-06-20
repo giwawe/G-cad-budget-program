@@ -11,6 +11,7 @@ export type QuantityRow = {
   windowWidthTotalM: number;
   windowAreaM2: number;
   doorWidthTotalM: number;
+  doorDeductAreaM2: number;
   wallGrossAreaM2: number;
   latexPaintAreaM2: number;
   evidence: string;
@@ -38,11 +39,36 @@ export type DrawingText = {
   point: DrawingPoint;
 };
 
+export type DrawingOpening = {
+  segments: DrawingSegment[];
+};
+
+export type DrawingWindow = {
+  segments: DrawingSegment[];
+  boundary_points: DrawingPoint[];
+  width_m: number;
+  height_m: number;
+  included_in_wall_deduction: boolean;
+  space_names: string[];
+};
+
+export type DrawingDoor = {
+  segment: DrawingSegment;
+  thickness_m: number;
+  width_m: number;
+  deduct_from_wall: boolean;
+  review_required: boolean;
+  opening_type: string;
+  space_names: string[];
+};
+
 export type DrawingGeometry = {
   spaces: DrawingSpace[];
   walls: DrawingSegment[];
   measured_walls: DrawingSegment[];
+  window_openings: DrawingWindow[];
   windows: DrawingSegment[];
+  door_openings: DrawingDoor[];
   doors: DrawingSegment[];
   base_segments: DrawingSegment[];
   base_texts: DrawingText[];

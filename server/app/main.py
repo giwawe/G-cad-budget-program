@@ -77,7 +77,30 @@ def _serialize_drawing(drawing: DrawingGeometry) -> dict:
         "spaces": [{"name": space.name, "points": [_point_to_dict(point) for point in space.points]} for space in drawing.spaces],
         "walls": [_segment_to_dict(segment) for segment in drawing.walls],
         "measured_walls": [_segment_to_dict(segment) for segment in drawing.measured_walls],
+        "window_openings": [
+            {
+                "segments": [_segment_to_dict(segment) for segment in window.segments],
+                "boundary_points": [_point_to_dict(point) for point in window.boundary_points],
+                "width_m": window.width_m,
+                "height_m": window.height_m,
+                "included_in_wall_deduction": window.included_in_wall_deduction,
+                "space_names": window.space_names,
+            }
+            for window in drawing.window_openings
+        ],
         "windows": [_segment_to_dict(segment) for segment in drawing.windows],
+        "door_openings": [
+            {
+                "segment": _segment_to_dict(door.segment),
+                "thickness_m": door.thickness_m,
+                "width_m": door.width_m,
+                "deduct_from_wall": door.deduct_from_wall,
+                "review_required": door.review_required,
+                "opening_type": door.opening_type,
+                "space_names": door.space_names,
+            }
+            for door in drawing.door_openings
+        ],
         "doors": [_segment_to_dict(segment) for segment in drawing.doors],
         "base_segments": [_segment_to_dict(segment) for segment in drawing.base_segments],
         "base_texts": [{"text": item.text, "point": _point_to_dict(item.point)} for item in drawing.base_texts],

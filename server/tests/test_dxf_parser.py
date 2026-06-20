@@ -4,6 +4,7 @@ from server.app.dxf import parser
 from server.app.models import ProjectDefaults
 from server.tests.dxf_fixtures import (
     build_closed_window_polyline_dxf,
+    build_closed_door_polyline_dxf,
     build_insert_door_dxf,
     build_simple_quote_dxf,
     build_two_room_quote_dxf_with_duplicate_close_point,
@@ -38,6 +39,20 @@ def test_parse_real_gbk_quote_dxf_from_fixture():
     assert all(space.name for space in spaces)
 
 
+def test_real_second_fixture_groups_window_entities_into_physical_windows():
+    fixture = Path(__file__).parent / "fixtures" / "test-case-2.dxf"
+
+    review = parser.parse_dxf_review(fixture.read_bytes(), ProjectDefaults())
+
+    assert len(review.drawing.window_openings) == 8
+    assert len(review.drawing.windows) == 45
+    assert all(window.width_m > 0 for window in review.drawing.window_openings)
+    assert {window.height_m for window in review.drawing.window_openings} == {1.5}
+    assert all(window.included_in_wall_deduction for window in review.drawing.window_openings)
+    assert all(window.space_names for window in review.drawing.window_openings)
+    assert all(len(window.boundary_points) >= 4 for window in review.drawing.window_openings)
+
+
 def test_duplicate_close_point_does_not_assign_wall_to_every_room():
     spaces = parser.parse_dxf_spaces(build_two_room_quote_dxf_with_duplicate_close_point(), ProjectDefaults())
 
@@ -48,7 +63,12 @@ def test_duplicate_close_point_does_not_assign_wall_to_every_room():
 def test_closed_quote_window_polyline_keeps_closing_segment_in_review_drawing():
     review = parser.parse_dxf_review(build_closed_window_polyline_dxf(), ProjectDefaults())
 
+    assert len(review.drawing.window_openings) == 1
     assert len(review.drawing.windows) == 4
+    assert review.drawing.window_openings[0].width_m == 2.0
+    assert review.drawing.window_openings[0].height_m == 1.5
+    assert review.drawing.window_openings[0].included_in_wall_deduction is True
+    assert review.drawing.window_openings[0].boundary_points == [(1.0, 0.0), (3.0, 0.0), (3.0, 0.24), (1.0, 0.24)]
 
 
 def test_quote_door_insert_is_recognized_as_one_door_opening():
@@ -57,6 +77,16 @@ def test_quote_door_insert_is_recognized_as_one_door_opening():
     assert len(review.drawing.doors) == 1
     assert [door.width_m for door in review.spaces[0].doors] == [0.9]
     assert review.drawing.doors[0] == ((2.05, 0.065), (2.95, 0.065))
+    assert review.drawing.door_openings[0].thickness_m == 0.13
+
+
+def test_closed_quote_door_polyline_is_normalized_to_one_centerline():
+    review = parser.parse_dxf_review(build_closed_door_polyline_dxf(), ProjectDefaults())
+
+    assert len(review.drawing.doors) == 1
+    assert review.drawing.doors[0] == ((1.0, 0.06), (1.9, 0.06))
+    assert review.drawing.door_openings[0].thickness_m == 0.12
+    assert [door.width_m for door in review.spaces[0].doors] == [0.9]
 
 
 def test_mtext_format_codes_are_removed():

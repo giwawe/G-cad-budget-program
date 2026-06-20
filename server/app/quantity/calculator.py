@@ -19,8 +19,12 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
         2,
     )
     door_width_total_m = round(sum(door.width_m for door in space.doors), 2)
+    door_deduct_area_m2 = round(
+        sum(door.width_m * (door.height_m or defaults.default_door_height_m) for door in space.doors if door.deduct_from_wall),
+        2,
+    )
     wall_gross_area_m2 = round(wall_measure_length_m * height_m, 2)
-    latex_paint_area_m2 = round(max(wall_gross_area_m2 - window_area_m2, 0), 2)
+    latex_paint_area_m2 = round(max(wall_gross_area_m2 - window_area_m2 - door_deduct_area_m2, 0), 2)
 
     anomalies = list(space.anomalies)
     if len(space.boundary_points_m) < 3:
@@ -29,6 +33,8 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
         anomalies.append("空间没有名称")
     if wall_measure_length_m == 0 and not is_excluded_space(space.name):
         anomalies.append("没有关联到 QUOTE_WALL 墙线")
+    if any(door.review_required for door in space.doors):
+        anomalies.append("存在疑似大洞口门，请确认是否扣减墙面")
 
     if is_excluded_space(space.name):
         status = ReviewStatus.excluded
@@ -39,8 +45,8 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
 
     evidence = (
         f"墙面展开面积 {wall_measure_length_m}m * {height_m}m = {wall_gross_area_m2}m2；"
-        f"乳胶漆面积 {wall_gross_area_m2}m2 - 窗洞 {window_area_m2}m2 = {latex_paint_area_m2}m2；"
-        "门洞默认不扣减。"
+        f"乳胶漆面积 {wall_gross_area_m2}m2 - 窗洞 {window_area_m2}m2 - 门洞 {door_deduct_area_m2}m2 = {latex_paint_area_m2}m2；"
+        "普通房门门洞默认不扣减，大洞口门按规则扣减。"
     )
 
     return QuantityRow(
@@ -54,6 +60,7 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
         window_width_total_m=window_width_total_m,
         window_area_m2=window_area_m2,
         door_width_total_m=door_width_total_m,
+        door_deduct_area_m2=door_deduct_area_m2,
         wall_gross_area_m2=wall_gross_area_m2,
         latex_paint_area_m2=latex_paint_area_m2,
         evidence=evidence,

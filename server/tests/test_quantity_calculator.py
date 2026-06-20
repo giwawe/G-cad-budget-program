@@ -36,6 +36,35 @@ def test_latex_area_deducts_windows_but_not_doors():
     assert "门洞默认不扣减" in row.evidence
 
 
+def test_large_door_opening_deducts_latex_area():
+    defaults = ProjectDefaults(project_height_m=2.8, default_window_height_m=1.5, default_door_height_m=2.1)
+    space = SpaceInput(
+        name="客厅",
+        boundary_points_m=[(0, 0), (6, 0), (6, 5), (0, 5)],
+        wall_lengths_m=[6, 5, 4],
+        doors=[OpeningInput(width_m=1.8, deduct_from_wall=True, opening_type="large_opening")],
+    )
+
+    row = calculate_quantity_row(space, defaults)
+
+    assert row.door_deduct_area_m2 == 3.78
+    assert row.latex_paint_area_m2 == 38.22
+
+
+def test_suspected_large_door_opening_requires_review_without_default_deduction():
+    space = SpaceInput(
+        name="客厅",
+        boundary_points_m=[(0, 0), (6, 0), (6, 5), (0, 5)],
+        wall_lengths_m=[6, 5, 4],
+        doors=[OpeningInput(width_m=1.3, review_required=True, opening_type="suspected_large_opening")],
+    )
+
+    row = calculate_quantity_row(space, ProjectDefaults())
+
+    assert row.door_deduct_area_m2 == 0
+    assert any("疑似大洞口" in anomaly for anomaly in row.anomalies)
+
+
 def test_height_priority_space_then_floor_then_project():
     defaults = ProjectDefaults(project_height_m=2.8)
 
