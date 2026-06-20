@@ -5,6 +5,7 @@ import { Download, FileUp, Layers3, Loader2, Settings2 } from "lucide-react";
 import { DrawingReview } from "@/components/drawing-review";
 import { QuantityTable } from "@/components/quantity-table";
 import { calibrationTemplateFileName, quantityRowsToCalibrationTemplate } from "@/lib/calibration-template";
+import { quantityRowAnchorHref } from "@/lib/quantity-row-anchor";
 import { updateQuantityRowStatus } from "@/lib/quantity-row-status";
 import type { CalibrationComparison, DrawingGeometry, QuantityRow, QuantitySummary, ReviewStatus } from "@/lib/types";
 
@@ -416,14 +417,14 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
           {comparison.differences.length > 0 && (
             <div className="calibrationDifferences">
               {comparison.differences.slice(0, 12).map((difference) => (
-                <div key={`${difference.space_name}-${difference.field}`}>
+                <a href={quantityRowAnchorHref(difference.space_name)} key={`${difference.space_name}-${difference.field}`}>
                   <strong>{difference.space_name}</strong>
                   <span>{difference.field}</span>
                   <code>
                     {difference.actual} / {difference.expected} ({difference.delta > 0 ? "+" : ""}
                     {difference.delta}, {difference.percent_delta}%)
                   </code>
-                </div>
+                </a>
               ))}
             </div>
           )}

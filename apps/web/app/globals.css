@@ -276,13 +276,20 @@ code {
   gap: 10px;
 }
 
-.calibrationDifferences div {
+.calibrationDifferences a {
   display: grid;
   gap: 5px;
   border: 1px solid var(--line);
   border-radius: 6px;
   background: #f9fafb;
+  color: inherit;
   padding: 10px;
+  text-decoration: none;
+}
+
+.calibrationDifferences a:hover {
+  border-color: var(--warning);
+  background: #fffaf0;
 }
 
 .calibrationDifferences span {
@@ -559,6 +566,10 @@ td small {
 
 .quantityDiffRow td {
   background: #fffaf0;
+}
+
+.quantityDiffRow:target td {
+  background: #ffe7b0;
 }
 
 td.quantityDiffCell {

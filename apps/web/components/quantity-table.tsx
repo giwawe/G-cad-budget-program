@@ -1,5 +1,6 @@
 import { AlertTriangle, CheckCircle2, CircleDashed, MinusCircle } from "lucide-react";
 import { differenceKey, indexDifferencesByCell } from "@/lib/calibration-differences";
+import { quantityRowAnchorId } from "@/lib/quantity-row-anchor";
 import type { CalibrationDifference, QuantityRow, ReviewStatus } from "@/lib/types";
 
 const statusLabels: Record<ReviewStatus, string> = {
@@ -68,7 +69,7 @@ export function QuantityTable({
             const doorDeductDifference = differencesByCell.get(differenceKey(row.spaceName, "door_deduct_area_m2"));
             const latexPaintDifference = differencesByCell.get(differenceKey(row.spaceName, "latex_paint_area_m2"));
             return (
-            <tr key={`${row.floor}-${row.spaceName}`} className={differences.some((difference) => difference.space_name === row.spaceName) ? "quantityDiffRow" : undefined}>
+            <tr id={quantityRowAnchorId(row.spaceName)} key={`${row.floor}-${row.spaceName}`} className={differences.some((difference) => difference.space_name === row.spaceName) ? "quantityDiffRow" : undefined}>
               <td>{row.floor}</td>
               <td>
                 <strong>{row.spaceName}</strong>
