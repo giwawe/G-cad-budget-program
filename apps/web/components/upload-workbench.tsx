@@ -7,7 +7,7 @@ import { QuantityTable } from "@/components/quantity-table";
 import { calibrationTemplateFileName, quantityRowsToCalibrationTemplate } from "@/lib/calibration-template";
 import { quantityRowAnchorHref } from "@/lib/quantity-row-anchor";
 import { updateQuantityRowStatus } from "@/lib/quantity-row-status";
-import { buildReviewSnapshot, reviewSnapshotFileName } from "@/lib/review-snapshot";
+import { buildReviewSnapshot, parseReviewSnapshot, reviewSnapshotFileName } from "@/lib/review-snapshot";
 import type { CalibrationComparison, DrawingGeometry, QuantityRow, QuantitySummary, ReviewStatus } from "@/lib/types";
 
 const DEFAULT_DOOR_HEIGHT_M = 2.1;
@@ -95,6 +95,7 @@ function round2(value: number) {
 export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const calibrationInputRef = useRef<HTMLInputElement>(null);
+  const snapshotInputRef = useRef<HTMLInputElement>(null);
   const [rows, setRows] = useState<QuantityRow[]>(initialRows);
   const [currentDxfFile, setCurrentDxfFile] = useState<File | null>(null);
   const [calibrationFileName, setCalibrationFileName] = useState("");
@@ -188,6 +189,32 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
       setMessage("");
     } finally {
       setIsComparing(false);
+      event.target.value = "";
+    }
+  }
+
+  async function handleSnapshotChange(event: ChangeEvent<HTMLInputElement>) {
+    const snapshotFile = event.target.files?.[0];
+    if (!snapshotFile) {
+      return;
+    }
+    try {
+      const snapshot = parseReviewSnapshot(await snapshotFile.text());
+      setRows(snapshot.rows);
+      setSummary(snapshot.summary);
+      setComparison(snapshot.comparison);
+      setFileName(snapshot.source_file);
+      setCalibrationFileName(snapshot.calibration_file ?? "");
+      setCurrentDxfFile(null);
+      setDrawing(null);
+      setGeneratedTemplate(null);
+      setGeneratedSnapshot({ fileName: snapshotFile.name, content: `${JSON.stringify(snapshot, null, 2)}\n` });
+      setError("");
+      setMessage(`已恢复校对快照：${snapshotFile.name}`);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "快照导入失败");
+      setMessage("");
+    } finally {
       event.target.value = "";
     }
   }
@@ -362,6 +389,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
     <main>
       <input ref={inputRef} hidden className="fileInput" type="file" accept=".dxf" onChange={handleFileChange} />
       <input ref={calibrationInputRef} hidden className="fileInput" type="file" accept=".json,application/json" onChange={handleCalibrationChange} />
+      <input ref={snapshotInputRef} hidden className="fileInput" type="file" accept=".json,application/json" onChange={handleSnapshotChange} />
       <section className="topbar">
         <div>
           <p>DXF 空间算量验证工具</p>
@@ -383,6 +411,10 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
           <button type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadReviewSnapshot}>
             <Download aria-hidden="true" size={18} />
             导出校对快照
+          </button>
+          <button type="button" disabled={isUploading || isComparing} onClick={() => snapshotInputRef.current?.click()}>
+            <FileUp aria-hidden="true" size={18} />
+            导入校对快照
           </button>
         </div>
       </section>

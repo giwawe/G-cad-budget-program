@@ -39,3 +39,30 @@ export function reviewSnapshotFileName(fileName: string): string {
   }
   return `${trimmed.replace(/\.[^.]+$/, "")}.review-snapshot.json`;
 }
+
+export function parseReviewSnapshot(content: string): ReviewSnapshot {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    throw new Error("快照 JSON 格式无效");
+  }
+  if (!parsed || typeof parsed !== "object") {
+    throw new Error("快照 JSON 格式无效");
+  }
+  const snapshot = parsed as Partial<ReviewSnapshot>;
+  if (typeof snapshot.source_file !== "string" || !snapshot.source_file.trim()) {
+    throw new Error("快照缺少 source_file");
+  }
+  if (!Array.isArray(snapshot.rows)) {
+    throw new Error("快照缺少 rows");
+  }
+  return {
+    exported_at: typeof snapshot.exported_at === "string" ? snapshot.exported_at : "",
+    source_file: snapshot.source_file,
+    calibration_file: typeof snapshot.calibration_file === "string" ? snapshot.calibration_file : null,
+    summary: snapshot.summary ?? null,
+    comparison: snapshot.comparison ?? null,
+    rows: snapshot.rows,
+  };
+}

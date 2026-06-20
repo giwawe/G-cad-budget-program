@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { buildReviewSnapshot, reviewSnapshotFileName } from "./review-snapshot.ts";
+import { buildReviewSnapshot, parseReviewSnapshot, reviewSnapshotFileName } from "./review-snapshot.ts";
 import type { QuantityRow } from "./types.ts";
 
 const rows: QuantityRow[] = [
@@ -43,3 +43,12 @@ assert.equal(snapshot.rows[0].status, "confirmed");
 assert.equal(snapshot.summary.space_count, 1);
 assert.equal(reviewSnapshotFileName("test-case.dxf"), "test-case.review-snapshot.json");
 assert.equal(reviewSnapshotFileName("样例数据"), "review-snapshot.json");
+
+const parsed = parseReviewSnapshot(JSON.stringify(snapshot));
+
+assert.equal(parsed.source_file, "test-case.dxf");
+assert.equal(parsed.rows[0].spaceName, "厨房");
+
+assert.throws(() => parseReviewSnapshot("{bad json"), /快照 JSON 格式无效/);
+assert.throws(() => parseReviewSnapshot(JSON.stringify({ rows: [] })), /快照缺少 source_file/);
+assert.throws(() => parseReviewSnapshot(JSON.stringify({ source_file: "x.dxf", rows: "bad" })), /快照缺少 rows/);
