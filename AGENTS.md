@@ -148,6 +148,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 每行可改 review 状态：待确认、已确认、需修图、不计价。
 - SVG 图形 review 可缩放/平移，支持空间改名、门洞扣减切换、窗洞扣减切换、窗高调整。
 - 导出报价映射 JSON；默认映射墙面乳胶漆、地面铺装、天棚乳胶漆，跳过不计价空间。
+- 下载/导入报价规则 JSON；导入后报价映射会使用当前规则重新计算金额。
 
 报价映射默认规则在 `apps/web/lib/quote-mapping.ts`：
 
@@ -156,6 +157,13 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 天棚乳胶漆：`ceilingAreaM2 * 32`
 
 这是当前阶段的占位型报价映射，不等于完整报价模板系统。
+
+报价规则 JSON 是数组格式，字段为：
+
+- `item_name`：清单项名称。
+- `metric`：取数指标，当前只允许 `latex_paint_area_m2`、`floor_area_m2`、`ceiling_area_m2`。
+- `unit`：单位。
+- `unit_price`：单价，必须是非负数字。
 
 ## 测试与 fixture
 
@@ -203,5 +211,6 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 校准差异跳转到表格行。
 - 默认楼层与空间分类规则校准。
 - 报价映射导出。
+- 报价规则模板下载和导入。
 
 继续开发时，先跑 `git status --short`，确认工作区干净或只包含本轮相关改动。

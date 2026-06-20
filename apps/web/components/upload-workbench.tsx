@@ -7,7 +7,15 @@ import { QuantityTable } from "@/components/quantity-table";
 import { calibrationTemplateFileName, quantityRowsToCalibrationTemplate } from "@/lib/calibration-template";
 import { quantityRowAnchorHref } from "@/lib/quantity-row-anchor";
 import { updateQuantityRowStatus } from "@/lib/quantity-row-status";
-import { buildQuoteMapping, quoteMappingFileName, type QuoteMapping } from "@/lib/quote-mapping";
+import {
+  buildQuoteMapping,
+  defaultQuoteRules,
+  parseQuoteRules,
+  quoteMappingFileName,
+  quoteRulesTemplateFileName,
+  type QuoteMapping,
+  type QuoteRule,
+} from "@/lib/quote-mapping";
 import { buildReviewSnapshot, parseReviewSnapshot, reviewSnapshotFileName } from "@/lib/review-snapshot";
 import type { CalibrationComparison, DrawingGeometry, QuantityRow, QuantitySummary, ReviewStatus } from "@/lib/types";
 
@@ -97,6 +105,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
   const inputRef = useRef<HTMLInputElement>(null);
   const calibrationInputRef = useRef<HTMLInputElement>(null);
   const snapshotInputRef = useRef<HTMLInputElement>(null);
+  const quoteRulesInputRef = useRef<HTMLInputElement>(null);
   const [rows, setRows] = useState<QuantityRow[]>(initialRows);
   const [currentDxfFile, setCurrentDxfFile] = useState<File | null>(null);
   const [calibrationFileName, setCalibrationFileName] = useState("");
@@ -111,6 +120,9 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
   const [generatedTemplate, setGeneratedTemplate] = useState<{ fileName: string; content: string } | null>(null);
   const [generatedSnapshot, setGeneratedSnapshot] = useState<{ fileName: string; content: string } | null>(null);
   const [generatedQuoteMapping, setGeneratedQuoteMapping] = useState<{ fileName: string; content: string; mapping: QuoteMapping } | null>(null);
+  const [quoteRules, setQuoteRules] = useState<QuoteRule[]>(() => defaultQuoteRules());
+  const [quoteRulesFileName, setQuoteRulesFileName] = useState("默认报价规则");
+  const [generatedQuoteRules, setGeneratedQuoteRules] = useState<{ fileName: string; content: string } | null>(null);
 
   const excludedCount = useMemo(() => rows.filter((row) => row.status === "excluded").length, [rows]);
 
@@ -127,6 +139,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
     setGeneratedTemplate(null);
     setGeneratedSnapshot(null);
     setGeneratedQuoteMapping(null);
+    setGeneratedQuoteRules(null);
     setMessage(`正在上传到 ${getApiBaseUrl()}`);
 
     try {
@@ -185,6 +198,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
       setRows(nextRows);
       setSummary(payload.summary);
       setComparison(payload.comparison);
+      setGeneratedQuoteMapping(null);
       setCalibrationFileName(calibrationFile.name);
       setMessage(payload.comparison.passed ? "校准通过：系统算量与校准 JSON 一致" : `发现 ${payload.comparison.differences.length} 项差异`);
     } catch (caught) {
@@ -212,6 +226,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
       setDrawing(null);
       setGeneratedTemplate(null);
       setGeneratedQuoteMapping(null);
+      setGeneratedQuoteRules(null);
       setGeneratedSnapshot({ fileName: snapshotFile.name, content: `${JSON.stringify(snapshot, null, 2)}\n` });
       setError("");
       setMessage(`已恢复校对快照：${snapshotFile.name}`);
@@ -272,7 +287,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
   }
 
   function handleDownloadQuoteMapping() {
-    const mapping = buildQuoteMapping(rows);
+    const mapping = buildQuoteMapping(rows, quoteRules);
     const downloadName = quoteMappingFileName(fileName);
     const content = `${JSON.stringify(mapping, null, 2)}\n`;
     const blob = new Blob([content], { type: "application/json;charset=utf-8" });
@@ -296,8 +311,54 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
     setMessage(`已复制报价映射：${generatedQuoteMapping.fileName}`);
   }
 
+  function handleDownloadQuoteRulesTemplate() {
+    const downloadName = quoteRulesTemplateFileName(fileName);
+    const content = `${JSON.stringify(quoteRules, null, 2)}\n`;
+    const blob = new Blob([content], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = downloadName;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setGeneratedQuoteRules({ fileName: downloadName, content });
+    setMessage(`已生成报价规则模板：${downloadName}`);
+  }
+
+  async function handleCopyQuoteRulesTemplate() {
+    if (!generatedQuoteRules) {
+      return;
+    }
+    await navigator.clipboard.writeText(generatedQuoteRules.content);
+    setMessage(`已复制报价规则模板：${generatedQuoteRules.fileName}`);
+  }
+
+  async function handleQuoteRulesChange(event: ChangeEvent<HTMLInputElement>) {
+    const rulesFile = event.target.files?.[0];
+    if (!rulesFile) {
+      return;
+    }
+    try {
+      const parsedRules = parseQuoteRules(await rulesFile.text());
+      setQuoteRules(parsedRules);
+      setQuoteRulesFileName(rulesFile.name);
+      setGeneratedQuoteMapping(null);
+      setGeneratedQuoteRules({ fileName: rulesFile.name, content: `${JSON.stringify(parsedRules, null, 2)}\n` });
+      setError("");
+      setMessage(`已导入报价规则：${rulesFile.name}`);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "报价规则导入失败");
+      setMessage("");
+    } finally {
+      event.target.value = "";
+    }
+  }
+
   function handleChangeStatus(spaceName: string, status: ReviewStatus) {
     setRows((current) => updateQuantityRowStatus(current, spaceName, status));
+    setGeneratedQuoteMapping(null);
     setMessage(`${spaceName} 状态已更新为 ${statusLabels[status]}`);
   }
 
@@ -328,6 +389,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
       };
     });
     setRows((current) => current.map((row) => (row.spaceName === previousName ? { ...row, spaceName: trimmedName } : row)));
+    setGeneratedQuoteMapping(null);
   }
 
   function handleToggleDoorDeduction(index: number) {
@@ -354,6 +416,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
 
     setRows(nextRows);
     setSummary(summarizeRows(nextRows));
+    setGeneratedQuoteMapping(null);
     setDrawing({
       ...drawing,
       door_openings: drawing.door_openings.map((item, doorIndex) =>
@@ -373,6 +436,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
 
     setRows(nextRows);
     setSummary(summarizeRows(nextRows));
+    setGeneratedQuoteMapping(null);
     setDrawing({
       ...drawing,
       window_openings: drawing.window_openings.map((item, windowIndex) =>
@@ -392,6 +456,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
 
     setRows(nextRows);
     setSummary(summarizeRows(nextRows));
+    setGeneratedQuoteMapping(null);
     setDrawing({
       ...drawing,
       window_openings: drawing.window_openings.map((item, windowIndex) => (windowIndex === index ? { ...item, height_m: nextHeight } : item)),
@@ -419,6 +484,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
       <input ref={inputRef} hidden className="fileInput" type="file" accept=".dxf" onChange={handleFileChange} />
       <input ref={calibrationInputRef} hidden className="fileInput" type="file" accept=".json,application/json" onChange={handleCalibrationChange} />
       <input ref={snapshotInputRef} hidden className="fileInput" type="file" accept=".json,application/json" onChange={handleSnapshotChange} />
+      <input ref={quoteRulesInputRef} hidden className="fileInput" type="file" accept=".json,application/json" onChange={handleQuoteRulesChange} />
       <section className="topbar">
         <div>
           <p>DXF 空间算量验证工具</p>
@@ -444,6 +510,14 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
           <button type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadQuoteMapping}>
             <ReceiptText aria-hidden="true" size={18} />
             导出报价映射
+          </button>
+          <button type="button" disabled={isUploading || isComparing} onClick={handleDownloadQuoteRulesTemplate}>
+            <Download aria-hidden="true" size={18} />
+            下载报价规则
+          </button>
+          <button type="button" disabled={isUploading || isComparing} onClick={() => quoteRulesInputRef.current?.click()}>
+            <FileUp aria-hidden="true" size={18} />
+            导入报价规则
           </button>
           <button type="button" disabled={isUploading || isComparing} onClick={() => snapshotInputRef.current?.click()}>
             <FileUp aria-hidden="true" size={18} />
@@ -481,6 +555,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
           {message && <small className="infoText">{message}</small>}
           {error && <small className="errorText">{error}</small>}
           {calibrationFileName && <small className="infoText">校准文件：{calibrationFileName}</small>}
+          <small className="infoText">报价规则：{quoteRulesFileName}（{quoteRules.length} 项）</small>
         </div>
       </section>
 
@@ -511,6 +586,21 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
             </button>
           </div>
           <textarea readOnly value={generatedSnapshot.content} aria-label="校对快照 JSON" />
+        </section>
+      )}
+
+      {generatedQuoteRules && (
+        <section className="templatePanel">
+          <div className="templateHeader">
+            <div>
+              <strong>报价规则模板</strong>
+              <span>{generatedQuoteRules.fileName}</span>
+            </div>
+            <button type="button" onClick={handleCopyQuoteRulesTemplate}>
+              复制 JSON
+            </button>
+          </div>
+          <textarea readOnly value={generatedQuoteRules.content} aria-label="报价规则 JSON" />
         </section>
       )}
 

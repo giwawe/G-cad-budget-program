@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { buildQuoteMapping, quoteMappingFileName } from "./quote-mapping.ts";
+import { buildQuoteMapping, defaultQuoteRules, parseQuoteRules, quoteMappingFileName, quoteRulesTemplateFileName } from "./quote-mapping.ts";
 import type { QuantityRow } from "./types.ts";
 
 const rows: QuantityRow[] = [
@@ -56,5 +56,32 @@ assert.equal(mapping.summary.item_count, 3);
 assert.equal(mapping.summary.space_count, 1);
 assert.equal(mapping.summary.total_amount, 1060.08);
 
+const customMapping = buildQuoteMapping(rows, [{ item_name: "厨房墙面定制漆", metric: "latex_paint_area_m2", unit: "m2", unit_price: 30 }]);
+
+assert.equal(customMapping.items.length, 1);
+assert.equal(customMapping.items[0].item_name, "厨房墙面定制漆");
+assert.equal(customMapping.items[0].quantity, 25.54);
+assert.equal(customMapping.items[0].unit_price, 30);
+assert.equal(customMapping.items[0].amount, 766.2);
+assert.equal(customMapping.summary.total_amount, 766.2);
+
+const rules = defaultQuoteRules();
+assert.equal(rules[0].item_name, "墙面乳胶漆");
+assert.equal(rules[0].metric, "latex_paint_area_m2");
+assert.equal(rules[0].unit_price, 28);
+rules[0].unit_price = 99;
+assert.equal(defaultQuoteRules()[0].unit_price, 28);
+
+const parsedRules = parseQuoteRules(JSON.stringify([{ item_name: "地面找平", metric: "floor_area_m2", unit: "m2", unit_price: 18 }]));
+assert.equal(parsedRules[0].item_name, "地面找平");
+assert.equal(parsedRules[0].unit_price, 18);
+
+assert.throws(() => parseQuoteRules("{bad json"), /报价规则 JSON 格式无效/);
+assert.throws(() => parseQuoteRules(JSON.stringify({ item_name: "x" })), /报价规则必须是数组/);
+assert.throws(() => parseQuoteRules(JSON.stringify([{ item_name: "x", metric: "bad", unit: "m2", unit_price: 1 }])), /报价规则 metric 无效/);
+assert.throws(() => parseQuoteRules(JSON.stringify([{ item_name: "x", metric: "floor_area_m2", unit: "m2", unit_price: -1 }])), /报价规则 unit_price 无效/);
+
 assert.equal(quoteMappingFileName("test-case.dxf"), "test-case.quote-mapping.json");
 assert.equal(quoteMappingFileName("样例数据"), "quote-mapping.json");
+assert.equal(quoteRulesTemplateFileName("test-case.dxf"), "test-case.quote-rules.json");
+assert.equal(quoteRulesTemplateFileName("样例数据"), "quote-rules.json");
