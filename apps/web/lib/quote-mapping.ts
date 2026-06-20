@@ -11,6 +11,15 @@ export type QuoteRule = {
   space_types?: string[];
 };
 
+export type PendingQuoteMetric = {
+  item_name: string;
+  unit: string;
+  unit_price: number;
+  reason: string;
+  suggested_metric: string;
+  source_group: string;
+};
+
 export type QuoteMappingItem = {
   floor: string;
   space_name: string;
@@ -31,10 +40,144 @@ export type QuoteMapping = {
   };
 };
 
+export const DEFAULT_QUOTE_RULES_NAME = "商品房整装默认规则";
+
+const DRY_SPACE_TYPES = ["客厅", "餐厅", "卧室", "书房", "过道", "门厅", "楼梯过道", "衣帽间", "储物间", "露台"];
+const CEILING_SPACE_TYPES = ["客厅", "餐厅", "卧室", "书房", "过道", "门厅", "楼梯过道", "衣帽间", "储物间"];
+const WET_FLOOR_SPACE_TYPES = ["厨房", "卫生间", "阳台", "露台", "洗衣房"];
+
 const DEFAULT_RULES: QuoteRule[] = [
-  { item_name: "墙面乳胶漆", metric: "latex_paint_area_m2", unit: "m2", unit_price: 28 },
-  { item_name: "地面铺装", metric: "floor_area_m2", unit: "m2", unit_price: 45 },
-  { item_name: "天棚乳胶漆", metric: "ceiling_area_m2", unit: "m2", unit_price: 32 },
+  { item_name: "墙面界面剂处理", metric: "latex_paint_area_m2", unit: "m2", unit_price: 7, space_types: DRY_SPACE_TYPES },
+  { item_name: "墙面批嵌", metric: "latex_paint_area_m2", unit: "m2", unit_price: 25, space_types: DRY_SPACE_TYPES },
+  { item_name: "墙面乳胶漆", metric: "latex_paint_area_m2", unit: "m2", unit_price: 20, space_types: DRY_SPACE_TYPES },
+  { item_name: "轻钢龙骨平顶", metric: "ceiling_area_m2", unit: "m2", unit_price: 180, space_types: CEILING_SPACE_TYPES },
+  { item_name: "顶面批嵌", metric: "ceiling_area_m2", unit: "m2", unit_price: 25, space_types: DRY_SPACE_TYPES },
+  { item_name: "顶面乳胶漆", metric: "ceiling_area_m2", unit: "m2", unit_price: 20, space_types: DRY_SPACE_TYPES },
+  { item_name: "地面找平", metric: "floor_area_m2", unit: "m2", unit_price: 56, space_types: WET_FLOOR_SPACE_TYPES },
+  { item_name: "地面砖铺贴(750X1500)", metric: "floor_area_m2", unit: "m2", unit_price: 96, space_types: undefined },
+];
+
+const APARTMENT_PENDING_METRICS: PendingQuoteMetric[] = [
+  {
+    item_name: "墙面贴瓷砖(600X1200)",
+    unit: "m2",
+    unit_price: 100,
+    reason: "墙砖面积需要区分厨房、卫生间、阳台等空间的墙面铺贴高度和扣减口径，不能直接等同乳胶漆面积。",
+    suggested_metric: "wall_tile_area_m2",
+    source_group: "墙砖",
+  },
+  {
+    item_name: "墙地面防漏处理",
+    unit: "m2",
+    unit_price: 51.5,
+    reason: "防水面积包含地面和墙面上翻高度，需按空间类型、淋浴区和门洞规则单独计量。",
+    suggested_metric: "waterproof_area_m2",
+    source_group: "防水",
+  },
+  {
+    item_name: "窗台石铺贴",
+    unit: "M",
+    unit_price: 73,
+    reason: "窗台石按窗洞宽度或窗台长度计量，当前 DXF 只沉淀窗洞面积与宽度汇总，尚未形成逐窗台清单。",
+    suggested_metric: "windowsill_length_m",
+    source_group: "窗台石",
+  },
+  {
+    item_name: "暗窗帘箱",
+    unit: "M",
+    unit_price: 110,
+    reason: "窗帘箱按需要安装窗帘的墙面长度计量，不能从地面、顶面或乳胶漆面积推导。",
+    suggested_metric: "curtain_box_length_m",
+    source_group: "窗帘箱",
+  },
+  {
+    item_name: "强电布线",
+    unit: "M2",
+    unit_price: 78,
+    reason: "水电通常按套内施工面积、点位或回路规则综合计价，当前缺少点位和回路数据。",
+    suggested_metric: "electrical_scope_area_m2",
+    source_group: "水电",
+  },
+  {
+    item_name: "水路布管",
+    unit: "M2",
+    unit_price: 29.5,
+    reason: "水路依赖厨房、卫生间、阳台等给排水点位和管线范围，不能直接套现有三类面积。",
+    suggested_metric: "plumbing_scope_area_m2",
+    source_group: "水电",
+  },
+  {
+    item_name: "拆改及拆墙",
+    unit: "M2",
+    unit_price: 60,
+    reason: "拆改需要识别拆除墙体、铲除范围和新建墙体，当前 DXF 规范尚未区分拆改图层。",
+    suggested_metric: "demolition_wall_area_m2",
+    source_group: "拆改",
+  },
+  {
+    item_name: "砌120厚砖墙",
+    unit: "M2",
+    unit_price: 170,
+    reason: "新砌墙按墙体长度和高度计量，需要独立的新建墙体图层或人工录入。",
+    suggested_metric: "new_wall_area_m2",
+    source_group: "拆改",
+  },
+  {
+    item_name: "室内门",
+    unit: "樘",
+    unit_price: 1200,
+    reason: "门按樘数和门型计价，当前门洞只用于墙面扣减判断，未区分成品门清单。",
+    suggested_metric: "interior_door_count",
+    source_group: "门",
+  },
+  {
+    item_name: "马桶",
+    unit: "个",
+    unit_price: 2500,
+    reason: "洁具按设备件数和品牌规格计价，需要点位或选品清单，不能由面积自动推算。",
+    suggested_metric: "toilet_count",
+    source_group: "洁具",
+  },
+  {
+    item_name: "浴室柜",
+    unit: "套",
+    unit_price: 3000,
+    reason: "浴室柜按套数、长度和规格计价，需要洁具/柜体选型数据。",
+    suggested_metric: "bathroom_vanity_count",
+    source_group: "洁具",
+  },
+  {
+    item_name: "全屋定制",
+    unit: "M2",
+    unit_price: 600,
+    reason: "定制柜体按展开面积或投影面积计量，需要柜体布置和高度数据。",
+    suggested_metric: "custom_cabinet_area_m2",
+    source_group: "定制",
+  },
+  {
+    item_name: "橱柜",
+    unit: "M",
+    unit_price: 600,
+    reason: "橱柜按延米、上下柜组合和台面规则计价，需要厨房柜体线或人工录入。",
+    suggested_metric: "kitchen_cabinet_length_m",
+    source_group: "定制",
+  },
+  {
+    item_name: "地面瓷砖主材",
+    unit: "片",
+    unit_price: 50,
+    reason: "主材按规格、损耗率和采购单位计价，需要从铺贴面积换算到片数并关联选品。",
+    suggested_metric: "floor_tile_piece_count",
+    source_group: "主材",
+  },
+  {
+    item_name: "全屋灯饰",
+    unit: "套",
+    unit_price: 6000,
+    reason: "套装项按配置包或点位清单计价，当前算量结果没有灯位和套餐配置。",
+    suggested_metric: "lighting_package_count",
+    source_group: "套装项",
+  },
 ];
 
 const METRIC_TO_ROW_FIELD: Record<QuoteMetric, QuantityRowMetric> = {
@@ -44,7 +187,11 @@ const METRIC_TO_ROW_FIELD: Record<QuoteMetric, QuantityRowMetric> = {
 };
 
 export function defaultQuoteRules(): QuoteRule[] {
-  return DEFAULT_RULES.map((rule) => ({ ...rule }));
+  return DEFAULT_RULES.map((rule) => ({ ...rule, space_types: rule.space_types ? [...rule.space_types] : undefined }));
+}
+
+export function apartmentPendingQuoteMetrics(): PendingQuoteMetric[] {
+  return APARTMENT_PENDING_METRICS.map((item) => ({ ...item }));
 }
 
 export function buildQuoteMapping(rows: QuantityRow[], rules: QuoteRule[] = DEFAULT_RULES): QuoteMapping {

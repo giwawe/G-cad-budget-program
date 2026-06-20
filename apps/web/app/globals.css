@@ -270,6 +270,65 @@ code {
   font-size: 20px;
 }
 
+.quoteGaps {
+  display: grid;
+  gap: 10px;
+  border: 1px solid #f0dcae;
+  border-radius: 6px;
+  background: #fffaf0;
+  color: #4d3b18;
+  padding: 10px 12px;
+}
+
+.quoteGaps > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.quoteGaps strong {
+  font-size: 13px;
+}
+
+.quoteGaps span {
+  color: #80611d;
+  font-size: 12px;
+}
+
+.quoteGaps ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.quoteGaps li {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 4px 8px;
+  border-top: 1px solid #f0dcae;
+  padding-top: 8px;
+}
+
+.quoteGaps li span {
+  grid-row: span 2;
+  font-weight: 700;
+}
+
+.quoteGaps li strong,
+.quoteGaps li code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.quoteGaps li code {
+  color: #5f4410;
+  font-size: 11px;
+}
+
 .quotePreview {
   overflow-x: auto;
 }
@@ -688,8 +747,14 @@ td .differenceValue {
   .fieldGrid,
   .summaryCards,
   .calibrationDifferences,
-  .quoteSummary {
+  .quoteSummary,
+  .quoteGaps ul {
     grid-template-columns: 1fr;
+  }
+
+  .quoteGaps > div {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .topbarActions {

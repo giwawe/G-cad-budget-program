@@ -8,7 +8,9 @@ import { calibrationTemplateFileName, quantityRowsToCalibrationTemplate } from "
 import { quantityRowAnchorHref } from "@/lib/quantity-row-anchor";
 import { updateQuantityRowStatus } from "@/lib/quantity-row-status";
 import {
+  apartmentPendingQuoteMetrics,
   buildQuoteMapping,
+  DEFAULT_QUOTE_RULES_NAME,
   defaultQuoteRules,
   parseQuoteRules,
   quoteMappingFileName,
@@ -121,10 +123,11 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
   const [generatedSnapshot, setGeneratedSnapshot] = useState<{ fileName: string; content: string } | null>(null);
   const [generatedQuoteMapping, setGeneratedQuoteMapping] = useState<{ fileName: string; content: string; mapping: QuoteMapping } | null>(null);
   const [quoteRules, setQuoteRules] = useState<QuoteRule[]>(() => defaultQuoteRules());
-  const [quoteRulesFileName, setQuoteRulesFileName] = useState("默认报价规则");
+  const [quoteRulesFileName, setQuoteRulesFileName] = useState(DEFAULT_QUOTE_RULES_NAME);
   const [generatedQuoteRules, setGeneratedQuoteRules] = useState<{ fileName: string; content: string } | null>(null);
 
   const excludedCount = useMemo(() => rows.filter((row) => row.status === "excluded").length, [rows]);
+  const pendingQuoteMetrics = useMemo(() => apartmentPendingQuoteMetrics(), []);
 
   async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -556,6 +559,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
           {error && <small className="errorText">{error}</small>}
           {calibrationFileName && <small className="infoText">校准文件：{calibrationFileName}</small>}
           <small className="infoText">报价规则：{quoteRulesFileName}（{quoteRules.length} 项）</small>
+          <small className="infoText">待补取数口径：{pendingQuoteMetrics.length} 项不参与当前金额</small>
         </div>
       </section>
 
@@ -628,6 +632,21 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
               <span>估算合计</span>
               <strong>{generatedQuoteMapping.mapping.summary.total_amount.toFixed(2)}</strong>
             </div>
+          </div>
+          <div className="quoteGaps">
+            <div>
+              <strong>待补取数口径</strong>
+              <span>{pendingQuoteMetrics.length} 项暂不参与金额汇总，后续补齐 metric 后再接入。</span>
+            </div>
+            <ul>
+              {pendingQuoteMetrics.slice(0, 10).map((item) => (
+                <li key={`${item.source_group}-${item.item_name}`}>
+                  <span>{item.source_group}</span>
+                  <strong>{item.item_name}</strong>
+                  <code>{item.suggested_metric}</code>
+                </li>
+              ))}
+            </ul>
           </div>
           <div className="quotePreview">
             <table>
