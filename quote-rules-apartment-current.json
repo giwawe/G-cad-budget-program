@@ -1,0 +1,57 @@
+[
+  {
+    "item_name": "墙面界面剂处理",
+    "metric": "latex_paint_area_m2",
+    "unit": "m2",
+    "unit_price": 7,
+    "space_types": ["客厅", "餐厅", "卧室", "书房", "过道", "门厅", "楼梯过道", "衣帽间", "储物间", "露台"]
+  },
+  {
+    "item_name": "墙面批嵌",
+    "metric": "latex_paint_area_m2",
+    "unit": "m2",
+    "unit_price": 25,
+    "space_types": ["客厅", "餐厅", "卧室", "书房", "过道", "门厅", "楼梯过道", "衣帽间", "储物间", "露台"]
+  },
+  {
+    "item_name": "墙面乳胶漆",
+    "metric": "latex_paint_area_m2",
+    "unit": "m2",
+    "unit_price": 20,
+    "space_types": ["客厅", "餐厅", "卧室", "书房", "过道", "门厅", "楼梯过道", "衣帽间", "储物间", "露台"]
+  },
+  {
+    "item_name": "轻钢龙骨平顶",
+    "metric": "ceiling_area_m2",
+    "unit": "m2",
+    "unit_price": 180,
+    "space_types": ["客厅", "餐厅", "卧室", "书房", "过道", "门厅", "楼梯过道", "衣帽间", "储物间"]
+  },
+  {
+    "item_name": "顶面批嵌",
+    "metric": "ceiling_area_m2",
+    "unit": "m2",
+    "unit_price": 25,
+    "space_types": ["客厅", "餐厅", "卧室", "书房", "过道", "门厅", "楼梯过道", "衣帽间", "储物间", "露台"]
+  },
+  {
+    "item_name": "顶面乳胶漆",
+    "metric": "ceiling_area_m2",
+    "unit": "m2",
+    "unit_price": 20,
+    "space_types": ["客厅", "餐厅", "卧室", "书房", "过道", "门厅", "楼梯过道", "衣帽间", "储物间", "露台"]
+  },
+  {
+    "item_name": "地面找平",
+    "metric": "floor_area_m2",
+    "unit": "m2",
+    "unit_price": 56,
+    "space_types": ["厨房", "卫生间", "阳台", "露台", "洗衣房"]
+  },
+  {
+    "item_name": "地面砖铺贴(750X1500)",
+    "metric": "floor_area_m2",
+    "unit": "m2",
+    "unit_price": 96
+  }
+]

@@ -65,6 +65,18 @@ assert.equal(customMapping.items[0].unit_price, 30);
 assert.equal(customMapping.items[0].amount, 766.2);
 assert.equal(customMapping.summary.total_amount, 766.2);
 
+const bedroomRows: QuantityRow[] = [
+  { ...rows[0], spaceName: "主卧", spaceType: "卧室", latexPaintAreaM2: 30 },
+  { ...rows[0], spaceName: "厨房", spaceType: "厨房", latexPaintAreaM2: 20 },
+];
+const dryAreaMapping = buildQuoteMapping(bedroomRows, [
+  { item_name: "墙面乳胶漆", metric: "latex_paint_area_m2", unit: "m2", unit_price: 20, space_types: ["卧室", "客厅"] },
+]);
+
+assert.equal(dryAreaMapping.items.length, 1);
+assert.equal(dryAreaMapping.items[0].space_name, "主卧");
+assert.equal(dryAreaMapping.summary.total_amount, 600);
+
 const rules = defaultQuoteRules();
 assert.equal(rules[0].item_name, "墙面乳胶漆");
 assert.equal(rules[0].metric, "latex_paint_area_m2");
@@ -72,14 +84,16 @@ assert.equal(rules[0].unit_price, 28);
 rules[0].unit_price = 99;
 assert.equal(defaultQuoteRules()[0].unit_price, 28);
 
-const parsedRules = parseQuoteRules(JSON.stringify([{ item_name: "地面找平", metric: "floor_area_m2", unit: "m2", unit_price: 18 }]));
+const parsedRules = parseQuoteRules(JSON.stringify([{ item_name: "地面找平", metric: "floor_area_m2", unit: "m2", unit_price: 18, space_types: ["厨房", "卫生间"] }]));
 assert.equal(parsedRules[0].item_name, "地面找平");
 assert.equal(parsedRules[0].unit_price, 18);
+assert.deepEqual(parsedRules[0].space_types, ["厨房", "卫生间"]);
 
 assert.throws(() => parseQuoteRules("{bad json"), /报价规则 JSON 格式无效/);
 assert.throws(() => parseQuoteRules(JSON.stringify({ item_name: "x" })), /报价规则必须是数组/);
 assert.throws(() => parseQuoteRules(JSON.stringify([{ item_name: "x", metric: "bad", unit: "m2", unit_price: 1 }])), /报价规则 metric 无效/);
 assert.throws(() => parseQuoteRules(JSON.stringify([{ item_name: "x", metric: "floor_area_m2", unit: "m2", unit_price: -1 }])), /报价规则 unit_price 无效/);
+assert.throws(() => parseQuoteRules(JSON.stringify([{ item_name: "x", metric: "floor_area_m2", unit: "m2", unit_price: 1, space_types: [""] }])), /报价规则 space_types 无效/);
 
 assert.equal(quoteMappingFileName("test-case.dxf"), "test-case.quote-mapping.json");
 assert.equal(quoteMappingFileName("样例数据"), "quote-mapping.json");

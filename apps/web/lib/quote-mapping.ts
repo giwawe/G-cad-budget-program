@@ -8,6 +8,7 @@ export type QuoteRule = {
   metric: QuoteMetric;
   unit: string;
   unit_price: number;
+  space_types?: string[];
 };
 
 export type QuoteMappingItem = {
@@ -49,7 +50,7 @@ export function defaultQuoteRules(): QuoteRule[] {
 export function buildQuoteMapping(rows: QuantityRow[], rules: QuoteRule[] = DEFAULT_RULES): QuoteMapping {
   const billableRows = rows.filter((row) => row.status !== "excluded");
   const items = billableRows.flatMap((row) =>
-    rules.map((rule) => {
+    rules.filter((rule) => ruleAppliesToRow(rule, row)).map((rule) => {
       const quantity = round2(row[METRIC_TO_ROW_FIELD[rule.metric]]);
       return {
         floor: row.floor,
@@ -125,7 +126,22 @@ function normalizeQuoteRule(rule: unknown, index: number): QuoteRule {
     metric: candidate.metric,
     unit: candidate.unit.trim(),
     unit_price: round2(candidate.unit_price),
+    space_types: normalizeSpaceTypes(candidate.space_types),
   };
+}
+
+function ruleAppliesToRow(rule: QuoteRule, row: QuantityRow) {
+  return !rule.space_types || rule.space_types.length === 0 || rule.space_types.includes(row.spaceType);
+}
+
+function normalizeSpaceTypes(spaceTypes: unknown): string[] | undefined {
+  if (spaceTypes === undefined) {
+    return undefined;
+  }
+  if (!Array.isArray(spaceTypes) || !spaceTypes.every((item) => typeof item === "string" && item.trim())) {
+    throw new Error("报价规则 space_types 无效");
+  }
+  return spaceTypes.map((item) => item.trim());
 }
 
 function round2(value: number) {

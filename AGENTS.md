@@ -164,6 +164,9 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - `metric`：取数指标，当前只允许 `latex_paint_area_m2`、`floor_area_m2`、`ceiling_area_m2`。
 - `unit`：单位。
 - `unit_price`：单价，必须是非负数字。
+- `space_types`：可选，空间类型白名单；填写后只对这些空间类型生成清单项。
+
+当前商品房报价表已整理出一份可导入规则：`quote-rules-apartment-current.json`。它基于商品房报价表的 `整装` 工作表，只包含当前系统能准确承接的面积类项目；墙砖、防水、窗台石、窗帘箱、水电、拆改等项目需要后续扩展取数口径后再接入。
 
 ## 测试与 fixture
 
