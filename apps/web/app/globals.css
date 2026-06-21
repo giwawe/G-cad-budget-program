@@ -301,6 +301,20 @@ code {
   padding-top: 8px;
 }
 
+.quoteGaps .curtainReadinessDetails {
+  display: grid;
+  align-items: stretch;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.quoteGaps .curtainReadinessDetails span {
+  min-width: 0;
+  border: 1px solid #f0dcae;
+  border-radius: 6px;
+  padding: 6px 8px;
+  overflow-wrap: anywhere;
+}
+
 .quoteGaps ul {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

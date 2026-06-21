@@ -14,6 +14,7 @@ import {
   curtainQuoteReadiness,
   DEFAULT_QUOTE_RULES_NAME,
   defaultQuoteRules,
+  formatCurtainReadinessSpaces,
   parseQuoteRules,
   quoteMappingFileName,
   quoteRulesTemplateFileName,
@@ -677,6 +678,10 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
             <div className="curtainReadiness">
               <strong>窗帘/窗帘箱可报价候选 {curtainReadiness.ready_count} 个空间</strong>
               <span>仍待确认 {curtainReadiness.pending_count} 个空间；当前不参与金额汇总。</span>
+            </div>
+            <div className="curtainReadinessDetails">
+              <span>可候选：{formatCurtainReadinessSpaces(curtainReadiness.ready_space_names)}</span>
+              <span>待确认：{formatCurtainReadinessSpaces(curtainReadiness.pending_space_names)}</span>
             </div>
             <ul>
               {pendingQuoteMetrics.slice(0, 10).map((item) => (

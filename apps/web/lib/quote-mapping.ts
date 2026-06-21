@@ -213,6 +213,14 @@ export function curtainQuoteReadiness(rows: QuantityRow[]): CurtainQuoteReadines
   };
 }
 
+export function formatCurtainReadinessSpaces(spaceNames: string[], limit = 4): string {
+  if (spaceNames.length === 0) {
+    return "暂无";
+  }
+  const visible = spaceNames.slice(0, limit).join("、");
+  return spaceNames.length > limit ? `${visible}等 ${spaceNames.length} 个` : visible;
+}
+
 export function buildQuoteMapping(rows: QuantityRow[], rules: QuoteRule[] = DEFAULT_RULES): QuoteMapping {
   const billableRows = rows.filter((row) => row.status !== "excluded");
   const items = billableRows.flatMap((row) =>

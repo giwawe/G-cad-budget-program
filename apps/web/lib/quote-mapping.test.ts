@@ -6,6 +6,7 @@ import {
   curtainQuoteReadiness,
   DEFAULT_QUOTE_RULES_NAME,
   defaultQuoteRules,
+  formatCurtainReadinessSpaces,
   parseQuoteRules,
   quoteMappingFileName,
   quoteRulesTemplateFileName,
@@ -178,6 +179,9 @@ assert.deepEqual(curtainReadiness, {
   ready_space_names: ["主卧", "次卧"],
   pending_space_names: ["书房", "客厅"],
 });
+assert.equal(formatCurtainReadinessSpaces(["主卧", "次卧"]), "主卧、次卧");
+assert.equal(formatCurtainReadinessSpaces(["主卧", "次卧", "书房", "客厅", "南卧"]), "主卧、次卧、书房、客厅等 5 个");
+assert.equal(formatCurtainReadinessSpaces([]), "暂无");
 
 assert.throws(() => parseQuoteRules("{bad json"), /报价规则 JSON 格式无效/);
 assert.throws(() => parseQuoteRules(JSON.stringify({ item_name: "x" })), /报价规则必须是数组/);
