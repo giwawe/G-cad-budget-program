@@ -32,6 +32,7 @@ class SpaceInput:
     name: str = ""
     boundary_points_m: list[tuple[float, float]] = field(default_factory=list)
     wall_lengths_m: list[float] = field(default_factory=list)
+    curtain_wall_width_candidate_m: float = 0
     windows: list[OpeningInput] = field(default_factory=list)
     doors: list[OpeningInput] = field(default_factory=list)
     height_m: float | None = None

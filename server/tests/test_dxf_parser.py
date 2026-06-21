@@ -7,6 +7,7 @@ from server.tests.dxf_fixtures import (
     build_closed_door_polyline_dxf,
     build_insert_door_dxf,
     build_simple_quote_dxf,
+    build_window_on_short_wall_dxf,
     build_two_room_quote_dxf_with_duplicate_close_point,
 )
 
@@ -70,6 +71,13 @@ def test_closed_quote_window_polyline_keeps_closing_segment_in_review_drawing():
     assert review.drawing.window_openings[0].height_m == 1.5
     assert review.drawing.window_openings[0].included_in_wall_deduction is True
     assert review.drawing.window_openings[0].boundary_points == [(1.0, 0.0), (3.0, 0.0), (3.0, 0.24), (1.0, 0.24)]
+
+
+def test_curtain_wall_width_candidate_uses_window_wall_not_longest_wall():
+    review = parser.parse_dxf_review(build_window_on_short_wall_dxf(), ProjectDefaults())
+
+    assert review.spaces[0].wall_lengths_m == [6.0, 3.0, 6.0, 3.0]
+    assert review.spaces[0].curtain_wall_width_candidate_m == 3.0
 
 
 def test_quote_door_insert_is_recognized_as_one_door_opening():

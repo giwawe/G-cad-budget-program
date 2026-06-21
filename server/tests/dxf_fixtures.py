@@ -37,6 +37,21 @@ def build_closed_window_polyline_dxf() -> bytes:
     return _save_doc(doc)
 
 
+def build_window_on_short_wall_dxf() -> bytes:
+    doc = ezdxf.new("R2010")
+    msp = doc.modelspace()
+    for layer in ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_WINDOW", "QUOTE_TEXT"]:
+        doc.layers.add(layer)
+    msp.add_lwpolyline([(0, 0), (6000, 0), (6000, 3000), (0, 3000), (0, 0)], dxfattribs={"layer": "QUOTE_ROOM"})
+    msp.add_line((0, 0), (6000, 0), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((6000, 0), (6000, 3000), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((0, 3000), (6000, 3000), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((0, 0), (0, 3000), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((6000, 900), (6000, 2100), dxfattribs={"layer": "QUOTE_WINDOW"})
+    msp.add_text("一层-主卧", dxfattribs={"layer": "QUOTE_TEXT", "insert": (3000, 1500)})
+    return _save_doc(doc)
+
+
 def build_insert_door_dxf() -> bytes:
     doc = ezdxf.new("R2010")
     msp = doc.modelspace()

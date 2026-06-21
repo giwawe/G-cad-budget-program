@@ -148,6 +148,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
             continue
         named_rooms.append((name, room))
         room_walls = [(start, end) for start, end in walls if _segment_in_room(room, start, end)]
+        room_windows = [opening for opening in grouped_window_opening_inputs if _opening_associated_with_room(room, *_opening_centerline(opening))]
         measured_walls.extend(room_walls)
         drawing_spaces.append(DrawingSpace(name=name, points=room))
         spaces.append(
@@ -156,10 +157,10 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
                 name=name,
                 boundary_points_m=room,
                 wall_lengths_m=[round(line_length(start, end), 2) for start, end in room_walls],
+                curtain_wall_width_candidate_m=_curtain_wall_width_candidate(room_walls, room_windows),
                 windows=[
                     OpeningInput(width_m=round(_opening_width(opening), 2), height_m=defaults.default_window_height_m)
-                    for opening in grouped_window_opening_inputs
-                    if _opening_associated_with_room(room, *_opening_centerline(opening))
+                    for opening in room_windows
                 ],
                 doors=[
                     _door_input_for_segment(start, end)
@@ -401,6 +402,44 @@ def _opening_centerline(opening: DrawingOpening) -> tuple[Point, Point]:
         return ((round(bbox["min_x"], 3), y), (round(bbox["max_x"], 3), y))
     x = round((bbox["min_x"] + bbox["max_x"]) / 2, 3)
     return ((x, round(bbox["min_y"], 3)), (x, round(bbox["max_y"], 3)))
+
+
+def _curtain_wall_width_candidate(room_walls: list[tuple[Point, Point]], window_openings: list[DrawingOpening]) -> float:
+    candidates: list[float] = []
+    for opening in window_openings:
+        window_segment = _opening_centerline(opening)
+        matching_walls = [wall for wall in room_walls if _window_matches_wall(window_segment, wall)]
+        if matching_walls:
+            candidates.append(max(line_length(wall[0], wall[1]) for wall in matching_walls))
+    if not candidates:
+        return 0
+    return round(max(candidates), 2)
+
+
+def _window_matches_wall(window_segment: tuple[Point, Point], wall: tuple[Point, Point]) -> bool:
+    if not _segments_are_parallel(window_segment, wall):
+        return False
+    if _distance_between_segments(window_segment, wall) > 0.2:
+        return False
+    return _projection_overlap_length(window_segment, wall) >= 0.05
+
+
+def _segments_are_parallel(first: tuple[Point, Point], second: tuple[Point, Point]) -> bool:
+    first_direction = _segment_unit_direction(first)
+    second_direction = _segment_unit_direction(second)
+    return abs(first_direction[0] * second_direction[0] + first_direction[1] * second_direction[1]) >= 0.95
+
+
+def _projection_overlap_length(first: tuple[Point, Point], second: tuple[Point, Point]) -> float:
+    direction = _segment_unit_direction(second)
+    origin = second[0]
+    first_values = [_project_point(point, origin, direction) for point in first]
+    second_values = [_project_point(point, origin, direction) for point in second]
+    return max(0, min(max(first_values), max(second_values)) - max(min(first_values), min(second_values)))
+
+
+def _project_point(point: Point, origin: Point, direction: tuple[float, float]) -> float:
+    return (point[0] - origin[0]) * direction[0] + (point[1] - origin[1]) * direction[1]
 
 
 def _door_insert_opening_from_virtual_entities(entity, scale: float) -> DrawingOpening | None:

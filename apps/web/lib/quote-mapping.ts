@@ -74,7 +74,7 @@ const APARTMENT_PENDING_METRICS: PendingQuoteMetric[] = [
     item_name: "暗窗帘箱",
     unit: "M",
     unit_price: 110,
-    reason: "窗帘箱和窗帘应按窗户所在墙面的整面墙宽度计量，且厨房、卫生间、过道等空间默认不做；当前尚未识别窗户所在墙面整宽。",
+    reason: "窗帘箱和窗帘应按窗户所在墙面的整面墙宽度计量，且厨房、卫生间、过道等空间默认不做；当前已生成窗帘墙宽候选并支持人工校准，但尚未接入报价金额。",
     suggested_metric: "curtain_wall_width_m",
     source_group: "窗帘箱",
   },

@@ -102,6 +102,21 @@ def test_curtain_wall_width_uses_longest_wall_for_supported_windowed_spaces():
     assert row.curtain_wall_width_m == 4.2
 
 
+def test_curtain_wall_width_prefers_window_wall_candidate():
+    space = SpaceInput(
+        floor="一层",
+        name="一层-主卧",
+        boundary_points_m=[(0, 0), (6, 0), (6, 3), (0, 3)],
+        wall_lengths_m=[6, 3, 6, 3],
+        windows=[OpeningInput(width_m=1.2)],
+        curtain_wall_width_candidate_m=3,
+    )
+
+    row = calculate_quantity_row(space, ProjectDefaults())
+
+    assert row.curtain_wall_width_m == 3
+
+
 def test_curtain_wall_width_is_zero_for_kitchen_bathroom_and_corridor():
     defaults = ProjectDefaults()
     for name in ["一层-厨房", "一层-卫生间", "一层-过道"]:
