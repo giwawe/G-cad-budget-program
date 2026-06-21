@@ -147,6 +147,7 @@ def _stable_quantity_row(row: dict) -> dict:
         "wall_measure_length_m": row["wall_measure_length_m"],
         "window_width_total_m": row["window_width_total_m"],
         "windowsill_length_m": row["windowsill_length_m"],
+        "curtain_wall_width_m": row["curtain_wall_width_m"],
         "window_area_m2": row["window_area_m2"],
         "door_width_total_m": row["door_width_total_m"],
         "door_deduct_area_m2": row["door_deduct_area_m2"],

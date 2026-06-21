@@ -33,6 +33,7 @@ type ApiQuantityRow = {
   height_m: number;
   window_width_total_m: number;
   windowsill_length_m: number;
+  curtain_wall_width_m: number;
   window_area_m2: number;
   door_width_total_m: number;
   door_deduct_area_m2: number;
@@ -82,6 +83,7 @@ function toQuantityRow(row: ApiQuantityRow): QuantityRow {
     heightM: row.height_m,
     windowWidthTotalM: row.window_width_total_m,
     windowsillLengthM: row.windowsill_length_m,
+    curtainWallWidthM: row.curtain_wall_width_m,
     windowAreaM2: row.window_area_m2,
     doorWidthTotalM: row.door_width_total_m,
     doorDeductAreaM2: row.door_deduct_area_m2,

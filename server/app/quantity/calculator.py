@@ -4,6 +4,7 @@ from server.app.quantity.geometry import polygon_area
 
 WALL_TILE_SPACE_TYPES = {"厨房", "卫生间"}
 WATERPROOF_SPACE_TYPES = {"厨房", "卫生间", "阳台", "露台", "洗衣房"}
+CURTAIN_CANDIDATE_SPACE_TYPES = {"客厅", "卧室", "书房"}
 WALL_TILE_HEIGHT_M = 2.5
 WATERPROOF_HEIGHT_BY_SPACE_TYPE = {
     "卫生间": 1.8,
@@ -26,6 +27,7 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
 
     window_width_total_m = round(sum(window.width_m for window in space.windows), 2)
     windowsill_length_m = window_width_total_m
+    curtain_wall_width_m = calculate_curtain_wall_width_m(space_type, space.wall_lengths_m, space.windows)
     window_area_m2 = round(
         sum(window.width_m * (window.height_m or defaults.default_window_height_m) for window in space.windows),
         2,
@@ -74,6 +76,7 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
         height_m=height_m,
         window_width_total_m=window_width_total_m,
         windowsill_length_m=windowsill_length_m,
+        curtain_wall_width_m=curtain_wall_width_m,
         window_area_m2=window_area_m2,
         door_width_total_m=door_width_total_m,
         door_deduct_area_m2=door_deduct_area_m2,
@@ -91,6 +94,12 @@ def calculate_wall_tile_area_m2(space_type: str, wall_measure_length_m: float, w
     if space_type not in WALL_TILE_SPACE_TYPES:
         return 0
     return round(max(wall_measure_length_m * WALL_TILE_HEIGHT_M - window_area_m2 - door_area_m2, 0), 2)
+
+
+def calculate_curtain_wall_width_m(space_type: str, wall_lengths_m: list[float], windows: list) -> float:
+    if space_type not in CURTAIN_CANDIDATE_SPACE_TYPES or not windows or not wall_lengths_m:
+        return 0
+    return round(max(wall_lengths_m), 2)
 
 
 def calculate_waterproof_area_m2(space_type: str, floor_area_m2: float, wall_measure_length_m: float, height_m: float) -> float:

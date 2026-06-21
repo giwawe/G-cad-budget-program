@@ -10,6 +10,7 @@ export type QuantityRow = {
   heightM: number;
   windowWidthTotalM: number;
   windowsillLengthM: number;
+  curtainWallWidthM: number;
   windowAreaM2: number;
   doorWidthTotalM: number;
   doorDeductAreaM2: number;

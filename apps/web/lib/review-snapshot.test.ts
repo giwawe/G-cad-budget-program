@@ -13,6 +13,7 @@ const rows: QuantityRow[] = [
     heightM: 2.8,
     windowWidthTotalM: 0,
     windowsillLengthM: 0,
+    curtainWallWidthM: 0,
     windowAreaM2: 0,
     doorWidthTotalM: 1,
     doorDeductAreaM2: 0,
@@ -51,6 +52,14 @@ const parsed = parseReviewSnapshot(JSON.stringify(snapshot));
 
 assert.equal(parsed.source_file, "test-case.dxf");
 assert.equal(parsed.rows[0].spaceName, "厨房");
+
+const legacySnapshot = {
+  ...snapshot,
+  rows: rows.map(({ curtainWallWidthM: _curtainWallWidthM, ...row }) => row),
+};
+const parsedLegacySnapshot = parseReviewSnapshot(JSON.stringify(legacySnapshot));
+
+assert.equal(parsedLegacySnapshot.rows[0].curtainWallWidthM, 0);
 
 assert.throws(() => parseReviewSnapshot("{bad json"), /快照 JSON 格式无效/);
 assert.throws(() => parseReviewSnapshot(JSON.stringify({ rows: [] })), /快照缺少 source_file/);

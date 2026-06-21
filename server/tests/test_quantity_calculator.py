@@ -88,6 +88,37 @@ def test_balcony_has_waterproof_but_no_automatic_wall_tile():
     assert row.waterproof_area_m2 == 9
 
 
+def test_curtain_wall_width_uses_longest_wall_for_supported_windowed_spaces():
+    space = SpaceInput(
+        floor="一层",
+        name="一层-主卧",
+        boundary_points_m=[(0, 0), (4.2, 0), (4.2, 3.4), (0, 3.4)],
+        wall_lengths_m=[4.2, 3.4, 4.2, 3.4],
+        windows=[OpeningInput(width_m=1.6)],
+    )
+
+    row = calculate_quantity_row(space, ProjectDefaults())
+
+    assert row.curtain_wall_width_m == 4.2
+
+
+def test_curtain_wall_width_is_zero_for_kitchen_bathroom_and_corridor():
+    defaults = ProjectDefaults()
+    for name in ["一层-厨房", "一层-卫生间", "一层-过道"]:
+        row = calculate_quantity_row(
+            SpaceInput(
+                floor="一层",
+                name=name,
+                boundary_points_m=[(0, 0), (3, 0), (3, 2), (0, 2)],
+                wall_lengths_m=[3, 2, 3, 2],
+                windows=[OpeningInput(width_m=1.2)],
+            ),
+            defaults,
+        )
+
+        assert row.curtain_wall_width_m == 0
+
+
 def test_large_door_opening_deducts_latex_area():
     defaults = ProjectDefaults(project_height_m=2.8, default_window_height_m=1.5, default_door_height_m=2.1)
     space = SpaceInput(
