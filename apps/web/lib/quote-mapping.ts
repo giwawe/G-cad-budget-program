@@ -40,6 +40,13 @@ export type QuoteMapping = {
   };
 };
 
+export type CurtainQuoteReadiness = {
+  ready_count: number;
+  pending_count: number;
+  ready_space_names: string[];
+  pending_space_names: string[];
+};
+
 export const DEFAULT_QUOTE_RULES_NAME = "商品房整装默认规则";
 
 const DRY_SPACE_TYPES = ["客厅", "餐厅", "卧室", "书房", "过道", "门厅", "楼梯过道", "衣帽间", "储物间", "露台"];
@@ -183,6 +190,27 @@ export function defaultQuoteRules(): QuoteRule[] {
 
 export function apartmentPendingQuoteMetrics(): PendingQuoteMetric[] {
   return APARTMENT_PENDING_METRICS.map((item) => ({ ...item }));
+}
+
+export function curtainQuoteReadiness(rows: QuantityRow[]): CurtainQuoteReadiness {
+  const ready_space_names: string[] = [];
+  const pending_space_names: string[] = [];
+  for (const row of rows) {
+    if (row.status === "excluded") {
+      continue;
+    }
+    if ((row.curtainWallWidthSource === "manual" || row.curtainWallWidthSource === "matched_window_wall") && row.curtainWallWidthM > 0) {
+      ready_space_names.push(row.spaceName);
+    } else if (row.curtainWallWidthSource === "fallback_longest_wall" || row.curtainWallWidthSource === "manual_required_l_shape_window") {
+      pending_space_names.push(row.spaceName);
+    }
+  }
+  return {
+    ready_count: ready_space_names.length,
+    pending_count: pending_space_names.length,
+    ready_space_names,
+    pending_space_names,
+  };
 }
 
 export function buildQuoteMapping(rows: QuantityRow[], rules: QuoteRule[] = DEFAULT_RULES): QuoteMapping {

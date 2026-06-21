@@ -296,6 +296,11 @@ code {
   font-size: 12px;
 }
 
+.quoteGaps .curtainReadiness {
+  border-top: 1px solid #f0dcae;
+  padding-top: 8px;
+}
+
 .quoteGaps ul {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -11,6 +11,7 @@ import { updateQuantityRowCurtainWallWidth, updateQuantityRowStatus } from "@/li
 import {
   apartmentPendingQuoteMetrics,
   buildQuoteMapping,
+  curtainQuoteReadiness,
   DEFAULT_QUOTE_RULES_NAME,
   defaultQuoteRules,
   parseQuoteRules,
@@ -146,6 +147,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
 
   const excludedCount = useMemo(() => rows.filter((row) => row.status === "excluded").length, [rows]);
   const pendingQuoteMetrics = useMemo(() => apartmentPendingQuoteMetrics(), []);
+  const curtainReadiness = useMemo(() => curtainQuoteReadiness(rows), [rows]);
 
   async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -671,6 +673,10 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
             <div>
               <strong>待补取数口径</strong>
               <span>{pendingQuoteMetrics.length} 项暂不参与金额汇总，后续补齐 metric 后再接入。</span>
+            </div>
+            <div className="curtainReadiness">
+              <strong>窗帘/窗帘箱可报价候选 {curtainReadiness.ready_count} 个空间</strong>
+              <span>仍待确认 {curtainReadiness.pending_count} 个空间；当前不参与金额汇总。</span>
             </div>
             <ul>
               {pendingQuoteMetrics.slice(0, 10).map((item) => (

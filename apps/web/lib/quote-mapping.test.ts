@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import {
   apartmentPendingQuoteMetrics,
   buildQuoteMapping,
+  curtainQuoteReadiness,
   DEFAULT_QUOTE_RULES_NAME,
   defaultQuoteRules,
   parseQuoteRules,
@@ -162,6 +163,21 @@ const windowedBedroomMapping = buildQuoteMapping([{ ...rows[0], spaceName: "主�
 assert.equal(windowedBedroomMapping.items.at(-1)?.item_name, "窗台石铺贴");
 assert.equal(windowedBedroomMapping.items.at(-1)?.quantity, 1.8);
 assert.equal(windowedBedroomMapping.items.at(-1)?.amount, 131.4);
+
+const curtainReadiness = curtainQuoteReadiness([
+  { ...rows[0], spaceName: "主卧", spaceType: "卧室", curtainWallWidthM: 4.2, curtainWallWidthSource: "manual" },
+  { ...rows[0], spaceName: "次卧", spaceType: "卧室", curtainWallWidthM: 3.6, curtainWallWidthSource: "matched_window_wall" },
+  { ...rows[0], spaceName: "书房", spaceType: "书房", curtainWallWidthM: 3.2, curtainWallWidthSource: "fallback_longest_wall" },
+  { ...rows[0], spaceName: "客厅", spaceType: "客厅", curtainWallWidthM: 0, curtainWallWidthSource: "manual_required_l_shape_window" },
+  { ...rows[1], spaceName: "电梯井", curtainWallWidthM: 5, curtainWallWidthSource: "manual" },
+]);
+
+assert.deepEqual(curtainReadiness, {
+  ready_count: 2,
+  pending_count: 2,
+  ready_space_names: ["主卧", "次卧"],
+  pending_space_names: ["书房", "客厅"],
+});
 
 assert.throws(() => parseQuoteRules("{bad json"), /报价规则 JSON 格式无效/);
 assert.throws(() => parseQuoteRules(JSON.stringify({ item_name: "x" })), /报价规则必须是数组/);
