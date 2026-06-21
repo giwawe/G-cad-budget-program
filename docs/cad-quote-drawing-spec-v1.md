@@ -198,6 +198,8 @@
 
 窗帘和窗帘箱不按窗洞宽度计量，应按窗户所在墙面的整面墙宽度计量。厨房、卫生间、过道等空间默认不做窗帘和窗帘箱；一般不做窗帘箱的位置也不生成窗帘。当前系统只生成 `curtain_wall_width_m` 候选值：若窗洞中心线能匹配到邻近且平行的 `QUOTE_WALL`，取该墙段整宽；若匹配不到，回退到空间最长一段 `QUOTE_WALL`。L 形或转角窗涉及两面墙和转角做法，当前不自动计算窗帘或窗帘箱长度，候选值为 `0`，需要人工确认。系统同时输出 `curtain_wall_width_source`：`matched_window_wall` 表示已匹配窗户所在墙，`fallback_longest_wall` 表示回退最长墙需人工重点确认，`manual_required_l_shape_window` 表示 L 形窗需人工确认，`not_applicable` 表示不适用，前端人工编辑后为 `manual`。该候选值允许在工程量表中人工校准、随校对快照保存/恢复；当前不自动生成窗帘或窗帘箱金额，后续完成人工校准和规则确认后再接入报价。
 
+校准模板会导出 `windowsill_length_m`、`curtain_wall_width_m` 和 `curtain_wall_width_source`。报价员可以把 L 形窗人工确认后的实际延米填回模板，再作为 golden JSON 固定校准结果。
+
 ## 9. 特殊空间
 
 | 空间名称关键词 | 当前处理 |

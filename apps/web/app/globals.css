@@ -787,6 +787,15 @@ td .curtainWallSource.manual {
   color: #4338ca;
 }
 
+td .curtainWallHelp {
+  display: block;
+  margin-top: 4px;
+  color: #b91c1c;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
 @media (max-width: 960px) {
   main {
     width: min(100vw - 24px, 1360px);

@@ -124,6 +124,7 @@ export function QuantityTable({
                   `${row.curtainWallWidthM.toFixed(2)} m`
                 )}
                 <small className={`curtainWallSource ${row.curtainWallWidthSource}`}>{curtainWallSourceLabels[row.curtainWallWidthSource]}</small>
+                {row.curtainWallWidthSource === "manual_required_l_shape_window" && <small className="curtainWallHelp">请填实际窗帘/窗帘箱延米</small>}
                 <DifferenceValue difference={curtainWallDifference} />
               </td>
               <td className={differenceClass(windowAreaDifference)}>

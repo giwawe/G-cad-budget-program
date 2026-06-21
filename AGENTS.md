@@ -154,6 +154,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 上传校准 JSON 并显示“校准通过”或差异卡片。
 - 差异卡片可跳转到对应表格行，差异单元格高亮。
 - 导出校准模板 JSON，并在页面显示可复制内容。
+- 校准模板包含窗台石长度、窗帘墙宽候选和窗帘墙宽来源，便于把 L 形窗人工确认值沉淀进 golden JSON。
 - 导出校对快照 JSON；快照包含来源文件、校准文件、summary、comparison 和 rows。
 - 导入校对快照 JSON，恢复表格、状态、summary、comparison 和来源文件名。
 - 每行可改 review 状态：待确认、已确认、需修图、不计价。
