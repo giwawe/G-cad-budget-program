@@ -33,6 +33,7 @@ class SpaceInput:
     boundary_points_m: list[tuple[float, float]] = field(default_factory=list)
     wall_lengths_m: list[float] = field(default_factory=list)
     curtain_wall_width_candidate_m: float = 0
+    curtain_wall_width_source: str = "not_applicable"
     windows: list[OpeningInput] = field(default_factory=list)
     doors: list[OpeningInput] = field(default_factory=list)
     height_m: float | None = None
@@ -52,6 +53,7 @@ class QuantityRow:
     window_width_total_m: float
     windowsill_length_m: float
     curtain_wall_width_m: float
+    curtain_wall_width_source: str
     window_area_m2: float
     door_width_total_m: float
     door_deduct_area_m2: float

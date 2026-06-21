@@ -19,7 +19,7 @@ import {
   type QuoteRule,
 } from "@/lib/quote-mapping";
 import { buildReviewSnapshot, parseReviewSnapshot, reviewSnapshotFileName } from "@/lib/review-snapshot";
-import type { CalibrationComparison, DrawingGeometry, QuantityRow, QuantitySummary, ReviewStatus } from "@/lib/types";
+import type { CalibrationComparison, CurtainWallWidthSource, DrawingGeometry, QuantityRow, QuantitySummary, ReviewStatus } from "@/lib/types";
 
 const DEFAULT_DOOR_HEIGHT_M = 2.1;
 
@@ -34,6 +34,7 @@ type ApiQuantityRow = {
   window_width_total_m: number;
   windowsill_length_m: number;
   curtain_wall_width_m: number;
+  curtain_wall_width_source?: CurtainWallWidthSource;
   window_area_m2: number;
   door_width_total_m: number;
   door_deduct_area_m2: number;
@@ -84,6 +85,7 @@ function toQuantityRow(row: ApiQuantityRow): QuantityRow {
     windowWidthTotalM: row.window_width_total_m,
     windowsillLengthM: row.windowsill_length_m,
     curtainWallWidthM: row.curtain_wall_width_m,
+    curtainWallWidthSource: row.curtain_wall_width_source ?? "not_applicable",
     windowAreaM2: row.window_area_m2,
     doorWidthTotalM: row.door_width_total_m,
     doorDeductAreaM2: row.door_deduct_area_m2,

@@ -1,4 +1,5 @@
 export type ReviewStatus = "pending_review" | "confirmed" | "needs_fix" | "excluded";
+export type CurtainWallWidthSource = "matched_window_wall" | "fallback_longest_wall" | "not_applicable" | "manual";
 
 export type QuantityRow = {
   floor: string;
@@ -11,6 +12,7 @@ export type QuantityRow = {
   windowWidthTotalM: number;
   windowsillLengthM: number;
   curtainWallWidthM: number;
+  curtainWallWidthSource: CurtainWallWidthSource;
   windowAreaM2: number;
   doorWidthTotalM: number;
   doorDeductAreaM2: number;

@@ -14,6 +14,7 @@ const rows: QuantityRow[] = [
     windowWidthTotalM: 0,
     windowsillLengthM: 0,
     curtainWallWidthM: 0,
+    curtainWallWidthSource: "not_applicable",
     windowAreaM2: 0,
     doorWidthTotalM: 1,
     doorDeductAreaM2: 0,
@@ -55,11 +56,12 @@ assert.equal(parsed.rows[0].spaceName, "厨房");
 
 const legacySnapshot = {
   ...snapshot,
-  rows: rows.map(({ curtainWallWidthM: _curtainWallWidthM, ...row }) => row),
+  rows: rows.map(({ curtainWallWidthM: _curtainWallWidthM, curtainWallWidthSource: _curtainWallWidthSource, ...row }) => row),
 };
 const parsedLegacySnapshot = parseReviewSnapshot(JSON.stringify(legacySnapshot));
 
 assert.equal(parsedLegacySnapshot.rows[0].curtainWallWidthM, 0);
+assert.equal(parsedLegacySnapshot.rows[0].curtainWallWidthSource, "not_applicable");
 
 assert.throws(() => parseReviewSnapshot("{bad json"), /快照 JSON 格式无效/);
 assert.throws(() => parseReviewSnapshot(JSON.stringify({ rows: [] })), /快照缺少 source_file/);

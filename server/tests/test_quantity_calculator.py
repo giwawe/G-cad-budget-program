@@ -100,6 +100,7 @@ def test_curtain_wall_width_uses_longest_wall_for_supported_windowed_spaces():
     row = calculate_quantity_row(space, ProjectDefaults())
 
     assert row.curtain_wall_width_m == 4.2
+    assert row.curtain_wall_width_source == "fallback_longest_wall"
 
 
 def test_curtain_wall_width_prefers_window_wall_candidate():
@@ -115,6 +116,7 @@ def test_curtain_wall_width_prefers_window_wall_candidate():
     row = calculate_quantity_row(space, ProjectDefaults())
 
     assert row.curtain_wall_width_m == 3
+    assert row.curtain_wall_width_source == "matched_window_wall"
 
 
 def test_curtain_wall_width_is_zero_for_kitchen_bathroom_and_corridor():
@@ -132,6 +134,7 @@ def test_curtain_wall_width_is_zero_for_kitchen_bathroom_and_corridor():
         )
 
         assert row.curtain_wall_width_m == 0
+        assert row.curtain_wall_width_source == "not_applicable"
 
 
 def test_large_door_opening_deducts_latex_area():

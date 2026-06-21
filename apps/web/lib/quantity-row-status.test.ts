@@ -14,6 +14,7 @@ const rows: QuantityRow[] = [
     windowWidthTotalM: 0,
     windowsillLengthM: 0,
     curtainWallWidthM: 0,
+    curtainWallWidthSource: "not_applicable",
     windowAreaM2: 0,
     doorWidthTotalM: 1,
     doorDeductAreaM2: 0,
@@ -36,6 +37,7 @@ const rows: QuantityRow[] = [
     windowWidthTotalM: 0,
     windowsillLengthM: 0,
     curtainWallWidthM: 0,
+    curtainWallWidthSource: "fallback_longest_wall",
     windowAreaM2: 0,
     doorWidthTotalM: 3.52,
     doorDeductAreaM2: 0,
@@ -60,6 +62,7 @@ const updatedCurtainWidth = updateQuantityRowCurtainWallWidth(rows, "客厅", 5.
 
 assert.equal(updatedCurtainWidth[0].curtainWallWidthM, 0);
 assert.equal(updatedCurtainWidth[1].curtainWallWidthM, 5.24);
+assert.equal(updatedCurtainWidth[1].curtainWallWidthSource, "manual");
 assert.equal(rows[1].curtainWallWidthM, 0);
 assert.notEqual(updatedCurtainWidth, rows);
 

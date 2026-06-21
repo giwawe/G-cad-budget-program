@@ -1,7 +1,7 @@
 import { AlertTriangle, CheckCircle2, CircleDashed, MinusCircle } from "lucide-react";
 import { differenceKey, indexDifferencesByCell } from "@/lib/calibration-differences";
 import { quantityRowAnchorId } from "@/lib/quantity-row-anchor";
-import type { CalibrationDifference, QuantityRow, ReviewStatus } from "@/lib/types";
+import type { CalibrationDifference, CurtainWallWidthSource, QuantityRow, ReviewStatus } from "@/lib/types";
 
 const statusLabels: Record<ReviewStatus, string> = {
   pending_review: "待确认",
@@ -15,6 +15,13 @@ const statusIcons: Record<ReviewStatus, React.ReactNode> = {
   confirmed: <CheckCircle2 aria-hidden="true" size={16} />,
   needs_fix: <AlertTriangle aria-hidden="true" size={16} />,
   excluded: <MinusCircle aria-hidden="true" size={16} />,
+};
+
+const curtainWallSourceLabels: Record<CurtainWallWidthSource, string> = {
+  matched_window_wall: "窗所在墙",
+  fallback_longest_wall: "回退最长墙",
+  not_applicable: "不适用",
+  manual: "人工校准",
 };
 
 function DifferenceValue({ difference }: { difference?: CalibrationDifference }) {
@@ -115,6 +122,7 @@ export function QuantityTable({
                 ) : (
                   `${row.curtainWallWidthM.toFixed(2)} m`
                 )}
+                <small className={`curtainWallSource ${row.curtainWallWidthSource}`}>{curtainWallSourceLabels[row.curtainWallWidthSource]}</small>
                 <DifferenceValue difference={curtainWallDifference} />
               </td>
               <td className={differenceClass(windowAreaDifference)}>

@@ -6,5 +6,5 @@ export function updateQuantityRowStatus(rows: QuantityRow[], spaceName: string, 
 
 export function updateQuantityRowCurtainWallWidth(rows: QuantityRow[], spaceName: string, widthM: number): QuantityRow[] {
   const curtainWallWidthM = Math.round(Math.max(widthM, 0) * 100) / 100;
-  return rows.map((row) => (row.spaceName === spaceName ? { ...row, curtainWallWidthM } : row));
+  return rows.map((row) => (row.spaceName === spaceName ? { ...row, curtainWallWidthM, curtainWallWidthSource: "manual" } : row));
 }

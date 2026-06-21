@@ -27,7 +27,13 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
 
     window_width_total_m = round(sum(window.width_m for window in space.windows), 2)
     windowsill_length_m = window_width_total_m
-    curtain_wall_width_m = calculate_curtain_wall_width_m(space_type, space.wall_lengths_m, space.windows, space.curtain_wall_width_candidate_m)
+    curtain_wall_width_m, curtain_wall_width_source = calculate_curtain_wall_width_m(
+        space_type,
+        space.wall_lengths_m,
+        space.windows,
+        space.curtain_wall_width_candidate_m,
+        space.curtain_wall_width_source,
+    )
     window_area_m2 = round(
         sum(window.width_m * (window.height_m or defaults.default_window_height_m) for window in space.windows),
         2,
@@ -77,6 +83,7 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
         window_width_total_m=window_width_total_m,
         windowsill_length_m=windowsill_length_m,
         curtain_wall_width_m=curtain_wall_width_m,
+        curtain_wall_width_source=curtain_wall_width_source,
         window_area_m2=window_area_m2,
         door_width_total_m=door_width_total_m,
         door_deduct_area_m2=door_deduct_area_m2,
@@ -96,12 +103,18 @@ def calculate_wall_tile_area_m2(space_type: str, wall_measure_length_m: float, w
     return round(max(wall_measure_length_m * WALL_TILE_HEIGHT_M - window_area_m2 - door_area_m2, 0), 2)
 
 
-def calculate_curtain_wall_width_m(space_type: str, wall_lengths_m: list[float], windows: list, candidate_m: float = 0) -> float:
+def calculate_curtain_wall_width_m(
+    space_type: str,
+    wall_lengths_m: list[float],
+    windows: list,
+    candidate_m: float = 0,
+    candidate_source: str = "not_applicable",
+) -> tuple[float, str]:
     if space_type not in CURTAIN_CANDIDATE_SPACE_TYPES or not windows or not wall_lengths_m:
-        return 0
+        return (0, "not_applicable")
     if candidate_m > 0:
-        return round(candidate_m, 2)
-    return round(max(wall_lengths_m), 2)
+        return (round(candidate_m, 2), candidate_source if candidate_source != "not_applicable" else "matched_window_wall")
+    return (round(max(wall_lengths_m), 2), "fallback_longest_wall")
 
 
 def calculate_waterproof_area_m2(space_type: str, floor_area_m2: float, wall_measure_length_m: float, height_m: float) -> float:

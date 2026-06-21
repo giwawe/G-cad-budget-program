@@ -149,6 +149,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         named_rooms.append((name, room))
         room_walls = [(start, end) for start, end in walls if _segment_in_room(room, start, end)]
         room_windows = [opening for opening in grouped_window_opening_inputs if _opening_associated_with_room(room, *_opening_centerline(opening))]
+        curtain_wall_width_candidate_m = _curtain_wall_width_candidate(room_walls, room_windows)
         measured_walls.extend(room_walls)
         drawing_spaces.append(DrawingSpace(name=name, points=room))
         spaces.append(
@@ -157,7 +158,8 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
                 name=name,
                 boundary_points_m=room,
                 wall_lengths_m=[round(line_length(start, end), 2) for start, end in room_walls],
-                curtain_wall_width_candidate_m=_curtain_wall_width_candidate(room_walls, room_windows),
+                curtain_wall_width_candidate_m=curtain_wall_width_candidate_m,
+                curtain_wall_width_source="matched_window_wall" if curtain_wall_width_candidate_m > 0 else "not_applicable",
                 windows=[
                     OpeningInput(width_m=round(_opening_width(opening), 2), height_m=defaults.default_window_height_m)
                     for opening in room_windows

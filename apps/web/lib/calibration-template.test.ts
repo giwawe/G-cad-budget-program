@@ -14,6 +14,7 @@ const rows: QuantityRow[] = [
     windowWidthTotalM: 0,
     windowsillLengthM: 0,
     curtainWallWidthM: 0,
+    curtainWallWidthSource: "not_applicable",
     windowAreaM2: 0,
     doorWidthTotalM: 1,
     doorDeductAreaM2: 0,

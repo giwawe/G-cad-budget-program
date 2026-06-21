@@ -78,6 +78,7 @@ def test_curtain_wall_width_candidate_uses_window_wall_not_longest_wall():
 
     assert review.spaces[0].wall_lengths_m == [6.0, 3.0, 6.0, 3.0]
     assert review.spaces[0].curtain_wall_width_candidate_m == 3.0
+    assert review.spaces[0].curtain_wall_width_source == "matched_window_wall"
 
 
 def test_quote_door_insert_is_recognized_as_one_door_opening():
