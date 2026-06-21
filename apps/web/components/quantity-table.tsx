@@ -50,7 +50,7 @@ export function QuantityTable({
   rows: QuantityRow[];
   differences?: CalibrationDifference[];
   onChangeStatus?: (spaceName: string, status: ReviewStatus) => void;
-  onChangeCurtainWallWidth?: (spaceName: string, widthM: number) => void;
+  onChangeCurtainWallWidth?: (spaceName: string, widthM: number, source?: "manual" | "calibration") => void;
 }) {
   const differencesByCell = indexDifferencesByCell(differences);
 
@@ -127,7 +127,7 @@ export function QuantityTable({
                 <small className={`curtainWallSource ${row.curtainWallWidthSource}`}>{curtainWallSourceLabels[row.curtainWallWidthSource]}</small>
                 {row.curtainWallWidthSource === "manual_required_l_shape_window" && <small className="curtainWallHelp">请填实际窗帘/窗帘箱延米</small>}
                 {onChangeCurtainWallWidth && curtainWallCalibrationValue !== null && (
-                  <button className="inlineApplyButton" type="button" onClick={() => onChangeCurtainWallWidth(row.spaceName, curtainWallCalibrationValue)}>
+                  <button className="inlineApplyButton" type="button" onClick={() => onChangeCurtainWallWidth(row.spaceName, curtainWallCalibrationValue, "calibration")}>
                     应用校准 {curtainWallCalibrationValue.toFixed(2)} m
                   </button>
                 )}

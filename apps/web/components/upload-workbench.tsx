@@ -5,6 +5,7 @@ import { Download, FileUp, Layers3, Loader2, ReceiptText, Settings2 } from "luci
 import { DrawingReview } from "@/components/drawing-review";
 import { QuantityTable } from "@/components/quantity-table";
 import { calibrationTemplateFileName, quantityRowsToCalibrationTemplate } from "@/lib/calibration-template";
+import { resolveCalibrationDifference } from "@/lib/calibration-differences";
 import { quantityRowAnchorHref } from "@/lib/quantity-row-anchor";
 import { updateQuantityRowCurtainWallWidth, updateQuantityRowStatus } from "@/lib/quantity-row-status";
 import {
@@ -382,13 +383,16 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
     setMessage(`${spaceName} 状态已更新为 ${statusLabels[status]}`);
   }
 
-  function handleChangeCurtainWallWidth(spaceName: string, widthM: number) {
+  function handleChangeCurtainWallWidth(spaceName: string, widthM: number, source: "manual" | "calibration" = "manual") {
     if (!Number.isFinite(widthM)) {
       return;
     }
     setRows((current) => updateQuantityRowCurtainWallWidth(current, spaceName, widthM));
+    if (source === "calibration") {
+      setComparison((current) => (current ? resolveCalibrationDifference(current, spaceName, "curtain_wall_width_m") : current));
+    }
     setGeneratedQuoteMapping(null);
-    setMessage(`${spaceName} 窗帘墙宽候选已更新`);
+    setMessage(source === "calibration" ? `${spaceName} 窗帘墙宽候选已应用校准值` : `${spaceName} 窗帘墙宽候选已更新`);
   }
 
   function handleRenameSpace(index: number, name: string) {

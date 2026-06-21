@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { curtainWallCalibrationTarget, differenceKey, indexDifferencesByCell } from "./calibration-differences.ts";
+import { curtainWallCalibrationTarget, differenceKey, indexDifferencesByCell, resolveCalibrationDifference } from "./calibration-differences.ts";
 import type { CalibrationDifference, QuantityRow } from "./types.ts";
 
 const differences: CalibrationDifference[] = [
@@ -46,3 +46,37 @@ assert.equal(curtainWallCalibrationTarget(row, curtainDifference), 4.2);
 assert.equal(curtainWallCalibrationTarget({ ...row, curtainWallWidthSource: "fallback_longest_wall" }, curtainDifference), 4.2);
 assert.equal(curtainWallCalibrationTarget({ ...row, curtainWallWidthSource: "matched_window_wall" }, curtainDifference), null);
 assert.equal(curtainWallCalibrationTarget(row, { ...curtainDifference, field: "floor_area_m2" }), null);
+
+const resolvedComparison = resolveCalibrationDifference(
+  {
+    passed: false,
+    matched_count: 2,
+    failed_count: 2,
+    missing_spaces: [],
+    unexpected_spaces: [],
+    differences: [curtainDifference, differences[0]],
+  },
+  "主卧",
+  "curtain_wall_width_m",
+);
+
+assert.equal(resolvedComparison.passed, false);
+assert.equal(resolvedComparison.failed_count, 1);
+assert.deepEqual(resolvedComparison.differences, [differences[0]]);
+
+const fullyResolvedComparison = resolveCalibrationDifference(
+  {
+    passed: false,
+    matched_count: 1,
+    failed_count: 1,
+    missing_spaces: [],
+    unexpected_spaces: [],
+    differences: [curtainDifference],
+  },
+  "主卧",
+  "curtain_wall_width_m",
+);
+
+assert.equal(fullyResolvedComparison.passed, true);
+assert.equal(fullyResolvedComparison.failed_count, 0);
+assert.deepEqual(fullyResolvedComparison.differences, []);
