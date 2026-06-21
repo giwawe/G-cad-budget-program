@@ -11,7 +11,9 @@
     "wall_gross_area_m2": 43.96,
     "latex_paint_area_m2": 40.95,
     "status": "pending_review",
-    "anomalies": []
+    "anomalies": [
+      "L形窗帘和窗帘箱长度需人工确认"
+    ]
   },
   {
     "space_name": "主卫",
@@ -39,7 +41,9 @@
     "wall_gross_area_m2": 45.98,
     "latex_paint_area_m2": 42.52,
     "status": "pending_review",
-    "anomalies": []
+    "anomalies": [
+      "L形窗帘和窗帘箱长度需人工确认"
+    ]
   },
   {
     "space_name": "卧室二",
@@ -95,7 +99,9 @@
     "wall_gross_area_m2": 39.56,
     "latex_paint_area_m2": 34.65,
     "status": "pending_review",
-    "anomalies": []
+    "anomalies": [
+      "L形窗帘和窗帘箱长度需人工确认"
+    ]
   },
   {
     "space_name": "厨房",

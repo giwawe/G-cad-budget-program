@@ -110,6 +110,8 @@ def calculate_curtain_wall_width_m(
     candidate_m: float = 0,
     candidate_source: str = "not_applicable",
 ) -> tuple[float, str]:
+    if candidate_source == "manual_required_l_shape_window":
+        return (0, "manual_required_l_shape_window")
     if space_type not in CURTAIN_CANDIDATE_SPACE_TYPES or not windows or not wall_lengths_m:
         return (0, "not_applicable")
     if candidate_m > 0:

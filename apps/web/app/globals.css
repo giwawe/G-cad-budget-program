@@ -772,6 +772,11 @@ td .curtainWallSource.fallback_longest_wall {
   color: #9a3412;
 }
 
+td .curtainWallSource.manual_required_l_shape_window {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
 td .curtainWallSource.matched_window_wall {
   background: #ecfdf5;
   color: #047857;

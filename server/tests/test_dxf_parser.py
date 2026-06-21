@@ -6,6 +6,7 @@ from server.tests.dxf_fixtures import (
     build_closed_window_polyline_dxf,
     build_closed_door_polyline_dxf,
     build_insert_door_dxf,
+    build_l_shaped_window_dxf,
     build_simple_quote_dxf,
     build_window_on_short_wall_dxf,
     build_two_room_quote_dxf_with_duplicate_close_point,
@@ -79,6 +80,14 @@ def test_curtain_wall_width_candidate_uses_window_wall_not_longest_wall():
     assert review.spaces[0].wall_lengths_m == [6.0, 3.0, 6.0, 3.0]
     assert review.spaces[0].curtain_wall_width_candidate_m == 3.0
     assert review.spaces[0].curtain_wall_width_source == "matched_window_wall"
+
+
+def test_l_shaped_window_requires_manual_curtain_wall_width():
+    review = parser.parse_dxf_review(build_l_shaped_window_dxf(), ProjectDefaults())
+
+    assert review.spaces[0].curtain_wall_width_candidate_m == 0
+    assert review.spaces[0].curtain_wall_width_source == "manual_required_l_shape_window"
+    assert any("L形窗" in anomaly for anomaly in review.spaces[0].anomalies)
 
 
 def test_quote_door_insert_is_recognized_as_one_door_opening():

@@ -119,6 +119,25 @@ def test_curtain_wall_width_prefers_window_wall_candidate():
     assert row.curtain_wall_width_source == "matched_window_wall"
 
 
+def test_l_shaped_window_curtain_wall_width_requires_manual_review():
+    space = SpaceInput(
+        floor="一层",
+        name="一层-客厅",
+        boundary_points_m=[(0, 0), (6, 0), (6, 4), (0, 4)],
+        wall_lengths_m=[6, 4, 6, 4],
+        curtain_wall_width_candidate_m=0,
+        curtain_wall_width_source="manual_required_l_shape_window",
+        windows=[OpeningInput(width_m=1.8)],
+        anomalies=["L形窗帘和窗帘箱长度需人工确认"],
+    )
+
+    row = calculate_quantity_row(space, ProjectDefaults())
+
+    assert row.curtain_wall_width_m == 0
+    assert row.curtain_wall_width_source == "manual_required_l_shape_window"
+    assert any("L形窗" in anomaly for anomaly in row.anomalies)
+
+
 def test_curtain_wall_width_is_zero_for_kitchen_bathroom_and_corridor():
     defaults = ProjectDefaults()
     for name in ["一层-厨房", "一层-卫生间", "一层-过道"]:

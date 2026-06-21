@@ -1,5 +1,5 @@
 export type ReviewStatus = "pending_review" | "confirmed" | "needs_fix" | "excluded";
-export type CurtainWallWidthSource = "matched_window_wall" | "fallback_longest_wall" | "not_applicable" | "manual";
+export type CurtainWallWidthSource = "matched_window_wall" | "fallback_longest_wall" | "not_applicable" | "manual_required_l_shape_window" | "manual";
 
 export type QuantityRow = {
   floor: string;
