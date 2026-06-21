@@ -1,5 +1,5 @@
 import { AlertTriangle, CheckCircle2, CircleDashed, MinusCircle } from "lucide-react";
-import { differenceKey, indexDifferencesByCell } from "@/lib/calibration-differences";
+import { curtainWallCalibrationTarget, differenceKey, indexDifferencesByCell } from "@/lib/calibration-differences";
 import { quantityRowAnchorId } from "@/lib/quantity-row-anchor";
 import type { CalibrationDifference, CurtainWallWidthSource, QuantityRow, ReviewStatus } from "@/lib/types";
 
@@ -81,6 +81,7 @@ export function QuantityTable({
             const wallLengthDifference = differencesByCell.get(differenceKey(row.spaceName, "wall_measure_length_m"));
             const windowsillDifference = differencesByCell.get(differenceKey(row.spaceName, "windowsill_length_m"));
             const curtainWallDifference = differencesByCell.get(differenceKey(row.spaceName, "curtain_wall_width_m"));
+            const curtainWallCalibrationValue = curtainWallCalibrationTarget(row, curtainWallDifference);
             const windowAreaDifference = differencesByCell.get(differenceKey(row.spaceName, "window_area_m2"));
             const doorDeductDifference = differencesByCell.get(differenceKey(row.spaceName, "door_deduct_area_m2"));
             const latexPaintDifference = differencesByCell.get(differenceKey(row.spaceName, "latex_paint_area_m2"));
@@ -125,6 +126,11 @@ export function QuantityTable({
                 )}
                 <small className={`curtainWallSource ${row.curtainWallWidthSource}`}>{curtainWallSourceLabels[row.curtainWallWidthSource]}</small>
                 {row.curtainWallWidthSource === "manual_required_l_shape_window" && <small className="curtainWallHelp">请填实际窗帘/窗帘箱延米</small>}
+                {onChangeCurtainWallWidth && curtainWallCalibrationValue !== null && (
+                  <button className="inlineApplyButton" type="button" onClick={() => onChangeCurtainWallWidth(row.spaceName, curtainWallCalibrationValue)}>
+                    应用校准 {curtainWallCalibrationValue.toFixed(2)} m
+                  </button>
+                )}
                 <DifferenceValue difference={curtainWallDifference} />
               </td>
               <td className={differenceClass(windowAreaDifference)}>

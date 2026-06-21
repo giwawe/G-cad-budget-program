@@ -200,6 +200,8 @@
 
 校准模板会导出 `windowsill_length_m`、`curtain_wall_width_m` 和 `curtain_wall_width_source`。报价员可以把 L 形窗人工确认后的实际延米填回模板，再作为 golden JSON 固定校准结果。
 
+上传包含 `curtain_wall_width_m` 的校准 JSON 后，若当前行来源是 `manual_required_l_shape_window` 或 `fallback_longest_wall`，工程量表会提供“应用校准”按钮，把校准值写回当前行并将来源标记为 `manual`。
+
 ## 9. 特殊空间
 
 | 空间名称关键词 | 当前处理 |
