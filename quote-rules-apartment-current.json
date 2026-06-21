@@ -67,5 +67,11 @@
     "unit": "m2",
     "unit_price": 51.5,
     "space_types": ["厨房", "卫生间", "阳台", "露台", "洗衣房"]
+  },
+  {
+    "item_name": "窗台石铺贴",
+    "metric": "windowsill_length_m",
+    "unit": "M",
+    "unit_price": 73
   }
 ]

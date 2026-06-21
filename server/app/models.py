@@ -49,6 +49,7 @@ class QuantityRow:
     wall_measure_length_m: float
     height_m: float
     window_width_total_m: float
+    windowsill_length_m: float
     window_area_m2: float
     door_width_total_m: float
     door_deduct_area_m2: float

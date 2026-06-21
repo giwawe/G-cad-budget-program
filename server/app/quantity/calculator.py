@@ -25,6 +25,7 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
     wall_measure_length_m = round(sum(space.wall_lengths_m), 2)
 
     window_width_total_m = round(sum(window.width_m for window in space.windows), 2)
+    windowsill_length_m = window_width_total_m
     window_area_m2 = round(
         sum(window.width_m * (window.height_m or defaults.default_window_height_m) for window in space.windows),
         2,
@@ -72,6 +73,7 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
         wall_measure_length_m=wall_measure_length_m,
         height_m=height_m,
         window_width_total_m=window_width_total_m,
+        windowsill_length_m=windowsill_length_m,
         window_area_m2=window_area_m2,
         door_width_total_m=door_width_total_m,
         door_deduct_area_m2=door_deduct_area_m2,

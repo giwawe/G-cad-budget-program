@@ -2,6 +2,7 @@ DEFAULT_NUMERIC_FIELDS = [
     "floor_area_m2",
     "wall_measure_length_m",
     "window_width_total_m",
+    "windowsill_length_m",
     "window_area_m2",
     "door_width_total_m",
     "door_deduct_area_m2",

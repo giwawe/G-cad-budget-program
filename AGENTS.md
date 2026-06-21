@@ -142,6 +142,8 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 厨房、卫生间、阳台、露台、洗衣房自动计算 `waterproof_area_m2`。
 - 防水面积公式：`地面面积 + 墙面计量长度 * 防水高度`；卫生间防水高度 `1.8m`，其它湿区 `0.3m`。
 - 阳台、露台、洗衣房墙砖当前不自动计价，未来需要贴砖墙面标记或图层，若有贴砖墙面再按实际层高计算。
+- 窗台石当前自动计算 `windowsill_length_m`，v1 直接等于 `window_width_total_m`，用于窗台石铺贴报价。
+- 窗帘和窗帘箱不能按窗洞宽度计量，应按窗户所在墙面的整面墙宽度；厨房、卫生间、过道等空间默认不做窗帘/窗帘箱，当前仍保留为待补口径。
 
 ## 前端已实现能力
 
@@ -155,7 +157,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 导入校对快照 JSON，恢复表格、状态、summary、comparison 和来源文件名。
 - 每行可改 review 状态：待确认、已确认、需修图、不计价。
 - SVG 图形 review 可缩放/平移，支持空间改名、门洞扣减切换、窗洞扣减切换、窗高调整。
-- 导出报价映射 JSON；默认使用商品房报价表 `整装` 工作表中当前可自动取数的 10 条规则，跳过不计价空间。
+- 导出报价映射 JSON；默认使用商品房报价表 `整装` 工作表中当前可自动取数的 11 条规则，跳过不计价空间。
 - 下载/导入报价规则 JSON；导入后报价映射会使用当前规则重新计算金额。
 - 页面会提示商品房整装待补取数口径清单，这些项目暂不参与金额汇总。
 
@@ -167,20 +169,21 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 地面砖铺贴(750X1500)：按 `floorAreaM2`，当前不限制空间类型。
 - 墙面贴瓷砖(600X1200)：按 `wallTileAreaM2`，仅匹配厨房、卫生间。
 - 墙地面防漏处理：按 `waterproofAreaM2`，仅匹配厨房、卫生间、阳台、露台、洗衣房。
+- 窗台石铺贴：按 `windowsillLengthM`，有窗洞长度时生成。
 
 这些规则只覆盖现有算量口径能稳定承接的自动计价项目，不等于完整整装报价。
 
 报价规则 JSON 是数组格式，字段为：
 
 - `item_name`：清单项名称。
-- `metric`：取数指标，当前只允许 `latex_paint_area_m2`、`floor_area_m2`、`ceiling_area_m2`、`wall_tile_area_m2`、`waterproof_area_m2`。
+- `metric`：取数指标，当前只允许 `latex_paint_area_m2`、`floor_area_m2`、`ceiling_area_m2`、`wall_tile_area_m2`、`waterproof_area_m2`、`windowsill_length_m`。
 - `unit`：单位。
 - `unit_price`：单价，必须是非负数字。
 - `space_types`：可选，空间类型白名单；填写后只对这些空间类型生成清单项。
 
 当前商品房报价表已整理出一份可导入规则：`quote-rules-apartment-current.json`。它基于商品房报价表的 `整装` 工作表，只包含当前系统能准确承接的面积类项目；`半包` 工作表不读取、不展示、不保留为规则来源。
 
-商品房整装待补取数口径记录在 `apartmentPendingQuoteMetrics()`，只用于页面展示和后续扩展，不混入可导入规则 JSON，也不参与金额汇总。当前重点包括阳台/露台/洗衣房墙砖、窗台石、窗帘箱、水电、拆改、门、洁具、定制、主材、套装项等。
+商品房整装待补取数口径记录在 `apartmentPendingQuoteMetrics()`，只用于页面展示和后续扩展，不混入可导入规则 JSON，也不参与金额汇总。当前重点包括阳台/露台/洗衣房墙砖、窗帘箱/窗帘整墙宽、水电、拆改、门、洁具、定制、主材、套装项等。
 
 ## 测试与 fixture
 

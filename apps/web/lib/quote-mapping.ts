@@ -1,7 +1,7 @@
 import type { QuantityRow } from "./types";
 
-type QuantityRowMetric = "latexPaintAreaM2" | "floorAreaM2" | "ceilingAreaM2" | "wallTileAreaM2" | "waterproofAreaM2";
-export type QuoteMetric = "latex_paint_area_m2" | "floor_area_m2" | "ceiling_area_m2" | "wall_tile_area_m2" | "waterproof_area_m2";
+type QuantityRowMetric = "latexPaintAreaM2" | "floorAreaM2" | "ceilingAreaM2" | "wallTileAreaM2" | "waterproofAreaM2" | "windowsillLengthM";
+export type QuoteMetric = "latex_paint_area_m2" | "floor_area_m2" | "ceiling_area_m2" | "wall_tile_area_m2" | "waterproof_area_m2" | "windowsill_length_m";
 
 export type QuoteRule = {
   item_name: string;
@@ -58,6 +58,7 @@ const DEFAULT_RULES: QuoteRule[] = [
   { item_name: "地面砖铺贴(750X1500)", metric: "floor_area_m2", unit: "m2", unit_price: 96, space_types: undefined },
   { item_name: "墙面贴瓷砖(600X1200)", metric: "wall_tile_area_m2", unit: "m2", unit_price: 100, space_types: WALL_TILE_SPACE_TYPES },
   { item_name: "墙地面防漏处理", metric: "waterproof_area_m2", unit: "m2", unit_price: 51.5, space_types: WET_FLOOR_SPACE_TYPES },
+  { item_name: "窗台石铺贴", metric: "windowsill_length_m", unit: "M", unit_price: 73, space_types: undefined },
 ];
 
 const APARTMENT_PENDING_METRICS: PendingQuoteMetric[] = [
@@ -70,19 +71,11 @@ const APARTMENT_PENDING_METRICS: PendingQuoteMetric[] = [
     source_group: "墙砖",
   },
   {
-    item_name: "窗台石铺贴",
-    unit: "M",
-    unit_price: 73,
-    reason: "窗台石按窗洞宽度或窗台长度计量，当前 DXF 只沉淀窗洞面积与宽度汇总，尚未形成逐窗台清单。",
-    suggested_metric: "windowsill_length_m",
-    source_group: "窗台石",
-  },
-  {
     item_name: "暗窗帘箱",
     unit: "M",
     unit_price: 110,
-    reason: "窗帘箱按需要安装窗帘的墙面长度计量，不能从地面、顶面或乳胶漆面积推导。",
-    suggested_metric: "curtain_box_length_m",
+    reason: "窗帘箱和窗帘应按窗户所在墙面的整面墙宽度计量，且厨房、卫生间、过道等空间默认不做；当前尚未识别窗户所在墙面整宽。",
+    suggested_metric: "curtain_wall_width_m",
     source_group: "窗帘箱",
   },
   {
@@ -181,6 +174,7 @@ const METRIC_TO_ROW_FIELD: Record<QuoteMetric, QuantityRowMetric> = {
   ceiling_area_m2: "ceilingAreaM2",
   wall_tile_area_m2: "wallTileAreaM2",
   waterproof_area_m2: "waterproofAreaM2",
+  windowsill_length_m: "windowsillLengthM",
 };
 
 export function defaultQuoteRules(): QuoteRule[] {
@@ -275,7 +269,14 @@ function normalizeQuoteRule(rule: unknown, index: number): QuoteRule {
 }
 
 function isQuoteMetric(metric: unknown): metric is QuoteMetric {
-  return metric === "latex_paint_area_m2" || metric === "floor_area_m2" || metric === "ceiling_area_m2" || metric === "wall_tile_area_m2" || metric === "waterproof_area_m2";
+  return (
+    metric === "latex_paint_area_m2" ||
+    metric === "floor_area_m2" ||
+    metric === "ceiling_area_m2" ||
+    metric === "wall_tile_area_m2" ||
+    metric === "waterproof_area_m2" ||
+    metric === "windowsill_length_m"
+  );
 }
 
 function ruleAppliesToRow(rule: QuoteRule, row: QuantityRow) {

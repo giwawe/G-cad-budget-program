@@ -55,6 +55,7 @@ export function QuantityTable({
             <th>地面面积</th>
             <th>墙线长度</th>
             <th>层高</th>
+            <th>窗台石长度</th>
             <th>窗洞面积</th>
             <th>门洞扣减</th>
             <th>乳胶漆面积</th>
@@ -67,6 +68,7 @@ export function QuantityTable({
           {rows.map((row) => {
             const floorAreaDifference = differencesByCell.get(differenceKey(row.spaceName, "floor_area_m2"));
             const wallLengthDifference = differencesByCell.get(differenceKey(row.spaceName, "wall_measure_length_m"));
+            const windowsillDifference = differencesByCell.get(differenceKey(row.spaceName, "windowsill_length_m"));
             const windowAreaDifference = differencesByCell.get(differenceKey(row.spaceName, "window_area_m2"));
             const doorDeductDifference = differencesByCell.get(differenceKey(row.spaceName, "door_deduct_area_m2"));
             const latexPaintDifference = differencesByCell.get(differenceKey(row.spaceName, "latex_paint_area_m2"));
@@ -89,6 +91,10 @@ export function QuantityTable({
                 <DifferenceValue difference={wallLengthDifference} />
               </td>
               <td>{row.heightM.toFixed(2)} m</td>
+              <td className={differenceClass(windowsillDifference)}>
+                {row.windowsillLengthM.toFixed(2)} m
+                <DifferenceValue difference={windowsillDifference} />
+              </td>
               <td className={differenceClass(windowAreaDifference)}>
                 {row.windowAreaM2.toFixed(2)} m2
                 <DifferenceValue difference={windowAreaDifference} />

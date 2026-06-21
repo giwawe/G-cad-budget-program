@@ -32,6 +32,7 @@ def test_latex_area_deducts_windows_but_not_doors():
     assert row.window_area_m2 == 4.8
     assert row.door_width_total_m == 0.9
     assert row.latex_paint_area_m2 == 37.2
+    assert row.windowsill_length_m == 3.2
     assert row.wall_tile_area_m2 == 0
     assert row.waterproof_area_m2 == 0
     assert row.status == ReviewStatus.pending_review

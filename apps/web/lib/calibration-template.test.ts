@@ -12,6 +12,7 @@ const rows: QuantityRow[] = [
     wallMeasureLengthM: 9.12,
     heightM: 2.8,
     windowWidthTotalM: 0,
+    windowsillLengthM: 0,
     windowAreaM2: 0,
     doorWidthTotalM: 1,
     doorDeductAreaM2: 0,

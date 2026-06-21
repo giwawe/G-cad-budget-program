@@ -70,6 +70,7 @@ export function parseReviewSnapshot(content: string): ReviewSnapshot {
 function normalizeSnapshotRow(row: QuantityRow): QuantityRow {
   return {
     ...row,
+    windowsillLengthM: typeof row.windowsillLengthM === "number" ? row.windowsillLengthM : row.windowWidthTotalM,
     wallTileAreaM2: typeof row.wallTileAreaM2 === "number" ? row.wallTileAreaM2 : 0,
     waterproofAreaM2: typeof row.waterproofAreaM2 === "number" ? row.waterproofAreaM2 : 0,
   };
