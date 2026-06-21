@@ -732,6 +732,28 @@ td .differenceValue {
   font-weight: 700;
 }
 
+.inlineNumberField {
+  display: inline-flex;
+  align-items: center;
+  grid-template-columns: none;
+  gap: 6px;
+  color: #334155;
+}
+
+.inlineNumberField input {
+  width: 84px;
+  min-height: 30px;
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.inlineNumberField span {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
 @media (max-width: 960px) {
   main {
     width: min(100vw - 24px, 1360px);

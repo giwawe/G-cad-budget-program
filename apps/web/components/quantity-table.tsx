@@ -37,10 +37,12 @@ export function QuantityTable({
   rows,
   differences = [],
   onChangeStatus,
+  onChangeCurtainWallWidth,
 }: {
   rows: QuantityRow[];
   differences?: CalibrationDifference[];
   onChangeStatus?: (spaceName: string, status: ReviewStatus) => void;
+  onChangeCurtainWallWidth?: (spaceName: string, widthM: number) => void;
 }) {
   const differencesByCell = indexDifferencesByCell(differences);
 
@@ -98,7 +100,21 @@ export function QuantityTable({
                 <DifferenceValue difference={windowsillDifference} />
               </td>
               <td className={differenceClass(curtainWallDifference)}>
-                {row.curtainWallWidthM.toFixed(2)} m
+                {onChangeCurtainWallWidth ? (
+                  <label className="inlineNumberField">
+                    <input
+                      aria-label={`${row.spaceName} 窗帘墙宽候选`}
+                      min="0"
+                      step="0.01"
+                      type="number"
+                      value={row.curtainWallWidthM}
+                      onChange={(event) => onChangeCurtainWallWidth(row.spaceName, Number(event.target.value))}
+                    />
+                    <span>m</span>
+                  </label>
+                ) : (
+                  `${row.curtainWallWidthM.toFixed(2)} m`
+                )}
                 <DifferenceValue difference={curtainWallDifference} />
               </td>
               <td className={differenceClass(windowAreaDifference)}>

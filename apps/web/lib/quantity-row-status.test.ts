@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { updateQuantityRowStatus } from "./quantity-row-status.ts";
+import { updateQuantityRowCurtainWallWidth, updateQuantityRowStatus } from "./quantity-row-status.ts";
 import type { QuantityRow } from "./types.ts";
 
 const rows: QuantityRow[] = [
@@ -55,3 +55,14 @@ assert.equal(updated[0].status, "confirmed");
 assert.equal(updated[1].status, "pending_review");
 assert.equal(rows[0].status, "pending_review");
 assert.notEqual(updated, rows);
+
+const updatedCurtainWidth = updateQuantityRowCurtainWallWidth(rows, "客厅", 5.236);
+
+assert.equal(updatedCurtainWidth[0].curtainWallWidthM, 0);
+assert.equal(updatedCurtainWidth[1].curtainWallWidthM, 5.24);
+assert.equal(rows[1].curtainWallWidthM, 0);
+assert.notEqual(updatedCurtainWidth, rows);
+
+const clampedCurtainWidth = updateQuantityRowCurtainWallWidth(rows, "客厅", -1);
+
+assert.equal(clampedCurtainWidth[1].curtainWallWidthM, 0);

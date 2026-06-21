@@ -6,7 +6,7 @@ import { DrawingReview } from "@/components/drawing-review";
 import { QuantityTable } from "@/components/quantity-table";
 import { calibrationTemplateFileName, quantityRowsToCalibrationTemplate } from "@/lib/calibration-template";
 import { quantityRowAnchorHref } from "@/lib/quantity-row-anchor";
-import { updateQuantityRowStatus } from "@/lib/quantity-row-status";
+import { updateQuantityRowCurtainWallWidth, updateQuantityRowStatus } from "@/lib/quantity-row-status";
 import {
   apartmentPendingQuoteMetrics,
   buildQuoteMapping,
@@ -380,6 +380,15 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
     setMessage(`${spaceName} 状态已更新为 ${statusLabels[status]}`);
   }
 
+  function handleChangeCurtainWallWidth(spaceName: string, widthM: number) {
+    if (!Number.isFinite(widthM)) {
+      return;
+    }
+    setRows((current) => updateQuantityRowCurtainWallWidth(current, spaceName, widthM));
+    setGeneratedQuoteMapping(null);
+    setMessage(`${spaceName} 窗帘墙宽候选已更新`);
+  }
+
   function handleRenameSpace(index: number, name: string) {
     const trimmedName = name.trim();
     if (!trimmedName) {
@@ -744,7 +753,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
             <p>第一期重点验证 DXF 自动算出的空间面积、墙面计量长度、窗洞扣减和计算依据。</p>
           </div>
         </div>
-        <QuantityTable rows={rows} differences={comparison?.differences ?? []} onChangeStatus={handleChangeStatus} />
+        <QuantityTable rows={rows} differences={comparison?.differences ?? []} onChangeStatus={handleChangeStatus} onChangeCurtainWallWidth={handleChangeCurtainWallWidth} />
       </section>
     </main>
   );
