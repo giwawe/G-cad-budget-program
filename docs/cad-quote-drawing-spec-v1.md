@@ -196,13 +196,13 @@
 
 防水高度当前按空间类型取默认值：卫生间 `1.8m`，厨房、阳台、露台、洗衣房 `0.3m`。阳台、露台、洗衣房墙砖不是所有墙面都需要铺贴，当前不自动计算墙砖面积；后续需要增加贴砖墙面标记或图层后，再按实际层高计算。
 
-窗帘和窗帘箱不按窗洞宽度计量，应按窗户所在墙面的整面墙宽度计量。厨房、卫生间、过道等空间默认不做窗帘和窗帘箱；一般不做窗帘箱的位置也不生成窗帘。当前系统只生成 `curtain_wall_width_m` 候选值：若窗洞中心线能匹配到邻近且平行的 `QUOTE_WALL`，取该墙段整宽；若匹配不到，回退到空间最长一段 `QUOTE_WALL`。L 形或转角窗涉及两面墙和转角做法，当前不自动计算窗帘或窗帘箱长度，候选值为 `0`，需要人工确认。系统同时输出 `curtain_wall_width_source`：`matched_window_wall` 表示已匹配窗户所在墙，`fallback_longest_wall` 表示回退最长墙需人工重点确认，`manual_required_l_shape_window` 表示 L 形窗需人工确认，`not_applicable` 表示不适用，前端人工编辑后为 `manual`。该候选值允许在工程量表中人工校准、随校对快照保存/恢复；当前不自动生成窗帘或窗帘箱金额，后续完成人工校准和规则确认后再接入报价。
+窗帘和窗帘箱不按窗洞宽度计量，应按窗户所在墙面的整面墙宽度计量。厨房、卫生间、过道等空间默认不做窗帘和窗帘箱；一般不做窗帘箱的位置也不生成窗帘。当前系统只生成 `curtain_wall_width_m` 候选值：若窗洞中心线能匹配到邻近且平行的 `QUOTE_WALL`，取该墙段整宽；若匹配不到，回退到空间最长一段 `QUOTE_WALL`。L 形或转角窗涉及两面墙和转角做法，当前不自动计算窗帘或窗帘箱长度，候选值为 `0`，需要人工确认。系统同时输出 `curtain_wall_width_source`：`matched_window_wall` 表示已匹配窗户所在墙，`fallback_longest_wall` 表示回退最长墙需人工重点确认，`manual_required_l_shape_window` 表示 L 形窗需人工确认，`not_applicable` 表示不适用，前端人工编辑后为 `manual`。该候选值允许在工程量表中人工校准、随校对快照保存/恢复；人工确认后的暗窗帘箱会进入导出的 `curtain_quote_candidates` 候选清单，但当前不自动生成窗帘或窗帘箱金额，后续完成人工校准和规则确认后再接入报价。
 
 校准模板会导出 `windowsill_length_m`、`curtain_wall_width_m` 和 `curtain_wall_width_source`。报价员可以把 L 形窗人工确认后的实际延米填回模板，再作为 golden JSON 固定校准结果。
 
 上传包含 `curtain_wall_width_m` 的校准 JSON 后，若当前行来源是 `manual_required_l_shape_window` 或 `fallback_longest_wall`，工程量表会提供“应用校准”按钮，把校准值写回当前行、将来源标记为 `manual`，并清除该单元格的当前差异。
 
-报价映射区域会统计窗帘/窗帘箱可报价候选空间数、仍待确认空间数和对应空间名，用于判断该口径离报价接入还有多远；导出的报价映射 JSON 同步附带 `curtain_quote_readiness` 摘要。该统计当前不生成窗帘或窗帘箱金额。
+报价映射区域会统计窗帘/窗帘箱可报价候选空间数、仍待确认空间数和对应空间名，用于判断该口径离报价接入还有多远；导出的报价映射 JSON 同步附带 `curtain_quote_readiness` 摘要和 `curtain_quote_candidates` 人工确认候选清单。该统计和候选清单当前不生成窗帘或窗帘箱金额，也不计入 `items`。
 
 ## 9. 特殊空间
 

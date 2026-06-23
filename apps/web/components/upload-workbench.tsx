@@ -682,6 +682,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
             <div className="curtainReadinessDetails">
               <span>可候选：{formatCurtainReadinessSpaces(curtainReadiness.ready_space_names)}</span>
               <span>待确认：{formatCurtainReadinessSpaces(curtainReadiness.pending_space_names)}</span>
+              <span>已导出人工确认候选：{generatedQuoteMapping.mapping.curtain_quote_candidates.length} 项</span>
             </div>
             <ul>
               {pendingQuoteMetrics.slice(0, 10).map((item) => (

@@ -185,14 +185,28 @@ assert.equal(formatCurtainReadinessSpaces([]), "暂无");
 
 const curtainCandidateMapping = buildQuoteMapping([
   { ...rows[0], spaceName: "主卧", spaceType: "卧室", curtainWallWidthM: 4.2, curtainWallWidthSource: "manual" },
+  { ...rows[0], spaceName: "次卧", spaceType: "卧室", curtainWallWidthM: 3.6, curtainWallWidthSource: "matched_window_wall" },
   { ...rows[0], spaceName: "客厅", spaceType: "客厅", curtainWallWidthM: 0, curtainWallWidthSource: "manual_required_l_shape_window" },
 ]);
 assert.deepEqual(curtainCandidateMapping.curtain_quote_readiness, {
-  ready_count: 1,
+  ready_count: 2,
   pending_count: 1,
-  ready_space_names: ["主卧"],
+  ready_space_names: ["主卧", "次卧"],
   pending_space_names: ["客厅"],
 });
+assert.deepEqual(curtainCandidateMapping.curtain_quote_candidates, [
+  {
+    floor: "一层",
+    space_name: "主卧",
+    space_type: "卧室",
+    item_name: "暗窗帘箱",
+    quantity: 4.2,
+    unit: "M",
+    unit_price: 110,
+    source: "manual",
+    note: "人工确认候选，不参与金额汇总",
+  },
+]);
 assert.ok(!curtainCandidateMapping.items.some((item) => item.item_name.includes("窗帘")));
 
 assert.throws(() => parseQuoteRules("{bad json"), /报价规则 JSON 格式无效/);

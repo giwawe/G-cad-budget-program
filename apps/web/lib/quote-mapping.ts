@@ -31,6 +31,18 @@ export type QuoteMappingItem = {
   amount: number;
 };
 
+export type CurtainQuoteCandidate = {
+  floor: string;
+  space_name: string;
+  space_type: string;
+  item_name: "暗窗帘箱";
+  quantity: number;
+  unit: "M";
+  unit_price: number;
+  source: "manual";
+  note: string;
+};
+
 export type QuoteMapping = {
   items: QuoteMappingItem[];
   summary: {
@@ -39,6 +51,7 @@ export type QuoteMapping = {
     total_amount: number;
   };
   curtain_quote_readiness: CurtainQuoteReadiness;
+  curtain_quote_candidates: CurtainQuoteCandidate[];
 };
 
 export type CurtainQuoteReadiness = {
@@ -222,6 +235,22 @@ export function formatCurtainReadinessSpaces(spaceNames: string[], limit = 4): s
   return spaceNames.length > limit ? `${visible}等 ${spaceNames.length} 个` : visible;
 }
 
+export function curtainQuoteCandidates(rows: QuantityRow[]): CurtainQuoteCandidate[] {
+  return rows
+    .filter((row) => row.status !== "excluded" && row.curtainWallWidthSource === "manual" && row.curtainWallWidthM > 0)
+    .map((row) => ({
+      floor: row.floor,
+      space_name: row.spaceName,
+      space_type: row.spaceType,
+      item_name: "暗窗帘箱",
+      quantity: round2(row.curtainWallWidthM),
+      unit: "M",
+      unit_price: 110,
+      source: "manual",
+      note: "人工确认候选，不参与金额汇总",
+    }));
+}
+
 export function buildQuoteMapping(rows: QuantityRow[], rules: QuoteRule[] = DEFAULT_RULES): QuoteMapping {
   const billableRows = rows.filter((row) => row.status !== "excluded");
   const items = billableRows.flatMap((row) =>
@@ -248,6 +277,7 @@ export function buildQuoteMapping(rows: QuantityRow[], rules: QuoteRule[] = DEFA
       total_amount: round2(items.reduce((sum, item) => sum + item.amount, 0)),
     },
     curtain_quote_readiness: curtainQuoteReadiness(rows),
+    curtain_quote_candidates: curtainQuoteCandidates(rows),
   };
 }
 
