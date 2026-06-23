@@ -144,7 +144,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 阳台、露台、洗衣房墙砖当前不自动计价，未来需要贴砖墙面标记或图层，若有贴砖墙面再按实际层高计算。
 - 窗台石当前自动计算 `windowsill_length_m`，v1 直接等于 `window_width_total_m`，用于窗台石铺贴报价。
 - 窗帘和窗帘箱不能按窗洞宽度计量，应按窗户所在墙面的整面墙宽度；厨房、卫生间、过道等空间默认不做窗帘/窗帘箱。
-- 当前 `curtain_wall_width_m` 只是候选取数：客厅、卧室、书房有窗时优先按窗洞中心线匹配邻近且平行的 `QUOTE_WALL`，取窗户所在墙面的整面墙宽；匹配不到时回退到该空间最长一段 `QUOTE_WALL`；其它空间为 `0`。L 形/转角窗帘和窗帘箱长度不自动计算，候选值为 `0` 并要求人工确认。`curtain_wall_width_source` 标记来源：`matched_window_wall`、`fallback_longest_wall`、`manual_required_l_shape_window`、`not_applicable` 或前端人工编辑后的 `manual`。前端工程量表可人工校准并随校对快照保存/恢复，但它不进入报价规则和金额汇总。
+- `curtain_wall_width_m` 是窗帘墙宽候选取数：客厅、卧室、书房有窗时优先按窗洞中心线匹配邻近且平行的 `QUOTE_WALL`，取窗户所在墙面的整面墙宽；匹配不到时回退到该空间最长一段 `QUOTE_WALL`；其它空间为 `0`。L 形/转角窗帘和窗帘箱长度不自动计算，候选值为 `0` 并要求人工确认。`curtain_wall_width_source` 标记来源：`matched_window_wall`、`fallback_longest_wall`、`manual_required_l_shape_window`、`not_applicable` 或前端人工编辑后的 `manual`。前端工程量表可人工校准并随校对快照保存/恢复；只有来源为 `manual` 且长度大于 0 时，暗窗帘箱才进入报价规则和金额汇总。
 
 ## 前端已实现能力
 
@@ -160,10 +160,10 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 导入校对快照 JSON，恢复表格、状态、summary、comparison 和来源文件名。
 - 每行可改 review 状态：待确认、已确认、需修图、不计价。
 - SVG 图形 review 可缩放/平移，支持空间改名、门洞扣减切换、窗洞扣减切换、窗高调整。
-- 导出报价映射 JSON；默认使用商品房报价表 `整装` 工作表中当前可自动取数的 11 条规则，跳过不计价空间。
+- 导出报价映射 JSON；默认使用商品房报价表 `整装` 工作表中当前可自动取数的 12 条规则，跳过不计价空间。
 - 下载/导入报价规则 JSON；导入后报价映射会使用当前规则重新计算金额。
 - 页面会提示商品房整装待补取数口径清单，这些项目暂不参与金额汇总。
-- 导出报价映射后会显示窗帘/窗帘箱可报价候选空间数、仍待确认空间数和对应空间名；导出的报价映射 JSON 会附带 `curtain_quote_readiness` 摘要，并把人工确认后的暗窗帘箱写入 `curtain_quote_candidates` 候选清单，但窗帘/窗帘箱仍不进入 `items` 和金额汇总。
+- 导出报价映射后会显示窗帘/窗帘箱可报价候选空间数、仍待确认空间数和对应空间名；导出的报价映射 JSON 会附带 `curtain_quote_readiness` 摘要，并把人工确认后的暗窗帘箱写入 `curtain_quote_candidates` 候选清单和 `items` 金额汇总。
 - 窗帘墙宽候选列可在工程量表中直接编辑；编辑后会清空已生成的报价映射，避免沿用旧结果。
 - 窗帘墙宽候选列会显示候选来源，`回退最长墙` 代表未匹配到窗户所在墙面，需要人工重点确认；`L形窗人工确认` 代表转角窗不能按直线墙宽自动取数。
 
@@ -176,21 +176,21 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 墙面贴瓷砖(600X1200)：按 `wallTileAreaM2`，仅匹配厨房、卫生间。
 - 墙地面防漏处理：按 `waterproofAreaM2`，仅匹配厨房、卫生间、阳台、露台、洗衣房。
 - 窗台石铺贴：按 `windowsillLengthM`，有窗洞长度时生成。
-- 窗帘墙宽候选 `curtainWallWidthM` 只在工程量表展示，并可在人工确认后导出为 `curtain_quote_candidates` 候选清单；它仍不属于可导入报价规则 metric，也不进入金额汇总。
+- 窗帘墙宽候选 `curtainWallWidthM` 在工程量表展示，并可在人工确认后导出为 `curtain_quote_candidates` 候选清单；`curtain_wall_width_m` 已属于可导入报价规则 metric，但仅 `curtainWallWidthSource === "manual"` 时生成暗窗帘箱金额。
 
 这些规则只覆盖现有算量口径能稳定承接的自动计价项目，不等于完整整装报价。
 
 报价规则 JSON 是数组格式，字段为：
 
 - `item_name`：清单项名称。
-- `metric`：取数指标，当前只允许 `latex_paint_area_m2`、`floor_area_m2`、`ceiling_area_m2`、`wall_tile_area_m2`、`waterproof_area_m2`、`windowsill_length_m`。
+- `metric`：取数指标，当前只允许 `latex_paint_area_m2`、`floor_area_m2`、`ceiling_area_m2`、`wall_tile_area_m2`、`waterproof_area_m2`、`windowsill_length_m`、`curtain_wall_width_m`。
 - `unit`：单位。
 - `unit_price`：单价，必须是非负数字。
 - `space_types`：可选，空间类型白名单；填写后只对这些空间类型生成清单项。
 
 当前商品房报价表已整理出一份可导入规则：`quote-rules-apartment-current.json`。它基于商品房报价表的 `整装` 工作表，只包含当前系统能准确承接的面积类项目；`半包` 工作表不读取、不展示、不保留为规则来源。
 
-商品房整装待补取数口径记录在 `apartmentPendingQuoteMetrics()`，只用于页面展示和后续扩展，不混入可导入规则 JSON，也不参与金额汇总。当前重点包括阳台/露台/洗衣房墙砖、窗帘箱/窗帘整墙宽校准、水电、拆改、门、洁具、定制、主材、套装项等。
+商品房整装待补取数口径记录在 `apartmentPendingQuoteMetrics()`，只用于页面展示和后续扩展，不混入可导入规则 JSON，也不参与金额汇总。当前重点包括阳台/露台/洗衣房墙砖、水电、拆改、门、洁具、定制、主材、套装项等。
 
 ## 测试与 fixture
 

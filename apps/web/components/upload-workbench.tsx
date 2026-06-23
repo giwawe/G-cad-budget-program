@@ -677,7 +677,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
             </div>
             <div className="curtainReadiness">
               <strong>窗帘/窗帘箱可报价候选 {curtainReadiness.ready_count} 个空间</strong>
-              <span>仍待确认 {curtainReadiness.pending_count} 个空间；当前不参与金额汇总。</span>
+              <span>仍待确认 {curtainReadiness.pending_count} 个空间；人工确认后暗窗帘箱进入金额汇总。</span>
             </div>
             <div className="curtainReadinessDetails">
               <span>可候选：{formatCurtainReadinessSpaces(curtainReadiness.ready_space_names)}</span>

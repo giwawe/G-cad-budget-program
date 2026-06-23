@@ -73,5 +73,12 @@
     "metric": "windowsill_length_m",
     "unit": "M",
     "unit_price": 73
+  },
+  {
+    "item_name": "暗窗帘箱",
+    "metric": "curtain_wall_width_m",
+    "unit": "M",
+    "unit_price": 110,
+    "space_types": ["客厅", "卧室", "书房"]
   }
 ]
