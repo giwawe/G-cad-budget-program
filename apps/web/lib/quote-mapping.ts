@@ -38,6 +38,7 @@ export type QuoteMapping = {
     item_count: number;
     total_amount: number;
   };
+  curtain_quote_readiness: CurtainQuoteReadiness;
 };
 
 export type CurtainQuoteReadiness = {
@@ -246,6 +247,7 @@ export function buildQuoteMapping(rows: QuantityRow[], rules: QuoteRule[] = DEFA
       item_count: items.length,
       total_amount: round2(items.reduce((sum, item) => sum + item.amount, 0)),
     },
+    curtain_quote_readiness: curtainQuoteReadiness(rows),
   };
 }
 
