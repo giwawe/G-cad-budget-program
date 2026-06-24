@@ -50,7 +50,8 @@ type ApiQuantityRow = {
   demolition_wall_length_m: number;
   demolition_wall_area_m2: number;
   interior_door_count: number;
-  kitchen_cabinet_length_m: number;
+  kitchen_base_cabinet_length_m: number;
+  kitchen_wall_cabinet_length_m: number;
   waterproof_area_m2: number;
   evidence: string;
   anomalies: string[];
@@ -108,7 +109,8 @@ function toQuantityRow(row: ApiQuantityRow): QuantityRow {
     demolitionWallLengthM: row.demolition_wall_length_m ?? 0,
     demolitionWallAreaM2: row.demolition_wall_area_m2 ?? 0,
     interiorDoorCount: row.interior_door_count ?? 0,
-    kitchenCabinetLengthM: row.kitchen_cabinet_length_m ?? 0,
+    kitchenBaseCabinetLengthM: row.kitchen_base_cabinet_length_m ?? 0,
+    kitchenWallCabinetLengthM: row.kitchen_wall_cabinet_length_m ?? 0,
     waterproofAreaM2: row.waterproof_area_m2,
     evidence: row.evidence,
     anomalies: row.anomalies,
@@ -805,7 +807,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
   );
 }
 
-const layers = ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_WALL_TILE", "QUOTE_NEW_WALL", "QUOTE_DEMO_WALL", "QUOTE_CABINET", "QUOTE_WINDOW", "QUOTE_DOOR", "QUOTE_FLOOR", "QUOTE_HEIGHT"];
+const layers = ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_WALL_TILE", "QUOTE_NEW_WALL", "QUOTE_DEMO_WALL", "QUOTE_BASE_CABINET", "QUOTE_WALL_CABINET", "QUOTE_WINDOW", "QUOTE_DOOR", "QUOTE_FLOOR", "QUOTE_HEIGHT"];
 
 const statusLabels: Record<ReviewStatus, string> = {
   pending_review: "待确认",

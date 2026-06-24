@@ -153,25 +153,32 @@ def test_demolition_wall_area_uses_marked_demolition_wall_lengths_and_actual_hei
     assert row.demolition_wall_area_m2 == 11.2
 
 
-def test_kitchen_cabinet_length_uses_marked_cabinet_lengths_only_for_kitchen():
+def test_kitchen_cabinet_lengths_separate_base_and_wall_cabinets_only_for_kitchen():
     defaults = ProjectDefaults()
     kitchen = SpaceInput(
         floor="一层",
         name="一层-厨房",
         boundary_points_m=[(0, 0), (3.6, 0), (3.6, 2.4), (0, 2.4)],
         wall_lengths_m=[3.6, 2.4, 3.6, 2.4],
-        cabinet_lengths_m=[3.0, 1.3],
+        base_cabinet_lengths_m=[3.0, 1.3],
+        wall_cabinet_lengths_m=[3.0],
     )
     bedroom = SpaceInput(
         floor="一层",
         name="一层-卧室",
         boundary_points_m=[(0, 0), (3.6, 0), (3.6, 2.4), (0, 2.4)],
         wall_lengths_m=[3.6, 2.4, 3.6, 2.4],
-        cabinet_lengths_m=[2.0],
+        base_cabinet_lengths_m=[2.0],
+        wall_cabinet_lengths_m=[1.0],
     )
 
-    assert calculate_quantity_row(kitchen, defaults).kitchen_cabinet_length_m == 4.3
-    assert calculate_quantity_row(bedroom, defaults).kitchen_cabinet_length_m == 0
+    kitchen_row = calculate_quantity_row(kitchen, defaults)
+    bedroom_row = calculate_quantity_row(bedroom, defaults)
+
+    assert kitchen_row.kitchen_base_cabinet_length_m == 4.3
+    assert kitchen_row.kitchen_wall_cabinet_length_m == 3.0
+    assert bedroom_row.kitchen_base_cabinet_length_m == 0
+    assert bedroom_row.kitchen_wall_cabinet_length_m == 0
 
 
 def test_curtain_wall_width_uses_longest_wall_for_supported_windowed_spaces():

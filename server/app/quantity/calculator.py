@@ -62,7 +62,8 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
     demolition_wall_length_m = round(sum(space.demolition_wall_lengths_m), 2)
     demolition_wall_area_m2 = calculate_demolition_wall_area_m2(demolition_wall_length_m, height_m)
     interior_door_count = calculate_interior_door_count(space.doors)
-    kitchen_cabinet_length_m = calculate_kitchen_cabinet_length_m(space_type, space.cabinet_lengths_m)
+    kitchen_base_cabinet_length_m = calculate_kitchen_cabinet_length_m(space_type, space.base_cabinet_lengths_m)
+    kitchen_wall_cabinet_length_m = calculate_kitchen_cabinet_length_m(space_type, space.wall_cabinet_lengths_m)
     waterproof_area_m2 = calculate_waterproof_area_m2(space_type, floor_area_m2, wall_measure_length_m, height_m)
 
     anomalies = list(space.anomalies)
@@ -112,7 +113,8 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
         demolition_wall_length_m=demolition_wall_length_m,
         demolition_wall_area_m2=demolition_wall_area_m2,
         interior_door_count=interior_door_count,
-        kitchen_cabinet_length_m=kitchen_cabinet_length_m,
+        kitchen_base_cabinet_length_m=kitchen_base_cabinet_length_m,
+        kitchen_wall_cabinet_length_m=kitchen_wall_cabinet_length_m,
         waterproof_area_m2=waterproof_area_m2,
         evidence=evidence,
         anomalies=anomalies,

@@ -80,7 +80,8 @@ function normalizeSnapshotRow(row: QuantityRow): QuantityRow {
     demolitionWallLengthM: typeof row.demolitionWallLengthM === "number" ? row.demolitionWallLengthM : 0,
     demolitionWallAreaM2: typeof row.demolitionWallAreaM2 === "number" ? row.demolitionWallAreaM2 : 0,
     interiorDoorCount: typeof row.interiorDoorCount === "number" ? row.interiorDoorCount : 0,
-    kitchenCabinetLengthM: typeof row.kitchenCabinetLengthM === "number" ? row.kitchenCabinetLengthM : 0,
+    kitchenBaseCabinetLengthM: typeof row.kitchenBaseCabinetLengthM === "number" ? row.kitchenBaseCabinetLengthM : 0,
+    kitchenWallCabinetLengthM: typeof row.kitchenWallCabinetLengthM === "number" ? row.kitchenWallCabinetLengthM : 0,
     waterproofAreaM2: typeof row.waterproofAreaM2 === "number" ? row.waterproofAreaM2 : 0,
   };
 }

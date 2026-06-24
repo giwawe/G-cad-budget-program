@@ -575,8 +575,17 @@ code {
   vector-effect: non-scaling-stroke;
 }
 
-.svgCabinet {
+.svgBaseCabinet {
   stroke: #a855f7;
+  stroke-linecap: round;
+  stroke-width: 0.46;
+  opacity: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.svgWallCabinet {
+  stroke: #ec4899;
+  stroke-dasharray: 0.2 0.1;
   stroke-linecap: round;
   stroke-width: 0.46;
   opacity: 1;

@@ -98,7 +98,8 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - `QUOTE_WALL_TILE`：阳台、露台、洗衣房等实际贴砖墙面线，用于标记贴砖墙长。
 - `QUOTE_NEW_WALL`：新砌墙中心线或墙体线，用于新砌墙长度和面积。
 - `QUOTE_DEMO_WALL`：拆除墙体中心线或墙体线，用于拆墙长度和面积。
-- `QUOTE_CABINET`：厨房橱柜地柜/台面延米线，用于橱柜长度。
+- `QUOTE_BASE_CABINET`：厨房地柜/台面延米线，用于橱柜地柜长度。
+- `QUOTE_WALL_CABINET`：厨房吊柜延米线，用于橱柜吊柜长度。
 - `QUOTE_WINDOW`：窗洞宽度标记，默认参与墙面扣减。
 - `QUOTE_DOOR`：门洞宽度标记，普通门默认不扣墙面。
 - `QUOTE_TEXT`：空间名称文字；`QUOTE_FLOOR`、`QUOTE_HEIGHT` 当前只读取文字，能力仍有限。
@@ -115,7 +116,8 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 乳胶漆面积 = 墙面展开面积 - 窗洞面积 - 门洞扣减
 新砌墙面积 = 与空间关联的 QUOTE_NEW_WALL 长度合计 * 层高
 拆墙面积 = 与空间关联的 QUOTE_DEMO_WALL 长度合计 * 层高
-厨房橱柜长度 = 厨房空间内 QUOTE_CABINET 长度合计
+厨房地柜长度 = 厨房空间内 QUOTE_BASE_CABINET 长度合计
+厨房吊柜长度 = 厨房空间内 QUOTE_WALL_CABINET 长度合计
 ```
 
 默认参数：
@@ -155,7 +157,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 工程量表显示 `wall_tile_measure_length_m`，校准模板也会导出 `wall_tile_measure_length_m` 和 `wall_tile_area_m2`。
 - 新砌墙：画在 `QUOTE_NEW_WALL` 的线段会生成 `new_wall_length_m` 和 `new_wall_area_m2`，公式为 `新砌墙长度 * 空间实际层高`；默认报价规则“砌120厚砖墙”按 `new_wall_area_m2` 生成金额。
 - 拆墙：画在 `QUOTE_DEMO_WALL` 的线段会生成 `demolition_wall_length_m` 和 `demolition_wall_area_m2`，公式为 `拆墙长度 * 空间实际层高`；默认报价规则“拆改及拆墙”按 `demolition_wall_area_m2` 生成金额。
-- 橱柜：画在 `QUOTE_CABINET` 的线段会生成 `kitchen_cabinet_length_m`，仅厨房空间计入；默认报价规则“橱柜”按 `kitchen_cabinet_length_m` 生成金额。
+- 橱柜：地柜画在 `QUOTE_BASE_CABINET`，吊柜画在 `QUOTE_WALL_CABINET`，分别生成 `kitchen_base_cabinet_length_m` 和 `kitchen_wall_cabinet_length_m`，仅厨房空间计入；默认报价规则“橱柜地柜”和“橱柜吊柜”分别按对应 metric 生成金额。地柜和吊柜在 CAD 中可能重叠，必须分图层，不能用单一橱柜线混算。
 - 窗台石当前自动计算 `windowsill_length_m`，v1 直接等于 `window_width_total_m`，用于窗台石铺贴报价。
 - 窗帘和窗帘箱不能按窗洞宽度计量，应按窗户所在墙面的整面墙宽度；厨房、卫生间、过道等空间默认不做窗帘/窗帘箱。
 - `curtain_wall_width_m` 是窗帘墙宽候选取数：客厅、卧室、书房有窗时优先按窗洞中心线匹配邻近且平行的 `QUOTE_WALL`，取窗户所在墙面的整面墙宽；匹配不到时回退到该空间最长一段 `QUOTE_WALL`；其它空间为 `0`。L 形/转角窗帘和窗帘箱长度不自动计算，候选值为 `0` 并要求人工确认。`curtain_wall_width_source` 标记来源：`matched_window_wall`、`fallback_longest_wall`、`manual_required_l_shape_window`、`not_applicable` 或前端人工编辑后的 `manual`。前端工程量表可人工校准并随校对快照保存/恢复；只有来源为 `manual` 且长度大于 0 时，暗窗帘箱才进入报价规则和金额汇总。
@@ -168,7 +170,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 上传校准 JSON 并显示“校准通过”或差异卡片。
 - 差异卡片可跳转到对应表格行，差异单元格高亮。
 - 导出校准模板 JSON，并在页面显示可复制内容。
-- 校准模板包含窗台石长度、窗帘墙宽候选、窗帘墙宽来源、贴砖墙、新砌墙、拆墙、室内门数和橱柜长度指标，便于把人工确认值沉淀进 golden JSON。
+- 校准模板包含窗台石长度、窗帘墙宽候选、窗帘墙宽来源、贴砖墙、新砌墙、拆墙、室内门数、橱柜地柜长度和橱柜吊柜长度指标，便于把人工确认值沉淀进 golden JSON。
 - 上传校准 JSON 后，如果窗帘墙宽候选存在差异，且当前来源为 `manual_required_l_shape_window` 或 `fallback_longest_wall`，工程量表会提供“应用校准”按钮，把校准值写回当前行、标记为 `manual`，并清除该单元格的当前差异。
 - 导出校对快照 JSON；快照包含来源文件、校准文件、summary、comparison 和 rows。
 - 导入校对快照 JSON，恢复表格、状态、summary、comparison 和来源文件名。
@@ -193,7 +195,8 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 砌120厚砖墙：按 `newWallAreaM2`，画了 `QUOTE_NEW_WALL` 时生成。
 - 拆改及拆墙：按 `demolitionWallAreaM2`，画了 `QUOTE_DEMO_WALL` 时生成。
 - 室内门：按 `interiorDoorCount`，普通 `QUOTE_DOOR` 门洞生成。
-- 橱柜：按 `kitchenCabinetLengthM`，厨房画了 `QUOTE_CABINET` 时生成。
+- 橱柜地柜：按 `kitchenBaseCabinetLengthM`，厨房画了 `QUOTE_BASE_CABINET` 时生成。
+- 橱柜吊柜：按 `kitchenWallCabinetLengthM`，厨房画了 `QUOTE_WALL_CABINET` 时生成。
 - 窗帘墙宽候选 `curtainWallWidthM` 在工程量表展示，并可在人工确认后导出为 `curtain_quote_candidates` 候选清单；`curtain_wall_width_m` 已属于可导入报价规则 metric，但仅 `curtainWallWidthSource === "manual"` 时生成暗窗帘箱金额。
 
 这些规则只覆盖现有算量口径能稳定承接的自动计价项目，不等于完整整装报价。
@@ -201,7 +204,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 报价规则 JSON 是数组格式，字段为：
 
 - `item_name`：清单项名称。
-- `metric`：取数指标，当前只允许 `latex_paint_area_m2`、`floor_area_m2`、`ceiling_area_m2`、`wall_tile_area_m2`、`waterproof_area_m2`、`windowsill_length_m`、`new_wall_area_m2`、`demolition_wall_area_m2`、`interior_door_count`、`kitchen_cabinet_length_m`、`curtain_wall_width_m`。
+- `metric`：取数指标，当前只允许 `latex_paint_area_m2`、`floor_area_m2`、`ceiling_area_m2`、`wall_tile_area_m2`、`waterproof_area_m2`、`windowsill_length_m`、`new_wall_area_m2`、`demolition_wall_area_m2`、`interior_door_count`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`curtain_wall_width_m`。
 - `unit`：单位。
 - `unit_price`：单价，必须是非负数字。
 - `space_types`：可选，空间类型白名单；填写后只对这些空间类型生成清单项。

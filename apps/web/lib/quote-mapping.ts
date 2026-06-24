@@ -11,7 +11,8 @@ type QuantityRowMetric =
   | "newWallAreaM2"
   | "demolitionWallAreaM2"
   | "interiorDoorCount"
-  | "kitchenCabinetLengthM";
+  | "kitchenBaseCabinetLengthM"
+  | "kitchenWallCabinetLengthM";
 export type QuoteMetric =
   | "latex_paint_area_m2"
   | "floor_area_m2"
@@ -23,7 +24,8 @@ export type QuoteMetric =
   | "new_wall_area_m2"
   | "demolition_wall_area_m2"
   | "interior_door_count"
-  | "kitchen_cabinet_length_m";
+  | "kitchen_base_cabinet_length_m"
+  | "kitchen_wall_cabinet_length_m";
 
 export type QuoteRule = {
   item_name: string;
@@ -107,7 +109,8 @@ const DEFAULT_RULES: QuoteRule[] = [
   { item_name: "砌120厚砖墙", metric: "new_wall_area_m2", unit: "M2", unit_price: 170, space_types: undefined },
   { item_name: "拆改及拆墙", metric: "demolition_wall_area_m2", unit: "M2", unit_price: 60, space_types: undefined },
   { item_name: "室内门", metric: "interior_door_count", unit: "樘", unit_price: 1200, space_types: undefined },
-  { item_name: "橱柜", metric: "kitchen_cabinet_length_m", unit: "M", unit_price: 600, space_types: KITCHEN_CABINET_SPACE_TYPES },
+  { item_name: "橱柜地柜", metric: "kitchen_base_cabinet_length_m", unit: "M", unit_price: 600, space_types: KITCHEN_CABINET_SPACE_TYPES },
+  { item_name: "橱柜吊柜", metric: "kitchen_wall_cabinet_length_m", unit: "M", unit_price: 600, space_types: KITCHEN_CABINET_SPACE_TYPES },
   { item_name: "暗窗帘箱", metric: "curtain_wall_width_m", unit: "M", unit_price: 110, space_types: CURTAIN_SPACE_TYPES },
 ];
 
@@ -181,7 +184,8 @@ const METRIC_TO_ROW_FIELD: Record<QuoteMetric, QuantityRowMetric> = {
   new_wall_area_m2: "newWallAreaM2",
   demolition_wall_area_m2: "demolitionWallAreaM2",
   interior_door_count: "interiorDoorCount",
-  kitchen_cabinet_length_m: "kitchenCabinetLengthM",
+  kitchen_base_cabinet_length_m: "kitchenBaseCabinetLengthM",
+  kitchen_wall_cabinet_length_m: "kitchenWallCabinetLengthM",
 };
 
 export function defaultQuoteRules(): QuoteRule[] {
@@ -334,7 +338,8 @@ function isQuoteMetric(metric: unknown): metric is QuoteMetric {
     metric === "new_wall_area_m2" ||
     metric === "demolition_wall_area_m2" ||
     metric === "interior_door_count" ||
-    metric === "kitchen_cabinet_length_m"
+    metric === "kitchen_base_cabinet_length_m" ||
+    metric === "kitchen_wall_cabinet_length_m"
   );
 }
 

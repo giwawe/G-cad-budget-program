@@ -33,7 +33,8 @@
 | `QUOTE_WALL_TILE` | 阳台、露台、洗衣房等实际贴砖墙面线 | 计算标记贴砖墙长和墙砖面积 |
 | `QUOTE_NEW_WALL` | 新砌墙中心线或墙体线 | 计算新砌墙长度和面积 |
 | `QUOTE_DEMO_WALL` | 拆除墙体中心线或墙体线 | 计算拆墙长度和面积 |
-| `QUOTE_CABINET` | 厨房橱柜地柜/台面延米线 | 计算厨房橱柜长度 |
+| `QUOTE_BASE_CABINET` | 厨房地柜/台面延米线 | 计算橱柜地柜长度 |
+| `QUOTE_WALL_CABINET` | 厨房吊柜延米线 | 计算橱柜吊柜长度 |
 
 ### 2.3 预留或增强图层
 
@@ -144,20 +145,25 @@
 
 ### 4.4 厨房橱柜线
 
-`QUOTE_CABINET` 表示厨房橱柜按延米计价的柜体线，当前用于“橱柜”报价项。
+橱柜必须区分地柜和吊柜。CAD 图中地柜、吊柜模型可能在平面上重叠，系统不通过几何位置自动判断上下柜，而是通过图层区分。
+
+- `QUOTE_BASE_CABINET` 表示厨房地柜/台面按延米计价的柜体线。
+- `QUOTE_WALL_CABINET` 表示厨房吊柜按延米计价的柜体线。
 
 要求：
 
 - 可以使用 `LINE`、`LWPOLYLINE` 或 `POLYLINE`。
-- 只画实际计入橱柜延米的地柜/台面线，不要用厨房墙线或空间边界代替。
+- 地柜只画在 `QUOTE_BASE_CABINET`，吊柜只画在 `QUOTE_WALL_CABINET`，即使两者平面位置重叠也要分图层。
+- 不要用厨房墙线、柜体模型外轮廓或空间边界代替橱柜延米线。
 - 橱柜线应落在厨房空间边界内或贴近厨房，便于系统归属到正确空间。
-- 只有归属到空间类型为厨房的 `QUOTE_CABINET` 会计入 `kitchen_cabinet_length_m`；其它空间中的同层线段默认为 0。
-- 上下柜组合、转角重复、特殊高柜和台面材质差异当前不自动拆分，需要报价规则或校准 JSON 进一步确认。
+- 只有归属到空间类型为厨房的橱柜线会计入对应 metric；其它空间中的同类线段默认为 0。
+- 转角重复、特殊高柜、台面材质差异和上下柜不同单价当前不自动拆分，需要报价规则或校准 JSON 进一步确认。
 
 当前计算口径：
 
 ```text
-厨房橱柜长度 = 与厨房空间关联的 QUOTE_CABINET 长度合计
+厨房地柜长度 = 与厨房空间关联的 QUOTE_BASE_CABINET 长度合计
+厨房吊柜长度 = 与厨房空间关联的 QUOTE_WALL_CABINET 长度合计
 ```
 
 ## 5. 空间名称和楼层
@@ -271,7 +277,8 @@
 新砌墙面积 = 新砌墙长度 * 空间实际层高；没有 QUOTE_NEW_WALL 时为 0
 拆墙面积 = 拆墙长度 * 空间实际层高；没有 QUOTE_DEMO_WALL 时为 0
 室内门数 = 自动判为室内门且 opening_type=normal_door 的 QUOTE_DOOR 门洞数量；入户门、推拉门、疑似大洞口和大洞口为 0
-厨房橱柜长度 = 厨房空间内 QUOTE_CABINET 长度合计；其它空间或没有 QUOTE_CABINET 时为 0
+厨房地柜长度 = 厨房空间内 QUOTE_BASE_CABINET 长度合计；其它空间或没有 QUOTE_BASE_CABINET 时为 0
+厨房吊柜长度 = 厨房空间内 QUOTE_WALL_CABINET 长度合计；其它空间或没有 QUOTE_WALL_CABINET 时为 0
 防水面积 = 地面面积 + 墙面计量长度 * 防水高度
 窗台石长度 = 窗宽合计
 窗帘墙宽候选 = 客厅/卧室/书房有窗时优先匹配窗户所在 QUOTE_WALL 墙段整宽；匹配不到时回退到空间最长一段 QUOTE_WALL；其它空间为 0
@@ -281,7 +288,7 @@
 
 窗帘和窗帘箱不按窗洞宽度计量，应按窗户所在墙面的整面墙宽度计量。厨房、卫生间、过道等空间默认不做窗帘和窗帘箱；一般不做窗帘箱的位置也不生成窗帘。当前系统生成 `curtain_wall_width_m` 候选值：若窗洞中心线能匹配到邻近且平行的 `QUOTE_WALL`，取该墙段整宽；若匹配不到，回退到空间最长一段 `QUOTE_WALL`。L 形或转角窗涉及两面墙和转角做法，当前不自动计算窗帘或窗帘箱长度，候选值为 `0`，需要人工确认。系统同时输出 `curtain_wall_width_source`：`matched_window_wall` 表示已匹配窗户所在墙，`fallback_longest_wall` 表示回退最长墙需人工重点确认，`manual_required_l_shape_window` 表示 L 形窗需人工确认，`not_applicable` 表示不适用，前端人工编辑后为 `manual`。该候选值允许在工程量表中人工校准、随校对快照保存/恢复；只有来源为 `manual` 且长度大于 `0` 时，暗窗帘箱才进入导出的 `curtain_quote_candidates` 候选清单、`items` 和金额汇总。
 
-校准模板会导出 `windowsill_length_m`、`curtain_wall_width_m`、`curtain_wall_width_source`、`wall_tile_measure_length_m`、`wall_tile_area_m2`、`new_wall_length_m`、`new_wall_area_m2`、`demolition_wall_length_m`、`demolition_wall_area_m2`、`interior_door_count` 和 `kitchen_cabinet_length_m`。报价员可以把 L 形窗人工确认后的实际延米、贴砖墙、新砌墙、拆墙、室内门数或厨房橱柜长度校准值填回模板，再作为 golden JSON 固定校准结果。
+校准模板会导出 `windowsill_length_m`、`curtain_wall_width_m`、`curtain_wall_width_source`、`wall_tile_measure_length_m`、`wall_tile_area_m2`、`new_wall_length_m`、`new_wall_area_m2`、`demolition_wall_length_m`、`demolition_wall_area_m2`、`interior_door_count`、`kitchen_base_cabinet_length_m` 和 `kitchen_wall_cabinet_length_m`。报价员可以把 L 形窗人工确认后的实际延米、贴砖墙、新砌墙、拆墙、室内门数或厨房橱柜长度校准值填回模板，再作为 golden JSON 固定校准结果。
 
 上传包含 `curtain_wall_width_m` 的校准 JSON 后，若当前行来源是 `manual_required_l_shape_window` 或 `fallback_longest_wall`，工程量表会提供“应用校准”按钮，把校准值写回当前行、将来源标记为 `manual`，并清除该单元格的当前差异。
 
@@ -307,7 +314,8 @@
 | 阳台/露台/洗衣房未画 `QUOTE_WALL_TILE` | 墙砖面积为 0 | 只在实际贴砖墙段补画 `QUOTE_WALL_TILE` |
 | 新砌墙没有画在 `QUOTE_NEW_WALL` | 新砌墙面积为 0 | 只把新增墙体画入 `QUOTE_NEW_WALL` |
 | 拆除墙没有画在 `QUOTE_DEMO_WALL` | 拆墙面积为 0 | 只把拆除墙体画入 `QUOTE_DEMO_WALL` |
-| 厨房橱柜没有画在 `QUOTE_CABINET` | 橱柜长度为 0 | 只在实际橱柜延米位置补画 `QUOTE_CABINET` |
+| 厨房地柜没有画在 `QUOTE_BASE_CABINET` | 橱柜地柜长度为 0 | 只在实际地柜/台面延米位置补画 `QUOTE_BASE_CABINET` |
+| 厨房吊柜没有画在 `QUOTE_WALL_CABINET` | 橱柜吊柜长度为 0 | 只在实际吊柜延米位置补画 `QUOTE_WALL_CABINET` |
 | 同一墙段重复画线 | 墙面长度重复计算 | 保留一条清晰墙线 |
 | 窗线离空间太远 | 窗洞无法归属空间 | 将窗线贴近空间边界或墙线 |
 | 门宽在 `1.2m-1.5m` | 标记疑似大洞口 | 在校对表确认是否扣减 |
@@ -326,7 +334,8 @@
 - [ ] 阳台、露台、洗衣房如需墙砖，实际贴砖墙段已画在 `QUOTE_WALL_TILE`。
 - [ ] 新砌墙如需计价，新增墙体已画在 `QUOTE_NEW_WALL`。
 - [ ] 拆除墙如需计价，拆除墙体已画在 `QUOTE_DEMO_WALL`。
-- [ ] 厨房橱柜如需计价，实际橱柜延米线已画在 `QUOTE_CABINET`。
+- [ ] 厨房地柜如需计价，实际地柜/台面延米线已画在 `QUOTE_BASE_CABINET`。
+- [ ] 厨房吊柜如需计价，实际吊柜延米线已画在 `QUOTE_WALL_CABINET`。
 - [ ] 窗洞已画在 `QUOTE_WINDOW`，并贴近对应空间。
 - [ ] 门洞已画在 `QUOTE_DOOR`，并贴近对应空间。
 - [ ] 大洞口或疑似大洞口已准备在校对表中确认。

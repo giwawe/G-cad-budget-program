@@ -93,8 +93,15 @@
     "unit_price": 1200
   },
   {
-    "item_name": "橱柜",
-    "metric": "kitchen_cabinet_length_m",
+    "item_name": "橱柜地柜",
+    "metric": "kitchen_base_cabinet_length_m",
+    "unit": "M",
+    "unit_price": 600,
+    "space_types": ["厨房"]
+  },
+  {
+    "item_name": "橱柜吊柜",
+    "metric": "kitchen_wall_cabinet_length_m",
     "unit": "M",
     "unit_price": 600,
     "space_types": ["厨房"]

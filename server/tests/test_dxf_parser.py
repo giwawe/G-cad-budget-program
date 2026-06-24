@@ -123,8 +123,10 @@ def test_quote_cabinet_segments_are_assigned_to_kitchen_space():
     review = parser.parse_dxf_review(build_kitchen_cabinet_dxf(), ProjectDefaults())
 
     assert review.spaces[0].name == "一层-厨房"
-    assert review.spaces[0].cabinet_lengths_m == [3.0, 1.3]
-    assert review.drawing.cabinets == [((0.3, 0.3), (3.3, 0.3)), ((3.3, 0.3), (3.3, 1.6))]
+    assert review.spaces[0].base_cabinet_lengths_m == [3.0, 1.3]
+    assert review.spaces[0].wall_cabinet_lengths_m == [3.0]
+    assert review.drawing.base_cabinets == [((0.3, 0.3), (3.3, 0.3)), ((3.3, 0.3), (3.3, 1.6))]
+    assert review.drawing.wall_cabinets == [((0.3, 0.3), (3.3, 0.3))]
 
 
 def test_quote_door_insert_is_recognized_as_one_door_opening():

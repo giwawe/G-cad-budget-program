@@ -16,7 +16,8 @@ DEFAULT_NUMERIC_FIELDS = [
     "demolition_wall_length_m",
     "demolition_wall_area_m2",
     "interior_door_count",
-    "kitchen_cabinet_length_m",
+    "kitchen_base_cabinet_length_m",
+    "kitchen_wall_cabinet_length_m",
 ]
 
 
