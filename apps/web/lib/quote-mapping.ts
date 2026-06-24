@@ -24,6 +24,7 @@ export type QuoteMetric =
   | "floor_tile_piece_count"
   | "electrical_scope_area_m2"
   | "plumbing_scope_area_m2"
+  | "lighting_package_count"
   | "ceiling_area_m2"
   | "wall_tile_area_m2"
   | "waterproof_area_m2"
@@ -36,6 +37,7 @@ export type QuoteMetric =
   | "kitchen_wall_cabinet_length_m"
   | "toilet_count"
   | "bathroom_vanity_count";
+type RowQuoteMetric = Exclude<QuoteMetric, "lighting_package_count">;
 
 export type QuoteRule = {
   item_name: string;
@@ -127,6 +129,7 @@ const DEFAULT_RULES: QuoteRule[] = [
   { item_name: "橱柜吊柜", metric: "kitchen_wall_cabinet_length_m", unit: "M", unit_price: 600, space_types: KITCHEN_CABINET_SPACE_TYPES },
   { item_name: "马桶", metric: "toilet_count", unit: "个", unit_price: 2500, space_types: BATHROOM_FIXTURE_SPACE_TYPES },
   { item_name: "浴室柜", metric: "bathroom_vanity_count", unit: "套", unit_price: 3000, space_types: BATHROOM_FIXTURE_SPACE_TYPES },
+  { item_name: "全屋灯饰", metric: "lighting_package_count", unit: "套", unit_price: 6000, space_types: undefined },
   { item_name: "暗窗帘箱", metric: "curtain_wall_width_m", unit: "M", unit_price: 110, space_types: CURTAIN_SPACE_TYPES },
 ];
 
@@ -139,17 +142,9 @@ const APARTMENT_PENDING_METRICS: PendingQuoteMetric[] = [
     suggested_metric: "custom_cabinet_area_m2",
     source_group: "定制",
   },
-  {
-    item_name: "全屋灯饰",
-    unit: "套",
-    unit_price: 6000,
-    reason: "套装项按配置包或点位清单计价，当前算量结果没有灯位和套餐配置。",
-    suggested_metric: "lighting_package_count",
-    source_group: "套装项",
-  },
 ];
 
-const METRIC_TO_ROW_FIELD: Record<QuoteMetric, QuantityRowMetric> = {
+const METRIC_TO_ROW_FIELD: Record<RowQuoteMetric, QuantityRowMetric> = {
   latex_paint_area_m2: "latexPaintAreaM2",
   floor_area_m2: "floorAreaM2",
   floor_tile_piece_count: "floorTilePieceCount",
@@ -224,8 +219,10 @@ export function curtainQuoteCandidates(rows: QuantityRow[]): CurtainQuoteCandida
 
 export function buildQuoteMapping(rows: QuantityRow[], rules: QuoteRule[] = DEFAULT_RULES): QuoteMapping {
   const billableRows = rows.filter((row) => row.status !== "excluded");
-  const items = billableRows.flatMap((row) =>
-    rules.filter((rule) => ruleAppliesToRow(rule, row)).map((rule) => {
+  const rowRules = rules.filter((rule): rule is QuoteRule & { metric: RowQuoteMetric } => rule.metric !== "lighting_package_count");
+  const projectRules = rules.filter((rule) => rule.metric === "lighting_package_count");
+  const rowItems = billableRows.flatMap((row) =>
+    rowRules.filter((rule) => ruleAppliesToRow(rule, row)).map((rule) => {
       const quantity = round2(row[METRIC_TO_ROW_FIELD[rule.metric]]);
       return {
         floor: row.floor,
@@ -239,6 +236,8 @@ export function buildQuoteMapping(rows: QuantityRow[], rules: QuoteRule[] = DEFA
       };
     }).filter((item) => item.quantity > 0),
   );
+  const projectItems = buildProjectQuoteItems(billableRows, projectRules);
+  const items = [...rowItems, ...projectItems];
 
   return {
     items,
@@ -250,6 +249,22 @@ export function buildQuoteMapping(rows: QuantityRow[], rules: QuoteRule[] = DEFA
     curtain_quote_readiness: curtainQuoteReadiness(rows),
     curtain_quote_candidates: curtainQuoteCandidates(rows),
   };
+}
+
+function buildProjectQuoteItems(billableRows: QuantityRow[], rules: QuoteRule[]): QuoteMappingItem[] {
+  if (billableRows.length === 0) {
+    return [];
+  }
+  return rules.map((rule) => ({
+    floor: "全屋",
+    space_name: "全屋",
+    space_type: "全屋",
+    item_name: rule.item_name,
+    quantity: 1,
+    unit: rule.unit,
+    unit_price: rule.unit_price,
+    amount: round2(rule.unit_price),
+  })).filter((item) => item.quantity > 0);
 }
 
 export function quoteMappingFileName(fileName: string): string {
@@ -314,6 +329,7 @@ function isQuoteMetric(metric: unknown): metric is QuoteMetric {
     metric === "floor_tile_piece_count" ||
     metric === "electrical_scope_area_m2" ||
     metric === "plumbing_scope_area_m2" ||
+    metric === "lighting_package_count" ||
     metric === "ceiling_area_m2" ||
     metric === "wall_tile_area_m2" ||
     metric === "waterproof_area_m2" ||

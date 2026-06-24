@@ -139,6 +139,12 @@
     "space_types": ["卫生间"]
   },
   {
+    "item_name": "全屋灯饰",
+    "metric": "lighting_package_count",
+    "unit": "套",
+    "unit_price": 6000
+  },
+  {
     "item_name": "暗窗帘箱",
     "metric": "curtain_wall_width_m",
     "unit": "M",
