@@ -199,7 +199,18 @@ assert.deepEqual(buildingAreaMapping.items, [
 ]);
 assert.equal(buildingAreaMapping.summary.building_area_m2, 88.66);
 assert.equal(buildingAreaMapping.summary.total_amount, 886.6);
-assert.equal(buildQuoteMapping(rows, [{ item_name: "按建筑面积计价项目", metric: "building_area_m2", unit: "m2", unit_price: 10 }]).items.length, 0);
+assert.deepEqual(buildingAreaMapping.building_area_quote_readiness, {
+  building_area_m2: 88.66,
+  required_item_names: ["按建筑面积计价项目"],
+  missing_item_names: [],
+});
+const missingBuildingAreaMapping = buildQuoteMapping(rows, [{ item_name: "按建筑面积计价项目", metric: "building_area_m2", unit: "m2", unit_price: 10 }]);
+assert.equal(missingBuildingAreaMapping.items.length, 0);
+assert.deepEqual(missingBuildingAreaMapping.building_area_quote_readiness, {
+  building_area_m2: 0,
+  required_item_names: ["按建筑面积计价项目"],
+  missing_item_names: ["按建筑面积计价项目"],
+});
 
 const bedroomRows: QuantityRow[] = [
   { ...rows[0], spaceName: "主卧", spaceType: "卧室", latexPaintAreaM2: 30, wallTileAreaM2: 0, waterproofAreaM2: 0 },

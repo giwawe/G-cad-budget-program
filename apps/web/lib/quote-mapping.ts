@@ -105,6 +105,7 @@ export type QuoteMapping = {
   };
   curtain_quote_readiness: CurtainQuoteReadiness;
   curtain_quote_candidates: CurtainQuoteCandidate[];
+  building_area_quote_readiness: BuildingAreaQuoteReadiness;
 };
 
 export type CurtainQuoteReadiness = {
@@ -112,6 +113,12 @@ export type CurtainQuoteReadiness = {
   pending_count: number;
   ready_space_names: string[];
   pending_space_names: string[];
+};
+
+export type BuildingAreaQuoteReadiness = {
+  building_area_m2: number;
+  required_item_names: string[];
+  missing_item_names: string[];
 };
 
 export const DEFAULT_QUOTE_RULES_NAME = "商品房整装默认规则";
@@ -277,6 +284,16 @@ export function buildQuoteMapping(rows: QuantityRow[], rules: QuoteRule[] = DEFA
     },
     curtain_quote_readiness: curtainQuoteReadiness(rows),
     curtain_quote_candidates: curtainQuoteCandidates(rows),
+    building_area_quote_readiness: buildingAreaQuoteReadiness(rules, buildingAreaM2),
+  };
+}
+
+function buildingAreaQuoteReadiness(rules: QuoteRule[], buildingAreaM2: number): BuildingAreaQuoteReadiness {
+  const required_item_names = rules.filter((rule) => rule.metric === "building_area_m2").map((rule) => rule.item_name);
+  return {
+    building_area_m2: buildingAreaM2,
+    required_item_names,
+    missing_item_names: buildingAreaM2 > 0 ? [] : required_item_names,
   };
 }
 
