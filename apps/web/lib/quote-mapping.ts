@@ -17,7 +17,6 @@ type QuantityRowMetric =
   | "kitchenBaseCabinetLengthM"
   | "kitchenWallCabinetLengthM"
   | "customCabinetAreaM2"
-  | "customCabinetLengthM"
   | "toiletCount"
   | "bathroomVanityCount";
 export type QuoteMetric =
@@ -38,7 +37,6 @@ export type QuoteMetric =
   | "kitchen_base_cabinet_length_m"
   | "kitchen_wall_cabinet_length_m"
   | "custom_cabinet_area_m2"
-  | "custom_cabinet_length_m"
   | "toilet_count"
   | "bathroom_vanity_count";
 type RowQuoteMetric = Exclude<QuoteMetric, "lighting_package_count">;
@@ -132,7 +130,6 @@ const DEFAULT_RULES: QuoteRule[] = [
   { item_name: "橱柜地柜", metric: "kitchen_base_cabinet_length_m", unit: "M", unit_price: 600, space_types: KITCHEN_CABINET_SPACE_TYPES },
   { item_name: "橱柜吊柜", metric: "kitchen_wall_cabinet_length_m", unit: "M", unit_price: 600, space_types: KITCHEN_CABINET_SPACE_TYPES },
   { item_name: "全屋定制", metric: "custom_cabinet_area_m2", unit: "M2", unit_price: 600, space_types: undefined },
-  { item_name: "全屋定制低柜", metric: "custom_cabinet_length_m", unit: "M", unit_price: 600, space_types: undefined },
   { item_name: "马桶", metric: "toilet_count", unit: "个", unit_price: 2500, space_types: BATHROOM_FIXTURE_SPACE_TYPES },
   { item_name: "浴室柜", metric: "bathroom_vanity_count", unit: "套", unit_price: 3000, space_types: BATHROOM_FIXTURE_SPACE_TYPES },
   { item_name: "全屋灯饰", metric: "lighting_package_count", unit: "套", unit_price: 6000, space_types: undefined },
@@ -158,7 +155,6 @@ const METRIC_TO_ROW_FIELD: Record<RowQuoteMetric, QuantityRowMetric> = {
   kitchen_base_cabinet_length_m: "kitchenBaseCabinetLengthM",
   kitchen_wall_cabinet_length_m: "kitchenWallCabinetLengthM",
   custom_cabinet_area_m2: "customCabinetAreaM2",
-  custom_cabinet_length_m: "customCabinetLengthM",
   toilet_count: "toiletCount",
   bathroom_vanity_count: "bathroomVanityCount",
 };
@@ -340,7 +336,6 @@ function isQuoteMetric(metric: unknown): metric is QuoteMetric {
     metric === "kitchen_base_cabinet_length_m" ||
     metric === "kitchen_wall_cabinet_length_m" ||
     metric === "custom_cabinet_area_m2" ||
-    metric === "custom_cabinet_length_m" ||
     metric === "toilet_count" ||
     metric === "bathroom_vanity_count"
   );

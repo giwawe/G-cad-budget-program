@@ -83,7 +83,6 @@ export function QuantityTable({
             <th>橱柜地柜</th>
             <th>橱柜吊柜</th>
             <th>全屋定制</th>
-            <th>定制低柜</th>
             <th>马桶</th>
             <th>浴室柜</th>
             <th>防水面积</th>
@@ -113,7 +112,6 @@ export function QuantityTable({
             const kitchenBaseCabinetLengthDifference = differencesByCell.get(differenceKey(row.spaceName, "kitchen_base_cabinet_length_m"));
             const kitchenWallCabinetLengthDifference = differencesByCell.get(differenceKey(row.spaceName, "kitchen_wall_cabinet_length_m"));
             const customCabinetAreaDifference = differencesByCell.get(differenceKey(row.spaceName, "custom_cabinet_area_m2"));
-            const customCabinetLengthDifference = differencesByCell.get(differenceKey(row.spaceName, "custom_cabinet_length_m"));
             const toiletCountDifference = differencesByCell.get(differenceKey(row.spaceName, "toilet_count"));
             const bathroomVanityCountDifference = differencesByCell.get(differenceKey(row.spaceName, "bathroom_vanity_count"));
             const waterproofDifference = differencesByCell.get(differenceKey(row.spaceName, "waterproof_area_m2"));
@@ -226,10 +224,6 @@ export function QuantityTable({
               <td className={differenceClass(customCabinetAreaDifference)}>
                 {row.customCabinetAreaM2.toFixed(2)} m2
                 <DifferenceValue difference={customCabinetAreaDifference} />
-              </td>
-              <td className={differenceClass(customCabinetLengthDifference)}>
-                {row.customCabinetLengthM.toFixed(2)} m
-                <DifferenceValue difference={customCabinetLengthDifference} />
               </td>
               <td className={differenceClass(toiletCountDifference)}>
                 {row.toiletCount} 个

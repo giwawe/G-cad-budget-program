@@ -27,7 +27,6 @@ export type CalibrationTemplateRow = {
   kitchen_base_cabinet_length_m: number;
   kitchen_wall_cabinet_length_m: number;
   custom_cabinet_area_m2: number;
-  custom_cabinet_length_m: number;
   toilet_count: number;
   bathroom_vanity_count: number;
   status: QuantityRow["status"];
@@ -62,7 +61,6 @@ export function quantityRowsToCalibrationTemplate(rows: QuantityRow[]): Calibrat
     kitchen_base_cabinet_length_m: row.kitchenBaseCabinetLengthM,
     kitchen_wall_cabinet_length_m: row.kitchenWallCabinetLengthM,
     custom_cabinet_area_m2: row.customCabinetAreaM2,
-    custom_cabinet_length_m: row.customCabinetLengthM,
     toilet_count: row.toiletCount,
     bathroom_vanity_count: row.bathroomVanityCount,
     status: row.status,

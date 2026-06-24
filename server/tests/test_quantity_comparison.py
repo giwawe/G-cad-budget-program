@@ -126,12 +126,12 @@ def test_compare_quantity_rows_reports_kitchen_cabinet_length_differences_by_def
 
 
 def test_compare_quantity_rows_reports_custom_cabinet_area_differences_by_default():
-    actual_rows = [{"space_name": "主卧", "custom_cabinet_area_m2": 7.8, "custom_cabinet_length_m": 2.0}]
-    expected_rows = [{"space_name": "主卧", "custom_cabinet_area_m2": 6.0, "custom_cabinet_length_m": 1.5}]
+    actual_rows = [{"space_name": "主卧", "custom_cabinet_area_m2": 9.8}]
+    expected_rows = [{"space_name": "主卧", "custom_cabinet_area_m2": 6.0}]
 
     result = compare_quantity_rows(actual_rows, expected_rows)
 
-    assert [difference["field"] for difference in result["differences"]] == ["custom_cabinet_area_m2", "custom_cabinet_length_m"]
+    assert [difference["field"] for difference in result["differences"]] == ["custom_cabinet_area_m2"]
 
 
 def test_compare_quantity_rows_reports_bathroom_fixture_count_differences_by_default():

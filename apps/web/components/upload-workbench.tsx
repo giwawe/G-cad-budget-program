@@ -56,7 +56,6 @@ type ApiQuantityRow = {
   kitchen_base_cabinet_length_m: number;
   kitchen_wall_cabinet_length_m: number;
   custom_cabinet_area_m2: number;
-  custom_cabinet_length_m: number;
   toilet_count: number;
   bathroom_vanity_count: number;
   waterproof_area_m2: number;
@@ -122,7 +121,6 @@ function toQuantityRow(row: ApiQuantityRow): QuantityRow {
     kitchenBaseCabinetLengthM: row.kitchen_base_cabinet_length_m ?? 0,
     kitchenWallCabinetLengthM: row.kitchen_wall_cabinet_length_m ?? 0,
     customCabinetAreaM2: row.custom_cabinet_area_m2 ?? 0,
-    customCabinetLengthM: row.custom_cabinet_length_m ?? 0,
     toiletCount: row.toilet_count ?? 0,
     bathroomVanityCount: row.bathroom_vanity_count ?? 0,
     waterproofAreaM2: row.waterproof_area_m2,

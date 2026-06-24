@@ -35,7 +35,7 @@
 | `QUOTE_DEMO_WALL` | 拆除墙体中心线或墙体线 | 计算拆墙长度和面积 |
 | `QUOTE_BASE_CABINET` | 厨房地柜/台面延米线 | 计算橱柜地柜长度 |
 | `QUOTE_WALL_CABINET` | 厨房吊柜延米线 | 计算橱柜吊柜长度 |
-| `QUOTE_CUSTOM` | 非厨房全屋定制柜体投影延米线，可配邻近高度文字 | 计算全屋定制面积和低柜长度 |
+| `QUOTE_CUSTOM` | 非厨房全屋定制柜体投影延米线，可配邻近高度文字 | 计算全屋定制数量 |
 | `QUOTE_TOILET` | 可选马桶点位 | 覆盖卫生间默认马桶数量 |
 | `QUOTE_BATHROOM_VANITY` | 可选浴室柜点位 | 覆盖卫生间默认浴室柜数量 |
 
@@ -180,14 +180,13 @@
 - 不要把厨房地柜、厨房吊柜画入 `QUOTE_CUSTOM`。
 - 柜体线应落在所属空间边界内或贴近空间，便于系统归属到正确空间。
 - 未标注高度时，默认按 `2.6m` 高度换算投影面积。
-- 如柜体高度低于 `1m`，请在 `QUOTE_CUSTOM` 图层靠近对应柜体线的位置补文字标注，例如 `H=800`、`高度800` 或 `H=0.8m`。系统会把该线段计入 `custom_cabinet_length_m`，不计入投影面积。
+- 如柜体高度低于 `1m`，请在 `QUOTE_CUSTOM` 图层靠近对应柜体线的位置补文字标注，例如 `H=800`、`高度800` 或 `H=0.8m`。系统会把该线段按长度米取值，并入同一个 `custom_cabinet_area_m2` 数量，不单独生成低柜字段或报价项。
 - 高度大于等于 `1m` 的特殊高度标注会按实际高度换算投影面积；不同单价、开放格和复杂组合仍可通过报价规则或校准 JSON 进一步确认。
 
 当前计算口径：
 
 ```text
-全屋定制面积 = 非厨房空间内未标低柜的 QUOTE_CUSTOM 长度 * 柜高（未标注时默认 2.6m）
-全屋定制低柜长度 = 非厨房空间内高度标注低于 1m 的 QUOTE_CUSTOM 长度合计
+全屋定制数量 = 非厨房空间内常规 QUOTE_CUSTOM 长度 * 柜高（未标注时默认 2.6m）+ 高度低于 1m 的低柜长度
 ```
 
 ### 4.6 洁具点位
@@ -326,8 +325,7 @@
 室内门数 = 自动判为室内门且 opening_type=normal_door 的 QUOTE_DOOR 门洞数量；入户门、推拉门、疑似大洞口和大洞口为 0
 厨房地柜长度 = 厨房空间内 QUOTE_BASE_CABINET 长度合计；其它空间或没有 QUOTE_BASE_CABINET 时为 0
 厨房吊柜长度 = 厨房空间内 QUOTE_WALL_CABINET 长度合计；其它空间或没有 QUOTE_WALL_CABINET 时为 0
-全屋定制面积 = 非厨房空间内未标低柜的 QUOTE_CUSTOM 长度 * 柜高（未标注时默认 2.6m）；厨房空间或没有 QUOTE_CUSTOM 时为 0
-全屋定制低柜长度 = 非厨房空间内高度低于 1m 的 QUOTE_CUSTOM 长度合计
+全屋定制面积 = 非厨房空间内常规 QUOTE_CUSTOM 长度 * 柜高（未标注时默认 2.6m）+ 高度低于 1m 的低柜长度；厨房空间或没有 QUOTE_CUSTOM 时为 0
 马桶数量 = 卫生间默认 1 个；有 QUOTE_TOILET 点位时按点位数；非卫生间为 0
 浴室柜数量 = 卫生间默认 1 套；有 QUOTE_BATHROOM_VANITY 点位时按点位数；非卫生间为 0
 地面瓷砖主材片数 = ceil(地面面积 * 1.05 / (0.75m * 1.5m))
@@ -345,13 +343,13 @@
 
 全屋灯饰当前作为项目级套餐处理：只要报价映射中存在至少一个可计价空间，就生成 1 套“全屋灯饰”，不随空间数量重复计费；灯位数量、品牌配置和套餐差异后续可通过报价规则或点位图层细化。
 
-全屋定制当前按非厨房空间的 `QUOTE_CUSTOM` 延米线计算：未标注高度时按默认 `2.6m` 换算投影面积；同图层邻近文字标注高度低于 `1m` 时，改按低柜长度 `custom_cabinet_length_m` 计量，不进入投影面积；厨房空间已经由 `QUOTE_BASE_CABINET` 和 `QUOTE_WALL_CABINET` 单独承接，避免重复计价。
+全屋定制当前按非厨房空间的 `QUOTE_CUSTOM` 延米线计算：未标注高度时按默认 `2.6m` 换算投影面积；同图层邻近文字标注高度低于 `1m` 时，按低柜长度米取值，并入同一个 `custom_cabinet_area_m2` 数量；厨房空间已经由 `QUOTE_BASE_CABINET` 和 `QUOTE_WALL_CABINET` 单独承接，避免重复计价。
 
 防水高度当前按空间类型取默认值：卫生间 `1.8m`，厨房、阳台、露台、洗衣房 `0.3m`。阳台、露台、洗衣房墙砖不是所有墙面都需要铺贴，只有画了 `QUOTE_WALL_TILE` 的贴砖墙面线才自动计算墙砖面积；当前按空间实际层高计算，暂不单独扣除未匹配贴砖墙的门窗洞。
 
 窗帘和窗帘箱不按窗洞宽度计量，应按窗户所在墙面的整面墙宽度计量。厨房、卫生间、过道等空间默认不做窗帘和窗帘箱；一般不做窗帘箱的位置也不生成窗帘。当前系统生成 `curtain_wall_width_m` 候选值：若窗洞中心线能匹配到邻近且平行的 `QUOTE_WALL`，取该墙段整宽；若匹配不到，回退到空间最长一段 `QUOTE_WALL`。L 形或转角窗涉及两面墙和转角做法，当前不自动计算窗帘或窗帘箱长度，候选值为 `0`，需要人工确认。系统同时输出 `curtain_wall_width_source`：`matched_window_wall` 表示已匹配窗户所在墙，`fallback_longest_wall` 表示回退最长墙需人工重点确认，`manual_required_l_shape_window` 表示 L 形窗需人工确认，`not_applicable` 表示不适用，前端人工编辑后为 `manual`。该候选值允许在工程量表中人工校准、随校对快照保存/恢复；只有来源为 `manual` 且长度大于 `0` 时，暗窗帘箱才进入导出的 `curtain_quote_candidates` 候选清单、`items` 和金额汇总。
 
-校准模板会导出 `windowsill_length_m`、`curtain_wall_width_m`、`curtain_wall_width_source`、`wall_tile_measure_length_m`、`wall_tile_area_m2`、`floor_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`new_wall_length_m`、`new_wall_area_m2`、`demolition_wall_length_m`、`demolition_wall_area_m2`、`interior_door_count`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`custom_cabinet_area_m2`、`custom_cabinet_length_m`、`toilet_count` 和 `bathroom_vanity_count`。报价员可以把 L 形窗人工确认后的实际延米、贴砖墙、地砖主材片数、水电施工面积、新砌墙、拆墙、室内门数、厨房橱柜长度、全屋定制面积、全屋定制低柜长度或洁具数量校准值填回模板，再作为 golden JSON 固定校准结果。
+校准模板会导出 `windowsill_length_m`、`curtain_wall_width_m`、`curtain_wall_width_source`、`wall_tile_measure_length_m`、`wall_tile_area_m2`、`floor_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`new_wall_length_m`、`new_wall_area_m2`、`demolition_wall_length_m`、`demolition_wall_area_m2`、`interior_door_count`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`custom_cabinet_area_m2`、`toilet_count` 和 `bathroom_vanity_count`。报价员可以把 L 形窗人工确认后的实际延米、贴砖墙、地砖主材片数、水电施工面积、新砌墙、拆墙、室内门数、厨房橱柜长度、全屋定制面积或洁具数量校准值填回模板，再作为 golden JSON 固定校准结果。
 
 上传包含 `curtain_wall_width_m` 的校准 JSON 后，若当前行来源是 `manual_required_l_shape_window` 或 `fallback_longest_wall`，工程量表会提供“应用校准”按钮，把校准值写回当前行、将来源标记为 `manual`，并清除该单元格的当前差异。
 

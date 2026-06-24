@@ -82,7 +82,6 @@ class QuantityRow:
     kitchen_base_cabinet_length_m: float
     kitchen_wall_cabinet_length_m: float
     custom_cabinet_area_m2: float
-    custom_cabinet_length_m: float
     toilet_count: int
     bathroom_vanity_count: int
     waterproof_area_m2: float

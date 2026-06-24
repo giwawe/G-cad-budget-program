@@ -220,10 +220,8 @@ def test_custom_cabinet_quantities_use_default_height_and_low_cabinet_length_out
     bedroom_row = calculate_quantity_row(bedroom, defaults)
     kitchen_row = calculate_quantity_row(kitchen, defaults)
 
-    assert bedroom_row.custom_cabinet_area_m2 == 7.8
-    assert bedroom_row.custom_cabinet_length_m == 2.0
+    assert bedroom_row.custom_cabinet_area_m2 == 9.8
     assert kitchen_row.custom_cabinet_area_m2 == 0
-    assert kitchen_row.custom_cabinet_length_m == 0
 
 
 def test_bathroom_fixture_counts_default_to_one_per_bathroom_and_allow_explicit_counts():

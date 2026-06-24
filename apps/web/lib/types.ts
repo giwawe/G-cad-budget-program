@@ -31,7 +31,6 @@ export type QuantityRow = {
   kitchenBaseCabinetLengthM: number;
   kitchenWallCabinetLengthM: number;
   customCabinetAreaM2: number;
-  customCabinetLengthM: number;
   toiletCount: number;
   bathroomVanityCount: number;
   waterproofAreaM2: number;

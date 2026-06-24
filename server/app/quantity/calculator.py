@@ -75,7 +75,7 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
     interior_door_count = calculate_interior_door_count(space.doors)
     kitchen_base_cabinet_length_m = calculate_kitchen_cabinet_length_m(space_type, space.base_cabinet_lengths_m)
     kitchen_wall_cabinet_length_m = calculate_kitchen_cabinet_length_m(space_type, space.wall_cabinet_lengths_m)
-    custom_cabinet_area_m2, custom_cabinet_length_m = calculate_custom_cabinet_quantities(
+    custom_cabinet_area_m2 = calculate_custom_cabinet_area_m2(
         space_type,
         space.custom_cabinet_lengths_m,
         space.custom_cabinet_heights_m,
@@ -137,7 +137,6 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
         kitchen_base_cabinet_length_m=kitchen_base_cabinet_length_m,
         kitchen_wall_cabinet_length_m=kitchen_wall_cabinet_length_m,
         custom_cabinet_area_m2=custom_cabinet_area_m2,
-        custom_cabinet_length_m=custom_cabinet_length_m,
         toilet_count=toilet_count,
         bathroom_vanity_count=bathroom_vanity_count,
         waterproof_area_m2=waterproof_area_m2,
@@ -194,18 +193,17 @@ def calculate_kitchen_cabinet_length_m(space_type: str, cabinet_lengths_m: list[
     return round(sum(cabinet_lengths_m), 2)
 
 
-def calculate_custom_cabinet_quantities(space_type: str, cabinet_lengths_m: list[float], cabinet_heights_m: list[float | None]) -> tuple[float, float]:
+def calculate_custom_cabinet_area_m2(space_type: str, cabinet_lengths_m: list[float], cabinet_heights_m: list[float | None]) -> float:
     if space_type in KITCHEN_CABINET_SPACE_TYPES:
-        return (0, 0)
-    area_m2 = 0.0
-    length_m = 0.0
+        return 0
+    quantity = 0.0
     for index, cabinet_length_m in enumerate(cabinet_lengths_m):
         cabinet_height_m = cabinet_heights_m[index] if index < len(cabinet_heights_m) else None
         if cabinet_height_m is not None and cabinet_height_m < CUSTOM_CABINET_LOW_HEIGHT_THRESHOLD_M:
-            length_m += cabinet_length_m
+            quantity += cabinet_length_m
         else:
-            area_m2 += cabinet_length_m * (cabinet_height_m or CUSTOM_CABINET_DEFAULT_HEIGHT_M)
-    return (round(max(area_m2, 0), 2), round(max(length_m, 0), 2))
+            quantity += cabinet_length_m * (cabinet_height_m or CUSTOM_CABINET_DEFAULT_HEIGHT_M)
+    return round(max(quantity, 0), 2)
 
 
 def calculate_bathroom_fixture_count(space_type: str, count: int) -> int:
