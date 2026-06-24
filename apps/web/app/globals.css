@@ -600,6 +600,15 @@ code {
   vector-effect: non-scaling-stroke;
 }
 
+.svgExteriorWall {
+  fill: rgba(255, 255, 255, 0.04);
+  stroke: #facc15;
+  stroke-dasharray: 0.28 0.16;
+  stroke-linejoin: round;
+  stroke-width: 0.34;
+  vector-effect: non-scaling-stroke;
+}
+
 .svgToilet {
   fill: #38bdf8;
   stroke: #0f172a;

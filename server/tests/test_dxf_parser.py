@@ -10,6 +10,7 @@ from server.tests.dxf_fixtures import (
     build_closed_door_polyline_dxf,
     build_custom_cabinet_dxf,
     build_demolition_wall_dxf,
+    build_ext_wall_area_dxf,
     build_auto_door_type_dxf,
     build_insert_door_dxf,
     build_kitchen_cabinet_dxf,
@@ -96,6 +97,13 @@ def test_l_shaped_window_requires_manual_curtain_wall_width():
     assert review.spaces[0].curtain_wall_width_candidate_m == 0
     assert review.spaces[0].curtain_wall_width_source == "manual_required_l_shape_window"
     assert any("L形窗" in anomaly for anomaly in review.spaces[0].anomalies)
+
+
+def test_quote_ext_wall_closed_polyline_calculates_building_area():
+    review = parser.parse_dxf_review(build_ext_wall_area_dxf(), ProjectDefaults())
+
+    assert review.drawing.building_area_m2 == 20
+    assert review.drawing.exterior_wall_boundaries == [[(-1.0, -1.0), (4.0, -1.0), (4.0, 3.0), (-1.0, 3.0)]]
 
 
 def test_quote_wall_tile_segments_are_assigned_to_space():

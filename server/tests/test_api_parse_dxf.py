@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 
 from server.app.main import app
 from server.app.quantity.geometry import line_length
-from server.tests.dxf_fixtures import build_simple_quote_dxf
+from server.tests.dxf_fixtures import build_ext_wall_area_dxf, build_simple_quote_dxf
 
 
 def test_parse_dxf_upload_returns_quantity_rows():
@@ -130,3 +130,22 @@ def test_parse_real_dxf_review_payload_includes_drawing_summary_and_measured_wal
     )
     assert len(measured_walls) > 0
     assert measured_length == payload["summary"]["wall_measure_length_total_m"]
+
+
+def test_parse_dxf_review_summary_includes_building_area_from_quote_ext_wall():
+    client = TestClient(app)
+
+    response = client.post("/api/parse-dxf-review", files={"file": ("ext-wall.dxf", build_ext_wall_area_dxf(), "application/dxf")})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["summary"]["building_area_m2"] == 20
+    assert payload["drawing"]["building_area_m2"] == 20
+    assert payload["drawing"]["exterior_wall_boundaries"] == [
+        [
+            {"x": -1.0, "y": -1.0},
+            {"x": 4.0, "y": -1.0},
+            {"x": 4.0, "y": 3.0},
+            {"x": -1.0, "y": 3.0},
+        ]
+    ]

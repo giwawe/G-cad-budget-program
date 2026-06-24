@@ -101,6 +101,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - `QUOTE_BASE_CABINET`：厨房地柜/台面延米线，用于橱柜地柜长度。
 - `QUOTE_WALL_CABINET`：厨房吊柜延米线，用于橱柜吊柜长度。
 - `QUOTE_CUSTOM`：非厨房全屋定制柜体投影延米线，用于全屋定制面积；同图层邻近文字可标注 `H=800` 这类柜高。
+- `QUOTE_EXT_WALL`：建筑外墙外轮廓闭合多段线，用于计算项目级建筑面积。
 - `QUOTE_TOILET`：可选马桶点位；不画时卫生间默认按 1 个马桶计。
 - `QUOTE_BATHROOM_VANITY`：可选浴室柜点位；不画时卫生间默认按 1 套浴室柜计。
 - `QUOTE_WINDOW`：窗洞宽度标记，默认参与墙面扣减。
@@ -110,6 +111,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 核心公式：
 
 ```text
+建筑面积 = 最大闭合 QUOTE_EXT_WALL 多段线面积；没有闭合外墙轮廓时为 0
 地面面积 = QUOTE_ROOM 闭合边界面积
 顶面面积 = 地面面积
 墙面计量长度 = 与空间关联的 QUOTE_WALL 长度
@@ -170,6 +172,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 橱柜：地柜画在 `QUOTE_BASE_CABINET`，吊柜画在 `QUOTE_WALL_CABINET`，分别生成 `kitchen_base_cabinet_length_m` 和 `kitchen_wall_cabinet_length_m`，仅厨房空间计入；默认报价规则“橱柜地柜”和“橱柜吊柜”分别按对应 metric 生成金额。地柜和吊柜在 CAD 中可能重叠，必须分图层，不能用单一橱柜线混算。
 - 全屋定制：非厨房柜体画在 `QUOTE_CUSTOM`，默认生成 `custom_cabinet_area_m2`，公式为 `常规柜投影长度 * 2.6m`；同图层邻近文字可标注柜高，如 `H=800`、`高度800` 或 `H=0.8m`，高度低于 1m 的低柜按长度米取值，并入同一个 `custom_cabinet_area_m2` 数量，不单独生成低柜字段或报价项；厨房空间默认为 0，避免和橱柜地柜/吊柜重复计费。
 - 洁具：卫生间默认生成 `toilet_count=1` 和 `bathroom_vanity_count=1`，用于“马桶”和“浴室柜”报价；如果画了 `QUOTE_TOILET` 或 `QUOTE_BATHROOM_VANITY` 点位，则按点位数覆盖默认数量。
+- 建筑面积：`building_area_m2` 从 `QUOTE_EXT_WALL` 闭合多段线读取，当前取面积最大的闭合外墙轮廓，写入 API summary 和图形校对页；它不是每个 `QUOTE_ROOM` 面积的简单求和，暂不混入空间工程量行。
 - 窗台石当前自动计算 `windowsill_length_m`，v1 直接等于 `window_width_total_m`，用于窗台石铺贴报价。
 - 窗帘和窗帘箱不能按窗洞宽度计量，应按窗户所在墙面的整面墙宽度；厨房、卫生间、过道等空间默认不做窗帘/窗帘箱。
 - `curtain_wall_width_m` 是窗帘墙宽候选取数：客厅、卧室、书房有窗时优先按窗洞中心线匹配邻近且平行的 `QUOTE_WALL`，取窗户所在墙面的整面墙宽；匹配不到时回退到该空间最长一段 `QUOTE_WALL`；其它空间为 `0`。L 形/转角窗帘和窗帘箱长度不自动计算，候选值为 `0` 并要求人工确认。`curtain_wall_width_source` 标记来源：`matched_window_wall`、`fallback_longest_wall`、`manual_required_l_shape_window`、`not_applicable` 或前端人工编辑后的 `manual`。前端工程量表可人工校准并随校对快照保存/恢复；只有来源为 `manual` 且长度大于 0 时，暗窗帘箱才进入报价规则和金额汇总。
@@ -188,6 +191,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 导入校对快照 JSON，恢复表格、状态、summary、comparison 和来源文件名。
 - 每行可改 review 状态：待确认、已确认、需修图、不计价。
 - SVG 图形 review 可缩放/平移，支持空间改名、门洞扣减切换、窗洞扣减切换、窗高调整。
+- 图形 review 和汇总卡会显示 `QUOTE_EXT_WALL` 外墙轮廓与 `building_area_m2` 建筑面积，便于核对项目级建筑面积。
 - 导出报价映射 JSON；默认使用商品房报价表 `整装` 工作表中当前可自动取数的 25 条规则，跳过不计价空间。
 - 下载/导入报价规则 JSON；导入后报价映射会使用当前规则重新计算金额。
 - 页面会提示商品房整装待补取数口径清单，这些项目暂不参与金额汇总。

@@ -8,7 +8,7 @@ import ezdxf
 
 from server.app.models import OpeningInput, ProjectDefaults, SpaceInput
 from server.app.quantity.classification import classify_space_type
-from server.app.quantity.geometry import contains_point, line_length
+from server.app.quantity.geometry import contains_point, line_length, polygon_area
 
 QUOTE_LAYERS = {
     "QUOTE_ROOM",
@@ -99,6 +99,8 @@ class DrawingGeometry:
     base_cabinets: list[tuple[Point, Point]]
     wall_cabinets: list[tuple[Point, Point]]
     custom_cabinets: list[tuple[Point, Point]]
+    exterior_wall_boundaries: list[list[Point]]
+    building_area_m2: float
     toilets: list[Point]
     bathroom_vanities: list[Point]
     window_openings: list[DrawingWindow]
@@ -137,6 +139,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
     wall_cabinet_segments: list[tuple[Point, Point]] = []
     custom_cabinet_segments: list[tuple[Point, Point]] = []
     custom_cabinet_height_markers: list[tuple[Point, float]] = []
+    exterior_wall_boundaries: list[list[Point]] = []
     toilet_points: list[Point] = []
     bathroom_vanity_points: list[Point] = []
     window_openings: list[DrawingOpening] = []
@@ -169,6 +172,10 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
                 height_m = _custom_cabinet_height_from_text(_text_content(entity))
                 if height_m is not None:
                     custom_cabinet_height_markers.append((_text_point(entity, defaults.unit_scale_to_m), height_m))
+        elif layer == "QUOTE_EXT_WALL":
+            boundary_points = _closed_polyline_boundary_points(entity, defaults.unit_scale_to_m)
+            if boundary_points:
+                exterior_wall_boundaries.append(boundary_points)
         elif layer == "QUOTE_TOILET":
             point = _entity_reference_point(entity, defaults.unit_scale_to_m)
             if point:
@@ -262,6 +269,9 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
     grouped_window_openings = [_drawing_window_for_opening(opening, named_rooms, defaults) for opening in grouped_window_opening_inputs]
     door_openings = [_drawing_door_for_opening(opening, named_rooms, walls) for opening in door_opening_inputs]
     doors = [door.segment for door in door_openings]
+    building_area_boundary = _building_area_boundary(exterior_wall_boundaries)
+    drawing_exterior_wall_boundaries = [building_area_boundary] if building_area_boundary else []
+    building_area_m2 = round(polygon_area(building_area_boundary), 2) if building_area_boundary else 0
 
     initial_bbox = _bbox_for_geometry([space.points for space in drawing_spaces])
     review_bbox = _expanded_bbox(initial_bbox, padding=2.0)
@@ -276,6 +286,8 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         base_cabinets=measured_base_cabinets,
         wall_cabinets=measured_wall_cabinets,
         custom_cabinets=measured_custom_cabinets,
+        exterior_wall_boundaries=drawing_exterior_wall_boundaries,
+        building_area_m2=building_area_m2,
         toilets=measured_toilets,
         bathroom_vanities=measured_bathroom_vanities,
         window_openings=grouped_window_openings,
@@ -287,6 +299,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         bbox=_bbox_for_geometry(
             [
                 *[space.points for space in drawing_spaces],
+                *drawing_exterior_wall_boundaries,
                 *[[start, end] for start, end in base_segments],
                 *[[start, end] for start, end in windows + doors],
             ]
@@ -332,6 +345,12 @@ def _entity_segments(entity, scale: float) -> list[tuple[Point, Point]]:
     if _entity_is_closed_polyline(entity) and points[0] != points[-1]:
         segments.append((points[-1], points[0]))
     return segments
+
+
+def _building_area_boundary(boundaries: list[list[Point]]) -> list[Point]:
+    if not boundaries:
+        return []
+    return max(boundaries, key=polygon_area)
 
 
 def _door_openings(entity, scale: float) -> list[DrawingOpening]:

@@ -68,6 +68,21 @@ def build_l_shaped_window_dxf() -> bytes:
     return _save_doc(doc)
 
 
+def build_ext_wall_area_dxf() -> bytes:
+    doc = ezdxf.new("R2010")
+    msp = doc.modelspace()
+    for layer in ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_EXT_WALL", "QUOTE_TEXT"]:
+        doc.layers.add(layer)
+    msp.add_lwpolyline([(0, 0), (3000, 0), (3000, 2000), (0, 2000), (0, 0)], dxfattribs={"layer": "QUOTE_ROOM"})
+    msp.add_line((0, 0), (3000, 0), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_text("一层-客厅", dxfattribs={"layer": "QUOTE_TEXT", "insert": (1500, 1000)})
+    exterior = msp.add_lwpolyline([(-1000, -1000), (4000, -1000), (4000, 3000), (-1000, 3000)], dxfattribs={"layer": "QUOTE_EXT_WALL"})
+    exterior.closed = True
+    smaller_exterior = msp.add_lwpolyline([(6000, 0), (7000, 0), (7000, 1000), (6000, 1000)], dxfattribs={"layer": "QUOTE_EXT_WALL"})
+    smaller_exterior.closed = True
+    return _save_doc(doc)
+
+
 def build_balcony_wall_tile_dxf() -> bytes:
     doc = ezdxf.new("R2010")
     msp = doc.modelspace()

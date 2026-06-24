@@ -139,6 +139,7 @@ function toQuantityRow(row: ApiQuantityRow): QuantityRow {
 function summarizeRows(rows: QuantityRow[]): QuantitySummary {
   return {
     space_count: rows.length,
+    building_area_m2: 0,
     floor_area_total_m2: round2(rows.reduce((sum, row) => sum + row.floorAreaM2, 0)),
     wall_measure_length_total_m: round2(rows.reduce((sum, row) => sum + row.wallMeasureLengthM, 0)),
     window_area_total_m2: round2(rows.reduce((sum, row) => sum + row.windowAreaM2, 0)),
@@ -829,7 +830,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
   );
 }
 
-const layers = ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_WALL_TILE", "QUOTE_NEW_WALL", "QUOTE_DEMO_WALL", "QUOTE_BASE_CABINET", "QUOTE_WALL_CABINET", "QUOTE_CUSTOM", "QUOTE_TOILET", "QUOTE_BATHROOM_VANITY", "QUOTE_WINDOW", "QUOTE_DOOR", "QUOTE_FLOOR", "QUOTE_HEIGHT"];
+const layers = ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_EXT_WALL", "QUOTE_WALL_TILE", "QUOTE_NEW_WALL", "QUOTE_DEMO_WALL", "QUOTE_BASE_CABINET", "QUOTE_WALL_CABINET", "QUOTE_CUSTOM", "QUOTE_TOILET", "QUOTE_BATHROOM_VANITY", "QUOTE_WINDOW", "QUOTE_DOOR", "QUOTE_FLOOR", "QUOTE_HEIGHT"];
 
 const statusLabels: Record<ReviewStatus, string> = {
   pending_review: "待确认",

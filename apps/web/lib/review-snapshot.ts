@@ -61,9 +61,19 @@ export function parseReviewSnapshot(content: string): ReviewSnapshot {
     exported_at: typeof snapshot.exported_at === "string" ? snapshot.exported_at : "",
     source_file: snapshot.source_file,
     calibration_file: typeof snapshot.calibration_file === "string" ? snapshot.calibration_file : null,
-    summary: snapshot.summary ?? null,
+    summary: normalizeSnapshotSummary(snapshot.summary ?? null),
     comparison: snapshot.comparison ?? null,
     rows: snapshot.rows.map(normalizeSnapshotRow),
+  };
+}
+
+function normalizeSnapshotSummary(summary: QuantitySummary | null): QuantitySummary | null {
+  if (!summary) {
+    return null;
+  }
+  return {
+    ...summary,
+    building_area_m2: typeof summary.building_area_m2 === "number" ? summary.building_area_m2 : 0,
   };
 }
 

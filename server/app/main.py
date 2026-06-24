@@ -71,17 +71,17 @@ async def parse_dxf_review_endpoint(file: UploadFile):
     defaults = ProjectDefaults()
     parsed = parse_dxf_review(await file.read(), defaults)
     rows = [asdict(calculate_quantity_row(space, defaults)) for space in parsed.spaces]
-    return {"rows": rows, "drawing": _serialize_drawing(parsed.drawing), "summary": _summarize_rows(rows)}
+    return {"rows": rows, "drawing": _serialize_drawing(parsed.drawing), "summary": _summarize_rows(rows, parsed.drawing.building_area_m2)}
 
 
 @app.post("/api/compare-dxf-calibration")
 async def compare_dxf_calibration(file: UploadFile, calibration: UploadFile):
     defaults = ProjectDefaults()
     expected_rows = json.loads((await calibration.read()).decode("utf-8"))
-    spaces = parse_dxf_spaces(await file.read(), defaults)
-    rows = [asdict(calculate_quantity_row(space, defaults)) for space in spaces]
+    parsed = parse_dxf_review(await file.read(), defaults)
+    rows = [asdict(calculate_quantity_row(space, defaults)) for space in parsed.spaces]
     stable_rows = [_stable_quantity_row(row) for row in rows]
-    return {"rows": rows, "summary": _summarize_rows(rows), "comparison": compare_quantity_rows(stable_rows, expected_rows)}
+    return {"rows": rows, "summary": _summarize_rows(rows, parsed.drawing.building_area_m2), "comparison": compare_quantity_rows(stable_rows, expected_rows)}
 
 
 def _serialize_drawing(drawing: DrawingGeometry) -> dict:
@@ -95,6 +95,8 @@ def _serialize_drawing(drawing: DrawingGeometry) -> dict:
         "base_cabinets": [_segment_to_dict(segment) for segment in drawing.base_cabinets],
         "wall_cabinets": [_segment_to_dict(segment) for segment in drawing.wall_cabinets],
         "custom_cabinets": [_segment_to_dict(segment) for segment in drawing.custom_cabinets],
+        "exterior_wall_boundaries": [[_point_to_dict(point) for point in boundary] for boundary in drawing.exterior_wall_boundaries],
+        "building_area_m2": drawing.building_area_m2,
         "toilets": [_point_to_dict(point) for point in drawing.toilets],
         "bathroom_vanities": [_point_to_dict(point) for point in drawing.bathroom_vanities],
         "window_openings": [
@@ -138,9 +140,10 @@ def _segment_to_dict(segment: tuple[tuple[float, float], tuple[float, float]]) -
     return {"start": _point_to_dict(start), "end": _point_to_dict(end)}
 
 
-def _summarize_rows(rows: list[dict]) -> dict[str, float | int]:
+def _summarize_rows(rows: list[dict], building_area_m2: float = 0) -> dict[str, float | int]:
     return {
         "space_count": len(rows),
+        "building_area_m2": round(building_area_m2, 2),
         "floor_area_total_m2": round(sum(row["floor_area_m2"] for row in rows), 2),
         "wall_measure_length_total_m": round(sum(row["wall_measure_length_m"] for row in rows), 2),
         "window_area_total_m2": round(sum(row["window_area_m2"] for row in rows), 2),

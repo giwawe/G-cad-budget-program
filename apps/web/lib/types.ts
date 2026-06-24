@@ -96,6 +96,8 @@ export type DrawingGeometry = {
   base_cabinets: DrawingSegment[];
   wall_cabinets: DrawingSegment[];
   custom_cabinets: DrawingSegment[];
+  exterior_wall_boundaries: DrawingPoint[][];
+  building_area_m2: number;
   toilets: DrawingPoint[];
   bathroom_vanities: DrawingPoint[];
   window_openings: DrawingWindow[];
@@ -114,6 +116,7 @@ export type DrawingGeometry = {
 
 export type QuantitySummary = {
   space_count: number;
+  building_area_m2: number;
   floor_area_total_m2: number;
   wall_measure_length_total_m: number;
   window_area_total_m2: number;

@@ -148,6 +148,7 @@ export function DrawingReview({
   const [showBaseCabinets, setShowBaseCabinets] = useState(true);
   const [showWallCabinets, setShowWallCabinets] = useState(true);
   const [showCustomCabinets, setShowCustomCabinets] = useState(true);
+  const [showExteriorWalls, setShowExteriorWalls] = useState(true);
   const [showBathroomFixtures, setShowBathroomFixtures] = useState(true);
   const [showWindows, setShowWindows] = useState(true);
   const [showDoors, setShowDoors] = useState(true);
@@ -263,6 +264,7 @@ export function DrawingReview({
     <section className="drawingReview">
       <div className="summaryCards">
         <div><span>空间</span><strong>{summary.space_count}</strong></div>
+        <div><span>建筑面积</span><strong>{summary.building_area_m2.toFixed(2)} m2</strong></div>
         <div><span>地面面积</span><strong>{summary.floor_area_total_m2.toFixed(2)} m2</strong></div>
         <div><span>墙线长度</span><strong>{summary.wall_measure_length_total_m.toFixed(2)} m</strong></div>
         <div><span>窗洞面积</span><strong>{summary.window_area_total_m2.toFixed(2)} m2</strong></div>
@@ -282,6 +284,7 @@ export function DrawingReview({
         <label className="drawingLayerToggle"><input type="checkbox" checked={showBaseCabinets} onChange={(event) => setShowBaseCabinets(event.target.checked)} />地柜 {drawing.base_cabinets.length}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showWallCabinets} onChange={(event) => setShowWallCabinets(event.target.checked)} />吊柜 {drawing.wall_cabinets.length}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showCustomCabinets} onChange={(event) => setShowCustomCabinets(event.target.checked)} />定制柜 {drawing.custom_cabinets.length}</label>
+        <label className="drawingLayerToggle"><input type="checkbox" checked={showExteriorWalls} onChange={(event) => setShowExteriorWalls(event.target.checked)} />外墙 {drawing.exterior_wall_boundaries.length}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showBathroomFixtures} onChange={(event) => setShowBathroomFixtures(event.target.checked)} />洁具 {drawing.toilets.length + drawing.bathroom_vanities.length}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showWindows} onChange={(event) => setShowWindows(event.target.checked)} />窗 {drawing.window_openings.length}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showDoors} onChange={(event) => setShowDoors(event.target.checked)} />门 {drawing.door_openings.length}</label>
@@ -302,6 +305,7 @@ export function DrawingReview({
           <g transform={`scale(1 -1) translate(0 ${-(drawing.bbox.min_y + drawing.bbox.max_y)})`}>
             {drawing.base_segments.map((segment, index) => <line key={`base-${index}`} className="svgBase" x1={segment.start.x} y1={segment.start.y} x2={segment.end.x} y2={segment.end.y} />)}
             {drawing.walls.map((wall, index) => <line key={`wall-${index}`} className="svgWall" x1={wall.start.x} y1={wall.start.y} x2={wall.end.x} y2={wall.end.y} />)}
+            {showExteriorWalls && drawing.exterior_wall_boundaries.map((boundary, index) => <polygon key={`exterior-wall-${index}`} points={pointList(boundary)} className="svgExteriorWall" />)}
             {drawing.spaces.map((space, index) => <polygon key={space.name} points={pointList(space.points)} className="svgSpace" style={{ fill: palette[index % palette.length], stroke: palette[index % palette.length] }} />)}
             {showMeasuredWalls && drawing.measured_walls.map((wall, index) => <line key={`measured-wall-${index}`} className="svgMeasuredWall" x1={wall.start.x} y1={wall.start.y} x2={wall.end.x} y2={wall.end.y} />)}
             {showTileWalls && drawing.tile_walls.map((wall, index) => <line key={`tile-wall-${index}`} className="svgTileWall" x1={wall.start.x} y1={wall.start.y} x2={wall.end.x} y2={wall.end.y} />)}
