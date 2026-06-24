@@ -68,6 +68,7 @@ class QuantityRow:
     new_wall_area_m2: float
     demolition_wall_length_m: float
     demolition_wall_area_m2: float
+    interior_door_count: int
     waterproof_area_m2: float
     evidence: str
     anomalies: list[str]

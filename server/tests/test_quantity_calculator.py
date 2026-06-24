@@ -250,6 +250,23 @@ def test_suspected_large_door_opening_requires_review_without_default_deduction(
     assert any("疑似大洞口" in anomaly for anomaly in row.anomalies)
 
 
+def test_interior_door_count_only_counts_normal_doors():
+    space = SpaceInput(
+        name="客厅",
+        boundary_points_m=[(0, 0), (6, 0), (6, 5), (0, 5)],
+        wall_lengths_m=[6, 5, 4],
+        doors=[
+            OpeningInput(width_m=0.9, opening_type="normal_door"),
+            OpeningInput(width_m=1.8, deduct_from_wall=True, opening_type="large_opening"),
+            OpeningInput(width_m=1.3, review_required=True, opening_type="suspected_large_opening"),
+        ],
+    )
+
+    row = calculate_quantity_row(space, ProjectDefaults())
+
+    assert row.interior_door_count == 1
+
+
 def test_height_priority_space_then_floor_then_project():
     defaults = ProjectDefaults(project_height_m=2.8)
 

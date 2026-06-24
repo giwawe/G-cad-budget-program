@@ -87,3 +87,12 @@ def test_compare_quantity_rows_reports_demolition_wall_differences_by_default():
     result = compare_quantity_rows(actual_rows, expected_rows)
 
     assert [difference["field"] for difference in result["differences"]] == ["demolition_wall_length_m", "demolition_wall_area_m2"]
+
+
+def test_compare_quantity_rows_reports_interior_door_count_differences_by_default():
+    actual_rows = [{"space_name": "客厅", "interior_door_count": 2}]
+    expected_rows = [{"space_name": "客厅", "interior_door_count": 1}]
+
+    result = compare_quantity_rows(actual_rows, expected_rows)
+
+    assert [difference["field"] for difference in result["differences"]] == ["interior_door_count"]

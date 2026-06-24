@@ -24,6 +24,7 @@ export type QuantityRow = {
   newWallAreaM2: number;
   demolitionWallLengthM: number;
   demolitionWallAreaM2: number;
+  interiorDoorCount: number;
   waterproofAreaM2: number;
   evidence: string;
   anomalies: string[];

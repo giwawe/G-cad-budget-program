@@ -49,6 +49,7 @@ type ApiQuantityRow = {
   new_wall_area_m2: number;
   demolition_wall_length_m: number;
   demolition_wall_area_m2: number;
+  interior_door_count: number;
   waterproof_area_m2: number;
   evidence: string;
   anomalies: string[];
@@ -105,6 +106,7 @@ function toQuantityRow(row: ApiQuantityRow): QuantityRow {
     newWallAreaM2: row.new_wall_area_m2 ?? 0,
     demolitionWallLengthM: row.demolition_wall_length_m ?? 0,
     demolitionWallAreaM2: row.demolition_wall_area_m2 ?? 0,
+    interiorDoorCount: row.interior_door_count ?? 0,
     waterproofAreaM2: row.waterproof_area_m2,
     evidence: row.evidence,
     anomalies: row.anomalies,

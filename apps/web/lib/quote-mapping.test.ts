@@ -37,6 +37,7 @@ const rows: QuantityRow[] = [
     newWallAreaM2: 0,
     demolitionWallLengthM: 0,
     demolitionWallAreaM2: 0,
+    interiorDoorCount: 0,
     waterproofAreaM2: 7.22,
     evidence: "",
     anomalies: [],
@@ -65,6 +66,7 @@ const rows: QuantityRow[] = [
     newWallAreaM2: 0,
     demolitionWallLengthM: 0,
     demolitionWallAreaM2: 0,
+    interiorDoorCount: 0,
     waterproofAreaM2: 0,
     evidence: "",
     anomalies: [],
@@ -131,7 +133,7 @@ assert.equal(dryAreaMapping.summary.total_amount, 600);
 
 const rules = defaultQuoteRules();
 assert.equal(DEFAULT_QUOTE_RULES_NAME, "商品房整装默认规则");
-assert.equal(rules.length, 14);
+assert.equal(rules.length, 15);
 assert.equal(rules[0].item_name, "墙面界面剂处理");
 assert.equal(rules[0].metric, "latex_paint_area_m2");
 assert.equal(rules[0].unit_price, 7);
@@ -157,6 +159,13 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "拆改及拆墙"), {
   unit_price: 60,
   space_types: undefined,
 });
+assert.deepEqual(rules.find((rule) => rule.item_name === "室内门"), {
+  item_name: "室内门",
+  metric: "interior_door_count",
+  unit: "樘",
+  unit_price: 1200,
+  space_types: undefined,
+});
 assert.deepEqual(rules[0].space_types, ["客厅", "餐厅", "卧室", "书房", "过道", "门厅", "楼梯过道", "衣帽间", "储物间", "露台"]);
 rules[0].unit_price = 99;
 rules[0].space_types?.push("厨房");
@@ -171,11 +180,12 @@ assert.ok(!pendingMetricGroups.has("防水"));
 assert.ok(!pendingMetricGroups.has("窗台石"));
 assert.ok(!pendingMetricGroups.has("窗帘箱"));
 assert.ok(!pendingMetricGroups.has("墙砖"));
-for (const expectedGroup of ["水电", "门", "洁具", "定制", "主材", "套装项"]) {
+for (const expectedGroup of ["水电", "洁具", "定制", "主材", "套装项"]) {
   assert.ok(pendingMetricGroups.has(expectedGroup), `missing pending group: ${expectedGroup}`);
 }
 assert.ok(!apartmentPendingQuoteMetrics().some((item) => item.item_name === "砌120厚砖墙"));
 assert.ok(!apartmentPendingQuoteMetrics().some((item) => item.item_name === "拆改及拆墙"));
+assert.ok(!apartmentPendingQuoteMetrics().some((item) => item.item_name === "室内门"));
 assert.ok(!apartmentPendingQuoteMetrics().some((item) => item.item_name.includes("阳台") && item.suggested_metric === "wall_tile_marked_area_m2"));
 assert.ok(!apartmentPendingQuoteMetrics().some((item) => item.item_name === "暗窗帘箱"));
 
@@ -226,6 +236,20 @@ assert.deepEqual(demolitionWallMapping.items.filter((item) => item.item_name ===
     unit: "M2",
     unit_price: 60,
     amount: 672,
+  },
+]);
+
+const interiorDoorMapping = buildQuoteMapping([{ ...rows[0], spaceName: "客厅", spaceType: "客厅", wallTileAreaM2: 0, waterproofAreaM2: 0, interiorDoorCount: 2 }]);
+assert.deepEqual(interiorDoorMapping.items.filter((item) => item.item_name === "室内门"), [
+  {
+    floor: "一层",
+    space_name: "客厅",
+    space_type: "客厅",
+    item_name: "室内门",
+    quantity: 2,
+    unit: "樘",
+    unit_price: 1200,
+    amount: 2400,
   },
 ]);
 

@@ -87,6 +87,12 @@
     "unit_price": 60
   },
   {
+    "item_name": "室内门",
+    "metric": "interior_door_count",
+    "unit": "樘",
+    "unit_price": 1200
+  },
+  {
     "item_name": "暗窗帘箱",
     "metric": "curtain_wall_width_m",
     "unit": "M",

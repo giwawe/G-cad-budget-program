@@ -9,7 +9,8 @@ type QuantityRowMetric =
   | "windowsillLengthM"
   | "curtainWallWidthM"
   | "newWallAreaM2"
-  | "demolitionWallAreaM2";
+  | "demolitionWallAreaM2"
+  | "interiorDoorCount";
 export type QuoteMetric =
   | "latex_paint_area_m2"
   | "floor_area_m2"
@@ -19,7 +20,8 @@ export type QuoteMetric =
   | "windowsill_length_m"
   | "curtain_wall_width_m"
   | "new_wall_area_m2"
-  | "demolition_wall_area_m2";
+  | "demolition_wall_area_m2"
+  | "interior_door_count";
 
 export type QuoteRule = {
   item_name: string;
@@ -101,6 +103,7 @@ const DEFAULT_RULES: QuoteRule[] = [
   { item_name: "窗台石铺贴", metric: "windowsill_length_m", unit: "M", unit_price: 73, space_types: undefined },
   { item_name: "砌120厚砖墙", metric: "new_wall_area_m2", unit: "M2", unit_price: 170, space_types: undefined },
   { item_name: "拆改及拆墙", metric: "demolition_wall_area_m2", unit: "M2", unit_price: 60, space_types: undefined },
+  { item_name: "室内门", metric: "interior_door_count", unit: "樘", unit_price: 1200, space_types: undefined },
   { item_name: "暗窗帘箱", metric: "curtain_wall_width_m", unit: "M", unit_price: 110, space_types: CURTAIN_SPACE_TYPES },
 ];
 
@@ -120,14 +123,6 @@ const APARTMENT_PENDING_METRICS: PendingQuoteMetric[] = [
     reason: "水路依赖厨房、卫生间、阳台等给排水点位和管线范围，不能直接套现有三类面积。",
     suggested_metric: "plumbing_scope_area_m2",
     source_group: "水电",
-  },
-  {
-    item_name: "室内门",
-    unit: "樘",
-    unit_price: 1200,
-    reason: "门按樘数和门型计价，当前门洞只用于墙面扣减判断，未区分成品门清单。",
-    suggested_metric: "interior_door_count",
-    source_group: "门",
   },
   {
     item_name: "马桶",
@@ -189,6 +184,7 @@ const METRIC_TO_ROW_FIELD: Record<QuoteMetric, QuantityRowMetric> = {
   curtain_wall_width_m: "curtainWallWidthM",
   new_wall_area_m2: "newWallAreaM2",
   demolition_wall_area_m2: "demolitionWallAreaM2",
+  interior_door_count: "interiorDoorCount",
 };
 
 export function defaultQuoteRules(): QuoteRule[] {
@@ -339,7 +335,8 @@ function isQuoteMetric(metric: unknown): metric is QuoteMetric {
     metric === "windowsill_length_m" ||
     metric === "curtain_wall_width_m" ||
     metric === "new_wall_area_m2" ||
-    metric === "demolition_wall_area_m2"
+    metric === "demolition_wall_area_m2" ||
+    metric === "interior_door_count"
   );
 }
 

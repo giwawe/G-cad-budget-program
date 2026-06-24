@@ -26,6 +26,7 @@ const rows: QuantityRow[] = [
     newWallAreaM2: 0,
     demolitionWallLengthM: 0,
     demolitionWallAreaM2: 0,
+    interiorDoorCount: 0,
     waterproofAreaM2: 7.22,
     evidence: "formula",
     anomalies: [],
@@ -69,6 +70,7 @@ const legacySnapshot = {
     newWallAreaM2: _newWallAreaM2,
     demolitionWallLengthM: _demolitionWallLengthM,
     demolitionWallAreaM2: _demolitionWallAreaM2,
+    interiorDoorCount: _interiorDoorCount,
     ...row
   }) => row),
 };
@@ -81,6 +83,7 @@ assert.equal(parsedLegacySnapshot.rows[0].newWallLengthM, 0);
 assert.equal(parsedLegacySnapshot.rows[0].newWallAreaM2, 0);
 assert.equal(parsedLegacySnapshot.rows[0].demolitionWallLengthM, 0);
 assert.equal(parsedLegacySnapshot.rows[0].demolitionWallAreaM2, 0);
+assert.equal(parsedLegacySnapshot.rows[0].interiorDoorCount, 0);
 
 assert.throws(() => parseReviewSnapshot("{bad json"), /快照 JSON 格式无效/);
 assert.throws(() => parseReviewSnapshot(JSON.stringify({ rows: [] })), /快照缺少 source_file/);

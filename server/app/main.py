@@ -162,6 +162,7 @@ def _stable_quantity_row(row: dict) -> dict:
         "new_wall_area_m2": row["new_wall_area_m2"],
         "demolition_wall_length_m": row["demolition_wall_length_m"],
         "demolition_wall_area_m2": row["demolition_wall_area_m2"],
+        "interior_door_count": row["interior_door_count"],
         "status": row["status"],
         "anomalies": row["anomalies"],
     }

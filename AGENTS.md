@@ -137,8 +137,10 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 门洞规则：
 
 - 普通门默认不扣墙面。
+- 普通门会生成 `interior_door_count`，默认报价规则“室内门”按樘数生成金额。
 - 大洞口门可按规则扣减。
 - 疑似大洞口会标记 review_required，并在异常里提示人工确认。
+- 大洞口和疑似大洞口不计入 `interior_door_count`；跨空间门洞若重复归属，需要在校准 JSON 中人工修正。
 
 墙砖与防水规则：
 
@@ -162,13 +164,13 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 上传校准 JSON 并显示“校准通过”或差异卡片。
 - 差异卡片可跳转到对应表格行，差异单元格高亮。
 - 导出校准模板 JSON，并在页面显示可复制内容。
-- 校准模板包含窗台石长度、窗帘墙宽候选、窗帘墙宽来源、贴砖墙、新砌墙和拆墙指标，便于把人工确认值沉淀进 golden JSON。
+- 校准模板包含窗台石长度、窗帘墙宽候选、窗帘墙宽来源、贴砖墙、新砌墙、拆墙和室内门数指标，便于把人工确认值沉淀进 golden JSON。
 - 上传校准 JSON 后，如果窗帘墙宽候选存在差异，且当前来源为 `manual_required_l_shape_window` 或 `fallback_longest_wall`，工程量表会提供“应用校准”按钮，把校准值写回当前行、标记为 `manual`，并清除该单元格的当前差异。
 - 导出校对快照 JSON；快照包含来源文件、校准文件、summary、comparison 和 rows。
 - 导入校对快照 JSON，恢复表格、状态、summary、comparison 和来源文件名。
 - 每行可改 review 状态：待确认、已确认、需修图、不计价。
 - SVG 图形 review 可缩放/平移，支持空间改名、门洞扣减切换、窗洞扣减切换、窗高调整。
-- 导出报价映射 JSON；默认使用商品房报价表 `整装` 工作表中当前可自动取数的 14 条规则，跳过不计价空间。
+- 导出报价映射 JSON；默认使用商品房报价表 `整装` 工作表中当前可自动取数的 15 条规则，跳过不计价空间。
 - 下载/导入报价规则 JSON；导入后报价映射会使用当前规则重新计算金额。
 - 页面会提示商品房整装待补取数口径清单，这些项目暂不参与金额汇总。
 - 导出报价映射后会显示窗帘/窗帘箱可报价候选空间数、仍待确认空间数和对应空间名；导出的报价映射 JSON 会附带 `curtain_quote_readiness` 摘要，并把人工确认后的暗窗帘箱写入 `curtain_quote_candidates` 候选清单和 `items` 金额汇总。
@@ -186,6 +188,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 窗台石铺贴：按 `windowsillLengthM`，有窗洞长度时生成。
 - 砌120厚砖墙：按 `newWallAreaM2`，画了 `QUOTE_NEW_WALL` 时生成。
 - 拆改及拆墙：按 `demolitionWallAreaM2`，画了 `QUOTE_DEMO_WALL` 时生成。
+- 室内门：按 `interiorDoorCount`，普通 `QUOTE_DOOR` 门洞生成。
 - 窗帘墙宽候选 `curtainWallWidthM` 在工程量表展示，并可在人工确认后导出为 `curtain_quote_candidates` 候选清单；`curtain_wall_width_m` 已属于可导入报价规则 metric，但仅 `curtainWallWidthSource === "manual"` 时生成暗窗帘箱金额。
 
 这些规则只覆盖现有算量口径能稳定承接的自动计价项目，不等于完整整装报价。
@@ -193,14 +196,14 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 报价规则 JSON 是数组格式，字段为：
 
 - `item_name`：清单项名称。
-- `metric`：取数指标，当前只允许 `latex_paint_area_m2`、`floor_area_m2`、`ceiling_area_m2`、`wall_tile_area_m2`、`waterproof_area_m2`、`windowsill_length_m`、`new_wall_area_m2`、`demolition_wall_area_m2`、`curtain_wall_width_m`。
+- `metric`：取数指标，当前只允许 `latex_paint_area_m2`、`floor_area_m2`、`ceiling_area_m2`、`wall_tile_area_m2`、`waterproof_area_m2`、`windowsill_length_m`、`new_wall_area_m2`、`demolition_wall_area_m2`、`interior_door_count`、`curtain_wall_width_m`。
 - `unit`：单位。
 - `unit_price`：单价，必须是非负数字。
 - `space_types`：可选，空间类型白名单；填写后只对这些空间类型生成清单项。
 
 当前商品房报价表已整理出一份可导入规则：`quote-rules-apartment-current.json`。它基于商品房报价表的 `整装` 工作表，只包含当前系统能准确承接的面积类项目；`半包` 工作表不读取、不展示、不保留为规则来源。
 
-商品房整装待补取数口径记录在 `apartmentPendingQuoteMetrics()`，只用于页面展示和后续扩展，不混入可导入规则 JSON，也不参与金额汇总。当前重点包括水电、门、洁具、定制、主材、套装项等。
+商品房整装待补取数口径记录在 `apartmentPendingQuoteMetrics()`，只用于页面展示和后续扩展，不混入可导入规则 JSON，也不参与金额汇总。当前重点包括水电、洁具、定制、主材、套装项等。
 
 ## 测试与 fixture
 

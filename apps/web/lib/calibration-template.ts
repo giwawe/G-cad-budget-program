@@ -20,6 +20,7 @@ export type CalibrationTemplateRow = {
   new_wall_area_m2: number;
   demolition_wall_length_m: number;
   demolition_wall_area_m2: number;
+  interior_door_count: number;
   status: QuantityRow["status"];
   anomalies: string[];
 };
@@ -45,6 +46,7 @@ export function quantityRowsToCalibrationTemplate(rows: QuantityRow[]): Calibrat
     new_wall_area_m2: row.newWallAreaM2,
     demolition_wall_length_m: row.demolitionWallLengthM,
     demolition_wall_area_m2: row.demolitionWallAreaM2,
+    interior_door_count: row.interiorDoorCount,
     status: row.status,
     anomalies: row.anomalies,
   }));

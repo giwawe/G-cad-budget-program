@@ -15,6 +15,7 @@ DEFAULT_NUMERIC_FIELDS = [
     "new_wall_area_m2",
     "demolition_wall_length_m",
     "demolition_wall_area_m2",
+    "interior_door_count",
 ]
 
 

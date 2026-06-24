@@ -224,6 +224,8 @@
 | `>= 1.2m` 且 `< 1.5m` | 疑似大洞口 | 标记人工确认，默认不扣 |
 | `>= 1.5m` | 大洞口 | 默认扣减 |
 
+普通门会计入 `interior_door_count`，用于“室内门”按樘计价。疑似大洞口和大洞口不自动计入室内门报价；跨空间门洞如果被两个空间重复归属，需要在校准 JSON 中人工修正。
+
 ## 8. 默认参数和算量公式
 
 当前系统默认参数：
@@ -249,6 +251,7 @@
 阳台/露台/洗衣房墙砖面积 = 贴砖墙长 * 空间实际层高；没有 QUOTE_WALL_TILE 时为 0
 新砌墙面积 = 新砌墙长度 * 空间实际层高；没有 QUOTE_NEW_WALL 时为 0
 拆墙面积 = 拆墙长度 * 空间实际层高；没有 QUOTE_DEMO_WALL 时为 0
+室内门数 = 普通 QUOTE_DOOR 门洞数量；疑似大洞口和大洞口为 0
 防水面积 = 地面面积 + 墙面计量长度 * 防水高度
 窗台石长度 = 窗宽合计
 窗帘墙宽候选 = 客厅/卧室/书房有窗时优先匹配窗户所在 QUOTE_WALL 墙段整宽；匹配不到时回退到空间最长一段 QUOTE_WALL；其它空间为 0
@@ -258,7 +261,7 @@
 
 窗帘和窗帘箱不按窗洞宽度计量，应按窗户所在墙面的整面墙宽度计量。厨房、卫生间、过道等空间默认不做窗帘和窗帘箱；一般不做窗帘箱的位置也不生成窗帘。当前系统生成 `curtain_wall_width_m` 候选值：若窗洞中心线能匹配到邻近且平行的 `QUOTE_WALL`，取该墙段整宽；若匹配不到，回退到空间最长一段 `QUOTE_WALL`。L 形或转角窗涉及两面墙和转角做法，当前不自动计算窗帘或窗帘箱长度，候选值为 `0`，需要人工确认。系统同时输出 `curtain_wall_width_source`：`matched_window_wall` 表示已匹配窗户所在墙，`fallback_longest_wall` 表示回退最长墙需人工重点确认，`manual_required_l_shape_window` 表示 L 形窗需人工确认，`not_applicable` 表示不适用，前端人工编辑后为 `manual`。该候选值允许在工程量表中人工校准、随校对快照保存/恢复；只有来源为 `manual` 且长度大于 `0` 时，暗窗帘箱才进入导出的 `curtain_quote_candidates` 候选清单、`items` 和金额汇总。
 
-校准模板会导出 `windowsill_length_m`、`curtain_wall_width_m`、`curtain_wall_width_source`、`wall_tile_measure_length_m`、`wall_tile_area_m2`、`new_wall_length_m`、`new_wall_area_m2`、`demolition_wall_length_m` 和 `demolition_wall_area_m2`。报价员可以把 L 形窗人工确认后的实际延米、贴砖墙、新砌墙或拆墙校准值填回模板，再作为 golden JSON 固定校准结果。
+校准模板会导出 `windowsill_length_m`、`curtain_wall_width_m`、`curtain_wall_width_source`、`wall_tile_measure_length_m`、`wall_tile_area_m2`、`new_wall_length_m`、`new_wall_area_m2`、`demolition_wall_length_m`、`demolition_wall_area_m2` 和 `interior_door_count`。报价员可以把 L 形窗人工确认后的实际延米、贴砖墙、新砌墙、拆墙或室内门数校准值填回模板，再作为 golden JSON 固定校准结果。
 
 上传包含 `curtain_wall_width_m` 的校准 JSON 后，若当前行来源是 `manual_required_l_shape_window` 或 `fallback_longest_wall`，工程量表会提供“应用校准”按钮，把校准值写回当前行、将来源标记为 `manual`，并清除该单元格的当前差异。
 
