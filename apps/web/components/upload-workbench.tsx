@@ -56,6 +56,7 @@ type ApiQuantityRow = {
   kitchen_base_cabinet_length_m: number;
   kitchen_wall_cabinet_length_m: number;
   custom_cabinet_area_m2: number;
+  custom_cabinet_length_m: number;
   toilet_count: number;
   bathroom_vanity_count: number;
   waterproof_area_m2: number;
@@ -121,6 +122,7 @@ function toQuantityRow(row: ApiQuantityRow): QuantityRow {
     kitchenBaseCabinetLengthM: row.kitchen_base_cabinet_length_m ?? 0,
     kitchenWallCabinetLengthM: row.kitchen_wall_cabinet_length_m ?? 0,
     customCabinetAreaM2: row.custom_cabinet_area_m2 ?? 0,
+    customCabinetLengthM: row.custom_cabinet_length_m ?? 0,
     toiletCount: row.toilet_count ?? 0,
     bathroomVanityCount: row.bathroom_vanity_count ?? 0,
     waterproofAreaM2: row.waterproof_area_m2,
@@ -823,7 +825,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
   );
 }
 
-const layers = ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_WALL_TILE", "QUOTE_NEW_WALL", "QUOTE_DEMO_WALL", "QUOTE_BASE_CABINET", "QUOTE_WALL_CABINET", "QUOTE_CUSTOM_CABINET", "QUOTE_TOILET", "QUOTE_BATHROOM_VANITY", "QUOTE_WINDOW", "QUOTE_DOOR", "QUOTE_FLOOR", "QUOTE_HEIGHT"];
+const layers = ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_WALL_TILE", "QUOTE_NEW_WALL", "QUOTE_DEMO_WALL", "QUOTE_BASE_CABINET", "QUOTE_WALL_CABINET", "QUOTE_CUSTOM", "QUOTE_TOILET", "QUOTE_BATHROOM_VANITY", "QUOTE_WINDOW", "QUOTE_DOOR", "QUOTE_FLOOR", "QUOTE_HEIGHT"];
 
 const statusLabels: Record<ReviewStatus, string> = {
   pending_review: "待确认",

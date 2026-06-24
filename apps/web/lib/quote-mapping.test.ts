@@ -37,6 +37,7 @@ const rows: QuantityRow[] = [
     electricalScopeAreaM2: 4.48,
     plumbingScopeAreaM2: 4.48,
     customCabinetAreaM2: 0,
+    customCabinetLengthM: 0,
     newWallLengthM: 0,
     newWallAreaM2: 0,
     demolitionWallLengthM: 0,
@@ -74,6 +75,7 @@ const rows: QuantityRow[] = [
     electricalScopeAreaM2: 3.24,
     plumbingScopeAreaM2: 3.24,
     customCabinetAreaM2: 0,
+    customCabinetLengthM: 0,
     newWallLengthM: 0,
     newWallAreaM2: 0,
     demolitionWallLengthM: 0,
@@ -143,7 +145,7 @@ const excludedOnlyMapping = buildQuoteMapping([rows[1]]);
 assert.equal(excludedOnlyMapping.items.length, 0);
 assert.equal(excludedOnlyMapping.summary.total_amount, 0);
 
-const bedroomDefaultMapping = buildQuoteMapping([{ ...rows[0], spaceName: "主卧", spaceType: "卧室", wallTileAreaM2: 0, waterproofAreaM2: 0, customCabinetAreaM2: 7.2, kitchenBaseCabinetLengthM: 0, kitchenWallCabinetLengthM: 0 }]);
+const bedroomDefaultMapping = buildQuoteMapping([{ ...rows[0], spaceName: "主卧", spaceType: "卧室", wallTileAreaM2: 0, waterproofAreaM2: 0, customCabinetAreaM2: 7.8, customCabinetLengthM: 0, kitchenBaseCabinetLengthM: 0, kitchenWallCabinetLengthM: 0 }]);
 
 assert.equal(bedroomDefaultMapping.items.length, 12);
 assert.deepEqual(bedroomDefaultMapping.items.map((item) => item.item_name), [
@@ -160,7 +162,7 @@ assert.deepEqual(bedroomDefaultMapping.items.map((item) => item.item_name), [
   "全屋定制",
   "全屋灯饰",
 ]);
-assert.equal(bedroomDefaultMapping.summary.total_amount, 13817.76);
+assert.equal(bedroomDefaultMapping.summary.total_amount, 14177.76);
 
 const customMapping = buildQuoteMapping(rows, [{ item_name: "厨房墙面定制漆", metric: "latex_paint_area_m2", unit: "m2", unit_price: 30 }]);
 
@@ -185,7 +187,7 @@ assert.equal(dryAreaMapping.summary.total_amount, 600);
 
 const rules = defaultQuoteRules();
 assert.equal(DEFAULT_QUOTE_RULES_NAME, "商品房整装默认规则");
-assert.equal(rules.length, 24);
+assert.equal(rules.length, 25);
 assert.equal(rules[0].item_name, "墙面界面剂处理");
 assert.equal(rules[0].metric, "latex_paint_area_m2");
 assert.equal(rules[0].unit_price, 7);
@@ -274,6 +276,13 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "全屋定制"), {
   unit_price: 600,
   space_types: undefined,
 });
+assert.deepEqual(rules.find((rule) => rule.item_name === "全屋定制低柜"), {
+  item_name: "全屋定制低柜",
+  metric: "custom_cabinet_length_m",
+  unit: "M",
+  unit_price: 600,
+  space_types: undefined,
+});
 assert.deepEqual(rules.find((rule) => rule.item_name === "浴室柜"), {
   item_name: "浴室柜",
   metric: "bathroom_vanity_count",
@@ -335,6 +344,7 @@ const parsedWetRules = parseQuoteRules(JSON.stringify([
   { item_name: "水路布管", metric: "plumbing_scope_area_m2", unit: "M2", unit_price: 29.5 },
   { item_name: "全屋灯饰", metric: "lighting_package_count", unit: "套", unit_price: 6000 },
   { item_name: "全屋定制", metric: "custom_cabinet_area_m2", unit: "M2", unit_price: 600 },
+  { item_name: "全屋定制低柜", metric: "custom_cabinet_length_m", unit: "M", unit_price: 600 },
 ]));
 assert.equal(parsedWetRules[0].metric, "wall_tile_area_m2");
 assert.equal(parsedWetRules[1].metric, "waterproof_area_m2");
@@ -422,17 +432,27 @@ assert.deepEqual(kitchenCabinetMapping.items.filter((item) => item.item_name ===
   },
 ]);
 
-const customCabinetMapping = buildQuoteMapping([{ ...rows[0], spaceName: "主卧", spaceType: "卧室", wallTileAreaM2: 0, waterproofAreaM2: 0, customCabinetAreaM2: 7.2 }]);
-assert.deepEqual(customCabinetMapping.items.filter((item) => item.item_name === "全屋定制"), [
+const customCabinetMapping = buildQuoteMapping([{ ...rows[0], spaceName: "主卧", spaceType: "卧室", wallTileAreaM2: 0, waterproofAreaM2: 0, customCabinetAreaM2: 7.8, customCabinetLengthM: 2.0 }]);
+assert.deepEqual(customCabinetMapping.items.filter((item) => item.item_name === "全屋定制" || item.item_name === "全屋定制低柜"), [
   {
     floor: "一层",
     space_name: "主卧",
     space_type: "卧室",
     item_name: "全屋定制",
-    quantity: 7.2,
+    quantity: 7.8,
     unit: "M2",
     unit_price: 600,
-    amount: 4320,
+    amount: 4680,
+  },
+  {
+    floor: "一层",
+    space_name: "主卧",
+    space_type: "卧室",
+    item_name: "全屋定制低柜",
+    quantity: 2,
+    unit: "M",
+    unit_price: 600,
+    amount: 1200,
   },
 ]);
 

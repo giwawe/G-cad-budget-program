@@ -131,6 +131,12 @@
     "unit_price": 600
   },
   {
+    "item_name": "全屋定制低柜",
+    "metric": "custom_cabinet_length_m",
+    "unit": "M",
+    "unit_price": 600
+  },
+  {
     "item_name": "马桶",
     "metric": "toilet_count",
     "unit": "个",

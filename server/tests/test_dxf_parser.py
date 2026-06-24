@@ -135,8 +135,9 @@ def test_quote_custom_cabinet_segments_are_assigned_to_space():
     review = parser.parse_dxf_review(build_custom_cabinet_dxf(), ProjectDefaults())
 
     assert review.spaces[0].name == "一层-主卧"
-    assert review.spaces[0].custom_cabinet_lengths_m == [3.0]
-    assert review.drawing.custom_cabinets == [((0.3, 0.3), (3.3, 0.3))]
+    assert review.spaces[0].custom_cabinet_lengths_m == [3.0, 2.0]
+    assert review.spaces[0].custom_cabinet_heights_m == [None, 0.8]
+    assert review.drawing.custom_cabinets == [((0.3, 0.3), (3.3, 0.3)), ((0.3, 0.8), (2.3, 0.8))]
 
 
 def test_quote_bathroom_fixture_points_are_assigned_to_bathroom_space():

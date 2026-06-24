@@ -17,7 +17,7 @@ QUOTE_LAYERS = {
     "QUOTE_DEMO_WALL",
     "QUOTE_BASE_CABINET",
     "QUOTE_WALL_CABINET",
-    "QUOTE_CUSTOM_CABINET",
+    "QUOTE_CUSTOM",
     "QUOTE_TOILET",
     "QUOTE_BATHROOM_VANITY",
     "QUOTE_OPENING",
@@ -135,6 +135,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
     base_cabinet_segments: list[tuple[Point, Point]] = []
     wall_cabinet_segments: list[tuple[Point, Point]] = []
     custom_cabinet_segments: list[tuple[Point, Point]] = []
+    custom_cabinet_height_markers: list[tuple[Point, float]] = []
     toilet_points: list[Point] = []
     bathroom_vanity_points: list[Point] = []
     window_openings: list[DrawingOpening] = []
@@ -161,8 +162,12 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
             base_cabinet_segments.extend(_entity_segments(entity, defaults.unit_scale_to_m))
         elif layer == "QUOTE_WALL_CABINET":
             wall_cabinet_segments.extend(_entity_segments(entity, defaults.unit_scale_to_m))
-        elif layer == "QUOTE_CUSTOM_CABINET":
+        elif layer == "QUOTE_CUSTOM":
             custom_cabinet_segments.extend(_entity_segments(entity, defaults.unit_scale_to_m))
+            if entity.dxftype() in {"TEXT", "MTEXT"}:
+                height_m = _custom_cabinet_height_from_text(_text_content(entity))
+                if height_m is not None:
+                    custom_cabinet_height_markers.append((_text_point(entity, defaults.unit_scale_to_m), height_m))
         elif layer == "QUOTE_TOILET":
             point = _entity_reference_point(entity, defaults.unit_scale_to_m)
             if point:
@@ -208,6 +213,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         room_base_cabinets = [(start, end) for start, end in base_cabinet_segments if _segment_in_room(room, start, end)]
         room_wall_cabinets = [(start, end) for start, end in wall_cabinet_segments if _segment_in_room(room, start, end)]
         room_custom_cabinets = [(start, end) for start, end in custom_cabinet_segments if _segment_in_room(room, start, end)]
+        room_custom_cabinet_heights = [_height_for_custom_cabinet_segment(segment, custom_cabinet_height_markers) for segment in room_custom_cabinets]
         room_toilets = [point for point in toilet_points if contains_point(room, point) or _point_on_boundary(room, point)]
         room_bathroom_vanities = [point for point in bathroom_vanity_points if contains_point(room, point) or _point_on_boundary(room, point)]
         room_windows = [opening for opening in grouped_window_opening_inputs if _opening_associated_with_room(room, *_opening_centerline(opening))]
@@ -235,6 +241,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
                 base_cabinet_lengths_m=[round(line_length(start, end), 2) for start, end in room_base_cabinets],
                 wall_cabinet_lengths_m=[round(line_length(start, end), 2) for start, end in room_wall_cabinets],
                 custom_cabinet_lengths_m=[round(line_length(start, end), 2) for start, end in room_custom_cabinets],
+                custom_cabinet_heights_m=room_custom_cabinet_heights,
                 toilet_count=len(room_toilets),
                 bathroom_vanity_count=len(room_bathroom_vanities),
                 curtain_wall_width_candidate_m=curtain_wall_width_candidate_m,
@@ -838,6 +845,28 @@ def clean_mtext(text: str) -> str:
 def _text_point(entity, scale: float) -> Point:
     insert = entity.dxf.insert
     return _scale_point((insert.x, insert.y), scale)
+
+
+def _custom_cabinet_height_from_text(text: str) -> float | None:
+    match = re.search(r"(?:H|h|高度)\s*[=:：]?\s*(\d+(?:\.\d+)?)\s*(m|M|米)?", text)
+    if not match:
+        return None
+    value = float(match.group(1))
+    unit = match.group(2)
+    if unit in {"m", "M", "米"}:
+        return round(value, 2)
+    return round(value / 1000 if value > 10 else value, 2)
+
+
+def _height_for_custom_cabinet_segment(segment: tuple[Point, Point], markers: list[tuple[Point, float]]) -> float | None:
+    nearby_markers = [
+        (line_length(_segment_midpoint(segment), point), height_m)
+        for point, height_m in markers
+        if _distance_to_segment(point, segment[0], segment[1]) <= 0.35
+    ]
+    if not nearby_markers:
+        return None
+    return min(nearby_markers, key=lambda item: item[0])[1]
 
 
 def _entity_reference_point(entity, scale: float) -> Point | None:

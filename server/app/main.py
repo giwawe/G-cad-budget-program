@@ -175,6 +175,7 @@ def _stable_quantity_row(row: dict) -> dict:
         "kitchen_base_cabinet_length_m": row["kitchen_base_cabinet_length_m"],
         "kitchen_wall_cabinet_length_m": row["kitchen_wall_cabinet_length_m"],
         "custom_cabinet_area_m2": row["custom_cabinet_area_m2"],
+        "custom_cabinet_length_m": row["custom_cabinet_length_m"],
         "toilet_count": row["toilet_count"],
         "bathroom_vanity_count": row["bathroom_vanity_count"],
         "status": row["status"],

@@ -141,15 +141,17 @@ def build_kitchen_cabinet_dxf() -> bytes:
 def build_custom_cabinet_dxf() -> bytes:
     doc = ezdxf.new("R2010")
     msp = doc.modelspace()
-    for layer in ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_CUSTOM_CABINET", "QUOTE_TEXT"]:
+    for layer in ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_CUSTOM", "QUOTE_TEXT"]:
         doc.layers.add(layer)
     msp.add_lwpolyline([(0, 0), (3600, 0), (3600, 3000), (0, 3000), (0, 0)], dxfattribs={"layer": "QUOTE_ROOM"})
     msp.add_line((0, 0), (3600, 0), dxfattribs={"layer": "QUOTE_WALL"})
     msp.add_line((3600, 0), (3600, 3000), dxfattribs={"layer": "QUOTE_WALL"})
     msp.add_line((0, 3000), (3600, 3000), dxfattribs={"layer": "QUOTE_WALL"})
     msp.add_line((0, 0), (0, 3000), dxfattribs={"layer": "QUOTE_WALL"})
-    msp.add_line((300, 300), (3300, 300), dxfattribs={"layer": "QUOTE_CUSTOM_CABINET"})
-    msp.add_line((5000, 0), (6000, 0), dxfattribs={"layer": "QUOTE_CUSTOM_CABINET"})
+    msp.add_line((300, 300), (3300, 300), dxfattribs={"layer": "QUOTE_CUSTOM"})
+    msp.add_line((300, 800), (2300, 800), dxfattribs={"layer": "QUOTE_CUSTOM"})
+    msp.add_text("H=800", dxfattribs={"layer": "QUOTE_CUSTOM", "insert": (1300, 950)})
+    msp.add_line((5000, 0), (6000, 0), dxfattribs={"layer": "QUOTE_CUSTOM"})
     msp.add_text("一层-主卧", dxfattribs={"layer": "QUOTE_TEXT", "insert": (1800, 1500)})
     return _save_doc(doc)
 
