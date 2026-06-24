@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { calibrationTemplateFileName, quantityRowsToCalibrationTemplate } from "./calibration-template.ts";
-import type { QuantityRow } from "./types.ts";
+import type { QuantityRow, QuantitySummary } from "./types.ts";
 
 const rows: QuantityRow[] = [
   {
@@ -44,6 +44,14 @@ const rows: QuantityRow[] = [
     status: "pending_review",
   },
 ];
+const summary: QuantitySummary = {
+  space_count: 1,
+  building_area_m2: 88.66,
+  floor_area_total_m2: 4.48,
+  wall_measure_length_total_m: 9.12,
+  window_area_total_m2: 0,
+  latex_paint_area_total_m2: 25.54,
+};
 
 assert.deepEqual(quantityRowsToCalibrationTemplate(rows), [
   {
@@ -82,6 +90,13 @@ assert.deepEqual(quantityRowsToCalibrationTemplate(rows), [
     anomalies: [],
   },
 ]);
+
+assert.deepEqual(quantityRowsToCalibrationTemplate(rows, summary), {
+  summary: {
+    building_area_m2: 88.66,
+  },
+  rows: quantityRowsToCalibrationTemplate(rows),
+});
 
 assert.equal(calibrationTemplateFileName("test-case.dxf"), "test-case.calibration.json");
 assert.equal(calibrationTemplateFileName("样例数据"), "calibration-template.json");

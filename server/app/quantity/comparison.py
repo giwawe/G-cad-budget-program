@@ -28,6 +28,37 @@ DEFAULT_NUMERIC_FIELDS = [
     "toilet_count",
     "bathroom_vanity_count",
 ]
+DEFAULT_SUMMARY_NUMERIC_FIELDS = ["building_area_m2"]
+
+
+def compare_quantity_payload(
+    actual_rows: list[dict],
+    actual_summary: dict,
+    expected_payload,
+    *,
+    numeric_fields: list[str] | None = None,
+    summary_numeric_fields: list[str] | None = None,
+    absolute_tolerance: float = 0.01,
+) -> dict:
+    expected_rows = expected_payload.get("rows", []) if isinstance(expected_payload, dict) else expected_payload
+    expected_summary = expected_payload.get("summary", {}) if isinstance(expected_payload, dict) else {}
+    result = compare_quantity_rows(
+        actual_rows,
+        expected_rows,
+        numeric_fields=numeric_fields,
+        absolute_tolerance=absolute_tolerance,
+    )
+    summary_differences = compare_quantity_summary(
+        actual_summary,
+        expected_summary,
+        numeric_fields=summary_numeric_fields,
+        absolute_tolerance=absolute_tolerance,
+    )
+    return {
+        **result,
+        "passed": result["passed"] and not summary_differences,
+        "summary_differences": summary_differences,
+    }
 
 
 def compare_quantity_rows(
@@ -76,6 +107,33 @@ def compare_quantity_rows(
         "unexpected_spaces": unexpected_spaces,
         "differences": differences,
     }
+
+
+def compare_quantity_summary(
+    actual_summary: dict,
+    expected_summary: dict,
+    *,
+    numeric_fields: list[str] | None = None,
+    absolute_tolerance: float = 0.01,
+) -> list[dict]:
+    fields = numeric_fields or DEFAULT_SUMMARY_NUMERIC_FIELDS
+    differences = []
+    for field in fields:
+        if field not in actual_summary or field not in expected_summary:
+            continue
+        delta = round(float(actual_summary[field]) - float(expected_summary[field]), 2)
+        if abs(delta) <= absolute_tolerance:
+            continue
+        differences.append(
+            {
+                "field": field,
+                "actual": actual_summary[field],
+                "expected": expected_summary[field],
+                "delta": delta,
+                "percent_delta": _percent_delta(float(actual_summary[field]), float(expected_summary[field])),
+            }
+        )
+    return differences
 
 
 def _rows_by_space_name(rows: list[dict]) -> dict[str, dict]:

@@ -149,3 +149,48 @@ def test_parse_dxf_review_summary_includes_building_area_from_quote_ext_wall():
             {"x": -1.0, "y": 3.0},
         ]
     ]
+
+
+def test_compare_dxf_calibration_reports_building_area_summary_difference():
+    client = TestClient(app)
+    calibration_payload = {
+        "summary": {"building_area_m2": 18},
+        "rows": [
+            {
+                "space_name": "一层-客厅",
+                "space_type": "客厅",
+                "floor_area_m2": 6,
+                "wall_measure_length_m": 3,
+                "window_width_total_m": 0,
+                "window_area_m2": 0,
+                "door_width_total_m": 0,
+                "door_deduct_area_m2": 0,
+                "wall_gross_area_m2": 8.4,
+                "latex_paint_area_m2": 8.4,
+                "status": "pending_review",
+                "anomalies": [],
+            }
+        ],
+    }
+
+    response = client.post(
+        "/api/compare-dxf-calibration",
+        files={
+            "file": ("ext-wall.dxf", build_ext_wall_area_dxf(), "application/dxf"),
+            "calibration": ("ext-wall.calibration.json", json.dumps(calibration_payload).encode("utf-8"), "application/json"),
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["summary"]["building_area_m2"] == 20
+    assert payload["comparison"]["passed"] is False
+    assert payload["comparison"]["summary_differences"] == [
+        {
+            "field": "building_area_m2",
+            "actual": 20,
+            "expected": 18,
+            "delta": 2.0,
+            "percent_delta": 11.11,
+        }
+    ]

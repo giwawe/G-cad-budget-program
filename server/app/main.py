@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from server.app.dxf.parser import DrawingGeometry, parse_dxf_review, parse_dxf_spaces
 from server.app.models import OpeningInput, ProjectDefaults, SpaceInput
 from server.app.quantity.calculator import calculate_quantity_row
-from server.app.quantity.comparison import compare_quantity_rows
+from server.app.quantity.comparison import compare_quantity_payload
 
 app = FastAPI(title="CAD Budget Quantity Validation API")
 app.add_middleware(
@@ -77,11 +77,12 @@ async def parse_dxf_review_endpoint(file: UploadFile):
 @app.post("/api/compare-dxf-calibration")
 async def compare_dxf_calibration(file: UploadFile, calibration: UploadFile):
     defaults = ProjectDefaults()
-    expected_rows = json.loads((await calibration.read()).decode("utf-8"))
+    expected_payload = json.loads((await calibration.read()).decode("utf-8"))
     parsed = parse_dxf_review(await file.read(), defaults)
     rows = [asdict(calculate_quantity_row(space, defaults)) for space in parsed.spaces]
     stable_rows = [_stable_quantity_row(row) for row in rows]
-    return {"rows": rows, "summary": _summarize_rows(rows, parsed.drawing.building_area_m2), "comparison": compare_quantity_rows(stable_rows, expected_rows)}
+    summary = _summarize_rows(rows, parsed.drawing.building_area_m2)
+    return {"rows": rows, "summary": summary, "comparison": compare_quantity_payload(stable_rows, summary, expected_payload)}
 
 
 def _serialize_drawing(drawing: DrawingGeometry) -> dict:

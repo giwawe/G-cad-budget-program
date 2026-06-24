@@ -420,6 +420,16 @@ code {
   text-decoration: none;
 }
 
+.summaryDifferenceCard {
+  display: grid;
+  gap: 5px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #f9fafb;
+  color: inherit;
+  padding: 10px;
+}
+
 .calibrationDifferences a:hover {
   border-color: var(--warning);
   background: #fffaf0;

@@ -312,7 +312,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
   }
 
   function handleDownloadCalibrationTemplate() {
-    const content = `${JSON.stringify(quantityRowsToCalibrationTemplate(rows), null, 2)}\n`;
+    const content = `${JSON.stringify(quantityRowsToCalibrationTemplate(rows, summary), null, 2)}\n`;
     const downloadName = calibrationTemplateFileName(fileName);
     const blob = new Blob([content], { type: "application/json;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -795,15 +795,25 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
         <section className={`calibrationPanel ${comparison.passed ? "passed" : "failed"}`}>
           <div className="calibrationSummary">
             <strong>{comparison.passed ? "校准通过" : "校准存在差异"}</strong>
-            <span>匹配 {comparison.matched_count} 个空间，差异空间 {comparison.failed_count} 个</span>
+            <span>匹配 {comparison.matched_count} 个空间，差异空间 {comparison.failed_count} 个，项目级差异 {comparison.summary_differences?.length ?? 0} 项</span>
             {(comparison.missing_spaces.length > 0 || comparison.unexpected_spaces.length > 0) && (
               <span>
                 缺失 {comparison.missing_spaces.length} 个，多余 {comparison.unexpected_spaces.length} 个
               </span>
             )}
           </div>
-          {comparison.differences.length > 0 && (
+          {((comparison.summary_differences?.length ?? 0) > 0 || comparison.differences.length > 0) && (
             <div className="calibrationDifferences">
+              {comparison.summary_differences?.map((difference) => (
+                <div className="summaryDifferenceCard" key={`summary-${difference.field}`}>
+                  <strong>项目汇总</strong>
+                  <span>{difference.field}</span>
+                  <code>
+                    {difference.actual} / {difference.expected} ({difference.delta > 0 ? "+" : ""}
+                    {difference.delta}, {difference.percent_delta}%)
+                  </code>
+                </div>
+              ))}
               {comparison.differences.slice(0, 12).map((difference) => (
                 <a href={quantityRowAnchorHref(difference.space_name)} key={`${difference.space_name}-${difference.field}`}>
                   <strong>{difference.space_name}</strong>

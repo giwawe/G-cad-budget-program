@@ -132,6 +132,14 @@ export type CalibrationDifference = {
   percent_delta: number;
 };
 
+export type CalibrationSummaryDifference = {
+  field: string;
+  actual: number;
+  expected: number;
+  delta: number;
+  percent_delta: number;
+};
+
 export type CalibrationComparison = {
   passed: boolean;
   matched_count: number;
@@ -139,4 +147,5 @@ export type CalibrationComparison = {
   missing_spaces: string[];
   unexpected_spaces: string[];
   differences: CalibrationDifference[];
+  summary_differences?: CalibrationSummaryDifference[];
 };

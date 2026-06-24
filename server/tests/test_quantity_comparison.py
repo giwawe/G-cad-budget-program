@@ -1,4 +1,4 @@
-from server.app.quantity.comparison import compare_quantity_rows
+from server.app.quantity.comparison import compare_quantity_payload, compare_quantity_rows
 
 
 def test_compare_quantity_rows_reports_numeric_differences_by_space_name():
@@ -141,3 +141,35 @@ def test_compare_quantity_rows_reports_bathroom_fixture_count_differences_by_def
     result = compare_quantity_rows(actual_rows, expected_rows)
 
     assert [difference["field"] for difference in result["differences"]] == ["toilet_count", "bathroom_vanity_count"]
+
+
+def test_compare_quantity_payload_reports_project_summary_differences():
+    actual_rows = [{"space_name": "客厅", "floor_area_m2": 30}]
+    actual_summary = {"building_area_m2": 88.66}
+    expected_payload = {
+        "summary": {"building_area_m2": 90},
+        "rows": [{"space_name": "客厅", "floor_area_m2": 30}],
+    }
+
+    result = compare_quantity_payload(actual_rows, actual_summary, expected_payload)
+
+    assert result["passed"] is False
+    assert result["differences"] == []
+    assert result["summary_differences"] == [
+        {
+            "field": "building_area_m2",
+            "actual": 88.66,
+            "expected": 90,
+            "delta": -1.34,
+            "percent_delta": -1.49,
+        }
+    ]
+
+
+def test_compare_quantity_payload_accepts_legacy_row_array():
+    expected_rows = [{"space_name": "客厅", "floor_area_m2": 31}]
+
+    result = compare_quantity_payload([{"space_name": "客厅", "floor_area_m2": 30}], {"building_area_m2": 88.66}, expected_rows)
+
+    assert result["summary_differences"] == []
+    assert [difference["field"] for difference in result["differences"]] == ["floor_area_m2"]

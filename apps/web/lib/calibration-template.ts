@@ -1,4 +1,4 @@
-import type { QuantityRow } from "./types";
+import type { QuantityRow, QuantitySummary } from "./types";
 
 export type CalibrationTemplateRow = {
   space_name: string;
@@ -36,8 +36,15 @@ export type CalibrationTemplateRow = {
   anomalies: string[];
 };
 
-export function quantityRowsToCalibrationTemplate(rows: QuantityRow[]): CalibrationTemplateRow[] {
-  return rows.map((row) => ({
+export type CalibrationTemplate = CalibrationTemplateRow[] | {
+  summary: {
+    building_area_m2: number;
+  };
+  rows: CalibrationTemplateRow[];
+};
+
+export function quantityRowsToCalibrationTemplate(rows: QuantityRow[], summary?: QuantitySummary | null): CalibrationTemplate {
+  const templateRows = rows.map((row) => ({
     space_name: row.spaceName,
     space_type: row.spaceType,
     floor_area_m2: row.floorAreaM2,
@@ -72,6 +79,15 @@ export function quantityRowsToCalibrationTemplate(rows: QuantityRow[]): Calibrat
     status: row.status,
     anomalies: row.anomalies,
   }));
+  if (!summary) {
+    return templateRows;
+  }
+  return {
+    summary: {
+      building_area_m2: summary.building_area_m2,
+    },
+    rows: templateRows,
+  };
 }
 
 export function calibrationTemplateFileName(fileName: string): string {
