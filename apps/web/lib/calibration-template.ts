@@ -16,6 +16,7 @@ export type CalibrationTemplateRow = {
   latex_paint_area_m2: number;
   wall_tile_measure_length_m: number;
   wall_tile_area_m2: number;
+  floor_tile_piece_count: number;
   new_wall_length_m: number;
   new_wall_area_m2: number;
   demolition_wall_length_m: number;
@@ -46,6 +47,7 @@ export function quantityRowsToCalibrationTemplate(rows: QuantityRow[]): Calibrat
     latex_paint_area_m2: row.latexPaintAreaM2,
     wall_tile_measure_length_m: row.wallTileMeasureLengthM,
     wall_tile_area_m2: row.wallTileAreaM2,
+    floor_tile_piece_count: row.floorTilePieceCount,
     new_wall_length_m: row.newWallLengthM,
     new_wall_area_m2: row.newWallAreaM2,
     demolition_wall_length_m: row.demolitionWallLengthM,

@@ -20,6 +20,7 @@ export type QuantityRow = {
   latexPaintAreaM2: number;
   wallTileMeasureLengthM: number;
   wallTileAreaM2: number;
+  floorTilePieceCount: number;
   newWallLengthM: number;
   newWallAreaM2: number;
   demolitionWallLengthM: number;

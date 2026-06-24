@@ -3,6 +3,7 @@ import type { QuantityRow } from "./types";
 type QuantityRowMetric =
   | "latexPaintAreaM2"
   | "floorAreaM2"
+  | "floorTilePieceCount"
   | "ceilingAreaM2"
   | "wallTileAreaM2"
   | "waterproofAreaM2"
@@ -18,6 +19,7 @@ type QuantityRowMetric =
 export type QuoteMetric =
   | "latex_paint_area_m2"
   | "floor_area_m2"
+  | "floor_tile_piece_count"
   | "ceiling_area_m2"
   | "wall_tile_area_m2"
   | "waterproof_area_m2"
@@ -108,6 +110,7 @@ const DEFAULT_RULES: QuoteRule[] = [
   { item_name: "顶面乳胶漆", metric: "ceiling_area_m2", unit: "m2", unit_price: 20, space_types: DRY_SPACE_TYPES },
   { item_name: "地面找平", metric: "floor_area_m2", unit: "m2", unit_price: 56, space_types: WET_FLOOR_SPACE_TYPES },
   { item_name: "地面砖铺贴(750X1500)", metric: "floor_area_m2", unit: "m2", unit_price: 96, space_types: undefined },
+  { item_name: "地面瓷砖主材", metric: "floor_tile_piece_count", unit: "片", unit_price: 50, space_types: undefined },
   { item_name: "墙面贴瓷砖(600X1200)", metric: "wall_tile_area_m2", unit: "m2", unit_price: 100, space_types: WALL_TILE_SPACE_TYPES },
   { item_name: "墙地面防漏处理", metric: "waterproof_area_m2", unit: "m2", unit_price: 51.5, space_types: WET_FLOOR_SPACE_TYPES },
   { item_name: "窗台石铺贴", metric: "windowsill_length_m", unit: "M", unit_price: 73, space_types: undefined },
@@ -147,14 +150,6 @@ const APARTMENT_PENDING_METRICS: PendingQuoteMetric[] = [
     source_group: "定制",
   },
   {
-    item_name: "地面瓷砖主材",
-    unit: "片",
-    unit_price: 50,
-    reason: "主材按规格、损耗率和采购单位计价，需要从铺贴面积换算到片数并关联选品。",
-    suggested_metric: "floor_tile_piece_count",
-    source_group: "主材",
-  },
-  {
     item_name: "全屋灯饰",
     unit: "套",
     unit_price: 6000,
@@ -167,6 +162,7 @@ const APARTMENT_PENDING_METRICS: PendingQuoteMetric[] = [
 const METRIC_TO_ROW_FIELD: Record<QuoteMetric, QuantityRowMetric> = {
   latex_paint_area_m2: "latexPaintAreaM2",
   floor_area_m2: "floorAreaM2",
+  floor_tile_piece_count: "floorTilePieceCount",
   ceiling_area_m2: "ceilingAreaM2",
   wall_tile_area_m2: "wallTileAreaM2",
   waterproof_area_m2: "waterproofAreaM2",
@@ -323,6 +319,7 @@ function isQuoteMetric(metric: unknown): metric is QuoteMetric {
   return (
     metric === "latex_paint_area_m2" ||
     metric === "floor_area_m2" ||
+    metric === "floor_tile_piece_count" ||
     metric === "ceiling_area_m2" ||
     metric === "wall_tile_area_m2" ||
     metric === "waterproof_area_m2" ||

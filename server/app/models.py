@@ -69,6 +69,7 @@ class QuantityRow:
     latex_paint_area_m2: float
     wall_tile_measure_length_m: float
     wall_tile_area_m2: float
+    floor_tile_piece_count: int
     new_wall_length_m: float
     new_wall_area_m2: float
     demolition_wall_length_m: float

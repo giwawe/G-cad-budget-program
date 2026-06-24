@@ -22,6 +22,7 @@ const rows: QuantityRow[] = [
     latexPaintAreaM2: 25.54,
     wallTileMeasureLengthM: 9.12,
     wallTileAreaM2: 20.7,
+    floorTilePieceCount: 5,
     newWallLengthM: 0,
     newWallAreaM2: 0,
     demolitionWallLengthM: 0,
@@ -70,6 +71,7 @@ const legacySnapshot = {
     curtainWallWidthM: _curtainWallWidthM,
     curtainWallWidthSource: _curtainWallWidthSource,
     wallTileMeasureLengthM: _wallTileMeasureLengthM,
+    floorTilePieceCount: _floorTilePieceCount,
     newWallLengthM: _newWallLengthM,
     newWallAreaM2: _newWallAreaM2,
     demolitionWallLengthM: _demolitionWallLengthM,
@@ -87,6 +89,7 @@ const parsedLegacySnapshot = parseReviewSnapshot(JSON.stringify(legacySnapshot))
 assert.equal(parsedLegacySnapshot.rows[0].curtainWallWidthM, 0);
 assert.equal(parsedLegacySnapshot.rows[0].curtainWallWidthSource, "not_applicable");
 assert.equal(parsedLegacySnapshot.rows[0].wallTileMeasureLengthM, 0);
+assert.equal(parsedLegacySnapshot.rows[0].floorTilePieceCount, 0);
 assert.equal(parsedLegacySnapshot.rows[0].newWallLengthM, 0);
 assert.equal(parsedLegacySnapshot.rows[0].newWallAreaM2, 0);
 assert.equal(parsedLegacySnapshot.rows[0].demolitionWallLengthM, 0);

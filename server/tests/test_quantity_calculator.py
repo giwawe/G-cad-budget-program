@@ -27,6 +27,7 @@ def test_latex_area_deducts_windows_but_not_doors():
     row = calculate_quantity_row(space, defaults)
 
     assert row.floor_area_m2 == 30
+    assert row.floor_tile_piece_count == 28
     assert row.wall_measure_length_m == 15
     assert row.wall_gross_area_m2 == 42
     assert row.window_area_m2 == 4.8
@@ -37,6 +38,20 @@ def test_latex_area_deducts_windows_but_not_doors():
     assert row.waterproof_area_m2 == 0
     assert row.status == ReviewStatus.pending_review
     assert "门洞默认不扣减" in row.evidence
+
+
+def test_floor_tile_piece_count_uses_750x1500_tile_with_5_percent_loss_and_ceiling():
+    space = SpaceInput(
+        floor="一层",
+        name="一层-客厅",
+        boundary_points_m=[(0, 0), (4.48, 0), (4.48, 1), (0, 1)],
+        wall_lengths_m=[4.48, 1, 4.48, 1],
+    )
+
+    row = calculate_quantity_row(space, ProjectDefaults())
+
+    assert row.floor_area_m2 == 4.48
+    assert row.floor_tile_piece_count == 5
 
 
 def test_kitchen_wall_tile_uses_default_tile_height_and_deducts_all_openings():

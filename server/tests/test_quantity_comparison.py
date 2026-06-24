@@ -71,6 +71,15 @@ def test_compare_quantity_rows_reports_wall_tile_differences_by_default():
     assert [difference["field"] for difference in result["differences"]] == ["wall_tile_measure_length_m", "wall_tile_area_m2"]
 
 
+def test_compare_quantity_rows_reports_floor_tile_piece_count_differences_by_default():
+    actual_rows = [{"space_name": "客厅", "floor_tile_piece_count": 28}]
+    expected_rows = [{"space_name": "客厅", "floor_tile_piece_count": 27}]
+
+    result = compare_quantity_rows(actual_rows, expected_rows)
+
+    assert [difference["field"] for difference in result["differences"]] == ["floor_tile_piece_count"]
+
+
 def test_compare_quantity_rows_reports_new_wall_differences_by_default():
     actual_rows = [{"space_name": "客厅", "new_wall_length_m": 4, "new_wall_area_m2": 11.2}]
     expected_rows = [{"space_name": "客厅", "new_wall_length_m": 3, "new_wall_area_m2": 8.4}]

@@ -163,6 +163,7 @@ def _stable_quantity_row(row: dict) -> dict:
         "latex_paint_area_m2": row["latex_paint_area_m2"],
         "wall_tile_measure_length_m": row["wall_tile_measure_length_m"],
         "wall_tile_area_m2": row["wall_tile_area_m2"],
+        "floor_tile_piece_count": row["floor_tile_piece_count"],
         "new_wall_length_m": row["new_wall_length_m"],
         "new_wall_area_m2": row["new_wall_area_m2"],
         "demolition_wall_length_m": row["demolition_wall_length_m"],

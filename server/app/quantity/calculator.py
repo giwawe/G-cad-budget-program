@@ -1,3 +1,5 @@
+import math
+
 from server.app.models import ProjectDefaults, QuantityRow, ReviewStatus, SpaceInput
 from server.app.quantity.classification import classify_space_type, is_excluded_space
 from server.app.quantity.geometry import polygon_area
@@ -9,6 +11,9 @@ CURTAIN_CANDIDATE_SPACE_TYPES = {"客厅", "卧室", "书房"}
 KITCHEN_CABINET_SPACE_TYPES = {"厨房"}
 BATHROOM_FIXTURE_SPACE_TYPES = {"卫生间"}
 WALL_TILE_HEIGHT_M = 2.5
+FLOOR_TILE_WIDTH_M = 0.75
+FLOOR_TILE_LENGTH_M = 1.5
+FLOOR_TILE_LOSS_RATE = 1.05
 WATERPROOF_HEIGHT_BY_SPACE_TYPE = {
     "卫生间": 1.8,
     "厨房": 0.3,
@@ -58,6 +63,7 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
         window_area_m2,
         door_area_for_wall_tile_m2,
     )
+    floor_tile_piece_count = calculate_floor_tile_piece_count(floor_area_m2)
     new_wall_length_m = round(sum(space.new_wall_lengths_m), 2)
     new_wall_area_m2 = calculate_new_wall_area_m2(new_wall_length_m, height_m)
     demolition_wall_length_m = round(sum(space.demolition_wall_lengths_m), 2)
@@ -111,6 +117,7 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
         latex_paint_area_m2=latex_paint_area_m2,
         wall_tile_measure_length_m=wall_tile_measure_length_m,
         wall_tile_area_m2=wall_tile_area_m2,
+        floor_tile_piece_count=floor_tile_piece_count,
         new_wall_length_m=new_wall_length_m,
         new_wall_area_m2=new_wall_area_m2,
         demolition_wall_length_m=demolition_wall_length_m,
@@ -148,6 +155,12 @@ def calculate_wall_tile_area_m2(
     if space_type in MARKED_WALL_TILE_SPACE_TYPES and wall_tile_measure_length_m > 0:
         return round(max(wall_tile_measure_length_m * height_m, 0), 2)
     return 0
+
+
+def calculate_floor_tile_piece_count(floor_area_m2: float) -> int:
+    if floor_area_m2 <= 0:
+        return 0
+    return math.ceil(floor_area_m2 * FLOOR_TILE_LOSS_RATE / (FLOOR_TILE_WIDTH_M * FLOOR_TILE_LENGTH_M))
 
 
 def calculate_new_wall_area_m2(new_wall_length_m: float, height_m: float) -> float:

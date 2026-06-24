@@ -55,6 +55,12 @@
     "unit_price": 96
   },
   {
+    "item_name": "地面瓷砖主材",
+    "metric": "floor_tile_piece_count",
+    "unit": "片",
+    "unit_price": 50
+  },
+  {
     "item_name": "墙面贴瓷砖(600X1200)",
     "metric": "wall_tile_area_m2",
     "unit": "m2",

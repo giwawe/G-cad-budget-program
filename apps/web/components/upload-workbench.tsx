@@ -45,6 +45,7 @@ type ApiQuantityRow = {
   latex_paint_area_m2: number;
   wall_tile_measure_length_m: number;
   wall_tile_area_m2: number;
+  floor_tile_piece_count: number;
   new_wall_length_m: number;
   new_wall_area_m2: number;
   demolition_wall_length_m: number;
@@ -106,6 +107,7 @@ function toQuantityRow(row: ApiQuantityRow): QuantityRow {
     latexPaintAreaM2: row.latex_paint_area_m2,
     wallTileMeasureLengthM: row.wall_tile_measure_length_m ?? 0,
     wallTileAreaM2: row.wall_tile_area_m2,
+    floorTilePieceCount: row.floor_tile_piece_count ?? 0,
     newWallLengthM: row.new_wall_length_m ?? 0,
     newWallAreaM2: row.new_wall_area_m2 ?? 0,
     demolitionWallLengthM: row.demolition_wall_length_m ?? 0,
