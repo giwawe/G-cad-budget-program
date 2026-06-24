@@ -107,6 +107,20 @@
     "space_types": ["厨房"]
   },
   {
+    "item_name": "马桶",
+    "metric": "toilet_count",
+    "unit": "个",
+    "unit_price": 2500,
+    "space_types": ["卫生间"]
+  },
+  {
+    "item_name": "浴室柜",
+    "metric": "bathroom_vanity_count",
+    "unit": "套",
+    "unit_price": 3000,
+    "space_types": ["卫生间"]
+  },
+  {
     "item_name": "暗窗帘箱",
     "metric": "curtain_wall_width_m",
     "unit": "M",

@@ -105,3 +105,12 @@ def test_compare_quantity_rows_reports_kitchen_cabinet_length_differences_by_def
     result = compare_quantity_rows(actual_rows, expected_rows)
 
     assert [difference["field"] for difference in result["differences"]] == ["kitchen_base_cabinet_length_m", "kitchen_wall_cabinet_length_m"]
+
+
+def test_compare_quantity_rows_reports_bathroom_fixture_count_differences_by_default():
+    actual_rows = [{"space_name": "卫生间", "toilet_count": 1, "bathroom_vanity_count": 2}]
+    expected_rows = [{"space_name": "卫生间", "toilet_count": 2, "bathroom_vanity_count": 1}]
+
+    result = compare_quantity_rows(actual_rows, expected_rows)
+
+    assert [difference["field"] for difference in result["differences"]] == ["toilet_count", "bathroom_vanity_count"]

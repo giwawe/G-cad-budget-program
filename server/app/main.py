@@ -94,6 +94,8 @@ def _serialize_drawing(drawing: DrawingGeometry) -> dict:
         "demolition_walls": [_segment_to_dict(segment) for segment in drawing.demolition_walls],
         "base_cabinets": [_segment_to_dict(segment) for segment in drawing.base_cabinets],
         "wall_cabinets": [_segment_to_dict(segment) for segment in drawing.wall_cabinets],
+        "toilets": [_point_to_dict(point) for point in drawing.toilets],
+        "bathroom_vanities": [_point_to_dict(point) for point in drawing.bathroom_vanities],
         "window_openings": [
             {
                 "segments": [_segment_to_dict(segment) for segment in window.segments],
@@ -168,6 +170,8 @@ def _stable_quantity_row(row: dict) -> dict:
         "interior_door_count": row["interior_door_count"],
         "kitchen_base_cabinet_length_m": row["kitchen_base_cabinet_length_m"],
         "kitchen_wall_cabinet_length_m": row["kitchen_wall_cabinet_length_m"],
+        "toilet_count": row["toilet_count"],
+        "bathroom_vanity_count": row["bathroom_vanity_count"],
         "status": row["status"],
         "anomalies": row["anomalies"],
     }

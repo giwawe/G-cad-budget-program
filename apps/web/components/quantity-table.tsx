@@ -79,6 +79,8 @@ export function QuantityTable({
             <th>拆墙面积</th>
             <th>橱柜地柜</th>
             <th>橱柜吊柜</th>
+            <th>马桶</th>
+            <th>浴室柜</th>
             <th>防水面积</th>
             <th>状态</th>
           </tr>
@@ -102,6 +104,8 @@ export function QuantityTable({
             const demolitionWallAreaDifference = differencesByCell.get(differenceKey(row.spaceName, "demolition_wall_area_m2"));
             const kitchenBaseCabinetLengthDifference = differencesByCell.get(differenceKey(row.spaceName, "kitchen_base_cabinet_length_m"));
             const kitchenWallCabinetLengthDifference = differencesByCell.get(differenceKey(row.spaceName, "kitchen_wall_cabinet_length_m"));
+            const toiletCountDifference = differencesByCell.get(differenceKey(row.spaceName, "toilet_count"));
+            const bathroomVanityCountDifference = differencesByCell.get(differenceKey(row.spaceName, "bathroom_vanity_count"));
             const waterproofDifference = differencesByCell.get(differenceKey(row.spaceName, "waterproof_area_m2"));
             return (
             <tr id={quantityRowAnchorId(row.spaceName)} key={`${row.floor}-${row.spaceName}`} className={differences.some((difference) => difference.space_name === row.spaceName) ? "quantityDiffRow" : undefined}>
@@ -196,6 +200,14 @@ export function QuantityTable({
               <td className={differenceClass(kitchenWallCabinetLengthDifference)}>
                 {row.kitchenWallCabinetLengthM.toFixed(2)} m
                 <DifferenceValue difference={kitchenWallCabinetLengthDifference} />
+              </td>
+              <td className={differenceClass(toiletCountDifference)}>
+                {row.toiletCount} 个
+                <DifferenceValue difference={toiletCountDifference} />
+              </td>
+              <td className={differenceClass(bathroomVanityCountDifference)}>
+                {row.bathroomVanityCount} 套
+                <DifferenceValue difference={bathroomVanityCountDifference} />
               </td>
               <td className={differenceClass(waterproofDifference)}>
                 {row.waterproofAreaM2.toFixed(2)} m2

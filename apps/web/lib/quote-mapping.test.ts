@@ -40,6 +40,8 @@ const rows: QuantityRow[] = [
     interiorDoorCount: 0,
     kitchenBaseCabinetLengthM: 4.3,
     kitchenWallCabinetLengthM: 3.0,
+    toiletCount: 0,
+    bathroomVanityCount: 0,
     waterproofAreaM2: 7.22,
     evidence: "",
     anomalies: [],
@@ -69,6 +71,10 @@ const rows: QuantityRow[] = [
     demolitionWallLengthM: 0,
     demolitionWallAreaM2: 0,
     interiorDoorCount: 0,
+    kitchenBaseCabinetLengthM: 0,
+    kitchenWallCabinetLengthM: 0,
+    toiletCount: 0,
+    bathroomVanityCount: 0,
     waterproofAreaM2: 0,
     evidence: "",
     anomalies: [],
@@ -141,7 +147,7 @@ assert.equal(dryAreaMapping.summary.total_amount, 600);
 
 const rules = defaultQuoteRules();
 assert.equal(DEFAULT_QUOTE_RULES_NAME, "商品房整装默认规则");
-assert.equal(rules.length, 17);
+assert.equal(rules.length, 19);
 assert.equal(rules[0].item_name, "墙面界面剂处理");
 assert.equal(rules[0].metric, "latex_paint_area_m2");
 assert.equal(rules[0].unit_price, 7);
@@ -188,6 +194,20 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "橱柜吊柜"), {
   unit_price: 600,
   space_types: ["厨房"],
 });
+assert.deepEqual(rules.find((rule) => rule.item_name === "马桶"), {
+  item_name: "马桶",
+  metric: "toilet_count",
+  unit: "个",
+  unit_price: 2500,
+  space_types: ["卫生间"],
+});
+assert.deepEqual(rules.find((rule) => rule.item_name === "浴室柜"), {
+  item_name: "浴室柜",
+  metric: "bathroom_vanity_count",
+  unit: "套",
+  unit_price: 3000,
+  space_types: ["卫生间"],
+});
 assert.deepEqual(rules[0].space_types, ["客厅", "餐厅", "卧室", "书房", "过道", "门厅", "楼梯过道", "衣帽间", "储物间", "露台"]);
 rules[0].unit_price = 99;
 rules[0].space_types?.push("厨房");
@@ -202,14 +222,17 @@ assert.ok(!pendingMetricGroups.has("防水"));
 assert.ok(!pendingMetricGroups.has("窗台石"));
 assert.ok(!pendingMetricGroups.has("窗帘箱"));
 assert.ok(!pendingMetricGroups.has("墙砖"));
-for (const expectedGroup of ["水电", "洁具", "定制", "主材", "套装项"]) {
+for (const expectedGroup of ["水电", "定制", "主材", "套装项"]) {
   assert.ok(pendingMetricGroups.has(expectedGroup), `missing pending group: ${expectedGroup}`);
 }
+assert.ok(!pendingMetricGroups.has("洁具"));
 assert.ok(!apartmentPendingQuoteMetrics().some((item) => item.item_name === "砌120厚砖墙"));
 assert.ok(!apartmentPendingQuoteMetrics().some((item) => item.item_name === "拆改及拆墙"));
 assert.ok(!apartmentPendingQuoteMetrics().some((item) => item.item_name === "室内门"));
 assert.ok(!apartmentPendingQuoteMetrics().some((item) => item.item_name === "橱柜地柜"));
 assert.ok(!apartmentPendingQuoteMetrics().some((item) => item.item_name === "橱柜吊柜"));
+assert.ok(!apartmentPendingQuoteMetrics().some((item) => item.item_name === "马桶"));
+assert.ok(!apartmentPendingQuoteMetrics().some((item) => item.item_name === "浴室柜"));
 assert.ok(!apartmentPendingQuoteMetrics().some((item) => item.item_name.includes("阳台") && item.suggested_metric === "wall_tile_marked_area_m2"));
 assert.ok(!apartmentPendingQuoteMetrics().some((item) => item.item_name === "暗窗帘箱"));
 
@@ -225,6 +248,8 @@ const parsedWetRules = parseQuoteRules(JSON.stringify([
   { item_name: "暗窗帘箱", metric: "curtain_wall_width_m", unit: "M", unit_price: 110, space_types: ["卧室"] },
   { item_name: "橱柜地柜", metric: "kitchen_base_cabinet_length_m", unit: "M", unit_price: 600, space_types: ["厨房"] },
   { item_name: "橱柜吊柜", metric: "kitchen_wall_cabinet_length_m", unit: "M", unit_price: 600, space_types: ["厨房"] },
+  { item_name: "马桶", metric: "toilet_count", unit: "个", unit_price: 2500, space_types: ["卫生间"] },
+  { item_name: "浴室柜", metric: "bathroom_vanity_count", unit: "套", unit_price: 3000, space_types: ["卫生间"] },
 ]));
 assert.equal(parsedWetRules[0].metric, "wall_tile_area_m2");
 assert.equal(parsedWetRules[1].metric, "waterproof_area_m2");
@@ -232,6 +257,8 @@ assert.equal(parsedWetRules[2].metric, "windowsill_length_m");
 assert.equal(parsedWetRules[3].metric, "curtain_wall_width_m");
 assert.equal(parsedWetRules[4].metric, "kitchen_base_cabinet_length_m");
 assert.equal(parsedWetRules[5].metric, "kitchen_wall_cabinet_length_m");
+assert.equal(parsedWetRules[6].metric, "toilet_count");
+assert.equal(parsedWetRules[7].metric, "bathroom_vanity_count");
 
 const balconyMapping = buildQuoteMapping([{ ...rows[0], spaceName: "阳台", spaceType: "阳台", wallTileAreaM2: 0, waterproofAreaM2: 9 }]);
 assert.deepEqual(balconyMapping.items.map((item) => item.item_name), ["地面找平", "地面砖铺贴(750X1500)", "墙地面防漏处理"]);
@@ -302,6 +329,30 @@ assert.deepEqual(kitchenCabinetMapping.items.filter((item) => item.item_name ===
     unit: "M",
     unit_price: 600,
     amount: 1800,
+  },
+]);
+
+const bathroomFixtureMapping = buildQuoteMapping([{ ...rows[0], spaceName: "卫生间", spaceType: "卫生间", wallTileAreaM2: 20.7, waterproofAreaM2: 21.84, toiletCount: 1, bathroomVanityCount: 1 }]);
+assert.deepEqual(bathroomFixtureMapping.items.filter((item) => item.item_name === "马桶" || item.item_name === "浴室柜"), [
+  {
+    floor: "一层",
+    space_name: "卫生间",
+    space_type: "卫生间",
+    item_name: "马桶",
+    quantity: 1,
+    unit: "个",
+    unit_price: 2500,
+    amount: 2500,
+  },
+  {
+    floor: "一层",
+    space_name: "卫生间",
+    space_type: "卫生间",
+    item_name: "浴室柜",
+    quantity: 1,
+    unit: "套",
+    unit_price: 3000,
+    amount: 3000,
   },
 ]);
 

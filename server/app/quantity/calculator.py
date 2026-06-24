@@ -7,6 +7,7 @@ MARKED_WALL_TILE_SPACE_TYPES = {"阳台", "露台", "洗衣房"}
 WATERPROOF_SPACE_TYPES = {"厨房", "卫生间", "阳台", "露台", "洗衣房"}
 CURTAIN_CANDIDATE_SPACE_TYPES = {"客厅", "卧室", "书房"}
 KITCHEN_CABINET_SPACE_TYPES = {"厨房"}
+BATHROOM_FIXTURE_SPACE_TYPES = {"卫生间"}
 WALL_TILE_HEIGHT_M = 2.5
 WATERPROOF_HEIGHT_BY_SPACE_TYPE = {
     "卫生间": 1.8,
@@ -64,6 +65,8 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
     interior_door_count = calculate_interior_door_count(space.doors)
     kitchen_base_cabinet_length_m = calculate_kitchen_cabinet_length_m(space_type, space.base_cabinet_lengths_m)
     kitchen_wall_cabinet_length_m = calculate_kitchen_cabinet_length_m(space_type, space.wall_cabinet_lengths_m)
+    toilet_count = calculate_bathroom_fixture_count(space_type, space.toilet_count)
+    bathroom_vanity_count = calculate_bathroom_fixture_count(space_type, space.bathroom_vanity_count)
     waterproof_area_m2 = calculate_waterproof_area_m2(space_type, floor_area_m2, wall_measure_length_m, height_m)
 
     anomalies = list(space.anomalies)
@@ -115,6 +118,8 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
         interior_door_count=interior_door_count,
         kitchen_base_cabinet_length_m=kitchen_base_cabinet_length_m,
         kitchen_wall_cabinet_length_m=kitchen_wall_cabinet_length_m,
+        toilet_count=toilet_count,
+        bathroom_vanity_count=bathroom_vanity_count,
         waterproof_area_m2=waterproof_area_m2,
         evidence=evidence,
         anomalies=anomalies,
@@ -161,6 +166,12 @@ def calculate_kitchen_cabinet_length_m(space_type: str, cabinet_lengths_m: list[
     if space_type not in KITCHEN_CABINET_SPACE_TYPES:
         return 0
     return round(sum(cabinet_lengths_m), 2)
+
+
+def calculate_bathroom_fixture_count(space_type: str, count: int) -> int:
+    if space_type not in BATHROOM_FIXTURE_SPACE_TYPES:
+        return 0
+    return max(int(count), 0) or 1
 
 
 def calculate_curtain_wall_width_m(

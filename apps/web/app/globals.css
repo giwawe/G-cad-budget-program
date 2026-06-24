@@ -592,6 +592,20 @@ code {
   vector-effect: non-scaling-stroke;
 }
 
+.svgToilet {
+  fill: #38bdf8;
+  stroke: #0f172a;
+  stroke-width: 0.04;
+  vector-effect: non-scaling-stroke;
+}
+
+.svgBathroomVanity {
+  fill: #22c55e;
+  stroke: #0f172a;
+  stroke-width: 0.04;
+  vector-effect: non-scaling-stroke;
+}
+
 .svgSpace {
   fill-opacity: 0.18;
   stroke-width: 0.09;

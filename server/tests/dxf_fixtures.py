@@ -138,6 +138,28 @@ def build_kitchen_cabinet_dxf() -> bytes:
     return _save_doc(doc)
 
 
+def build_bathroom_fixture_dxf() -> bytes:
+    doc = ezdxf.new("R2010")
+    msp = doc.modelspace()
+    for layer in ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_TOILET", "QUOTE_BATHROOM_VANITY", "QUOTE_TEXT"]:
+        doc.layers.add(layer)
+    toilet_block = doc.blocks.new(name="toilet_model")
+    toilet_block.add_circle((0, 0), 200)
+    vanity_block = doc.blocks.new(name="vanity_model")
+    vanity_block.add_lwpolyline([(-300, -200), (300, -200), (300, 200), (-300, 200), (-300, -200)])
+    msp.add_lwpolyline([(0, 0), (2600, 0), (2600, 2200), (0, 2200), (0, 0)], dxfattribs={"layer": "QUOTE_ROOM"})
+    msp.add_line((0, 0), (2600, 0), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((2600, 0), (2600, 2200), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((0, 2200), (2600, 2200), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((0, 0), (0, 2200), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_blockref("toilet_model", (700, 700), dxfattribs={"layer": "QUOTE_TOILET"})
+    msp.add_point((1800, 700), dxfattribs={"layer": "QUOTE_BATHROOM_VANITY"})
+    msp.add_blockref("vanity_model", (1800, 1500), dxfattribs={"layer": "QUOTE_BATHROOM_VANITY"})
+    msp.add_blockref("toilet_model", (5000, 700), dxfattribs={"layer": "QUOTE_TOILET"})
+    msp.add_text("一层-卫生间", dxfattribs={"layer": "QUOTE_TEXT", "insert": (1300, 1100)})
+    return _save_doc(doc)
+
+
 def build_insert_door_dxf() -> bytes:
     doc = ezdxf.new("R2010")
     msp = doc.modelspace()

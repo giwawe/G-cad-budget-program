@@ -29,6 +29,8 @@ const rows: QuantityRow[] = [
     interiorDoorCount: 0,
     kitchenBaseCabinetLengthM: 4.3,
     kitchenWallCabinetLengthM: 3,
+    toiletCount: 1,
+    bathroomVanityCount: 1,
     waterproofAreaM2: 7.22,
     evidence: "formula",
     anomalies: [],
@@ -75,6 +77,8 @@ const legacySnapshot = {
     interiorDoorCount: _interiorDoorCount,
     kitchenBaseCabinetLengthM: _kitchenBaseCabinetLengthM,
     kitchenWallCabinetLengthM: _kitchenWallCabinetLengthM,
+    toiletCount: _toiletCount,
+    bathroomVanityCount: _bathroomVanityCount,
     ...row
   }) => row),
 };
@@ -90,6 +94,8 @@ assert.equal(parsedLegacySnapshot.rows[0].demolitionWallAreaM2, 0);
 assert.equal(parsedLegacySnapshot.rows[0].interiorDoorCount, 0);
 assert.equal(parsedLegacySnapshot.rows[0].kitchenBaseCabinetLengthM, 0);
 assert.equal(parsedLegacySnapshot.rows[0].kitchenWallCabinetLengthM, 0);
+assert.equal(parsedLegacySnapshot.rows[0].toiletCount, 0);
+assert.equal(parsedLegacySnapshot.rows[0].bathroomVanityCount, 0);
 
 assert.throws(() => parseReviewSnapshot("{bad json"), /快照 JSON 格式无效/);
 assert.throws(() => parseReviewSnapshot(JSON.stringify({ rows: [] })), /快照缺少 source_file/);

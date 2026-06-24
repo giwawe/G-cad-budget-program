@@ -181,6 +181,43 @@ def test_kitchen_cabinet_lengths_separate_base_and_wall_cabinets_only_for_kitche
     assert bedroom_row.kitchen_wall_cabinet_length_m == 0
 
 
+def test_bathroom_fixture_counts_default_to_one_per_bathroom_and_allow_explicit_counts():
+    defaults = ProjectDefaults()
+    bathroom = SpaceInput(
+        floor="一层",
+        name="一层-卫生间",
+        boundary_points_m=[(0, 0), (2.6, 0), (2.6, 2.2), (0, 2.2)],
+        wall_lengths_m=[2.6, 2.2, 2.6, 2.2],
+    )
+    bathroom_with_points = SpaceInput(
+        floor="一层",
+        name="一层-卫生间",
+        boundary_points_m=[(0, 0), (2.6, 0), (2.6, 2.2), (0, 2.2)],
+        wall_lengths_m=[2.6, 2.2, 2.6, 2.2],
+        toilet_count=1,
+        bathroom_vanity_count=2,
+    )
+    bedroom = SpaceInput(
+        floor="一层",
+        name="一层-卧室",
+        boundary_points_m=[(0, 0), (2.6, 0), (2.6, 2.2), (0, 2.2)],
+        wall_lengths_m=[2.6, 2.2, 2.6, 2.2],
+        toilet_count=1,
+        bathroom_vanity_count=1,
+    )
+
+    bathroom_row = calculate_quantity_row(bathroom, defaults)
+    bathroom_with_points_row = calculate_quantity_row(bathroom_with_points, defaults)
+    bedroom_row = calculate_quantity_row(bedroom, defaults)
+
+    assert bathroom_row.toilet_count == 1
+    assert bathroom_row.bathroom_vanity_count == 1
+    assert bathroom_with_points_row.toilet_count == 1
+    assert bathroom_with_points_row.bathroom_vanity_count == 2
+    assert bedroom_row.toilet_count == 0
+    assert bedroom_row.bathroom_vanity_count == 0
+
+
 def test_curtain_wall_width_uses_longest_wall_for_supported_windowed_spaces():
     space = SpaceInput(
         floor="一层",

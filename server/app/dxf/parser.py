@@ -17,6 +17,8 @@ QUOTE_LAYERS = {
     "QUOTE_DEMO_WALL",
     "QUOTE_BASE_CABINET",
     "QUOTE_WALL_CABINET",
+    "QUOTE_TOILET",
+    "QUOTE_BATHROOM_VANITY",
     "QUOTE_OPENING",
     "QUOTE_WINDOW",
     "QUOTE_DOOR",
@@ -94,6 +96,8 @@ class DrawingGeometry:
     demolition_walls: list[tuple[Point, Point]]
     base_cabinets: list[tuple[Point, Point]]
     wall_cabinets: list[tuple[Point, Point]]
+    toilets: list[Point]
+    bathroom_vanities: list[Point]
     window_openings: list[DrawingWindow]
     windows: list[tuple[Point, Point]]
     door_openings: list[DrawingDoor]
@@ -128,6 +132,8 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
     demolition_wall_segments: list[tuple[Point, Point]] = []
     base_cabinet_segments: list[tuple[Point, Point]] = []
     wall_cabinet_segments: list[tuple[Point, Point]] = []
+    toilet_points: list[Point] = []
+    bathroom_vanity_points: list[Point] = []
     window_openings: list[DrawingOpening] = []
     windows: list[tuple[Point, Point]] = []
     door_opening_inputs: list[DrawingOpening] = []
@@ -152,6 +158,14 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
             base_cabinet_segments.extend(_entity_segments(entity, defaults.unit_scale_to_m))
         elif layer == "QUOTE_WALL_CABINET":
             wall_cabinet_segments.extend(_entity_segments(entity, defaults.unit_scale_to_m))
+        elif layer == "QUOTE_TOILET":
+            point = _entity_reference_point(entity, defaults.unit_scale_to_m)
+            if point:
+                toilet_points.append(point)
+        elif layer == "QUOTE_BATHROOM_VANITY":
+            point = _entity_reference_point(entity, defaults.unit_scale_to_m)
+            if point:
+                bathroom_vanity_points.append(point)
         elif layer == "QUOTE_WINDOW":
             window_segments = _entity_segments(entity, defaults.unit_scale_to_m)
             if window_segments:
@@ -174,6 +188,8 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
     measured_demolition_walls: list[tuple[Point, Point]] = []
     measured_base_cabinets: list[tuple[Point, Point]] = []
     measured_wall_cabinets: list[tuple[Point, Point]] = []
+    measured_toilets: list[Point] = []
+    measured_bathroom_vanities: list[Point] = []
     for room in rooms:
         name = _name_for_room(room, texts)
         if not name:
@@ -185,6 +201,8 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         room_demolition_walls = [(start, end) for start, end in demolition_wall_segments if _segment_in_room(room, start, end)]
         room_base_cabinets = [(start, end) for start, end in base_cabinet_segments if _segment_in_room(room, start, end)]
         room_wall_cabinets = [(start, end) for start, end in wall_cabinet_segments if _segment_in_room(room, start, end)]
+        room_toilets = [point for point in toilet_points if contains_point(room, point) or _point_on_boundary(room, point)]
+        room_bathroom_vanities = [point for point in bathroom_vanity_points if contains_point(room, point) or _point_on_boundary(room, point)]
         room_windows = [opening for opening in grouped_window_opening_inputs if _opening_associated_with_room(room, *_opening_centerline(opening))]
         has_l_shaped_window = any(_opening_is_l_shaped_window(opening) for opening in room_windows)
         curtain_wall_width_candidate_m = 0 if has_l_shaped_window else _curtain_wall_width_candidate(room_walls, room_windows)
@@ -194,6 +212,8 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         measured_demolition_walls.extend(room_demolition_walls)
         measured_base_cabinets.extend(room_base_cabinets)
         measured_wall_cabinets.extend(room_wall_cabinets)
+        measured_toilets.extend(room_toilets)
+        measured_bathroom_vanities.extend(room_bathroom_vanities)
         drawing_spaces.append(DrawingSpace(name=name, points=room))
         spaces.append(
             SpaceInput(
@@ -206,6 +226,8 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
                 demolition_wall_lengths_m=[round(line_length(start, end), 2) for start, end in room_demolition_walls],
                 base_cabinet_lengths_m=[round(line_length(start, end), 2) for start, end in room_base_cabinets],
                 wall_cabinet_lengths_m=[round(line_length(start, end), 2) for start, end in room_wall_cabinets],
+                toilet_count=len(room_toilets),
+                bathroom_vanity_count=len(room_bathroom_vanities),
                 curtain_wall_width_candidate_m=curtain_wall_width_candidate_m,
                 curtain_wall_width_source=_curtain_wall_width_source(curtain_wall_width_candidate_m, has_l_shaped_window),
                 windows=[
@@ -236,6 +258,8 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         demolition_walls=measured_demolition_walls,
         base_cabinets=measured_base_cabinets,
         wall_cabinets=measured_wall_cabinets,
+        toilets=measured_toilets,
+        bathroom_vanities=measured_bathroom_vanities,
         window_openings=grouped_window_openings,
         windows=windows,
         door_openings=door_openings,
@@ -804,6 +828,27 @@ def clean_mtext(text: str) -> str:
 def _text_point(entity, scale: float) -> Point:
     insert = entity.dxf.insert
     return _scale_point((insert.x, insert.y), scale)
+
+
+def _entity_reference_point(entity, scale: float) -> Point | None:
+    entity_type = entity.dxftype()
+    if entity_type == "INSERT":
+        insert = entity.dxf.insert
+        return _scale_point((insert.x, insert.y), scale)
+    if entity_type == "POINT":
+        location = entity.dxf.location
+        return _scale_point((location.x, location.y), scale)
+    if entity_type == "CIRCLE":
+        center = entity.dxf.center
+        return _scale_point((center.x, center.y), scale)
+    segments = _entity_segments(entity, scale)
+    if segments:
+        points = [point for segment in segments for point in segment]
+        return (
+            round(sum(point[0] for point in points) / len(points), 3),
+            round(sum(point[1] for point in points) / len(points), 3),
+        )
+    return None
 
 
 def _name_for_room(room: list[Point], texts: list[tuple[Point, str]]) -> str:

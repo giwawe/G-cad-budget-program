@@ -4,6 +4,7 @@ from server.app.dxf import parser
 from server.app.models import ProjectDefaults
 from server.tests.dxf_fixtures import (
     build_balcony_wall_tile_dxf,
+    build_bathroom_fixture_dxf,
     build_closed_window_polyline_dxf,
     build_closed_door_polyline_dxf,
     build_demolition_wall_dxf,
@@ -127,6 +128,16 @@ def test_quote_cabinet_segments_are_assigned_to_kitchen_space():
     assert review.spaces[0].wall_cabinet_lengths_m == [3.0]
     assert review.drawing.base_cabinets == [((0.3, 0.3), (3.3, 0.3)), ((3.3, 0.3), (3.3, 1.6))]
     assert review.drawing.wall_cabinets == [((0.3, 0.3), (3.3, 0.3))]
+
+
+def test_quote_bathroom_fixture_points_are_assigned_to_bathroom_space():
+    review = parser.parse_dxf_review(build_bathroom_fixture_dxf(), ProjectDefaults())
+
+    assert review.spaces[0].name == "一层-卫生间"
+    assert review.spaces[0].toilet_count == 1
+    assert review.spaces[0].bathroom_vanity_count == 2
+    assert review.drawing.toilets == [(0.7, 0.7)]
+    assert review.drawing.bathroom_vanities == [(1.8, 0.7), (1.8, 1.5)]
 
 
 def test_quote_door_insert_is_recognized_as_one_door_opening():

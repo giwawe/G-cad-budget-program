@@ -147,6 +147,7 @@ export function DrawingReview({
   const [showDemolitionWalls, setShowDemolitionWalls] = useState(true);
   const [showBaseCabinets, setShowBaseCabinets] = useState(true);
   const [showWallCabinets, setShowWallCabinets] = useState(true);
+  const [showBathroomFixtures, setShowBathroomFixtures] = useState(true);
   const [showWindows, setShowWindows] = useState(true);
   const [showDoors, setShowDoors] = useState(true);
   const [selectedWindowIndex, setSelectedWindowIndex] = useState<number | null>(null);
@@ -279,6 +280,7 @@ export function DrawingReview({
         <label className="drawingLayerToggle"><input type="checkbox" checked={showDemolitionWalls} onChange={(event) => setShowDemolitionWalls(event.target.checked)} />拆墙 {drawing.demolition_walls.length}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showBaseCabinets} onChange={(event) => setShowBaseCabinets(event.target.checked)} />地柜 {drawing.base_cabinets.length}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showWallCabinets} onChange={(event) => setShowWallCabinets(event.target.checked)} />吊柜 {drawing.wall_cabinets.length}</label>
+        <label className="drawingLayerToggle"><input type="checkbox" checked={showBathroomFixtures} onChange={(event) => setShowBathroomFixtures(event.target.checked)} />洁具 {drawing.toilets.length + drawing.bathroom_vanities.length}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showWindows} onChange={(event) => setShowWindows(event.target.checked)} />窗 {drawing.window_openings.length}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showDoors} onChange={(event) => setShowDoors(event.target.checked)} />门 {drawing.door_openings.length}</label>
         {selectedWindow && (
@@ -305,6 +307,8 @@ export function DrawingReview({
             {showDemolitionWalls && drawing.demolition_walls.map((wall, index) => <line key={`demolition-wall-${index}`} className="svgDemolitionWall" x1={wall.start.x} y1={wall.start.y} x2={wall.end.x} y2={wall.end.y} />)}
             {showBaseCabinets && drawing.base_cabinets.map((cabinet, index) => <line key={`base-cabinet-${index}`} className="svgBaseCabinet" x1={cabinet.start.x} y1={cabinet.start.y} x2={cabinet.end.x} y2={cabinet.end.y} />)}
             {showWallCabinets && drawing.wall_cabinets.map((cabinet, index) => <line key={`wall-cabinet-${index}`} className="svgWallCabinet" x1={cabinet.start.x} y1={cabinet.start.y} x2={cabinet.end.x} y2={cabinet.end.y} />)}
+            {showBathroomFixtures && drawing.toilets.map((point, index) => <circle key={`toilet-${index}`} className="svgToilet" cx={point.x} cy={point.y} r="0.16" />)}
+            {showBathroomFixtures && drawing.bathroom_vanities.map((point, index) => <rect key={`bathroom-vanity-${index}`} className="svgBathroomVanity" x={point.x - 0.16} y={point.y - 0.16} width="0.32" height="0.32" />)}
             {showWindows && drawing.window_openings.map((window, index) => (
               <g
                 key={`window-${index}`}
