@@ -62,13 +62,13 @@
   },
   {
     "item_name": "强电布线",
-    "metric": "electrical_scope_area_m2",
+    "metric": "building_area_m2",
     "unit": "M2",
     "unit_price": 78
   },
   {
     "item_name": "水路布管",
-    "metric": "plumbing_scope_area_m2",
+    "metric": "building_area_m2",
     "unit": "M2",
     "unit_price": 29.5
   },
