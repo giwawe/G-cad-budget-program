@@ -566,6 +566,15 @@ code {
   vector-effect: non-scaling-stroke;
 }
 
+.svgDemolitionWall {
+  stroke: #f97316;
+  stroke-dasharray: 0.24 0.14;
+  stroke-linecap: round;
+  stroke-width: 0.52;
+  opacity: 1;
+  vector-effect: non-scaling-stroke;
+}
+
 .svgSpace {
   fill-opacity: 0.18;
   stroke-width: 0.09;

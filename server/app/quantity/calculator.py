@@ -58,6 +58,8 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
     )
     new_wall_length_m = round(sum(space.new_wall_lengths_m), 2)
     new_wall_area_m2 = calculate_new_wall_area_m2(new_wall_length_m, height_m)
+    demolition_wall_length_m = round(sum(space.demolition_wall_lengths_m), 2)
+    demolition_wall_area_m2 = calculate_demolition_wall_area_m2(demolition_wall_length_m, height_m)
     waterproof_area_m2 = calculate_waterproof_area_m2(space_type, floor_area_m2, wall_measure_length_m, height_m)
 
     anomalies = list(space.anomalies)
@@ -104,6 +106,8 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
         wall_tile_area_m2=wall_tile_area_m2,
         new_wall_length_m=new_wall_length_m,
         new_wall_area_m2=new_wall_area_m2,
+        demolition_wall_length_m=demolition_wall_length_m,
+        demolition_wall_area_m2=demolition_wall_area_m2,
         waterproof_area_m2=waterproof_area_m2,
         evidence=evidence,
         anomalies=anomalies,
@@ -136,6 +140,10 @@ def calculate_wall_tile_area_m2(
 
 def calculate_new_wall_area_m2(new_wall_length_m: float, height_m: float) -> float:
     return round(max(new_wall_length_m * height_m, 0), 2)
+
+
+def calculate_demolition_wall_area_m2(demolition_wall_length_m: float, height_m: float) -> float:
+    return round(max(demolition_wall_length_m * height_m, 0), 2)
 
 
 def calculate_curtain_wall_width_m(

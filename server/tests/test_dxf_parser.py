@@ -6,6 +6,7 @@ from server.tests.dxf_fixtures import (
     build_balcony_wall_tile_dxf,
     build_closed_window_polyline_dxf,
     build_closed_door_polyline_dxf,
+    build_demolition_wall_dxf,
     build_insert_door_dxf,
     build_l_shaped_window_dxf,
     build_new_wall_dxf,
@@ -106,6 +107,14 @@ def test_quote_new_wall_segments_are_assigned_to_space():
     assert review.spaces[0].name == "一层-客厅"
     assert review.spaces[0].new_wall_lengths_m == [2.4, 1.6]
     assert review.drawing.new_walls == [((2.0, 0.5), (2.0, 2.9)), ((3.2, 0.5), (4.8, 0.5))]
+
+
+def test_quote_demo_wall_segments_are_assigned_to_space():
+    review = parser.parse_dxf_review(build_demolition_wall_dxf(), ProjectDefaults())
+
+    assert review.spaces[0].name == "一层-客厅"
+    assert review.spaces[0].demolition_wall_lengths_m == [2.4, 1.6]
+    assert review.drawing.demolition_walls == [((2.0, 0.5), (2.0, 2.9)), ((3.2, 0.5), (4.8, 0.5))]
 
 
 def test_quote_door_insert_is_recognized_as_one_door_opening():

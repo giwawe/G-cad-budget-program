@@ -81,6 +81,12 @@
     "unit_price": 170
   },
   {
+    "item_name": "拆改及拆墙",
+    "metric": "demolition_wall_area_m2",
+    "unit": "M2",
+    "unit_price": 60
+  },
+  {
     "item_name": "暗窗帘箱",
     "metric": "curtain_wall_width_m",
     "unit": "M",

@@ -13,6 +13,8 @@ DEFAULT_NUMERIC_FIELDS = [
     "wall_tile_area_m2",
     "new_wall_length_m",
     "new_wall_area_m2",
+    "demolition_wall_length_m",
+    "demolition_wall_area_m2",
 ]
 
 
