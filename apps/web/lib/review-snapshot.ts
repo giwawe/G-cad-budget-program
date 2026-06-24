@@ -76,6 +76,8 @@ function normalizeSnapshotRow(row: QuantityRow): QuantityRow {
     wallTileMeasureLengthM: typeof row.wallTileMeasureLengthM === "number" ? row.wallTileMeasureLengthM : 0,
     wallTileAreaM2: typeof row.wallTileAreaM2 === "number" ? row.wallTileAreaM2 : 0,
     floorTilePieceCount: typeof row.floorTilePieceCount === "number" ? row.floorTilePieceCount : 0,
+    electricalScopeAreaM2: typeof row.electricalScopeAreaM2 === "number" ? row.electricalScopeAreaM2 : 0,
+    plumbingScopeAreaM2: typeof row.plumbingScopeAreaM2 === "number" ? row.plumbingScopeAreaM2 : 0,
     newWallLengthM: typeof row.newWallLengthM === "number" ? row.newWallLengthM : 0,
     newWallAreaM2: typeof row.newWallAreaM2 === "number" ? row.newWallAreaM2 : 0,
     demolitionWallLengthM: typeof row.demolitionWallLengthM === "number" ? row.demolitionWallLengthM : 0,

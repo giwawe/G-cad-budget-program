@@ -159,6 +159,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 厨房、卫生间、阳台、露台、洗衣房自动计算 `waterproof_area_m2`。
 - 防水面积公式：`地面面积 + 墙面计量长度 * 防水高度`；卫生间防水高度 `1.8m`，其它湿区 `0.3m`。
 - 地面瓷砖主材：`floor_tile_piece_count = ceil(地面面积 * 1.05 / (0.75 * 1.5))`，按 750X1500 规格、5% 损耗、向上取整；默认报价规则“地面瓷砖主材”按片数生成金额。
+- 水电默认 scope：`electrical_scope_area_m2` 和 `plumbing_scope_area_m2` 当前均默认等于空间地面面积，用于“强电布线”“水路布管”按施工面积生成金额；点位、回路、特殊水路范围仍可通过校准 JSON 或后续图层细化。
 - 工程量表显示 `wall_tile_measure_length_m`，校准模板也会导出 `wall_tile_measure_length_m` 和 `wall_tile_area_m2`。
 - 新砌墙：画在 `QUOTE_NEW_WALL` 的线段会生成 `new_wall_length_m` 和 `new_wall_area_m2`，公式为 `新砌墙长度 * 空间实际层高`；默认报价规则“砌120厚砖墙”按 `new_wall_area_m2` 生成金额。
 - 拆墙：画在 `QUOTE_DEMO_WALL` 的线段会生成 `demolition_wall_length_m` 和 `demolition_wall_area_m2`，公式为 `拆墙长度 * 空间实际层高`；默认报价规则“拆改及拆墙”按 `demolition_wall_area_m2` 生成金额。
@@ -176,13 +177,13 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 上传校准 JSON 并显示“校准通过”或差异卡片。
 - 差异卡片可跳转到对应表格行，差异单元格高亮。
 - 导出校准模板 JSON，并在页面显示可复制内容。
-- 校准模板包含窗台石长度、窗帘墙宽候选、窗帘墙宽来源、贴砖墙、地砖主材片数、新砌墙、拆墙、室内门数、橱柜地柜长度、橱柜吊柜长度、马桶数和浴室柜数指标，便于把人工确认值沉淀进 golden JSON。
+- 校准模板包含窗台石长度、窗帘墙宽候选、窗帘墙宽来源、贴砖墙、地砖主材片数、水电施工面积、新砌墙、拆墙、室内门数、橱柜地柜长度、橱柜吊柜长度、马桶数和浴室柜数指标，便于把人工确认值沉淀进 golden JSON。
 - 上传校准 JSON 后，如果窗帘墙宽候选存在差异，且当前来源为 `manual_required_l_shape_window` 或 `fallback_longest_wall`，工程量表会提供“应用校准”按钮，把校准值写回当前行、标记为 `manual`，并清除该单元格的当前差异。
 - 导出校对快照 JSON；快照包含来源文件、校准文件、summary、comparison 和 rows。
 - 导入校对快照 JSON，恢复表格、状态、summary、comparison 和来源文件名。
 - 每行可改 review 状态：待确认、已确认、需修图、不计价。
 - SVG 图形 review 可缩放/平移，支持空间改名、门洞扣减切换、窗洞扣减切换、窗高调整。
-- 导出报价映射 JSON；默认使用商品房报价表 `整装` 工作表中当前可自动取数的 20 条规则，跳过不计价空间。
+- 导出报价映射 JSON；默认使用商品房报价表 `整装` 工作表中当前可自动取数的 22 条规则，跳过不计价空间。
 - 下载/导入报价规则 JSON；导入后报价映射会使用当前规则重新计算金额。
 - 页面会提示商品房整装待补取数口径清单，这些项目暂不参与金额汇总。
 - 导出报价映射后会显示窗帘/窗帘箱可报价候选空间数、仍待确认空间数和对应空间名；导出的报价映射 JSON 会附带 `curtain_quote_readiness` 摘要，并把人工确认后的暗窗帘箱写入 `curtain_quote_candidates` 候选清单和 `items` 金额汇总。
@@ -196,6 +197,8 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 地面找平：按 `floorAreaM2`，仅匹配厨房、卫生间、阳台、露台、洗衣房。
 - 地面砖铺贴(750X1500)：按 `floorAreaM2`，当前不限制空间类型。
 - 地面瓷砖主材：按 `floorTilePieceCount`，当前不限制空间类型；片数由地面面积按 750X1500、5% 损耗向上取整。
+- 强电布线：按 `electricalScopeAreaM2`，当前默认等于地面面积，不限制空间类型。
+- 水路布管：按 `plumbingScopeAreaM2`，当前默认等于地面面积，不限制空间类型。
 - 墙面贴瓷砖(600X1200)：按 `wallTileAreaM2`，匹配厨房、卫生间，以及画了 `QUOTE_WALL_TILE` 的阳台、露台、洗衣房。
 - 墙地面防漏处理：按 `waterproofAreaM2`，仅匹配厨房、卫生间、阳台、露台、洗衣房。
 - 窗台石铺贴：按 `windowsillLengthM`，有窗洞长度时生成。
@@ -213,14 +216,14 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 报价规则 JSON 是数组格式，字段为：
 
 - `item_name`：清单项名称。
-- `metric`：取数指标，当前只允许 `latex_paint_area_m2`、`floor_area_m2`、`floor_tile_piece_count`、`ceiling_area_m2`、`wall_tile_area_m2`、`waterproof_area_m2`、`windowsill_length_m`、`new_wall_area_m2`、`demolition_wall_area_m2`、`interior_door_count`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`toilet_count`、`bathroom_vanity_count`、`curtain_wall_width_m`。
+- `metric`：取数指标，当前只允许 `latex_paint_area_m2`、`floor_area_m2`、`floor_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`ceiling_area_m2`、`wall_tile_area_m2`、`waterproof_area_m2`、`windowsill_length_m`、`new_wall_area_m2`、`demolition_wall_area_m2`、`interior_door_count`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`toilet_count`、`bathroom_vanity_count`、`curtain_wall_width_m`。
 - `unit`：单位。
 - `unit_price`：单价，必须是非负数字。
 - `space_types`：可选，空间类型白名单；填写后只对这些空间类型生成清单项。
 
 当前商品房报价表已整理出一份可导入规则：`quote-rules-apartment-current.json`。它基于商品房报价表的 `整装` 工作表，只包含当前系统能准确承接的面积类项目；`半包` 工作表不读取、不展示、不保留为规则来源。
 
-商品房整装待补取数口径记录在 `apartmentPendingQuoteMetrics()`，只用于页面展示和后续扩展，不混入可导入规则 JSON，也不参与金额汇总。当前重点包括水电、定制、套装项等。
+商品房整装待补取数口径记录在 `apartmentPendingQuoteMetrics()`，只用于页面展示和后续扩展，不混入可导入规则 JSON，也不参与金额汇总。当前重点包括定制、套装项等。
 
 ## 测试与 fixture
 

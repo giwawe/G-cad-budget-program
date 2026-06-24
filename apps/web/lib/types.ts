@@ -21,6 +21,8 @@ export type QuantityRow = {
   wallTileMeasureLengthM: number;
   wallTileAreaM2: number;
   floorTilePieceCount: number;
+  electricalScopeAreaM2: number;
+  plumbingScopeAreaM2: number;
   newWallLengthM: number;
   newWallAreaM2: number;
   demolitionWallLengthM: number;

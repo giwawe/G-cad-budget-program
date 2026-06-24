@@ -28,6 +28,8 @@ def test_latex_area_deducts_windows_but_not_doors():
 
     assert row.floor_area_m2 == 30
     assert row.floor_tile_piece_count == 28
+    assert row.electrical_scope_area_m2 == 30
+    assert row.plumbing_scope_area_m2 == 30
     assert row.wall_measure_length_m == 15
     assert row.wall_gross_area_m2 == 42
     assert row.window_area_m2 == 4.8

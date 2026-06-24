@@ -64,6 +64,8 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
         door_area_for_wall_tile_m2,
     )
     floor_tile_piece_count = calculate_floor_tile_piece_count(floor_area_m2)
+    electrical_scope_area_m2 = floor_area_m2
+    plumbing_scope_area_m2 = floor_area_m2
     new_wall_length_m = round(sum(space.new_wall_lengths_m), 2)
     new_wall_area_m2 = calculate_new_wall_area_m2(new_wall_length_m, height_m)
     demolition_wall_length_m = round(sum(space.demolition_wall_lengths_m), 2)
@@ -118,6 +120,8 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
         wall_tile_measure_length_m=wall_tile_measure_length_m,
         wall_tile_area_m2=wall_tile_area_m2,
         floor_tile_piece_count=floor_tile_piece_count,
+        electrical_scope_area_m2=electrical_scope_area_m2,
+        plumbing_scope_area_m2=plumbing_scope_area_m2,
         new_wall_length_m=new_wall_length_m,
         new_wall_area_m2=new_wall_area_m2,
         demolition_wall_length_m=demolition_wall_length_m,

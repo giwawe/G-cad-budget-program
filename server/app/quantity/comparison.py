@@ -12,6 +12,8 @@ DEFAULT_NUMERIC_FIELDS = [
     "wall_tile_measure_length_m",
     "wall_tile_area_m2",
     "floor_tile_piece_count",
+    "electrical_scope_area_m2",
+    "plumbing_scope_area_m2",
     "new_wall_length_m",
     "new_wall_area_m2",
     "demolition_wall_length_m",

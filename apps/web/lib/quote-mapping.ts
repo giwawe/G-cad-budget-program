@@ -4,6 +4,8 @@ type QuantityRowMetric =
   | "latexPaintAreaM2"
   | "floorAreaM2"
   | "floorTilePieceCount"
+  | "electricalScopeAreaM2"
+  | "plumbingScopeAreaM2"
   | "ceilingAreaM2"
   | "wallTileAreaM2"
   | "waterproofAreaM2"
@@ -20,6 +22,8 @@ export type QuoteMetric =
   | "latex_paint_area_m2"
   | "floor_area_m2"
   | "floor_tile_piece_count"
+  | "electrical_scope_area_m2"
+  | "plumbing_scope_area_m2"
   | "ceiling_area_m2"
   | "wall_tile_area_m2"
   | "waterproof_area_m2"
@@ -111,6 +115,8 @@ const DEFAULT_RULES: QuoteRule[] = [
   { item_name: "地面找平", metric: "floor_area_m2", unit: "m2", unit_price: 56, space_types: WET_FLOOR_SPACE_TYPES },
   { item_name: "地面砖铺贴(750X1500)", metric: "floor_area_m2", unit: "m2", unit_price: 96, space_types: undefined },
   { item_name: "地面瓷砖主材", metric: "floor_tile_piece_count", unit: "片", unit_price: 50, space_types: undefined },
+  { item_name: "强电布线", metric: "electrical_scope_area_m2", unit: "M2", unit_price: 78, space_types: undefined },
+  { item_name: "水路布管", metric: "plumbing_scope_area_m2", unit: "M2", unit_price: 29.5, space_types: undefined },
   { item_name: "墙面贴瓷砖(600X1200)", metric: "wall_tile_area_m2", unit: "m2", unit_price: 100, space_types: WALL_TILE_SPACE_TYPES },
   { item_name: "墙地面防漏处理", metric: "waterproof_area_m2", unit: "m2", unit_price: 51.5, space_types: WET_FLOOR_SPACE_TYPES },
   { item_name: "窗台石铺贴", metric: "windowsill_length_m", unit: "M", unit_price: 73, space_types: undefined },
@@ -125,22 +131,6 @@ const DEFAULT_RULES: QuoteRule[] = [
 ];
 
 const APARTMENT_PENDING_METRICS: PendingQuoteMetric[] = [
-  {
-    item_name: "强电布线",
-    unit: "M2",
-    unit_price: 78,
-    reason: "水电通常按套内施工面积、点位或回路规则综合计价，当前缺少点位和回路数据。",
-    suggested_metric: "electrical_scope_area_m2",
-    source_group: "水电",
-  },
-  {
-    item_name: "水路布管",
-    unit: "M2",
-    unit_price: 29.5,
-    reason: "水路依赖厨房、卫生间、阳台等给排水点位和管线范围，不能直接套现有三类面积。",
-    suggested_metric: "plumbing_scope_area_m2",
-    source_group: "水电",
-  },
   {
     item_name: "全屋定制",
     unit: "M2",
@@ -163,6 +153,8 @@ const METRIC_TO_ROW_FIELD: Record<QuoteMetric, QuantityRowMetric> = {
   latex_paint_area_m2: "latexPaintAreaM2",
   floor_area_m2: "floorAreaM2",
   floor_tile_piece_count: "floorTilePieceCount",
+  electrical_scope_area_m2: "electricalScopeAreaM2",
+  plumbing_scope_area_m2: "plumbingScopeAreaM2",
   ceiling_area_m2: "ceilingAreaM2",
   wall_tile_area_m2: "wallTileAreaM2",
   waterproof_area_m2: "waterproofAreaM2",
@@ -320,6 +312,8 @@ function isQuoteMetric(metric: unknown): metric is QuoteMetric {
     metric === "latex_paint_area_m2" ||
     metric === "floor_area_m2" ||
     metric === "floor_tile_piece_count" ||
+    metric === "electrical_scope_area_m2" ||
+    metric === "plumbing_scope_area_m2" ||
     metric === "ceiling_area_m2" ||
     metric === "wall_tile_area_m2" ||
     metric === "waterproof_area_m2" ||

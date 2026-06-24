@@ -307,6 +307,8 @@
 马桶数量 = 卫生间默认 1 个；有 QUOTE_TOILET 点位时按点位数；非卫生间为 0
 浴室柜数量 = 卫生间默认 1 套；有 QUOTE_BATHROOM_VANITY 点位时按点位数；非卫生间为 0
 地面瓷砖主材片数 = ceil(地面面积 * 1.05 / (0.75m * 1.5m))
+强电布线施工面积 = 地面面积
+水路布管施工面积 = 地面面积
 防水面积 = 地面面积 + 墙面计量长度 * 防水高度
 窗台石长度 = 窗宽合计
 窗帘墙宽候选 = 客厅/卧室/书房有窗时优先匹配窗户所在 QUOTE_WALL 墙段整宽；匹配不到时回退到空间最长一段 QUOTE_WALL；其它空间为 0
@@ -314,11 +316,13 @@
 
 地面瓷砖主材当前按 750X1500 规格、5% 损耗率从地面面积换算片数，并向上取整；选品规格、拼花、斜铺或特殊损耗仍需要报价规则或校准 JSON 进一步确认。
 
+强电布线和水路布管当前按空间地面面积作为默认施工面积 scope，用于商品房整装默认报价规则按 `M2` 生成金额；点位、回路、局部改造或特殊水路范围尚未精算，后续可通过校准 JSON 或新增点位/管线图层细化。
+
 防水高度当前按空间类型取默认值：卫生间 `1.8m`，厨房、阳台、露台、洗衣房 `0.3m`。阳台、露台、洗衣房墙砖不是所有墙面都需要铺贴，只有画了 `QUOTE_WALL_TILE` 的贴砖墙面线才自动计算墙砖面积；当前按空间实际层高计算，暂不单独扣除未匹配贴砖墙的门窗洞。
 
 窗帘和窗帘箱不按窗洞宽度计量，应按窗户所在墙面的整面墙宽度计量。厨房、卫生间、过道等空间默认不做窗帘和窗帘箱；一般不做窗帘箱的位置也不生成窗帘。当前系统生成 `curtain_wall_width_m` 候选值：若窗洞中心线能匹配到邻近且平行的 `QUOTE_WALL`，取该墙段整宽；若匹配不到，回退到空间最长一段 `QUOTE_WALL`。L 形或转角窗涉及两面墙和转角做法，当前不自动计算窗帘或窗帘箱长度，候选值为 `0`，需要人工确认。系统同时输出 `curtain_wall_width_source`：`matched_window_wall` 表示已匹配窗户所在墙，`fallback_longest_wall` 表示回退最长墙需人工重点确认，`manual_required_l_shape_window` 表示 L 形窗需人工确认，`not_applicable` 表示不适用，前端人工编辑后为 `manual`。该候选值允许在工程量表中人工校准、随校对快照保存/恢复；只有来源为 `manual` 且长度大于 `0` 时，暗窗帘箱才进入导出的 `curtain_quote_candidates` 候选清单、`items` 和金额汇总。
 
-校准模板会导出 `windowsill_length_m`、`curtain_wall_width_m`、`curtain_wall_width_source`、`wall_tile_measure_length_m`、`wall_tile_area_m2`、`floor_tile_piece_count`、`new_wall_length_m`、`new_wall_area_m2`、`demolition_wall_length_m`、`demolition_wall_area_m2`、`interior_door_count`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`toilet_count` 和 `bathroom_vanity_count`。报价员可以把 L 形窗人工确认后的实际延米、贴砖墙、地砖主材片数、新砌墙、拆墙、室内门数、厨房橱柜长度或洁具数量校准值填回模板，再作为 golden JSON 固定校准结果。
+校准模板会导出 `windowsill_length_m`、`curtain_wall_width_m`、`curtain_wall_width_source`、`wall_tile_measure_length_m`、`wall_tile_area_m2`、`floor_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`new_wall_length_m`、`new_wall_area_m2`、`demolition_wall_length_m`、`demolition_wall_area_m2`、`interior_door_count`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`toilet_count` 和 `bathroom_vanity_count`。报价员可以把 L 形窗人工确认后的实际延米、贴砖墙、地砖主材片数、水电施工面积、新砌墙、拆墙、室内门数、厨房橱柜长度或洁具数量校准值填回模板，再作为 golden JSON 固定校准结果。
 
 上传包含 `curtain_wall_width_m` 的校准 JSON 后，若当前行来源是 `manual_required_l_shape_window` 或 `fallback_longest_wall`，工程量表会提供“应用校准”按钮，把校准值写回当前行、将来源标记为 `manual`，并清除该单元格的当前差异。
 
