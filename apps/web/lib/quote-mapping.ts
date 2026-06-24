@@ -1,4 +1,4 @@
-import type { QuantityRow } from "./types";
+import type { QuantityRow, QuantitySummary } from "./types";
 
 type QuantityRowMetric =
   | "latexPaintAreaM2"
@@ -23,6 +23,7 @@ type QuantityRowMetric =
   | "toiletCount"
   | "bathroomVanityCount";
 export type QuoteMetric =
+  | "building_area_m2"
   | "latex_paint_area_m2"
   | "floor_area_m2"
   | "floor_tile_piece_count"
@@ -45,7 +46,8 @@ export type QuoteMetric =
   | "custom_cabinet_area_m2"
   | "toilet_count"
   | "bathroom_vanity_count";
-type RowQuoteMetric = Exclude<QuoteMetric, "lighting_package_count">;
+type ProjectQuoteMetric = "building_area_m2" | "lighting_package_count";
+type RowQuoteMetric = Exclude<QuoteMetric, ProjectQuoteMetric>;
 type SummedProjectQuoteMetric =
   | "floor_tile_piece_count"
   | "electrical_scope_area_m2"
@@ -97,6 +99,7 @@ export type QuoteMapping = {
   items: QuoteMappingItem[];
   summary: {
     space_count: number;
+    building_area_m2: number;
     item_count: number;
     total_amount: number;
   };
@@ -241,10 +244,11 @@ export function curtainQuoteCandidates(rows: QuantityRow[]): CurtainQuoteCandida
     }));
 }
 
-export function buildQuoteMapping(rows: QuantityRow[], rules: QuoteRule[] = DEFAULT_RULES): QuoteMapping {
+export function buildQuoteMapping(rows: QuantityRow[], rules: QuoteRule[] = DEFAULT_RULES, summary?: Pick<QuantitySummary, "building_area_m2">): QuoteMapping {
   const billableRows = rows.filter((row) => row.status !== "excluded");
-  const rowRules = rules.filter((rule): rule is QuoteRule & { metric: RowQuoteMetric } => rule.metric !== "lighting_package_count" && !SUMMED_PROJECT_METRICS.has(rule.metric));
-  const projectRules = rules.filter((rule) => rule.metric === "lighting_package_count" || SUMMED_PROJECT_METRICS.has(rule.metric));
+  const buildingAreaM2 = round2(summary?.building_area_m2 ?? 0);
+  const rowRules = rules.filter((rule): rule is QuoteRule & { metric: RowQuoteMetric } => !isProjectMetric(rule.metric) && !SUMMED_PROJECT_METRICS.has(rule.metric));
+  const projectRules = rules.filter((rule) => isProjectMetric(rule.metric) || SUMMED_PROJECT_METRICS.has(rule.metric));
   const rowItems = billableRows.flatMap((row) =>
     rowRules.filter((rule) => ruleAppliesToRow(rule, row)).map((rule) => {
       const quantity = round2(row[METRIC_TO_ROW_FIELD[rule.metric]]);
@@ -260,13 +264,14 @@ export function buildQuoteMapping(rows: QuantityRow[], rules: QuoteRule[] = DEFA
       };
     }).filter((item) => item.quantity > 0),
   );
-  const projectItems = buildProjectQuoteItems(billableRows, projectRules);
+  const projectItems = buildProjectQuoteItems(billableRows, projectRules, buildingAreaM2);
   const items = [...rowItems, ...projectItems];
 
   return {
     items,
     summary: {
       space_count: billableRows.length,
+      building_area_m2: buildingAreaM2,
       item_count: items.length,
       total_amount: round2(items.reduce((sum, item) => sum + item.amount, 0)),
     },
@@ -275,12 +280,12 @@ export function buildQuoteMapping(rows: QuantityRow[], rules: QuoteRule[] = DEFA
   };
 }
 
-function buildProjectQuoteItems(billableRows: QuantityRow[], rules: QuoteRule[]): QuoteMappingItem[] {
+function buildProjectQuoteItems(billableRows: QuantityRow[], rules: QuoteRule[], buildingAreaM2: number): QuoteMappingItem[] {
   if (billableRows.length === 0) {
     return [];
   }
   return rules.map((rule) => {
-    const quantity = projectRuleQuantity(billableRows, rule);
+    const quantity = projectRuleQuantity(billableRows, rule, buildingAreaM2);
     return {
       floor: "全屋",
       space_name: "全屋",
@@ -294,7 +299,10 @@ function buildProjectQuoteItems(billableRows: QuantityRow[], rules: QuoteRule[])
   }).filter((item) => item.quantity > 0);
 }
 
-function projectRuleQuantity(billableRows: QuantityRow[], rule: QuoteRule): number {
+function projectRuleQuantity(billableRows: QuantityRow[], rule: QuoteRule, buildingAreaM2: number): number {
+  if (rule.metric === "building_area_m2") {
+    return buildingAreaM2;
+  }
   if (rule.metric === "lighting_package_count") {
     return 1;
   }
@@ -307,6 +315,10 @@ function projectRuleQuantity(billableRows: QuantityRow[], rule: QuoteRule): numb
     );
   }
   return 0;
+}
+
+function isProjectMetric(metric: QuoteMetric): metric is ProjectQuoteMetric {
+  return metric === "building_area_m2" || metric === "lighting_package_count";
 }
 
 function isSummedProjectMetric(metric: QuoteMetric): metric is SummedProjectQuoteMetric {
@@ -370,6 +382,7 @@ function normalizeQuoteRule(rule: unknown, index: number): QuoteRule {
 
 function isQuoteMetric(metric: unknown): metric is QuoteMetric {
   return (
+    metric === "building_area_m2" ||
     metric === "latex_paint_area_m2" ||
     metric === "floor_area_m2" ||
     metric === "floor_tile_piece_count" ||

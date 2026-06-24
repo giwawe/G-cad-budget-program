@@ -179,6 +179,28 @@ assert.equal(customMapping.items[0].unit_price, 30);
 assert.equal(customMapping.items[0].amount, 766.2);
 assert.equal(customMapping.summary.total_amount, 766.2);
 
+const buildingAreaMapping = buildQuoteMapping(
+  rows,
+  [{ item_name: "按建筑面积计价项目", metric: "building_area_m2", unit: "m2", unit_price: 10 }],
+  { building_area_m2: 88.66 },
+);
+
+assert.deepEqual(buildingAreaMapping.items, [
+  {
+    floor: "全屋",
+    space_name: "全屋",
+    space_type: "全屋",
+    item_name: "按建筑面积计价项目",
+    quantity: 88.66,
+    unit: "m2",
+    unit_price: 10,
+    amount: 886.6,
+  },
+]);
+assert.equal(buildingAreaMapping.summary.building_area_m2, 88.66);
+assert.equal(buildingAreaMapping.summary.total_amount, 886.6);
+assert.equal(buildQuoteMapping(rows, [{ item_name: "按建筑面积计价项目", metric: "building_area_m2", unit: "m2", unit_price: 10 }]).items.length, 0);
+
 const bedroomRows: QuantityRow[] = [
   { ...rows[0], spaceName: "主卧", spaceType: "卧室", latexPaintAreaM2: 30, wallTileAreaM2: 0, waterproofAreaM2: 0 },
   { ...rows[0], spaceName: "厨房", spaceType: "厨房", latexPaintAreaM2: 20 },
@@ -328,6 +350,7 @@ const parsedRules = parseQuoteRules(JSON.stringify([{ item_name: "地面找平",
 assert.equal(parsedRules[0].item_name, "地面找平");
 assert.equal(parsedRules[0].unit_price, 18);
 assert.deepEqual(parsedRules[0].space_types, ["厨房", "卫生间"]);
+assert.equal(parseQuoteRules(JSON.stringify([{ item_name: "管理费", metric: "building_area_m2", unit: "m2", unit_price: 10 }]))[0].metric, "building_area_m2");
 
 const parsedWetRules = parseQuoteRules(JSON.stringify([
   { item_name: "墙面贴瓷砖(600X1200)", metric: "wall_tile_area_m2", unit: "m2", unit_price: 100, space_types: ["厨房", "卫生间"] },

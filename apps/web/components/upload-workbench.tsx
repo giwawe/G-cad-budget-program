@@ -360,7 +360,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
   }
 
   function handleDownloadQuoteMapping() {
-    const mapping = buildQuoteMapping(rows, quoteRules);
+    const mapping = buildQuoteMapping(rows, quoteRules, summary ?? undefined);
     const downloadName = quoteMappingFileName(fileName);
     const content = `${JSON.stringify(mapping, null, 2)}\n`;
     const blob = new Blob([content], { type: "application/json;charset=utf-8" });
@@ -711,6 +711,10 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
             <div>
               <span>计价空间</span>
               <strong>{generatedQuoteMapping.mapping.summary.space_count}</strong>
+            </div>
+            <div>
+              <span>建筑面积</span>
+              <strong>{generatedQuoteMapping.mapping.summary.building_area_m2.toFixed(2)}</strong>
             </div>
             <div>
               <span>清单项</span>

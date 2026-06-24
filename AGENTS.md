@@ -172,7 +172,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 橱柜：地柜画在 `QUOTE_BASE_CABINET`，吊柜画在 `QUOTE_WALL_CABINET`，分别生成 `kitchen_base_cabinet_length_m` 和 `kitchen_wall_cabinet_length_m`，仅厨房空间计入；默认报价规则“橱柜地柜”和“橱柜吊柜”分别按对应 metric 生成金额。地柜和吊柜在 CAD 中可能重叠，必须分图层，不能用单一橱柜线混算。
 - 全屋定制：非厨房柜体画在 `QUOTE_CUSTOM`，默认生成 `custom_cabinet_area_m2`，公式为 `常规柜投影长度 * 2.6m`；同图层邻近文字可标注柜高，如 `H=800`、`高度800` 或 `H=0.8m`，高度低于 1m 的低柜按长度米取值，并入同一个 `custom_cabinet_area_m2` 数量，不单独生成低柜字段或报价项；厨房空间默认为 0，避免和橱柜地柜/吊柜重复计费。
 - 洁具：卫生间默认生成 `toilet_count=1` 和 `bathroom_vanity_count=1`，用于“马桶”和“浴室柜”报价；如果画了 `QUOTE_TOILET` 或 `QUOTE_BATHROOM_VANITY` 点位，则按点位数覆盖默认数量。
-- 建筑面积：`building_area_m2` 从 `QUOTE_EXT_WALL` 闭合多段线读取，当前取面积最大的闭合外墙轮廓，写入 API summary 和图形校对页；它不是每个 `QUOTE_ROOM` 面积的简单求和，暂不混入空间工程量行。
+- 建筑面积：`building_area_m2` 从 `QUOTE_EXT_WALL` 闭合多段线读取，当前取面积最大的闭合外墙轮廓，写入 API summary、图形校对页和报价映射 summary；它不是每个 `QUOTE_ROOM` 面积的简单求和，暂不混入空间工程量行。
 - 窗台石当前自动计算 `windowsill_length_m`，v1 直接等于 `window_width_total_m`，用于窗台石铺贴报价。
 - 窗帘和窗帘箱不能按窗洞宽度计量，应按窗户所在墙面的整面墙宽度；厨房、卫生间、过道等空间默认不做窗帘/窗帘箱。
 - `curtain_wall_width_m` 是窗帘墙宽候选取数：客厅、卧室、书房有窗时优先按窗洞中心线匹配邻近且平行的 `QUOTE_WALL`，取窗户所在墙面的整面墙宽；匹配不到时回退到该空间最长一段 `QUOTE_WALL`；其它空间为 `0`。L 形/转角窗帘和窗帘箱长度不自动计算，候选值为 `0` 并要求人工确认。`curtain_wall_width_source` 标记来源：`matched_window_wall`、`fallback_longest_wall`、`manual_required_l_shape_window`、`not_applicable` 或前端人工编辑后的 `manual`。前端工程量表可人工校准并随校对快照保存/恢复；只有来源为 `manual` 且长度大于 0 时，暗窗帘箱才进入报价规则和金额汇总。
@@ -209,6 +209,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 强电布线：按 `electricalScopeAreaM2` 全屋汇总，当前默认等于地面面积，不限制空间类型。
 - 水路布管：按 `plumbingScopeAreaM2` 全屋汇总，当前默认等于地面面积，不限制空间类型。
 - 全屋灯饰：按项目级 `lightingPackageCount=1`，有可计价空间时生成 1 套，不随空间重复。
+- 建筑面积：按项目级 `building_area_m2`，从当前 summary 取值生成“全屋”清单项；默认规则不配置具体项目，报价员可在报价规则 JSON 中添加管理费、成品保护、综合服务费等按建筑面积计价的项目。
 - 墙面贴瓷砖(600X1200)：按 `wallTileAreaM2`，匹配厨房、卫生间，以及画了 `QUOTE_WALL_TILE` 的阳台、露台、洗衣房。
 - 墙地面防漏处理：按 `waterproofAreaM2`，仅匹配厨房、卫生间、阳台、露台、洗衣房。
 - 窗台石铺贴：按 `windowsillLengthM`，有窗洞长度时生成。
@@ -228,7 +229,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 报价规则 JSON 是数组格式，字段为：
 
 - `item_name`：清单项名称。
-- `metric`：取数指标，当前只允许 `latex_paint_area_m2`、`floor_area_m2`、`floor_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`lighting_package_count`、`ceiling_area_m2`、`wall_tile_area_m2`、`waterproof_area_m2`、`windowsill_length_m`、`new_wall_area_m2`、`demolition_wall_area_m2`、`interior_door_count`、`bathroom_door_count`、`sliding_door_area_m2`、`sliding_door_casing_length_m`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`custom_cabinet_area_m2`、`toilet_count`、`bathroom_vanity_count`、`curtain_wall_width_m`。
+- `metric`：取数指标，当前只允许 `building_area_m2`、`latex_paint_area_m2`、`floor_area_m2`、`floor_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`lighting_package_count`、`ceiling_area_m2`、`wall_tile_area_m2`、`waterproof_area_m2`、`windowsill_length_m`、`new_wall_area_m2`、`demolition_wall_area_m2`、`interior_door_count`、`bathroom_door_count`、`sliding_door_area_m2`、`sliding_door_casing_length_m`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`custom_cabinet_area_m2`、`toilet_count`、`bathroom_vanity_count`、`curtain_wall_width_m`。
 - `unit`：单位。
 - `unit_price`：单价，必须是非负数字。
 - `space_types`：可选，空间类型白名单；填写后只对这些空间类型生成清单项。
