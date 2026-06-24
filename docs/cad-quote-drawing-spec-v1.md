@@ -297,7 +297,7 @@
 | `>= 1.2m` 且 `< 1.5m` | 疑似大洞口 | 标记人工确认，默认不扣 |
 | `>= 1.5m` | 大洞口 | 默认扣减 |
 
-系统会自动判断门类型，尽量减少额外出图工作量。块名或图层名含 `入户`、`进户`、`防盗`、`entry` 判为入户门；含 `推拉`、`移门`、`sliding` 判为推拉门；无关键词且门宽 `>=1.4m` 判为推拉门；剩余普通门判为室内门。只有判为室内门且 `opening_type=normal_door` 的门洞会计入 `interior_door_count`，用于“室内门”按樘计价。室内门只在厨房、卫生间、卧室、书房、衣帽间、储物间、洗衣房等房间侧计数；客厅、餐厅、过道、门厅等公共空间不承接室内门数量，避免同一门洞在客厅和房间重复报价。入户门、推拉门、疑似大洞口和大洞口不自动计入室内门报价。
+系统会自动判断门类型，尽量减少额外出图工作量。块名或图层名含 `入户`、`进户`、`防盗`、`entry` 判为入户门；含 `推拉`、`移门`、`sliding` 判为推拉门；无关键词且门宽 `>=1.4m` 判为推拉门；剩余普通门判为室内门。只有判为室内门且 `opening_type=normal_door` 的门洞会计入 `interior_door_count`，用于“室内门”按樘计价。室内门只在厨房、卧室、书房、衣帽间、储物间、洗衣房等房间侧计数；客厅、餐厅、过道、门厅等公共空间不承接室内门数量，避免同一门洞在客厅和房间重复报价。通往卫生间的门自动归为卫生间门，在卫生间侧生成 `bathroom_door_count`，不计入室内门。入户门、推拉门、疑似大洞口和大洞口不自动计入室内门报价。
 
 ## 8. 默认参数和算量公式
 
@@ -324,7 +324,10 @@
 阳台/露台/洗衣房墙砖面积 = 贴砖墙长 * 空间实际层高；没有 QUOTE_WALL_TILE 时为 0
 新砌墙面积 = 新砌墙长度 * 空间实际层高；没有 QUOTE_NEW_WALL 时为 0
 拆墙面积 = 拆墙长度 * 空间实际层高；没有 QUOTE_DEMO_WALL 时为 0
-室内门数 = 房间侧自动判为室内门且 opening_type=normal_door 的 QUOTE_DOOR 门洞数量；客厅/餐厅/过道/门厅侧、入户门、推拉门、疑似大洞口和大洞口为 0
+室内门数 = 房间侧自动判为室内门且 opening_type=normal_door 的 QUOTE_DOOR 门洞数量；客厅/餐厅/过道/门厅侧、卫生间门、入户门、推拉门、疑似大洞口和大洞口为 0
+卫生间门数 = 卫生间侧自动判为 bathroom_door 的 QUOTE_DOOR 门洞数量
+厨房推拉门面积 = 厨房空间内推拉门宽度 * 门高
+厨房推拉门门套长度 = 厨房空间内推拉门宽度 + 2 * 门高
 厨房地柜长度 = 厨房空间内 QUOTE_BASE_CABINET 长度合计；其它空间或没有 QUOTE_BASE_CABINET 时为 0
 厨房吊柜长度 = 厨房空间内 QUOTE_WALL_CABINET 长度合计；其它空间或没有 QUOTE_WALL_CABINET 时为 0
 全屋定制面积 = 非厨房空间内常规 QUOTE_CUSTOM 长度 * 柜高（未标注时默认 2.6m）+ 高度低于 1m 的低柜长度；厨房空间或没有 QUOTE_CUSTOM 时为 0
@@ -345,6 +348,8 @@
 
 砌120厚砖墙和拆改及拆墙在工程量表中保留空间归属，便于校对 CAD 取数；报价映射中按全屋面积汇总生成金额，不按每个空间拆行。
 
+厨房推拉门面积和门套长度在工程量表中展示，并导出到校准模板：`sliding_door_area_m2` 按门宽乘门高，`sliding_door_casing_length_m` 按门宽加两侧门高；当前默认门高为 `2.1m`。卫生间门导出为 `bathroom_door_count`，不混入室内门数量。
+
 全屋灯饰当前作为项目级套餐处理：只要报价映射中存在至少一个可计价空间，就生成 1 套“全屋灯饰”，不随空间数量重复计费；灯位数量、品牌配置和套餐差异后续可通过报价规则或点位图层细化。
 
 全屋定制当前按非厨房空间的 `QUOTE_CUSTOM` 延米线计算：未标注高度时按默认 `2.6m` 换算投影面积；同图层邻近文字标注高度低于 `1m` 时，按低柜长度米取值，并入同一个 `custom_cabinet_area_m2` 数量；厨房空间已经由 `QUOTE_BASE_CABINET` 和 `QUOTE_WALL_CABINET` 单独承接，避免重复计价。
@@ -353,7 +358,7 @@
 
 窗帘和窗帘箱不按窗洞宽度计量，应按窗户所在墙面的整面墙宽度计量。厨房、卫生间、过道等空间默认不做窗帘和窗帘箱；一般不做窗帘箱的位置也不生成窗帘。当前系统生成 `curtain_wall_width_m` 候选值：若窗洞中心线能匹配到邻近且平行的 `QUOTE_WALL`，取该墙段整宽；若匹配不到，回退到空间最长一段 `QUOTE_WALL`。L 形或转角窗涉及两面墙和转角做法，当前不自动计算窗帘或窗帘箱长度，候选值为 `0`，需要人工确认。系统同时输出 `curtain_wall_width_source`：`matched_window_wall` 表示已匹配窗户所在墙，`fallback_longest_wall` 表示回退最长墙需人工重点确认，`manual_required_l_shape_window` 表示 L 形窗需人工确认，`not_applicable` 表示不适用，前端人工编辑后为 `manual`。该候选值允许在工程量表中人工校准、随校对快照保存/恢复；只有来源为 `manual` 且长度大于 `0` 时，暗窗帘箱才进入导出的 `curtain_quote_candidates` 候选清单、`items` 和金额汇总。
 
-校准模板会导出 `windowsill_length_m`、`curtain_wall_width_m`、`curtain_wall_width_source`、`wall_tile_measure_length_m`、`wall_tile_area_m2`、`floor_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`new_wall_length_m`、`new_wall_area_m2`、`demolition_wall_length_m`、`demolition_wall_area_m2`、`interior_door_count`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`custom_cabinet_area_m2`、`toilet_count` 和 `bathroom_vanity_count`。报价员可以把 L 形窗人工确认后的实际延米、贴砖墙、地砖主材片数、水电施工面积、新砌墙、拆墙、室内门数、厨房橱柜长度、全屋定制面积或洁具数量校准值填回模板，再作为 golden JSON 固定校准结果。
+校准模板会导出 `windowsill_length_m`、`curtain_wall_width_m`、`curtain_wall_width_source`、`wall_tile_measure_length_m`、`wall_tile_area_m2`、`floor_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`new_wall_length_m`、`new_wall_area_m2`、`demolition_wall_length_m`、`demolition_wall_area_m2`、`interior_door_count`、`bathroom_door_count`、`sliding_door_area_m2`、`sliding_door_casing_length_m`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`custom_cabinet_area_m2`、`toilet_count` 和 `bathroom_vanity_count`。报价员可以把 L 形窗人工确认后的实际延米、贴砖墙、地砖主材片数、水电施工面积、新砌墙、拆墙、室内门数、卫生间门数、厨房推拉门、厨房橱柜长度、全屋定制面积或洁具数量校准值填回模板，再作为 golden JSON 固定校准结果。
 
 上传包含 `curtain_wall_width_m` 的校准 JSON 后，若当前行来源是 `manual_required_l_shape_window` 或 `fallback_longest_wall`，工程量表会提供“应用校准”按钮，把校准值写回当前行、将来源标记为 `manual`，并清除该单元格的当前差异。
 

@@ -28,6 +28,9 @@ export type QuantityRow = {
   demolitionWallLengthM: number;
   demolitionWallAreaM2: number;
   interiorDoorCount: number;
+  bathroomDoorCount: number;
+  slidingDoorAreaM2: number;
+  slidingDoorCasingLengthM: number;
   kitchenBaseCabinetLengthM: number;
   kitchenWallCabinetLengthM: number;
   customCabinetAreaM2: number;

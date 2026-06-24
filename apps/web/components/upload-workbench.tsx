@@ -53,6 +53,9 @@ type ApiQuantityRow = {
   demolition_wall_length_m: number;
   demolition_wall_area_m2: number;
   interior_door_count: number;
+  bathroom_door_count: number;
+  sliding_door_area_m2: number;
+  sliding_door_casing_length_m: number;
   kitchen_base_cabinet_length_m: number;
   kitchen_wall_cabinet_length_m: number;
   custom_cabinet_area_m2: number;
@@ -118,6 +121,9 @@ function toQuantityRow(row: ApiQuantityRow): QuantityRow {
     demolitionWallLengthM: row.demolition_wall_length_m ?? 0,
     demolitionWallAreaM2: row.demolition_wall_area_m2 ?? 0,
     interiorDoorCount: row.interior_door_count ?? 0,
+    bathroomDoorCount: row.bathroom_door_count ?? 0,
+    slidingDoorAreaM2: row.sliding_door_area_m2 ?? 0,
+    slidingDoorCasingLengthM: row.sliding_door_casing_length_m ?? 0,
     kitchenBaseCabinetLengthM: row.kitchen_base_cabinet_length_m ?? 0,
     kitchenWallCabinetLengthM: row.kitchen_wall_cabinet_length_m ?? 0,
     customCabinetAreaM2: row.custom_cabinet_area_m2 ?? 0,

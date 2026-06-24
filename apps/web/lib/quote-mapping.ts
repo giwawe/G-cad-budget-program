@@ -14,6 +14,9 @@ type QuantityRowMetric =
   | "newWallAreaM2"
   | "demolitionWallAreaM2"
   | "interiorDoorCount"
+  | "bathroomDoorCount"
+  | "slidingDoorAreaM2"
+  | "slidingDoorCasingLengthM"
   | "kitchenBaseCabinetLengthM"
   | "kitchenWallCabinetLengthM"
   | "customCabinetAreaM2"
@@ -34,6 +37,9 @@ export type QuoteMetric =
   | "new_wall_area_m2"
   | "demolition_wall_area_m2"
   | "interior_door_count"
+  | "bathroom_door_count"
+  | "sliding_door_area_m2"
+  | "sliding_door_casing_length_m"
   | "kitchen_base_cabinet_length_m"
   | "kitchen_wall_cabinet_length_m"
   | "custom_cabinet_area_m2"
@@ -165,6 +171,9 @@ const METRIC_TO_ROW_FIELD: Record<RowQuoteMetric, QuantityRowMetric> = {
   new_wall_area_m2: "newWallAreaM2",
   demolition_wall_area_m2: "demolitionWallAreaM2",
   interior_door_count: "interiorDoorCount",
+  bathroom_door_count: "bathroomDoorCount",
+  sliding_door_area_m2: "slidingDoorAreaM2",
+  sliding_door_casing_length_m: "slidingDoorCasingLengthM",
   kitchen_base_cabinet_length_m: "kitchenBaseCabinetLengthM",
   kitchen_wall_cabinet_length_m: "kitchenWallCabinetLengthM",
   custom_cabinet_area_m2: "customCabinetAreaM2",
@@ -375,6 +384,9 @@ function isQuoteMetric(metric: unknown): metric is QuoteMetric {
     metric === "new_wall_area_m2" ||
     metric === "demolition_wall_area_m2" ||
     metric === "interior_door_count" ||
+    metric === "bathroom_door_count" ||
+    metric === "sliding_door_area_m2" ||
+    metric === "sliding_door_casing_length_m" ||
     metric === "kitchen_base_cabinet_length_m" ||
     metric === "kitchen_wall_cabinet_length_m" ||
     metric === "custom_cabinet_area_m2" ||

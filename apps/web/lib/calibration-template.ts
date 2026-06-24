@@ -24,6 +24,9 @@ export type CalibrationTemplateRow = {
   demolition_wall_length_m: number;
   demolition_wall_area_m2: number;
   interior_door_count: number;
+  bathroom_door_count: number;
+  sliding_door_area_m2: number;
+  sliding_door_casing_length_m: number;
   kitchen_base_cabinet_length_m: number;
   kitchen_wall_cabinet_length_m: number;
   custom_cabinet_area_m2: number;
@@ -58,6 +61,9 @@ export function quantityRowsToCalibrationTemplate(rows: QuantityRow[]): Calibrat
     demolition_wall_length_m: row.demolitionWallLengthM,
     demolition_wall_area_m2: row.demolitionWallAreaM2,
     interior_door_count: row.interiorDoorCount,
+    bathroom_door_count: row.bathroomDoorCount,
+    sliding_door_area_m2: row.slidingDoorAreaM2,
+    sliding_door_casing_length_m: row.slidingDoorCasingLengthM,
     kitchen_base_cabinet_length_m: row.kitchenBaseCabinetLengthM,
     kitchen_wall_cabinet_length_m: row.kitchenWallCabinetLengthM,
     custom_cabinet_area_m2: row.customCabinetAreaM2,

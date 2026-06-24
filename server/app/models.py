@@ -79,6 +79,9 @@ class QuantityRow:
     demolition_wall_length_m: float
     demolition_wall_area_m2: float
     interior_door_count: int
+    bathroom_door_count: int
+    sliding_door_area_m2: float
+    sliding_door_casing_length_m: float
     kitchen_base_cabinet_length_m: float
     kitchen_wall_cabinet_length_m: float
     custom_cabinet_area_m2: float

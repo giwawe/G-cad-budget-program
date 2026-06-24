@@ -4,6 +4,7 @@ from server.app.dxf import parser
 from server.app.models import ProjectDefaults
 from server.tests.dxf_fixtures import (
     build_balcony_wall_tile_dxf,
+    build_bedroom_bathroom_door_dxf,
     build_bathroom_fixture_dxf,
     build_closed_window_polyline_dxf,
     build_closed_door_polyline_dxf,
@@ -168,6 +169,16 @@ def test_auto_door_type_distinguishes_interior_entry_and_sliding_doors():
     assert review.spaces[0].doors[1].opening_type == "normal_door"
     assert review.spaces[0].doors[3].opening_type == "suspected_large_opening"
     assert review.spaces[0].doors[4].width_m == 1.5
+
+
+def test_bedroom_bathroom_shared_door_is_bathroom_door():
+    review = parser.parse_dxf_review(build_bedroom_bathroom_door_dxf(), ProjectDefaults())
+
+    spaces_by_name = {space.name: space for space in review.spaces}
+
+    assert spaces_by_name["一层-主卧"].doors[0].quote_category == "bathroom_door"
+    assert spaces_by_name["一层-公卫"].doors[0].quote_category == "bathroom_door"
+    assert review.drawing.door_openings[0].quote_category == "bathroom_door"
 
 
 def test_closed_quote_door_polyline_is_normalized_to_one_centerline():

@@ -74,6 +74,9 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
     demolition_wall_length_m = round(sum(space.demolition_wall_lengths_m), 2)
     demolition_wall_area_m2 = calculate_demolition_wall_area_m2(demolition_wall_length_m, height_m)
     interior_door_count = calculate_interior_door_count(space_type, space.doors)
+    bathroom_door_count = calculate_bathroom_door_count(space_type, space.doors)
+    sliding_door_area_m2 = calculate_sliding_door_area_m2(space_type, space.doors, defaults.default_door_height_m)
+    sliding_door_casing_length_m = calculate_sliding_door_casing_length_m(space_type, space.doors, defaults.default_door_height_m)
     kitchen_base_cabinet_length_m = calculate_kitchen_cabinet_length_m(space_type, space.base_cabinet_lengths_m)
     kitchen_wall_cabinet_length_m = calculate_kitchen_cabinet_length_m(space_type, space.wall_cabinet_lengths_m)
     custom_cabinet_area_m2 = calculate_custom_cabinet_area_m2(
@@ -135,6 +138,9 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
         demolition_wall_length_m=demolition_wall_length_m,
         demolition_wall_area_m2=demolition_wall_area_m2,
         interior_door_count=interior_door_count,
+        bathroom_door_count=bathroom_door_count,
+        sliding_door_area_m2=sliding_door_area_m2,
+        sliding_door_casing_length_m=sliding_door_casing_length_m,
         kitchen_base_cabinet_length_m=kitchen_base_cabinet_length_m,
         kitchen_wall_cabinet_length_m=kitchen_wall_cabinet_length_m,
         custom_cabinet_area_m2=custom_cabinet_area_m2,
@@ -188,6 +194,24 @@ def calculate_interior_door_count(space_type: str, doors: list) -> int:
     if space_type not in INTERIOR_DOOR_COUNT_SPACE_TYPES:
         return 0
     return sum(1 for door in doors if door.opening_type == "normal_door" and door.quote_category == "interior_door")
+
+
+def calculate_bathroom_door_count(space_type: str, doors: list) -> int:
+    if space_type != "卫生间":
+        return 0
+    return sum(1 for door in doors if door.opening_type == "normal_door" and door.quote_category == "bathroom_door")
+
+
+def calculate_sliding_door_area_m2(space_type: str, doors: list, default_door_height_m: float) -> float:
+    if space_type != "厨房":
+        return 0
+    return round(sum(door.width_m * (door.height_m or default_door_height_m) for door in doors if door.quote_category == "sliding_door"), 2)
+
+
+def calculate_sliding_door_casing_length_m(space_type: str, doors: list, default_door_height_m: float) -> float:
+    if space_type != "厨房":
+        return 0
+    return round(sum(door.width_m + 2 * (door.height_m or default_door_height_m) for door in doors if door.quote_category == "sliding_door"), 2)
 
 
 def calculate_kitchen_cabinet_length_m(space_type: str, cabinet_lengths_m: list[float]) -> float:

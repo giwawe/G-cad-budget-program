@@ -70,6 +70,9 @@ export function QuantityTable({
             <th>窗洞面积</th>
             <th>门洞扣减</th>
             <th>室内门数</th>
+            <th>卫生间门</th>
+            <th>推拉门面积</th>
+            <th>推拉门门套</th>
             <th>乳胶漆面积</th>
             <th>贴砖墙长</th>
             <th>墙砖面积</th>
@@ -99,6 +102,9 @@ export function QuantityTable({
             const windowAreaDifference = differencesByCell.get(differenceKey(row.spaceName, "window_area_m2"));
             const doorDeductDifference = differencesByCell.get(differenceKey(row.spaceName, "door_deduct_area_m2"));
             const interiorDoorCountDifference = differencesByCell.get(differenceKey(row.spaceName, "interior_door_count"));
+            const bathroomDoorCountDifference = differencesByCell.get(differenceKey(row.spaceName, "bathroom_door_count"));
+            const slidingDoorAreaDifference = differencesByCell.get(differenceKey(row.spaceName, "sliding_door_area_m2"));
+            const slidingDoorCasingLengthDifference = differencesByCell.get(differenceKey(row.spaceName, "sliding_door_casing_length_m"));
             const latexPaintDifference = differencesByCell.get(differenceKey(row.spaceName, "latex_paint_area_m2"));
             const wallTileLengthDifference = differencesByCell.get(differenceKey(row.spaceName, "wall_tile_measure_length_m"));
             const wallTileDifference = differencesByCell.get(differenceKey(row.spaceName, "wall_tile_area_m2"));
@@ -172,6 +178,18 @@ export function QuantityTable({
               <td className={differenceClass(interiorDoorCountDifference)}>
                 {row.interiorDoorCount} 樘
                 <DifferenceValue difference={interiorDoorCountDifference} />
+              </td>
+              <td className={differenceClass(bathroomDoorCountDifference)}>
+                {row.bathroomDoorCount} 樘
+                <DifferenceValue difference={bathroomDoorCountDifference} />
+              </td>
+              <td className={differenceClass(slidingDoorAreaDifference)}>
+                {row.slidingDoorAreaM2.toFixed(2)} m2
+                <DifferenceValue difference={slidingDoorAreaDifference} />
+              </td>
+              <td className={differenceClass(slidingDoorCasingLengthDifference)}>
+                {row.slidingDoorCasingLengthM.toFixed(2)} m
+                <DifferenceValue difference={slidingDoorCasingLengthDifference} />
               </td>
               <td className={differenceClass(latexPaintDifference)}>
                 {row.latexPaintAreaM2.toFixed(2)} m2

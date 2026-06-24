@@ -31,6 +31,9 @@ const rows: QuantityRow[] = [
     demolitionWallLengthM: 0,
     demolitionWallAreaM2: 0,
     interiorDoorCount: 0,
+    bathroomDoorCount: 1,
+    slidingDoorAreaM2: 3.36,
+    slidingDoorCasingLengthM: 5.8,
     kitchenBaseCabinetLengthM: 4.3,
     kitchenWallCabinetLengthM: 3,
     toiletCount: 1,
@@ -83,6 +86,9 @@ const legacySnapshot = {
     demolitionWallLengthM: _demolitionWallLengthM,
     demolitionWallAreaM2: _demolitionWallAreaM2,
     interiorDoorCount: _interiorDoorCount,
+    bathroomDoorCount: _bathroomDoorCount,
+    slidingDoorAreaM2: _slidingDoorAreaM2,
+    slidingDoorCasingLengthM: _slidingDoorCasingLengthM,
     kitchenBaseCabinetLengthM: _kitchenBaseCabinetLengthM,
     kitchenWallCabinetLengthM: _kitchenWallCabinetLengthM,
     toiletCount: _toiletCount,
@@ -104,6 +110,9 @@ assert.equal(parsedLegacySnapshot.rows[0].newWallAreaM2, 0);
 assert.equal(parsedLegacySnapshot.rows[0].demolitionWallLengthM, 0);
 assert.equal(parsedLegacySnapshot.rows[0].demolitionWallAreaM2, 0);
 assert.equal(parsedLegacySnapshot.rows[0].interiorDoorCount, 0);
+assert.equal(parsedLegacySnapshot.rows[0].bathroomDoorCount, 0);
+assert.equal(parsedLegacySnapshot.rows[0].slidingDoorAreaM2, 0);
+assert.equal(parsedLegacySnapshot.rows[0].slidingDoorCasingLengthM, 0);
 assert.equal(parsedLegacySnapshot.rows[0].kitchenBaseCabinetLengthM, 0);
 assert.equal(parsedLegacySnapshot.rows[0].kitchenWallCabinetLengthM, 0);
 assert.equal(parsedLegacySnapshot.rows[0].toiletCount, 0);

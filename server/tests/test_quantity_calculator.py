@@ -375,14 +375,41 @@ def test_interior_door_count_only_counts_normal_doors():
         name="客卧",
         boundary_points_m=[(0, 0), (3, 0), (3, 3), (0, 3)],
         wall_lengths_m=[3, 3, 3, 3],
-        doors=[OpeningInput(width_m=0.9, opening_type="normal_door", quote_category="interior_door")],
+        doors=[
+            OpeningInput(width_m=0.9, opening_type="normal_door", quote_category="interior_door"),
+            OpeningInput(width_m=0.8, opening_type="normal_door", quote_category="bathroom_door"),
+        ],
+    )
+    bathroom = SpaceInput(
+        name="公卫",
+        boundary_points_m=[(0, 0), (2, 0), (2, 2), (0, 2)],
+        wall_lengths_m=[2, 2, 2, 2],
+        doors=[OpeningInput(width_m=0.8, opening_type="normal_door", quote_category="bathroom_door")],
     )
 
     living_room_row = calculate_quantity_row(living_room, ProjectDefaults())
     bedroom_row = calculate_quantity_row(bedroom, ProjectDefaults())
+    bathroom_row = calculate_quantity_row(bathroom, ProjectDefaults())
 
     assert living_room_row.interior_door_count == 0
     assert bedroom_row.interior_door_count == 1
+    assert bedroom_row.bathroom_door_count == 0
+    assert bathroom_row.interior_door_count == 0
+    assert bathroom_row.bathroom_door_count == 1
+
+
+def test_kitchen_sliding_door_area_and_casing_length_use_default_door_height():
+    kitchen = SpaceInput(
+        name="厨房",
+        boundary_points_m=[(0, 0), (3, 0), (3, 3), (0, 3)],
+        wall_lengths_m=[3, 3, 3, 3],
+        doors=[OpeningInput(width_m=1.6, opening_type="normal_door", quote_category="sliding_door")],
+    )
+
+    row = calculate_quantity_row(kitchen, ProjectDefaults())
+
+    assert row.sliding_door_area_m2 == 3.36
+    assert row.sliding_door_casing_length_m == 5.8
 
 
 def test_height_priority_space_then_floor_then_project():

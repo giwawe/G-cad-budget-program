@@ -148,10 +148,11 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 
 - 普通门默认不扣墙面。
 - 室内门报价不要求设计师额外分图层，系统会自动判断门类型：块名或图层名含 `入户`、`进户`、`防盗`、`entry` 判为入户门；含 `推拉`、`移门`、`sliding` 判为推拉门；无关键词且门宽 `>=1.4m` 判为推拉门；剩余普通门判为室内门。
-- 只有判为室内门且 `opening_type=normal_door` 的门洞会生成 `interior_door_count`，且只在厨房、卫生间、卧室、书房、衣帽间、储物间、洗衣房等房间侧计数；客厅、餐厅、过道、门厅等公共空间不承接室内门数量，避免同一门洞在客厅和房间重复报价。默认报价规则“室内门”按樘数生成金额。
+- 只有判为室内门且 `opening_type=normal_door` 的门洞会生成 `interior_door_count`，且只在厨房、卧室、书房、衣帽间、储物间、洗衣房等房间侧计数；客厅、餐厅、过道、门厅等公共空间不承接室内门数量，避免同一门洞在客厅和房间重复报价。通往卫生间的门自动归为 `bathroom_door`，在卫生间侧生成 `bathroom_door_count`，不计入室内门。默认报价规则“室内门”按樘数生成金额。
 - 大洞口门可按规则扣减。
 - 疑似大洞口会标记 review_required，并在异常里提示人工确认。
 - 入户门、推拉门、大洞口和疑似大洞口不计入 `interior_door_count`；跨空间门洞若重复归属，需要在校准 JSON 中人工修正。
+- 厨房推拉门：厨房空间中 `quote_category=sliding_door` 的门洞生成 `sliding_door_area_m2 = 门宽 * 门高` 和 `sliding_door_casing_length_m = 门宽 + 2 * 门高`；当前默认门高 `2.1m`，可通过校准模板修正。
 
 墙砖与防水规则：
 
@@ -210,6 +211,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 砌120厚砖墙：按 `newWallAreaM2` 全屋汇总，画了 `QUOTE_NEW_WALL` 时生成。
 - 拆改及拆墙：按 `demolitionWallAreaM2` 全屋汇总，画了 `QUOTE_DEMO_WALL` 时生成。
 - 室内门：按 `interiorDoorCount`，普通 `QUOTE_DOOR` 门洞生成。
+- 卫生间门、厨房推拉门面积、厨房推拉门门套长度已进入工程量表、校准模板和可导入报价规则 metric；默认报价规则暂不配置单价，后续可通过报价规则 JSON 接入金额。
 - 橱柜地柜：按 `kitchenBaseCabinetLengthM`，厨房画了 `QUOTE_BASE_CABINET` 时生成。
 - 橱柜吊柜：按 `kitchenWallCabinetLengthM`，厨房画了 `QUOTE_WALL_CABINET` 时生成。
 - 全屋定制：按 `customCabinetAreaM2`，非厨房空间画了 `QUOTE_CUSTOM` 时生成；高度低于 1m 的低柜按长度米并入同一数量。
@@ -222,7 +224,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 报价规则 JSON 是数组格式，字段为：
 
 - `item_name`：清单项名称。
-- `metric`：取数指标，当前只允许 `latex_paint_area_m2`、`floor_area_m2`、`floor_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`lighting_package_count`、`ceiling_area_m2`、`wall_tile_area_m2`、`waterproof_area_m2`、`windowsill_length_m`、`new_wall_area_m2`、`demolition_wall_area_m2`、`interior_door_count`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`custom_cabinet_area_m2`、`toilet_count`、`bathroom_vanity_count`、`curtain_wall_width_m`。
+- `metric`：取数指标，当前只允许 `latex_paint_area_m2`、`floor_area_m2`、`floor_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`lighting_package_count`、`ceiling_area_m2`、`wall_tile_area_m2`、`waterproof_area_m2`、`windowsill_length_m`、`new_wall_area_m2`、`demolition_wall_area_m2`、`interior_door_count`、`bathroom_door_count`、`sliding_door_area_m2`、`sliding_door_casing_length_m`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`custom_cabinet_area_m2`、`toilet_count`、`bathroom_vanity_count`、`curtain_wall_width_m`。
 - `unit`：单位。
 - `unit_price`：单价，必须是非负数字。
 - `space_types`：可选，空间类型白名单；填写后只对这些空间类型生成清单项。

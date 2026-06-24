@@ -7,6 +7,7 @@ from tempfile import NamedTemporaryFile
 import ezdxf
 
 from server.app.models import OpeningInput, ProjectDefaults, SpaceInput
+from server.app.quantity.classification import classify_space_type
 from server.app.quantity.geometry import contains_point, line_length
 
 QUOTE_LAYERS = {
@@ -192,7 +193,11 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
     spaces: list[SpaceInput] = []
     drawing_spaces: list[DrawingSpace] = []
     grouped_window_opening_inputs = _group_openings(window_openings)
-    named_rooms: list[tuple[str, list[Point]]] = []
+    named_rooms: list[tuple[str, list[Point]]] = [
+        (name, room)
+        for room in rooms
+        if (name := _name_for_room(room, texts))
+    ]
     measured_tile_walls: list[tuple[Point, Point]] = []
     measured_new_walls: list[tuple[Point, Point]] = []
     measured_demolition_walls: list[tuple[Point, Point]] = []
@@ -201,11 +206,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
     measured_custom_cabinets: list[tuple[Point, Point]] = []
     measured_toilets: list[Point] = []
     measured_bathroom_vanities: list[Point] = []
-    for room in rooms:
-        name = _name_for_room(room, texts)
-        if not name:
-            continue
-        named_rooms.append((name, room))
+    for name, room in named_rooms:
         room_walls = [(start, end) for start, end in walls if _segment_in_room(room, start, end)]
         room_tile_walls = [(start, end) for start, end in wall_tile_segments if _segment_in_room(room, start, end)]
         room_new_walls = [(start, end) for start, end in new_wall_segments if _segment_in_room(room, start, end)]
@@ -251,7 +252,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
                     for opening in room_windows
                 ],
                 doors=[
-                    _door_input_for_opening(opening)
+                    _door_input_for_opening(opening, [room_name for room_name, candidate_room in named_rooms if _opening_associated_with_room(candidate_room, opening.segments[0][0], opening.segments[0][1])])
                     for opening in door_opening_inputs
                     if _opening_associated_with_room(room, opening.segments[0][0], opening.segments[0][1])
                 ],
@@ -640,7 +641,11 @@ def _door_quote_category_from_entity(entity) -> str | None:
     return None
 
 
-def _resolve_door_quote_category(width_m: float, opening_type: str, quote_category: str | None) -> str | None:
+def _resolve_door_quote_category(width_m: float, opening_type: str, quote_category: str | None, space_names: list[str] | None = None) -> str | None:
+    if space_names and any(classify_space_type(space_name) == "卫生间" for space_name in space_names):
+        if quote_category in {"entry_door", "sliding_door"}:
+            return quote_category
+        return "bathroom_door"
     if quote_category:
         return quote_category
     if width_m >= 1.4:
@@ -650,7 +655,7 @@ def _resolve_door_quote_category(width_m: float, opening_type: str, quote_catego
     return "interior_door"
 
 
-def _door_input_for_opening(opening: DrawingOpening) -> OpeningInput:
+def _door_input_for_opening(opening: DrawingOpening, space_names: list[str]) -> OpeningInput:
     start, end = opening.segments[0]
     width_m = round(line_length(start, end), 2)
     opening_type, deduct_from_wall, review_required = _classify_door(width_m)
@@ -659,7 +664,7 @@ def _door_input_for_opening(opening: DrawingOpening) -> OpeningInput:
         deduct_from_wall=deduct_from_wall,
         review_required=review_required,
         opening_type=opening_type,
-        quote_category=_resolve_door_quote_category(width_m, opening_type, opening.quote_category),
+        quote_category=_resolve_door_quote_category(width_m, opening_type, opening.quote_category, space_names),
     )
 
 
@@ -679,6 +684,7 @@ def _drawing_door_for_opening(opening: DrawingOpening, named_rooms: list[tuple[s
     segment = opening.segments[0]
     width_m = round(line_length(segment[0], segment[1]), 2)
     opening_type, deduct_from_wall, review_required = _classify_door(width_m)
+    space_names = [name for name, room in named_rooms if _opening_associated_with_room(room, segment[0], segment[1])]
     return DrawingDoor(
         segment=segment,
         thickness_m=_connected_wall_thickness(segment, walls) or _opening_thickness(opening),
@@ -686,8 +692,8 @@ def _drawing_door_for_opening(opening: DrawingOpening, named_rooms: list[tuple[s
         deduct_from_wall=deduct_from_wall,
         review_required=review_required,
         opening_type=opening_type,
-        quote_category=_resolve_door_quote_category(width_m, opening_type, opening.quote_category),
-        space_names=[name for name, room in named_rooms if _opening_associated_with_room(room, segment[0], segment[1])],
+        quote_category=_resolve_door_quote_category(width_m, opening_type, opening.quote_category, space_names),
+        space_names=space_names,
     )
 
 
