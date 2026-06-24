@@ -549,6 +549,15 @@ code {
   vector-effect: non-scaling-stroke;
 }
 
+.svgTileWall {
+  stroke: #14b8a6;
+  stroke-dasharray: 0.18 0.12;
+  stroke-linecap: round;
+  stroke-width: 0.5;
+  opacity: 1;
+  vector-effect: non-scaling-stroke;
+}
+
 .svgSpace {
   fill-opacity: 0.18;
   stroke-width: 0.09;

@@ -95,6 +95,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 
 - `QUOTE_ROOM`：空间闭合边界，用于地面/顶面面积和空间归属。
 - `QUOTE_WALL`：真实可施工墙面线，用于墙面计量长度。
+- `QUOTE_WALL_TILE`：阳台、露台、洗衣房等实际贴砖墙面线，用于标记贴砖墙长。
 - `QUOTE_WINDOW`：窗洞宽度标记，默认参与墙面扣减。
 - `QUOTE_DOOR`：门洞宽度标记，普通门默认不扣墙面。
 - `QUOTE_TEXT`：空间名称文字；`QUOTE_FLOOR`、`QUOTE_HEIGHT` 当前只读取文字，能力仍有限。
@@ -139,9 +140,10 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 
 - 厨房、卫生间自动计算 `wall_tile_area_m2`，墙砖高度固定按 `2.5m`，不使用项目默认层高 `2.8m`。
 - 墙砖面积公式：`max(墙面计量长度 * 2.5 - 窗洞面积 - 所有门洞宽度 * 默认门高, 0)`；普通门在墙砖中也扣除。
+- 阳台、露台、洗衣房只有画了 `QUOTE_WALL_TILE` 时自动计算墙砖；公式为 `贴砖墙长 * 空间实际层高`，当前不单独扣除未匹配贴砖墙的门窗洞。
 - 厨房、卫生间、阳台、露台、洗衣房自动计算 `waterproof_area_m2`。
 - 防水面积公式：`地面面积 + 墙面计量长度 * 防水高度`；卫生间防水高度 `1.8m`，其它湿区 `0.3m`。
-- 阳台、露台、洗衣房墙砖当前不自动计价，未来需要贴砖墙面标记或图层，若有贴砖墙面再按实际层高计算。
+- 工程量表显示 `wall_tile_measure_length_m`，校准模板也会导出 `wall_tile_measure_length_m` 和 `wall_tile_area_m2`。
 - 窗台石当前自动计算 `windowsill_length_m`，v1 直接等于 `window_width_total_m`，用于窗台石铺贴报价。
 - 窗帘和窗帘箱不能按窗洞宽度计量，应按窗户所在墙面的整面墙宽度；厨房、卫生间、过道等空间默认不做窗帘/窗帘箱。
 - `curtain_wall_width_m` 是窗帘墙宽候选取数：客厅、卧室、书房有窗时优先按窗洞中心线匹配邻近且平行的 `QUOTE_WALL`，取窗户所在墙面的整面墙宽；匹配不到时回退到该空间最长一段 `QUOTE_WALL`；其它空间为 `0`。L 形/转角窗帘和窗帘箱长度不自动计算，候选值为 `0` 并要求人工确认。`curtain_wall_width_source` 标记来源：`matched_window_wall`、`fallback_longest_wall`、`manual_required_l_shape_window`、`not_applicable` 或前端人工编辑后的 `manual`。前端工程量表可人工校准并随校对快照保存/恢复；只有来源为 `manual` 且长度大于 0 时，暗窗帘箱才进入报价规则和金额汇总。
@@ -190,7 +192,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 
 当前商品房报价表已整理出一份可导入规则：`quote-rules-apartment-current.json`。它基于商品房报价表的 `整装` 工作表，只包含当前系统能准确承接的面积类项目；`半包` 工作表不读取、不展示、不保留为规则来源。
 
-商品房整装待补取数口径记录在 `apartmentPendingQuoteMetrics()`，只用于页面展示和后续扩展，不混入可导入规则 JSON，也不参与金额汇总。当前重点包括阳台/露台/洗衣房墙砖、水电、拆改、门、洁具、定制、主材、套装项等。
+商品房整装待补取数口径记录在 `apartmentPendingQuoteMetrics()`，只用于页面展示和后续扩展，不混入可导入规则 JSON，也不参与金额汇总。当前重点包括水电、拆改、门、洁具、定制、主材、套装项等。
 
 ## 测试与 fixture
 

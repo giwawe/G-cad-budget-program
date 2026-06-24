@@ -3,6 +3,7 @@ from pathlib import Path
 from server.app.dxf import parser
 from server.app.models import ProjectDefaults
 from server.tests.dxf_fixtures import (
+    build_balcony_wall_tile_dxf,
     build_closed_window_polyline_dxf,
     build_closed_door_polyline_dxf,
     build_insert_door_dxf,
@@ -88,6 +89,14 @@ def test_l_shaped_window_requires_manual_curtain_wall_width():
     assert review.spaces[0].curtain_wall_width_candidate_m == 0
     assert review.spaces[0].curtain_wall_width_source == "manual_required_l_shape_window"
     assert any("L形窗" in anomaly for anomaly in review.spaces[0].anomalies)
+
+
+def test_quote_wall_tile_segments_are_assigned_to_space():
+    review = parser.parse_dxf_review(build_balcony_wall_tile_dxf(), ProjectDefaults())
+
+    assert review.spaces[0].name == "一层-阳台"
+    assert review.spaces[0].wall_tile_lengths_m == [3.0, 2.0]
+    assert review.drawing.tile_walls == [((0.0, 0.0), (3.0, 0.0)), ((3.0, 0.0), (3.0, 2.0))]
 
 
 def test_quote_door_insert_is_recognized_as_one_door_opening():

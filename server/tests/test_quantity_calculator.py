@@ -88,6 +88,39 @@ def test_balcony_has_waterproof_but_no_automatic_wall_tile():
     assert row.waterproof_area_m2 == 9
 
 
+def test_balcony_wall_tile_uses_marked_tile_wall_lengths_and_actual_height():
+    space = SpaceInput(
+        floor="一层",
+        name="一层-阳台",
+        boundary_points_m=[(0, 0), (3, 0), (3, 2), (0, 2)],
+        wall_lengths_m=[3, 2, 3, 2],
+        wall_tile_lengths_m=[3, 2],
+        height_m=2.8,
+    )
+
+    row = calculate_quantity_row(space, ProjectDefaults())
+
+    assert row.wall_tile_measure_length_m == 5
+    assert row.wall_tile_area_m2 == 14
+    assert row.waterproof_area_m2 == 9
+
+
+def test_kitchen_wall_tile_ignores_marked_tile_wall_lengths_and_uses_default_tile_height():
+    space = SpaceInput(
+        floor="一层",
+        name="一层-厨房",
+        boundary_points_m=[(0, 0), (3, 0), (3, 2), (0, 2)],
+        wall_lengths_m=[3, 2, 3, 2],
+        wall_tile_lengths_m=[3],
+        height_m=2.8,
+    )
+
+    row = calculate_quantity_row(space, ProjectDefaults())
+
+    assert row.wall_tile_measure_length_m == 10
+    assert row.wall_tile_area_m2 == 25
+
+
 def test_curtain_wall_width_uses_longest_wall_for_supported_windowed_spaces():
     space = SpaceInput(
         floor="一层",

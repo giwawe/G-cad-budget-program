@@ -80,7 +80,7 @@ export const DEFAULT_QUOTE_RULES_NAME = "商品房整装默认规则";
 const DRY_SPACE_TYPES = ["客厅", "餐厅", "卧室", "书房", "过道", "门厅", "楼梯过道", "衣帽间", "储物间", "露台"];
 const CEILING_SPACE_TYPES = ["客厅", "餐厅", "卧室", "书房", "过道", "门厅", "楼梯过道", "衣帽间", "储物间"];
 const WET_FLOOR_SPACE_TYPES = ["厨房", "卫生间", "阳台", "露台", "洗衣房"];
-const WALL_TILE_SPACE_TYPES = ["厨房", "卫生间"];
+const WALL_TILE_SPACE_TYPES = ["厨房", "卫生间", "阳台", "露台", "洗衣房"];
 const CURTAIN_SPACE_TYPES = ["客厅", "卧室", "书房"];
 
 const DEFAULT_RULES: QuoteRule[] = [
@@ -99,14 +99,6 @@ const DEFAULT_RULES: QuoteRule[] = [
 ];
 
 const APARTMENT_PENDING_METRICS: PendingQuoteMetric[] = [
-  {
-    item_name: "阳台/露台/洗衣房墙砖",
-    unit: "m2",
-    unit_price: 0,
-    reason: "这些空间不是所有墙面都贴砖，需要未来增加贴砖墙面标记或图层；若标记为贴砖墙面，再按实际层高计算。",
-    suggested_metric: "wall_tile_marked_area_m2",
-    source_group: "墙砖",
-  },
   {
     item_name: "强电布线",
     unit: "M2",

@@ -12,6 +12,7 @@ from server.app.quantity.geometry import contains_point, line_length
 QUOTE_LAYERS = {
     "QUOTE_ROOM",
     "QUOTE_WALL",
+    "QUOTE_WALL_TILE",
     "QUOTE_OPENING",
     "QUOTE_WINDOW",
     "QUOTE_DOOR",
@@ -82,6 +83,7 @@ class DrawingGeometry:
     spaces: list[DrawingSpace]
     walls: list[tuple[Point, Point]]
     measured_walls: list[tuple[Point, Point]]
+    tile_walls: list[tuple[Point, Point]]
     window_openings: list[DrawingWindow]
     windows: list[tuple[Point, Point]]
     door_openings: list[DrawingDoor]
@@ -111,6 +113,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
 
     rooms: list[list[Point]] = []
     walls: list[tuple[Point, Point]] = []
+    wall_tile_segments: list[tuple[Point, Point]] = []
     window_openings: list[DrawingOpening] = []
     windows: list[tuple[Point, Point]] = []
     door_opening_inputs: list[DrawingOpening] = []
@@ -125,6 +128,8 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
                 rooms.append(points)
         elif layer == "QUOTE_WALL":
             walls.extend(_entity_segments(entity, defaults.unit_scale_to_m))
+        elif layer == "QUOTE_WALL_TILE":
+            wall_tile_segments.extend(_entity_segments(entity, defaults.unit_scale_to_m))
         elif layer == "QUOTE_WINDOW":
             window_segments = _entity_segments(entity, defaults.unit_scale_to_m)
             if window_segments:
@@ -142,16 +147,19 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
     drawing_spaces: list[DrawingSpace] = []
     grouped_window_opening_inputs = _group_openings(window_openings)
     named_rooms: list[tuple[str, list[Point]]] = []
+    measured_tile_walls: list[tuple[Point, Point]] = []
     for room in rooms:
         name = _name_for_room(room, texts)
         if not name:
             continue
         named_rooms.append((name, room))
         room_walls = [(start, end) for start, end in walls if _segment_in_room(room, start, end)]
+        room_tile_walls = [(start, end) for start, end in wall_tile_segments if _segment_in_room(room, start, end)]
         room_windows = [opening for opening in grouped_window_opening_inputs if _opening_associated_with_room(room, *_opening_centerline(opening))]
         has_l_shaped_window = any(_opening_is_l_shaped_window(opening) for opening in room_windows)
         curtain_wall_width_candidate_m = 0 if has_l_shaped_window else _curtain_wall_width_candidate(room_walls, room_windows)
         measured_walls.extend(room_walls)
+        measured_tile_walls.extend(room_tile_walls)
         drawing_spaces.append(DrawingSpace(name=name, points=room))
         spaces.append(
             SpaceInput(
@@ -159,6 +167,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
                 name=name,
                 boundary_points_m=room,
                 wall_lengths_m=[round(line_length(start, end), 2) for start, end in room_walls],
+                wall_tile_lengths_m=[round(line_length(start, end), 2) for start, end in room_tile_walls],
                 curtain_wall_width_candidate_m=curtain_wall_width_candidate_m,
                 curtain_wall_width_source=_curtain_wall_width_source(curtain_wall_width_candidate_m, has_l_shaped_window),
                 windows=[
@@ -184,6 +193,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         spaces=drawing_spaces,
         walls=walls,
         measured_walls=measured_walls,
+        tile_walls=measured_tile_walls,
         window_openings=grouped_window_openings,
         windows=windows,
         door_openings=door_openings,

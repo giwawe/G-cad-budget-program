@@ -18,6 +18,7 @@ export type QuantityRow = {
   doorDeductAreaM2: number;
   wallGrossAreaM2: number;
   latexPaintAreaM2: number;
+  wallTileMeasureLengthM: number;
   wallTileAreaM2: number;
   waterproofAreaM2: number;
   evidence: string;
@@ -72,6 +73,7 @@ export type DrawingGeometry = {
   spaces: DrawingSpace[];
   walls: DrawingSegment[];
   measured_walls: DrawingSegment[];
+  tile_walls: DrawingSegment[];
   window_openings: DrawingWindow[];
   windows: DrawingSegment[];
   door_openings: DrawingDoor[];

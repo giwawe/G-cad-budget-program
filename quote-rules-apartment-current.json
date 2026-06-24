@@ -59,7 +59,7 @@
     "metric": "wall_tile_area_m2",
     "unit": "m2",
     "unit_price": 100,
-    "space_types": ["厨房", "卫生间"]
+    "space_types": ["厨房", "卫生间", "阳台", "露台", "洗衣房"]
   },
   {
     "item_name": "墙地面防漏处理",

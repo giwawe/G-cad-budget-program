@@ -43,6 +43,7 @@ type ApiQuantityRow = {
   door_deduct_area_m2: number;
   wall_gross_area_m2: number;
   latex_paint_area_m2: number;
+  wall_tile_measure_length_m: number;
   wall_tile_area_m2: number;
   waterproof_area_m2: number;
   evidence: string;
@@ -94,6 +95,7 @@ function toQuantityRow(row: ApiQuantityRow): QuantityRow {
     doorDeductAreaM2: row.door_deduct_area_m2,
     wallGrossAreaM2: row.wall_gross_area_m2,
     latexPaintAreaM2: row.latex_paint_area_m2,
+    wallTileMeasureLengthM: row.wall_tile_measure_length_m ?? 0,
     wallTileAreaM2: row.wall_tile_area_m2,
     waterproofAreaM2: row.waterproof_area_m2,
     evidence: row.evidence,
@@ -117,10 +119,24 @@ function round2(value: number) {
 }
 
 function calculateWallTileArea(row: QuantityRow, windowAreaM2 = row.windowAreaM2, doorWidthTotalM = row.doorWidthTotalM) {
-  if (row.spaceType !== "厨房" && row.spaceType !== "卫生间") {
-    return 0;
+  if (row.spaceType === "厨房" || row.spaceType === "卫生间") {
+    return round2(Math.max(row.wallMeasureLengthM * 2.5 - windowAreaM2 - doorWidthTotalM * DEFAULT_DOOR_HEIGHT_M, 0));
   }
-  return round2(Math.max(row.wallMeasureLengthM * 2.5 - windowAreaM2 - doorWidthTotalM * DEFAULT_DOOR_HEIGHT_M, 0));
+  if (["阳台", "露台", "洗衣房"].includes(row.spaceType) && row.wallTileMeasureLengthM > 0) {
+    return round2(Math.max(row.wallTileMeasureLengthM * row.heightM, 0));
+  }
+  return 0;
+}
+
+function shouldRecalculateWallTileForOpening(row: QuantityRow) {
+  return row.spaceType === "厨房" || row.spaceType === "卫生间";
+}
+
+function calculateOpeningAdjustedWallTileArea(row: QuantityRow, windowAreaM2 = row.windowAreaM2, doorWidthTotalM = row.doorWidthTotalM) {
+  if (!shouldRecalculateWallTileForOpening(row)) {
+    return row.wallTileAreaM2;
+  }
+  return calculateWallTileArea(row, windowAreaM2, doorWidthTotalM);
 }
 
 export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] }) {
@@ -442,7 +458,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
       }
       const doorDeductAreaM2 = round2(Math.max(row.doorDeductAreaM2 + delta, 0));
       const latexPaintAreaM2 = round2(Math.max(row.latexPaintAreaM2 - delta, 0));
-      const wallTileAreaM2 = calculateWallTileArea(row, row.windowAreaM2, row.doorWidthTotalM);
+      const wallTileAreaM2 = calculateOpeningAdjustedWallTileArea(row, row.windowAreaM2, row.doorWidthTotalM);
       return {
         ...row,
         doorDeductAreaM2,
@@ -508,7 +524,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
       }
       const windowAreaM2 = round2(Math.max(row.windowAreaM2 + delta, 0));
       const latexPaintAreaM2 = round2(Math.max(row.latexPaintAreaM2 - delta, 0));
-      const wallTileAreaM2 = calculateWallTileArea(row, windowAreaM2);
+      const wallTileAreaM2 = calculateOpeningAdjustedWallTileArea(row, windowAreaM2);
       return {
         ...row,
         windowAreaM2,

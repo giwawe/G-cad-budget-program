@@ -9,6 +9,8 @@ DEFAULT_NUMERIC_FIELDS = [
     "door_deduct_area_m2",
     "wall_gross_area_m2",
     "latex_paint_area_m2",
+    "wall_tile_measure_length_m",
+    "wall_tile_area_m2",
 ]
 
 

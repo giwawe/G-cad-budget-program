@@ -142,6 +142,7 @@ export function DrawingReview({
   const [dragStart, setDragStart] = useState<{ pointer: DrawingPoint; center: DrawingPoint } | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [showMeasuredWalls, setShowMeasuredWalls] = useState(true);
+  const [showTileWalls, setShowTileWalls] = useState(true);
   const [showWindows, setShowWindows] = useState(true);
   const [showDoors, setShowDoors] = useState(true);
   const [selectedWindowIndex, setSelectedWindowIndex] = useState<number | null>(null);
@@ -269,6 +270,7 @@ export function DrawingReview({
         <button type="button" onClick={resetView}>适应窗口</button>
         <span>{Math.round(zoom * 100)}%</span>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showMeasuredWalls} onChange={(event) => setShowMeasuredWalls(event.target.checked)} />计入墙线 {drawing.measured_walls.length}</label>
+        <label className="drawingLayerToggle"><input type="checkbox" checked={showTileWalls} onChange={(event) => setShowTileWalls(event.target.checked)} />贴砖墙 {drawing.tile_walls.length}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showWindows} onChange={(event) => setShowWindows(event.target.checked)} />窗 {drawing.window_openings.length}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showDoors} onChange={(event) => setShowDoors(event.target.checked)} />门 {drawing.door_openings.length}</label>
         {selectedWindow && (
@@ -290,6 +292,7 @@ export function DrawingReview({
             {drawing.walls.map((wall, index) => <line key={`wall-${index}`} className="svgWall" x1={wall.start.x} y1={wall.start.y} x2={wall.end.x} y2={wall.end.y} />)}
             {drawing.spaces.map((space, index) => <polygon key={space.name} points={pointList(space.points)} className="svgSpace" style={{ fill: palette[index % palette.length], stroke: palette[index % palette.length] }} />)}
             {showMeasuredWalls && drawing.measured_walls.map((wall, index) => <line key={`measured-wall-${index}`} className="svgMeasuredWall" x1={wall.start.x} y1={wall.start.y} x2={wall.end.x} y2={wall.end.y} />)}
+            {showTileWalls && drawing.tile_walls.map((wall, index) => <line key={`tile-wall-${index}`} className="svgTileWall" x1={wall.start.x} y1={wall.start.y} x2={wall.end.x} y2={wall.end.y} />)}
             {showWindows && drawing.window_openings.map((window, index) => (
               <g
                 key={`window-${index}`}

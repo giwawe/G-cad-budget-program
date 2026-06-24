@@ -2,7 +2,8 @@ from server.app.models import ProjectDefaults, QuantityRow, ReviewStatus, SpaceI
 from server.app.quantity.classification import classify_space_type, is_excluded_space
 from server.app.quantity.geometry import polygon_area
 
-WALL_TILE_SPACE_TYPES = {"厨房", "卫生间"}
+FULL_WALL_TILE_SPACE_TYPES = {"厨房", "卫生间"}
+MARKED_WALL_TILE_SPACE_TYPES = {"阳台", "露台", "洗衣房"}
 WATERPROOF_SPACE_TYPES = {"厨房", "卫生间", "阳台", "露台", "洗衣房"}
 CURTAIN_CANDIDATE_SPACE_TYPES = {"客厅", "卧室", "书房"}
 WALL_TILE_HEIGHT_M = 2.5
@@ -46,7 +47,15 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
     door_area_for_wall_tile_m2 = round(sum(door.width_m * (door.height_m or defaults.default_door_height_m) for door in space.doors), 2)
     wall_gross_area_m2 = round(wall_measure_length_m * height_m, 2)
     latex_paint_area_m2 = round(max(wall_gross_area_m2 - window_area_m2 - door_deduct_area_m2, 0), 2)
-    wall_tile_area_m2 = calculate_wall_tile_area_m2(space_type, wall_measure_length_m, window_area_m2, door_area_for_wall_tile_m2)
+    wall_tile_measure_length_m = calculate_wall_tile_measure_length_m(space_type, wall_measure_length_m, space.wall_tile_lengths_m)
+    wall_tile_area_m2 = calculate_wall_tile_area_m2(
+        space_type,
+        wall_measure_length_m,
+        wall_tile_measure_length_m,
+        height_m,
+        window_area_m2,
+        door_area_for_wall_tile_m2,
+    )
     waterproof_area_m2 = calculate_waterproof_area_m2(space_type, floor_area_m2, wall_measure_length_m, height_m)
 
     anomalies = list(space.anomalies)
@@ -89,6 +98,7 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
         door_deduct_area_m2=door_deduct_area_m2,
         wall_gross_area_m2=wall_gross_area_m2,
         latex_paint_area_m2=latex_paint_area_m2,
+        wall_tile_measure_length_m=wall_tile_measure_length_m,
         wall_tile_area_m2=wall_tile_area_m2,
         waterproof_area_m2=waterproof_area_m2,
         evidence=evidence,
@@ -97,10 +107,27 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
     )
 
 
-def calculate_wall_tile_area_m2(space_type: str, wall_measure_length_m: float, window_area_m2: float, door_area_m2: float) -> float:
-    if space_type not in WALL_TILE_SPACE_TYPES:
-        return 0
-    return round(max(wall_measure_length_m * WALL_TILE_HEIGHT_M - window_area_m2 - door_area_m2, 0), 2)
+def calculate_wall_tile_measure_length_m(space_type: str, wall_measure_length_m: float, wall_tile_lengths_m: list[float]) -> float:
+    if space_type in FULL_WALL_TILE_SPACE_TYPES:
+        return wall_measure_length_m
+    if space_type in MARKED_WALL_TILE_SPACE_TYPES:
+        return round(sum(wall_tile_lengths_m), 2)
+    return 0
+
+
+def calculate_wall_tile_area_m2(
+    space_type: str,
+    wall_measure_length_m: float,
+    wall_tile_measure_length_m: float,
+    height_m: float,
+    window_area_m2: float,
+    door_area_m2: float,
+) -> float:
+    if space_type in FULL_WALL_TILE_SPACE_TYPES:
+        return round(max(wall_measure_length_m * WALL_TILE_HEIGHT_M - window_area_m2 - door_area_m2, 0), 2)
+    if space_type in MARKED_WALL_TILE_SPACE_TYPES and wall_tile_measure_length_m > 0:
+        return round(max(wall_tile_measure_length_m * height_m, 0), 2)
+    return 0
 
 
 def calculate_curtain_wall_width_m(

@@ -14,6 +14,8 @@ export type CalibrationTemplateRow = {
   door_deduct_area_m2: number;
   wall_gross_area_m2: number;
   latex_paint_area_m2: number;
+  wall_tile_measure_length_m: number;
+  wall_tile_area_m2: number;
   status: QuantityRow["status"];
   anomalies: string[];
 };
@@ -33,6 +35,8 @@ export function quantityRowsToCalibrationTemplate(rows: QuantityRow[]): Calibrat
     door_deduct_area_m2: row.doorDeductAreaM2,
     wall_gross_area_m2: row.wallGrossAreaM2,
     latex_paint_area_m2: row.latexPaintAreaM2,
+    wall_tile_measure_length_m: row.wallTileMeasureLengthM,
+    wall_tile_area_m2: row.wallTileAreaM2,
     status: row.status,
     anomalies: row.anomalies,
   }));

@@ -60,3 +60,12 @@ def test_compare_quantity_rows_passes_within_tolerance_and_flags_missing_spaces(
     assert result["missing_spaces"] == ["阳台"]
     assert result["unexpected_spaces"] == []
     assert result["differences"] == []
+
+
+def test_compare_quantity_rows_reports_wall_tile_differences_by_default():
+    actual_rows = [{"space_name": "阳台", "wall_tile_measure_length_m": 5, "wall_tile_area_m2": 14}]
+    expected_rows = [{"space_name": "阳台", "wall_tile_measure_length_m": 4, "wall_tile_area_m2": 11.2}]
+
+    result = compare_quantity_rows(actual_rows, expected_rows)
+
+    assert [difference["field"] for difference in result["differences"]] == ["wall_tile_measure_length_m", "wall_tile_area_m2"]

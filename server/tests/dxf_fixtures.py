@@ -68,6 +68,23 @@ def build_l_shaped_window_dxf() -> bytes:
     return _save_doc(doc)
 
 
+def build_balcony_wall_tile_dxf() -> bytes:
+    doc = ezdxf.new("R2010")
+    msp = doc.modelspace()
+    for layer in ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_WALL_TILE", "QUOTE_TEXT"]:
+        doc.layers.add(layer)
+    msp.add_lwpolyline([(0, 0), (3000, 0), (3000, 2000), (0, 2000), (0, 0)], dxfattribs={"layer": "QUOTE_ROOM"})
+    msp.add_line((0, 0), (3000, 0), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((3000, 0), (3000, 2000), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((0, 2000), (3000, 2000), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((0, 0), (0, 2000), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((0, 0), (3000, 0), dxfattribs={"layer": "QUOTE_WALL_TILE"})
+    msp.add_line((3000, 0), (3000, 2000), dxfattribs={"layer": "QUOTE_WALL_TILE"})
+    msp.add_line((5000, 0), (6000, 0), dxfattribs={"layer": "QUOTE_WALL_TILE"})
+    msp.add_text("一层-阳台", dxfattribs={"layer": "QUOTE_TEXT", "insert": (1500, 1000)})
+    return _save_doc(doc)
+
+
 def build_insert_door_dxf() -> bytes:
     doc = ezdxf.new("R2010")
     msp = doc.modelspace()
