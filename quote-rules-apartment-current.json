@@ -125,6 +125,12 @@
     "space_types": ["厨房"]
   },
   {
+    "item_name": "全屋定制",
+    "metric": "custom_cabinet_area_m2",
+    "unit": "M2",
+    "unit_price": 600
+  },
+  {
     "item_name": "马桶",
     "metric": "toilet_count",
     "unit": "个",

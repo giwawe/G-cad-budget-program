@@ -38,6 +38,7 @@ class SpaceInput:
     demolition_wall_lengths_m: list[float] = field(default_factory=list)
     base_cabinet_lengths_m: list[float] = field(default_factory=list)
     wall_cabinet_lengths_m: list[float] = field(default_factory=list)
+    custom_cabinet_lengths_m: list[float] = field(default_factory=list)
     toilet_count: int = 0
     bathroom_vanity_count: int = 0
     curtain_wall_width_candidate_m: float = 0
@@ -79,6 +80,7 @@ class QuantityRow:
     interior_door_count: int
     kitchen_base_cabinet_length_m: float
     kitchen_wall_cabinet_length_m: float
+    custom_cabinet_area_m2: float
     toilet_count: int
     bathroom_vanity_count: int
     waterproof_area_m2: float

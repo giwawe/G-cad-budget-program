@@ -55,6 +55,7 @@ type ApiQuantityRow = {
   interior_door_count: number;
   kitchen_base_cabinet_length_m: number;
   kitchen_wall_cabinet_length_m: number;
+  custom_cabinet_area_m2: number;
   toilet_count: number;
   bathroom_vanity_count: number;
   waterproof_area_m2: number;
@@ -119,6 +120,7 @@ function toQuantityRow(row: ApiQuantityRow): QuantityRow {
     interiorDoorCount: row.interior_door_count ?? 0,
     kitchenBaseCabinetLengthM: row.kitchen_base_cabinet_length_m ?? 0,
     kitchenWallCabinetLengthM: row.kitchen_wall_cabinet_length_m ?? 0,
+    customCabinetAreaM2: row.custom_cabinet_area_m2 ?? 0,
     toiletCount: row.toilet_count ?? 0,
     bathroomVanityCount: row.bathroom_vanity_count ?? 0,
     waterproofAreaM2: row.waterproof_area_m2,
@@ -636,7 +638,9 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
           {error && <small className="errorText">{error}</small>}
           {calibrationFileName && <small className="infoText">校准文件：{calibrationFileName}</small>}
           <small className="infoText">报价规则：{quoteRulesFileName}（{quoteRules.length} 项）</small>
-          <small className="infoText">待补取数口径：{pendingQuoteMetrics.length} 项不参与当前金额</small>
+          <small className="infoText">
+            {pendingQuoteMetrics.length > 0 ? `待补取数口径：${pendingQuoteMetrics.length} 项不参与当前金额` : "待补取数口径：已全部接入当前规则"}
+          </small>
         </div>
       </section>
 
@@ -713,7 +717,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
           <div className="quoteGaps">
             <div>
               <strong>待补取数口径</strong>
-              <span>{pendingQuoteMetrics.length} 项暂不参与金额汇总，后续补齐 metric 后再接入。</span>
+              <span>{pendingQuoteMetrics.length > 0 ? `${pendingQuoteMetrics.length} 项暂不参与金额汇总，后续补齐 metric 后再接入。` : "当前默认规则已无待补取数口径。"}</span>
             </div>
             <div className="curtainReadiness">
               <strong>窗帘/窗帘箱可报价候选 {curtainReadiness.ready_count} 个空间</strong>
@@ -724,15 +728,17 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
               <span>待确认：{formatCurtainReadinessSpaces(curtainReadiness.pending_space_names)}</span>
               <span>已导出人工确认候选：{generatedQuoteMapping.mapping.curtain_quote_candidates.length} 项</span>
             </div>
-            <ul>
-              {pendingQuoteMetrics.slice(0, 10).map((item) => (
-                <li key={`${item.source_group}-${item.item_name}`}>
-                  <span>{item.source_group}</span>
-                  <strong>{item.item_name}</strong>
-                  <code>{item.suggested_metric}</code>
-                </li>
-              ))}
-            </ul>
+            {pendingQuoteMetrics.length > 0 && (
+              <ul>
+                {pendingQuoteMetrics.slice(0, 10).map((item) => (
+                  <li key={`${item.source_group}-${item.item_name}`}>
+                    <span>{item.source_group}</span>
+                    <strong>{item.item_name}</strong>
+                    <code>{item.suggested_metric}</code>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
           <div className="quotePreview">
             <table>
@@ -817,7 +823,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
   );
 }
 
-const layers = ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_WALL_TILE", "QUOTE_NEW_WALL", "QUOTE_DEMO_WALL", "QUOTE_BASE_CABINET", "QUOTE_WALL_CABINET", "QUOTE_TOILET", "QUOTE_BATHROOM_VANITY", "QUOTE_WINDOW", "QUOTE_DOOR", "QUOTE_FLOOR", "QUOTE_HEIGHT"];
+const layers = ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_WALL_TILE", "QUOTE_NEW_WALL", "QUOTE_DEMO_WALL", "QUOTE_BASE_CABINET", "QUOTE_WALL_CABINET", "QUOTE_CUSTOM_CABINET", "QUOTE_TOILET", "QUOTE_BATHROOM_VANITY", "QUOTE_WINDOW", "QUOTE_DOOR", "QUOTE_FLOOR", "QUOTE_HEIGHT"];
 
 const statusLabels: Record<ReviewStatus, string> = {
   pending_review: "待确认",

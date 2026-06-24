@@ -21,6 +21,7 @@ DEFAULT_NUMERIC_FIELDS = [
     "interior_door_count",
     "kitchen_base_cabinet_length_m",
     "kitchen_wall_cabinet_length_m",
+    "custom_cabinet_area_m2",
     "toilet_count",
     "bathroom_vanity_count",
 ]

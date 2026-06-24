@@ -592,6 +592,14 @@ code {
   vector-effect: non-scaling-stroke;
 }
 
+.svgCustomCabinet {
+  stroke: #14b8a6;
+  stroke-linecap: round;
+  stroke-width: 0.46;
+  opacity: 1;
+  vector-effect: non-scaling-stroke;
+}
+
 .svgToilet {
   fill: #38bdf8;
   stroke: #0f172a;

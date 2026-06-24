@@ -30,6 +30,7 @@ export type QuantityRow = {
   interiorDoorCount: number;
   kitchenBaseCabinetLengthM: number;
   kitchenWallCabinetLengthM: number;
+  customCabinetAreaM2: number;
   toiletCount: number;
   bathroomVanityCount: number;
   waterproofAreaM2: number;
@@ -91,6 +92,7 @@ export type DrawingGeometry = {
   demolition_walls: DrawingSegment[];
   base_cabinets: DrawingSegment[];
   wall_cabinets: DrawingSegment[];
+  custom_cabinets: DrawingSegment[];
   toilets: DrawingPoint[];
   bathroom_vanities: DrawingPoint[];
   window_openings: DrawingWindow[];

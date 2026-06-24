@@ -198,6 +198,30 @@ def test_kitchen_cabinet_lengths_separate_base_and_wall_cabinets_only_for_kitche
     assert bedroom_row.kitchen_wall_cabinet_length_m == 0
 
 
+def test_custom_cabinet_area_uses_marked_lengths_and_default_height_outside_kitchen():
+    defaults = ProjectDefaults()
+    bedroom = SpaceInput(
+        floor="一层",
+        name="一层-卧室",
+        boundary_points_m=[(0, 0), (3.6, 0), (3.6, 3.0), (0, 3.0)],
+        wall_lengths_m=[3.6, 3.0, 3.6, 3.0],
+        custom_cabinet_lengths_m=[3.0],
+    )
+    kitchen = SpaceInput(
+        floor="一层",
+        name="一层-厨房",
+        boundary_points_m=[(0, 0), (3.6, 0), (3.6, 3.0), (0, 3.0)],
+        wall_lengths_m=[3.6, 3.0, 3.6, 3.0],
+        custom_cabinet_lengths_m=[3.0],
+    )
+
+    bedroom_row = calculate_quantity_row(bedroom, defaults)
+    kitchen_row = calculate_quantity_row(kitchen, defaults)
+
+    assert bedroom_row.custom_cabinet_area_m2 == 7.2
+    assert kitchen_row.custom_cabinet_area_m2 == 0
+
+
 def test_bathroom_fixture_counts_default_to_one_per_bathroom_and_allow_explicit_counts():
     defaults = ProjectDefaults()
     bathroom = SpaceInput(

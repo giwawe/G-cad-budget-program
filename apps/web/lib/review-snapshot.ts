@@ -85,6 +85,7 @@ function normalizeSnapshotRow(row: QuantityRow): QuantityRow {
     interiorDoorCount: typeof row.interiorDoorCount === "number" ? row.interiorDoorCount : 0,
     kitchenBaseCabinetLengthM: typeof row.kitchenBaseCabinetLengthM === "number" ? row.kitchenBaseCabinetLengthM : 0,
     kitchenWallCabinetLengthM: typeof row.kitchenWallCabinetLengthM === "number" ? row.kitchenWallCabinetLengthM : 0,
+    customCabinetAreaM2: typeof row.customCabinetAreaM2 === "number" ? row.customCabinetAreaM2 : 0,
     toiletCount: typeof row.toiletCount === "number" ? row.toiletCount : 0,
     bathroomVanityCount: typeof row.bathroomVanityCount === "number" ? row.bathroomVanityCount : 0,
     waterproofAreaM2: typeof row.waterproofAreaM2 === "number" ? row.waterproofAreaM2 : 0,

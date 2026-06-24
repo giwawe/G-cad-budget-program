@@ -17,6 +17,7 @@ QUOTE_LAYERS = {
     "QUOTE_DEMO_WALL",
     "QUOTE_BASE_CABINET",
     "QUOTE_WALL_CABINET",
+    "QUOTE_CUSTOM_CABINET",
     "QUOTE_TOILET",
     "QUOTE_BATHROOM_VANITY",
     "QUOTE_OPENING",
@@ -96,6 +97,7 @@ class DrawingGeometry:
     demolition_walls: list[tuple[Point, Point]]
     base_cabinets: list[tuple[Point, Point]]
     wall_cabinets: list[tuple[Point, Point]]
+    custom_cabinets: list[tuple[Point, Point]]
     toilets: list[Point]
     bathroom_vanities: list[Point]
     window_openings: list[DrawingWindow]
@@ -132,6 +134,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
     demolition_wall_segments: list[tuple[Point, Point]] = []
     base_cabinet_segments: list[tuple[Point, Point]] = []
     wall_cabinet_segments: list[tuple[Point, Point]] = []
+    custom_cabinet_segments: list[tuple[Point, Point]] = []
     toilet_points: list[Point] = []
     bathroom_vanity_points: list[Point] = []
     window_openings: list[DrawingOpening] = []
@@ -158,6 +161,8 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
             base_cabinet_segments.extend(_entity_segments(entity, defaults.unit_scale_to_m))
         elif layer == "QUOTE_WALL_CABINET":
             wall_cabinet_segments.extend(_entity_segments(entity, defaults.unit_scale_to_m))
+        elif layer == "QUOTE_CUSTOM_CABINET":
+            custom_cabinet_segments.extend(_entity_segments(entity, defaults.unit_scale_to_m))
         elif layer == "QUOTE_TOILET":
             point = _entity_reference_point(entity, defaults.unit_scale_to_m)
             if point:
@@ -188,6 +193,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
     measured_demolition_walls: list[tuple[Point, Point]] = []
     measured_base_cabinets: list[tuple[Point, Point]] = []
     measured_wall_cabinets: list[tuple[Point, Point]] = []
+    measured_custom_cabinets: list[tuple[Point, Point]] = []
     measured_toilets: list[Point] = []
     measured_bathroom_vanities: list[Point] = []
     for room in rooms:
@@ -201,6 +207,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         room_demolition_walls = [(start, end) for start, end in demolition_wall_segments if _segment_in_room(room, start, end)]
         room_base_cabinets = [(start, end) for start, end in base_cabinet_segments if _segment_in_room(room, start, end)]
         room_wall_cabinets = [(start, end) for start, end in wall_cabinet_segments if _segment_in_room(room, start, end)]
+        room_custom_cabinets = [(start, end) for start, end in custom_cabinet_segments if _segment_in_room(room, start, end)]
         room_toilets = [point for point in toilet_points if contains_point(room, point) or _point_on_boundary(room, point)]
         room_bathroom_vanities = [point for point in bathroom_vanity_points if contains_point(room, point) or _point_on_boundary(room, point)]
         room_windows = [opening for opening in grouped_window_opening_inputs if _opening_associated_with_room(room, *_opening_centerline(opening))]
@@ -212,6 +219,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         measured_demolition_walls.extend(room_demolition_walls)
         measured_base_cabinets.extend(room_base_cabinets)
         measured_wall_cabinets.extend(room_wall_cabinets)
+        measured_custom_cabinets.extend(room_custom_cabinets)
         measured_toilets.extend(room_toilets)
         measured_bathroom_vanities.extend(room_bathroom_vanities)
         drawing_spaces.append(DrawingSpace(name=name, points=room))
@@ -226,6 +234,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
                 demolition_wall_lengths_m=[round(line_length(start, end), 2) for start, end in room_demolition_walls],
                 base_cabinet_lengths_m=[round(line_length(start, end), 2) for start, end in room_base_cabinets],
                 wall_cabinet_lengths_m=[round(line_length(start, end), 2) for start, end in room_wall_cabinets],
+                custom_cabinet_lengths_m=[round(line_length(start, end), 2) for start, end in room_custom_cabinets],
                 toilet_count=len(room_toilets),
                 bathroom_vanity_count=len(room_bathroom_vanities),
                 curtain_wall_width_candidate_m=curtain_wall_width_candidate_m,
@@ -258,6 +267,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         demolition_walls=measured_demolition_walls,
         base_cabinets=measured_base_cabinets,
         wall_cabinets=measured_wall_cabinets,
+        custom_cabinets=measured_custom_cabinets,
         toilets=measured_toilets,
         bathroom_vanities=measured_bathroom_vanities,
         window_openings=grouped_window_openings,

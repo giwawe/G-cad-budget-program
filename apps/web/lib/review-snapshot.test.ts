@@ -25,6 +25,7 @@ const rows: QuantityRow[] = [
     floorTilePieceCount: 5,
     electricalScopeAreaM2: 4.48,
     plumbingScopeAreaM2: 4.48,
+    customCabinetAreaM2: 7.2,
     newWallLengthM: 0,
     newWallAreaM2: 0,
     demolitionWallLengthM: 0,
@@ -76,6 +77,7 @@ const legacySnapshot = {
     floorTilePieceCount: _floorTilePieceCount,
     electricalScopeAreaM2: _electricalScopeAreaM2,
     plumbingScopeAreaM2: _plumbingScopeAreaM2,
+    customCabinetAreaM2: _customCabinetAreaM2,
     newWallLengthM: _newWallLengthM,
     newWallAreaM2: _newWallAreaM2,
     demolitionWallLengthM: _demolitionWallLengthM,
@@ -96,6 +98,7 @@ assert.equal(parsedLegacySnapshot.rows[0].wallTileMeasureLengthM, 0);
 assert.equal(parsedLegacySnapshot.rows[0].floorTilePieceCount, 0);
 assert.equal(parsedLegacySnapshot.rows[0].electricalScopeAreaM2, 0);
 assert.equal(parsedLegacySnapshot.rows[0].plumbingScopeAreaM2, 0);
+assert.equal(parsedLegacySnapshot.rows[0].customCabinetAreaM2, 0);
 assert.equal(parsedLegacySnapshot.rows[0].newWallLengthM, 0);
 assert.equal(parsedLegacySnapshot.rows[0].newWallAreaM2, 0);
 assert.equal(parsedLegacySnapshot.rows[0].demolitionWallLengthM, 0);

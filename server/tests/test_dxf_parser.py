@@ -7,6 +7,7 @@ from server.tests.dxf_fixtures import (
     build_bathroom_fixture_dxf,
     build_closed_window_polyline_dxf,
     build_closed_door_polyline_dxf,
+    build_custom_cabinet_dxf,
     build_demolition_wall_dxf,
     build_auto_door_type_dxf,
     build_insert_door_dxf,
@@ -128,6 +129,14 @@ def test_quote_cabinet_segments_are_assigned_to_kitchen_space():
     assert review.spaces[0].wall_cabinet_lengths_m == [3.0]
     assert review.drawing.base_cabinets == [((0.3, 0.3), (3.3, 0.3)), ((3.3, 0.3), (3.3, 1.6))]
     assert review.drawing.wall_cabinets == [((0.3, 0.3), (3.3, 0.3))]
+
+
+def test_quote_custom_cabinet_segments_are_assigned_to_space():
+    review = parser.parse_dxf_review(build_custom_cabinet_dxf(), ProjectDefaults())
+
+    assert review.spaces[0].name == "一层-主卧"
+    assert review.spaces[0].custom_cabinet_lengths_m == [3.0]
+    assert review.drawing.custom_cabinets == [((0.3, 0.3), (3.3, 0.3))]
 
 
 def test_quote_bathroom_fixture_points_are_assigned_to_bathroom_space():

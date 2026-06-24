@@ -35,6 +35,7 @@
 | `QUOTE_DEMO_WALL` | 拆除墙体中心线或墙体线 | 计算拆墙长度和面积 |
 | `QUOTE_BASE_CABINET` | 厨房地柜/台面延米线 | 计算橱柜地柜长度 |
 | `QUOTE_WALL_CABINET` | 厨房吊柜延米线 | 计算橱柜吊柜长度 |
+| `QUOTE_CUSTOM_CABINET` | 非厨房全屋定制柜体投影延米线 | 计算全屋定制面积 |
 | `QUOTE_TOILET` | 可选马桶点位 | 覆盖卫生间默认马桶数量 |
 | `QUOTE_BATHROOM_VANITY` | 可选浴室柜点位 | 覆盖卫生间默认浴室柜数量 |
 
@@ -168,7 +169,25 @@
 厨房吊柜长度 = 与厨房空间关联的 QUOTE_WALL_CABINET 长度合计
 ```
 
-### 4.5 洁具点位
+### 4.5 全屋定制柜体线
+
+`QUOTE_CUSTOM_CABINET` 表示卧室、玄关、客厅、书房等非厨房空间中按投影面积计价的定制柜体延米线。厨房已有地柜和吊柜独立口径，厨房空间里的 `QUOTE_CUSTOM_CABINET` 当前不计入全屋定制，避免重复计价。
+
+要求：
+
+- 可以使用 `LINE`、`LWPOLYLINE` 或 `POLYLINE`。
+- 只画非厨房空间里实际需要按全屋定制计价的柜体投影长度。
+- 不要把厨房地柜、厨房吊柜画入 `QUOTE_CUSTOM_CABINET`。
+- 柜体线应落在所属空间边界内或贴近空间，便于系统归属到正确空间。
+- 当前默认按 `2.4m` 高度换算投影面积；特殊高度、半高柜、开放格和不同单价仍需要报价规则或校准 JSON 进一步确认。
+
+当前计算口径：
+
+```text
+全屋定制面积 = 非厨房空间内 QUOTE_CUSTOM_CABINET 长度合计 * 2.4m
+```
+
+### 4.6 洁具点位
 
 马桶和浴室柜默认按卫生间空间数计量：每个识别为卫生间的空间默认 `1` 个马桶、`1` 套浴室柜。设计师不需要为了常规卫生间额外画点位。
 
@@ -304,6 +323,7 @@
 室内门数 = 自动判为室内门且 opening_type=normal_door 的 QUOTE_DOOR 门洞数量；入户门、推拉门、疑似大洞口和大洞口为 0
 厨房地柜长度 = 厨房空间内 QUOTE_BASE_CABINET 长度合计；其它空间或没有 QUOTE_BASE_CABINET 时为 0
 厨房吊柜长度 = 厨房空间内 QUOTE_WALL_CABINET 长度合计；其它空间或没有 QUOTE_WALL_CABINET 时为 0
+全屋定制面积 = 非厨房空间内 QUOTE_CUSTOM_CABINET 长度合计 * 2.4m；厨房空间或没有 QUOTE_CUSTOM_CABINET 时为 0
 马桶数量 = 卫生间默认 1 个；有 QUOTE_TOILET 点位时按点位数；非卫生间为 0
 浴室柜数量 = 卫生间默认 1 套；有 QUOTE_BATHROOM_VANITY 点位时按点位数；非卫生间为 0
 地面瓷砖主材片数 = ceil(地面面积 * 1.05 / (0.75m * 1.5m))
@@ -321,11 +341,13 @@
 
 全屋灯饰当前作为项目级套餐处理：只要报价映射中存在至少一个可计价空间，就生成 1 套“全屋灯饰”，不随空间数量重复计费；灯位数量、品牌配置和套餐差异后续可通过报价规则或点位图层细化。
 
+全屋定制当前按非厨房空间的 `QUOTE_CUSTOM_CABINET` 投影延米线乘以默认 `2.4m` 高度换算面积；厨房空间已经由 `QUOTE_BASE_CABINET` 和 `QUOTE_WALL_CABINET` 单独承接，避免重复计价。
+
 防水高度当前按空间类型取默认值：卫生间 `1.8m`，厨房、阳台、露台、洗衣房 `0.3m`。阳台、露台、洗衣房墙砖不是所有墙面都需要铺贴，只有画了 `QUOTE_WALL_TILE` 的贴砖墙面线才自动计算墙砖面积；当前按空间实际层高计算，暂不单独扣除未匹配贴砖墙的门窗洞。
 
 窗帘和窗帘箱不按窗洞宽度计量，应按窗户所在墙面的整面墙宽度计量。厨房、卫生间、过道等空间默认不做窗帘和窗帘箱；一般不做窗帘箱的位置也不生成窗帘。当前系统生成 `curtain_wall_width_m` 候选值：若窗洞中心线能匹配到邻近且平行的 `QUOTE_WALL`，取该墙段整宽；若匹配不到，回退到空间最长一段 `QUOTE_WALL`。L 形或转角窗涉及两面墙和转角做法，当前不自动计算窗帘或窗帘箱长度，候选值为 `0`，需要人工确认。系统同时输出 `curtain_wall_width_source`：`matched_window_wall` 表示已匹配窗户所在墙，`fallback_longest_wall` 表示回退最长墙需人工重点确认，`manual_required_l_shape_window` 表示 L 形窗需人工确认，`not_applicable` 表示不适用，前端人工编辑后为 `manual`。该候选值允许在工程量表中人工校准、随校对快照保存/恢复；只有来源为 `manual` 且长度大于 `0` 时，暗窗帘箱才进入导出的 `curtain_quote_candidates` 候选清单、`items` 和金额汇总。
 
-校准模板会导出 `windowsill_length_m`、`curtain_wall_width_m`、`curtain_wall_width_source`、`wall_tile_measure_length_m`、`wall_tile_area_m2`、`floor_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`new_wall_length_m`、`new_wall_area_m2`、`demolition_wall_length_m`、`demolition_wall_area_m2`、`interior_door_count`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`toilet_count` 和 `bathroom_vanity_count`。报价员可以把 L 形窗人工确认后的实际延米、贴砖墙、地砖主材片数、水电施工面积、新砌墙、拆墙、室内门数、厨房橱柜长度或洁具数量校准值填回模板，再作为 golden JSON 固定校准结果。
+校准模板会导出 `windowsill_length_m`、`curtain_wall_width_m`、`curtain_wall_width_source`、`wall_tile_measure_length_m`、`wall_tile_area_m2`、`floor_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`new_wall_length_m`、`new_wall_area_m2`、`demolition_wall_length_m`、`demolition_wall_area_m2`、`interior_door_count`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`custom_cabinet_area_m2`、`toilet_count` 和 `bathroom_vanity_count`。报价员可以把 L 形窗人工确认后的实际延米、贴砖墙、地砖主材片数、水电施工面积、新砌墙、拆墙、室内门数、厨房橱柜长度、全屋定制面积或洁具数量校准值填回模板，再作为 golden JSON 固定校准结果。
 
 上传包含 `curtain_wall_width_m` 的校准 JSON 后，若当前行来源是 `manual_required_l_shape_window` 或 `fallback_longest_wall`，工程量表会提供“应用校准”按钮，把校准值写回当前行、将来源标记为 `manual`，并清除该单元格的当前差异。
 
@@ -353,6 +375,7 @@
 | 拆除墙没有画在 `QUOTE_DEMO_WALL` | 拆墙面积为 0 | 只把拆除墙体画入 `QUOTE_DEMO_WALL` |
 | 厨房地柜没有画在 `QUOTE_BASE_CABINET` | 橱柜地柜长度为 0 | 只在实际地柜/台面延米位置补画 `QUOTE_BASE_CABINET` |
 | 厨房吊柜没有画在 `QUOTE_WALL_CABINET` | 橱柜吊柜长度为 0 | 只在实际吊柜延米位置补画 `QUOTE_WALL_CABINET` |
+| 非厨房定制柜没有画在 `QUOTE_CUSTOM_CABINET` | 全屋定制面积为 0 | 只在实际定制柜投影位置补画 `QUOTE_CUSTOM_CABINET` |
 | 卫生间有多个马桶或浴室柜但未画点位 | 默认各计 1 | 用 `QUOTE_TOILET` 或 `QUOTE_BATHROOM_VANITY` 补点位覆盖 |
 | 同一墙段重复画线 | 墙面长度重复计算 | 保留一条清晰墙线 |
 | 窗线离空间太远 | 窗洞无法归属空间 | 将窗线贴近空间边界或墙线 |
@@ -374,6 +397,7 @@
 - [ ] 拆除墙如需计价，拆除墙体已画在 `QUOTE_DEMO_WALL`。
 - [ ] 厨房地柜如需计价，实际地柜/台面延米线已画在 `QUOTE_BASE_CABINET`。
 - [ ] 厨房吊柜如需计价，实际吊柜延米线已画在 `QUOTE_WALL_CABINET`。
+- [ ] 非厨房全屋定制柜如需计价，实际柜体投影延米线已画在 `QUOTE_CUSTOM_CABINET`。
 - [ ] 卫生间如不是默认 1 个马桶、1 套浴室柜，已补画 `QUOTE_TOILET` 或 `QUOTE_BATHROOM_VANITY` 点位。
 - [ ] 窗洞已画在 `QUOTE_WINDOW`，并贴近对应空间。
 - [ ] 门洞已画在 `QUOTE_DOOR`，并贴近对应空间。

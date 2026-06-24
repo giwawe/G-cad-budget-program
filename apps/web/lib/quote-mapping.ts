@@ -16,6 +16,7 @@ type QuantityRowMetric =
   | "interiorDoorCount"
   | "kitchenBaseCabinetLengthM"
   | "kitchenWallCabinetLengthM"
+  | "customCabinetAreaM2"
   | "toiletCount"
   | "bathroomVanityCount";
 export type QuoteMetric =
@@ -35,6 +36,7 @@ export type QuoteMetric =
   | "interior_door_count"
   | "kitchen_base_cabinet_length_m"
   | "kitchen_wall_cabinet_length_m"
+  | "custom_cabinet_area_m2"
   | "toilet_count"
   | "bathroom_vanity_count";
 type RowQuoteMetric = Exclude<QuoteMetric, "lighting_package_count">;
@@ -127,22 +129,14 @@ const DEFAULT_RULES: QuoteRule[] = [
   { item_name: "室内门", metric: "interior_door_count", unit: "樘", unit_price: 1200, space_types: undefined },
   { item_name: "橱柜地柜", metric: "kitchen_base_cabinet_length_m", unit: "M", unit_price: 600, space_types: KITCHEN_CABINET_SPACE_TYPES },
   { item_name: "橱柜吊柜", metric: "kitchen_wall_cabinet_length_m", unit: "M", unit_price: 600, space_types: KITCHEN_CABINET_SPACE_TYPES },
+  { item_name: "全屋定制", metric: "custom_cabinet_area_m2", unit: "M2", unit_price: 600, space_types: undefined },
   { item_name: "马桶", metric: "toilet_count", unit: "个", unit_price: 2500, space_types: BATHROOM_FIXTURE_SPACE_TYPES },
   { item_name: "浴室柜", metric: "bathroom_vanity_count", unit: "套", unit_price: 3000, space_types: BATHROOM_FIXTURE_SPACE_TYPES },
   { item_name: "全屋灯饰", metric: "lighting_package_count", unit: "套", unit_price: 6000, space_types: undefined },
   { item_name: "暗窗帘箱", metric: "curtain_wall_width_m", unit: "M", unit_price: 110, space_types: CURTAIN_SPACE_TYPES },
 ];
 
-const APARTMENT_PENDING_METRICS: PendingQuoteMetric[] = [
-  {
-    item_name: "全屋定制",
-    unit: "M2",
-    unit_price: 600,
-    reason: "定制柜体按展开面积或投影面积计量，需要柜体布置和高度数据。",
-    suggested_metric: "custom_cabinet_area_m2",
-    source_group: "定制",
-  },
-];
+const APARTMENT_PENDING_METRICS: PendingQuoteMetric[] = [];
 
 const METRIC_TO_ROW_FIELD: Record<RowQuoteMetric, QuantityRowMetric> = {
   latex_paint_area_m2: "latexPaintAreaM2",
@@ -160,6 +154,7 @@ const METRIC_TO_ROW_FIELD: Record<RowQuoteMetric, QuantityRowMetric> = {
   interior_door_count: "interiorDoorCount",
   kitchen_base_cabinet_length_m: "kitchenBaseCabinetLengthM",
   kitchen_wall_cabinet_length_m: "kitchenWallCabinetLengthM",
+  custom_cabinet_area_m2: "customCabinetAreaM2",
   toilet_count: "toiletCount",
   bathroom_vanity_count: "bathroomVanityCount",
 };
@@ -340,6 +335,7 @@ function isQuoteMetric(metric: unknown): metric is QuoteMetric {
     metric === "interior_door_count" ||
     metric === "kitchen_base_cabinet_length_m" ||
     metric === "kitchen_wall_cabinet_length_m" ||
+    metric === "custom_cabinet_area_m2" ||
     metric === "toilet_count" ||
     metric === "bathroom_vanity_count"
   );

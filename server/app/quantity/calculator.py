@@ -11,6 +11,7 @@ CURTAIN_CANDIDATE_SPACE_TYPES = {"客厅", "卧室", "书房"}
 KITCHEN_CABINET_SPACE_TYPES = {"厨房"}
 BATHROOM_FIXTURE_SPACE_TYPES = {"卫生间"}
 WALL_TILE_HEIGHT_M = 2.5
+CUSTOM_CABINET_DEFAULT_HEIGHT_M = 2.4
 FLOOR_TILE_WIDTH_M = 0.75
 FLOOR_TILE_LENGTH_M = 1.5
 FLOOR_TILE_LOSS_RATE = 1.05
@@ -73,6 +74,7 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
     interior_door_count = calculate_interior_door_count(space.doors)
     kitchen_base_cabinet_length_m = calculate_kitchen_cabinet_length_m(space_type, space.base_cabinet_lengths_m)
     kitchen_wall_cabinet_length_m = calculate_kitchen_cabinet_length_m(space_type, space.wall_cabinet_lengths_m)
+    custom_cabinet_area_m2 = calculate_custom_cabinet_area_m2(space_type, space.custom_cabinet_lengths_m)
     toilet_count = calculate_bathroom_fixture_count(space_type, space.toilet_count)
     bathroom_vanity_count = calculate_bathroom_fixture_count(space_type, space.bathroom_vanity_count)
     waterproof_area_m2 = calculate_waterproof_area_m2(space_type, floor_area_m2, wall_measure_length_m, height_m)
@@ -129,6 +131,7 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
         interior_door_count=interior_door_count,
         kitchen_base_cabinet_length_m=kitchen_base_cabinet_length_m,
         kitchen_wall_cabinet_length_m=kitchen_wall_cabinet_length_m,
+        custom_cabinet_area_m2=custom_cabinet_area_m2,
         toilet_count=toilet_count,
         bathroom_vanity_count=bathroom_vanity_count,
         waterproof_area_m2=waterproof_area_m2,
@@ -183,6 +186,12 @@ def calculate_kitchen_cabinet_length_m(space_type: str, cabinet_lengths_m: list[
     if space_type not in KITCHEN_CABINET_SPACE_TYPES:
         return 0
     return round(sum(cabinet_lengths_m), 2)
+
+
+def calculate_custom_cabinet_area_m2(space_type: str, cabinet_lengths_m: list[float]) -> float:
+    if space_type in KITCHEN_CABINET_SPACE_TYPES:
+        return 0
+    return round(max(sum(cabinet_lengths_m) * CUSTOM_CABINET_DEFAULT_HEIGHT_M, 0), 2)
 
 
 def calculate_bathroom_fixture_count(space_type: str, count: int) -> int:
