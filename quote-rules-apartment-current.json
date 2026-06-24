@@ -75,6 +75,12 @@
     "unit_price": 73
   },
   {
+    "item_name": "砌120厚砖墙",
+    "metric": "new_wall_area_m2",
+    "unit": "M2",
+    "unit_price": 170
+  },
+  {
     "item_name": "暗窗帘箱",
     "metric": "curtain_wall_width_m",
     "unit": "M",

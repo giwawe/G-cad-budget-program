@@ -90,6 +90,7 @@ def _serialize_drawing(drawing: DrawingGeometry) -> dict:
         "walls": [_segment_to_dict(segment) for segment in drawing.walls],
         "measured_walls": [_segment_to_dict(segment) for segment in drawing.measured_walls],
         "tile_walls": [_segment_to_dict(segment) for segment in drawing.tile_walls],
+        "new_walls": [_segment_to_dict(segment) for segment in drawing.new_walls],
         "window_openings": [
             {
                 "segments": [_segment_to_dict(segment) for segment in window.segments],
@@ -156,6 +157,8 @@ def _stable_quantity_row(row: dict) -> dict:
         "latex_paint_area_m2": row["latex_paint_area_m2"],
         "wall_tile_measure_length_m": row["wall_tile_measure_length_m"],
         "wall_tile_area_m2": row["wall_tile_area_m2"],
+        "new_wall_length_m": row["new_wall_length_m"],
+        "new_wall_area_m2": row["new_wall_area_m2"],
         "status": row["status"],
         "anomalies": row["anomalies"],
     }

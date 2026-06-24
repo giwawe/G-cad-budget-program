@@ -33,6 +33,7 @@ class SpaceInput:
     boundary_points_m: list[tuple[float, float]] = field(default_factory=list)
     wall_lengths_m: list[float] = field(default_factory=list)
     wall_tile_lengths_m: list[float] = field(default_factory=list)
+    new_wall_lengths_m: list[float] = field(default_factory=list)
     curtain_wall_width_candidate_m: float = 0
     curtain_wall_width_source: str = "not_applicable"
     windows: list[OpeningInput] = field(default_factory=list)
@@ -62,6 +63,8 @@ class QuantityRow:
     latex_paint_area_m2: float
     wall_tile_measure_length_m: float
     wall_tile_area_m2: float
+    new_wall_length_m: float
+    new_wall_area_m2: float
     waterproof_area_m2: float
     evidence: str
     anomalies: list[str]

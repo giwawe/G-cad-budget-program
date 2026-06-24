@@ -72,6 +72,8 @@ export function QuantityTable({
             <th>乳胶漆面积</th>
             <th>贴砖墙长</th>
             <th>墙砖面积</th>
+            <th>新砌墙长</th>
+            <th>新砌墙面积</th>
             <th>防水面积</th>
             <th>状态</th>
           </tr>
@@ -88,6 +90,8 @@ export function QuantityTable({
             const latexPaintDifference = differencesByCell.get(differenceKey(row.spaceName, "latex_paint_area_m2"));
             const wallTileLengthDifference = differencesByCell.get(differenceKey(row.spaceName, "wall_tile_measure_length_m"));
             const wallTileDifference = differencesByCell.get(differenceKey(row.spaceName, "wall_tile_area_m2"));
+            const newWallLengthDifference = differencesByCell.get(differenceKey(row.spaceName, "new_wall_length_m"));
+            const newWallAreaDifference = differencesByCell.get(differenceKey(row.spaceName, "new_wall_area_m2"));
             const waterproofDifference = differencesByCell.get(differenceKey(row.spaceName, "waterproof_area_m2"));
             return (
             <tr id={quantityRowAnchorId(row.spaceName)} key={`${row.floor}-${row.spaceName}`} className={differences.some((difference) => difference.space_name === row.spaceName) ? "quantityDiffRow" : undefined}>
@@ -154,6 +158,14 @@ export function QuantityTable({
               <td className={differenceClass(wallTileDifference)}>
                 {row.wallTileAreaM2.toFixed(2)} m2
                 <DifferenceValue difference={wallTileDifference} />
+              </td>
+              <td className={differenceClass(newWallLengthDifference)}>
+                {row.newWallLengthM.toFixed(2)} m
+                <DifferenceValue difference={newWallLengthDifference} />
+              </td>
+              <td className={differenceClass(newWallAreaDifference)}>
+                {row.newWallAreaM2.toFixed(2)} m2
+                <DifferenceValue difference={newWallAreaDifference} />
               </td>
               <td className={differenceClass(waterproofDifference)}>
                 {row.waterproofAreaM2.toFixed(2)} m2

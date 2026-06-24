@@ -20,6 +20,8 @@ export type QuantityRow = {
   latexPaintAreaM2: number;
   wallTileMeasureLengthM: number;
   wallTileAreaM2: number;
+  newWallLengthM: number;
+  newWallAreaM2: number;
   waterproofAreaM2: number;
   evidence: string;
   anomalies: string[];
@@ -74,6 +76,7 @@ export type DrawingGeometry = {
   walls: DrawingSegment[];
   measured_walls: DrawingSegment[];
   tile_walls: DrawingSegment[];
+  new_walls: DrawingSegment[];
   window_openings: DrawingWindow[];
   windows: DrawingSegment[];
   door_openings: DrawingDoor[];

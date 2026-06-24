@@ -11,6 +11,8 @@ DEFAULT_NUMERIC_FIELDS = [
     "latex_paint_area_m2",
     "wall_tile_measure_length_m",
     "wall_tile_area_m2",
+    "new_wall_length_m",
+    "new_wall_area_m2",
 ]
 
 

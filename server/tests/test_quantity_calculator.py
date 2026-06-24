@@ -121,6 +121,22 @@ def test_kitchen_wall_tile_ignores_marked_tile_wall_lengths_and_uses_default_til
     assert row.wall_tile_area_m2 == 25
 
 
+def test_new_wall_area_uses_marked_new_wall_lengths_and_actual_height():
+    space = SpaceInput(
+        floor="一层",
+        name="一层-客厅",
+        boundary_points_m=[(0, 0), (6, 0), (6, 4), (0, 4)],
+        wall_lengths_m=[6, 4, 6, 4],
+        new_wall_lengths_m=[2.4, 1.6],
+        height_m=2.8,
+    )
+
+    row = calculate_quantity_row(space, ProjectDefaults())
+
+    assert row.new_wall_length_m == 4
+    assert row.new_wall_area_m2 == 11.2
+
+
 def test_curtain_wall_width_uses_longest_wall_for_supported_windowed_spaces():
     space = SpaceInput(
         floor="一层",

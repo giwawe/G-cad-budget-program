@@ -7,7 +7,8 @@ type QuantityRowMetric =
   | "wallTileAreaM2"
   | "waterproofAreaM2"
   | "windowsillLengthM"
-  | "curtainWallWidthM";
+  | "curtainWallWidthM"
+  | "newWallAreaM2";
 export type QuoteMetric =
   | "latex_paint_area_m2"
   | "floor_area_m2"
@@ -15,7 +16,8 @@ export type QuoteMetric =
   | "wall_tile_area_m2"
   | "waterproof_area_m2"
   | "windowsill_length_m"
-  | "curtain_wall_width_m";
+  | "curtain_wall_width_m"
+  | "new_wall_area_m2";
 
 export type QuoteRule = {
   item_name: string;
@@ -95,6 +97,7 @@ const DEFAULT_RULES: QuoteRule[] = [
   { item_name: "墙面贴瓷砖(600X1200)", metric: "wall_tile_area_m2", unit: "m2", unit_price: 100, space_types: WALL_TILE_SPACE_TYPES },
   { item_name: "墙地面防漏处理", metric: "waterproof_area_m2", unit: "m2", unit_price: 51.5, space_types: WET_FLOOR_SPACE_TYPES },
   { item_name: "窗台石铺贴", metric: "windowsill_length_m", unit: "M", unit_price: 73, space_types: undefined },
+  { item_name: "砌120厚砖墙", metric: "new_wall_area_m2", unit: "M2", unit_price: 170, space_types: undefined },
   { item_name: "暗窗帘箱", metric: "curtain_wall_width_m", unit: "M", unit_price: 110, space_types: CURTAIN_SPACE_TYPES },
 ];
 
@@ -121,14 +124,6 @@ const APARTMENT_PENDING_METRICS: PendingQuoteMetric[] = [
     unit_price: 60,
     reason: "拆改需要识别拆除墙体、铲除范围和新建墙体，当前 DXF 规范尚未区分拆改图层。",
     suggested_metric: "demolition_wall_area_m2",
-    source_group: "拆改",
-  },
-  {
-    item_name: "砌120厚砖墙",
-    unit: "M2",
-    unit_price: 170,
-    reason: "新砌墙按墙体长度和高度计量，需要独立的新建墙体图层或人工录入。",
-    suggested_metric: "new_wall_area_m2",
     source_group: "拆改",
   },
   {
@@ -197,6 +192,7 @@ const METRIC_TO_ROW_FIELD: Record<QuoteMetric, QuantityRowMetric> = {
   waterproof_area_m2: "waterproofAreaM2",
   windowsill_length_m: "windowsillLengthM",
   curtain_wall_width_m: "curtainWallWidthM",
+  new_wall_area_m2: "newWallAreaM2",
 };
 
 export function defaultQuoteRules(): QuoteRule[] {
@@ -345,7 +341,8 @@ function isQuoteMetric(metric: unknown): metric is QuoteMetric {
     metric === "wall_tile_area_m2" ||
     metric === "waterproof_area_m2" ||
     metric === "windowsill_length_m" ||
-    metric === "curtain_wall_width_m"
+    metric === "curtain_wall_width_m" ||
+    metric === "new_wall_area_m2"
   );
 }
 

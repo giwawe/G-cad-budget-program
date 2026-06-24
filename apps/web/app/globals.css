@@ -558,6 +558,14 @@ code {
   vector-effect: non-scaling-stroke;
 }
 
+.svgNewWall {
+  stroke: #ef4444;
+  stroke-linecap: round;
+  stroke-width: 0.5;
+  opacity: 1;
+  vector-effect: non-scaling-stroke;
+}
+
 .svgSpace {
   fill-opacity: 0.18;
   stroke-width: 0.09;

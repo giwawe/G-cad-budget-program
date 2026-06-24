@@ -75,6 +75,8 @@ function normalizeSnapshotRow(row: QuantityRow): QuantityRow {
     curtainWallWidthSource: row.curtainWallWidthSource ?? "not_applicable",
     wallTileMeasureLengthM: typeof row.wallTileMeasureLengthM === "number" ? row.wallTileMeasureLengthM : 0,
     wallTileAreaM2: typeof row.wallTileAreaM2 === "number" ? row.wallTileAreaM2 : 0,
+    newWallLengthM: typeof row.newWallLengthM === "number" ? row.newWallLengthM : 0,
+    newWallAreaM2: typeof row.newWallAreaM2 === "number" ? row.newWallAreaM2 : 0,
     waterproofAreaM2: typeof row.waterproofAreaM2 === "number" ? row.waterproofAreaM2 : 0,
   };
 }
