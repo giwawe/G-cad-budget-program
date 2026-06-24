@@ -36,6 +36,7 @@ class SpaceInput:
     wall_tile_lengths_m: list[float] = field(default_factory=list)
     new_wall_lengths_m: list[float] = field(default_factory=list)
     demolition_wall_lengths_m: list[float] = field(default_factory=list)
+    cabinet_lengths_m: list[float] = field(default_factory=list)
     curtain_wall_width_candidate_m: float = 0
     curtain_wall_width_source: str = "not_applicable"
     windows: list[OpeningInput] = field(default_factory=list)
@@ -70,6 +71,7 @@ class QuantityRow:
     demolition_wall_length_m: float
     demolition_wall_area_m2: float
     interior_door_count: int
+    kitchen_cabinet_length_m: float
     waterproof_area_m2: float
     evidence: str
     anomalies: list[str]

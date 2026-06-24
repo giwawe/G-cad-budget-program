@@ -77,6 +77,7 @@ export function QuantityTable({
             <th>新砌墙面积</th>
             <th>拆墙长度</th>
             <th>拆墙面积</th>
+            <th>橱柜长度</th>
             <th>防水面积</th>
             <th>状态</th>
           </tr>
@@ -98,6 +99,7 @@ export function QuantityTable({
             const newWallAreaDifference = differencesByCell.get(differenceKey(row.spaceName, "new_wall_area_m2"));
             const demolitionWallLengthDifference = differencesByCell.get(differenceKey(row.spaceName, "demolition_wall_length_m"));
             const demolitionWallAreaDifference = differencesByCell.get(differenceKey(row.spaceName, "demolition_wall_area_m2"));
+            const kitchenCabinetLengthDifference = differencesByCell.get(differenceKey(row.spaceName, "kitchen_cabinet_length_m"));
             const waterproofDifference = differencesByCell.get(differenceKey(row.spaceName, "waterproof_area_m2"));
             return (
             <tr id={quantityRowAnchorId(row.spaceName)} key={`${row.floor}-${row.spaceName}`} className={differences.some((difference) => difference.space_name === row.spaceName) ? "quantityDiffRow" : undefined}>
@@ -184,6 +186,10 @@ export function QuantityTable({
               <td className={differenceClass(demolitionWallAreaDifference)}>
                 {row.demolitionWallAreaM2.toFixed(2)} m2
                 <DifferenceValue difference={demolitionWallAreaDifference} />
+              </td>
+              <td className={differenceClass(kitchenCabinetLengthDifference)}>
+                {row.kitchenCabinetLengthM.toFixed(2)} m
+                <DifferenceValue difference={kitchenCabinetLengthDifference} />
               </td>
               <td className={differenceClass(waterproofDifference)}>
                 {row.waterproofAreaM2.toFixed(2)} m2

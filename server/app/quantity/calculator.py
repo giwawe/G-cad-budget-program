@@ -6,6 +6,7 @@ FULL_WALL_TILE_SPACE_TYPES = {"厨房", "卫生间"}
 MARKED_WALL_TILE_SPACE_TYPES = {"阳台", "露台", "洗衣房"}
 WATERPROOF_SPACE_TYPES = {"厨房", "卫生间", "阳台", "露台", "洗衣房"}
 CURTAIN_CANDIDATE_SPACE_TYPES = {"客厅", "卧室", "书房"}
+KITCHEN_CABINET_SPACE_TYPES = {"厨房"}
 WALL_TILE_HEIGHT_M = 2.5
 WATERPROOF_HEIGHT_BY_SPACE_TYPE = {
     "卫生间": 1.8,
@@ -61,6 +62,7 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
     demolition_wall_length_m = round(sum(space.demolition_wall_lengths_m), 2)
     demolition_wall_area_m2 = calculate_demolition_wall_area_m2(demolition_wall_length_m, height_m)
     interior_door_count = calculate_interior_door_count(space.doors)
+    kitchen_cabinet_length_m = calculate_kitchen_cabinet_length_m(space_type, space.cabinet_lengths_m)
     waterproof_area_m2 = calculate_waterproof_area_m2(space_type, floor_area_m2, wall_measure_length_m, height_m)
 
     anomalies = list(space.anomalies)
@@ -110,6 +112,7 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
         demolition_wall_length_m=demolition_wall_length_m,
         demolition_wall_area_m2=demolition_wall_area_m2,
         interior_door_count=interior_door_count,
+        kitchen_cabinet_length_m=kitchen_cabinet_length_m,
         waterproof_area_m2=waterproof_area_m2,
         evidence=evidence,
         anomalies=anomalies,
@@ -150,6 +153,12 @@ def calculate_demolition_wall_area_m2(demolition_wall_length_m: float, height_m:
 
 def calculate_interior_door_count(doors: list) -> int:
     return sum(1 for door in doors if door.opening_type == "normal_door" and door.quote_category == "interior_door")
+
+
+def calculate_kitchen_cabinet_length_m(space_type: str, cabinet_lengths_m: list[float]) -> float:
+    if space_type not in KITCHEN_CABINET_SPACE_TYPES:
+        return 0
+    return round(sum(cabinet_lengths_m), 2)
 
 
 def calculate_curtain_wall_width_m(

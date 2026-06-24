@@ -9,6 +9,7 @@ from server.tests.dxf_fixtures import (
     build_demolition_wall_dxf,
     build_auto_door_type_dxf,
     build_insert_door_dxf,
+    build_kitchen_cabinet_dxf,
     build_l_shaped_window_dxf,
     build_new_wall_dxf,
     build_simple_quote_dxf,
@@ -116,6 +117,14 @@ def test_quote_demo_wall_segments_are_assigned_to_space():
     assert review.spaces[0].name == "一层-客厅"
     assert review.spaces[0].demolition_wall_lengths_m == [2.4, 1.6]
     assert review.drawing.demolition_walls == [((2.0, 0.5), (2.0, 2.9)), ((3.2, 0.5), (4.8, 0.5))]
+
+
+def test_quote_cabinet_segments_are_assigned_to_kitchen_space():
+    review = parser.parse_dxf_review(build_kitchen_cabinet_dxf(), ProjectDefaults())
+
+    assert review.spaces[0].name == "一层-厨房"
+    assert review.spaces[0].cabinet_lengths_m == [3.0, 1.3]
+    assert review.drawing.cabinets == [((0.3, 0.3), (3.3, 0.3)), ((3.3, 0.3), (3.3, 1.6))]
 
 
 def test_quote_door_insert_is_recognized_as_one_door_opening():

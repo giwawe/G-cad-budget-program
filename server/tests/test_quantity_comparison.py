@@ -96,3 +96,12 @@ def test_compare_quantity_rows_reports_interior_door_count_differences_by_defaul
     result = compare_quantity_rows(actual_rows, expected_rows)
 
     assert [difference["field"] for difference in result["differences"]] == ["interior_door_count"]
+
+
+def test_compare_quantity_rows_reports_kitchen_cabinet_length_differences_by_default():
+    actual_rows = [{"space_name": "厨房", "kitchen_cabinet_length_m": 4.3}]
+    expected_rows = [{"space_name": "厨房", "kitchen_cabinet_length_m": 3.8}]
+
+    result = compare_quantity_rows(actual_rows, expected_rows)
+
+    assert [difference["field"] for difference in result["differences"]] == ["kitchen_cabinet_length_m"]

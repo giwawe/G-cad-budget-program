@@ -10,7 +10,8 @@ type QuantityRowMetric =
   | "curtainWallWidthM"
   | "newWallAreaM2"
   | "demolitionWallAreaM2"
-  | "interiorDoorCount";
+  | "interiorDoorCount"
+  | "kitchenCabinetLengthM";
 export type QuoteMetric =
   | "latex_paint_area_m2"
   | "floor_area_m2"
@@ -21,7 +22,8 @@ export type QuoteMetric =
   | "curtain_wall_width_m"
   | "new_wall_area_m2"
   | "demolition_wall_area_m2"
-  | "interior_door_count";
+  | "interior_door_count"
+  | "kitchen_cabinet_length_m";
 
 export type QuoteRule = {
   item_name: string;
@@ -88,6 +90,7 @@ const CEILING_SPACE_TYPES = ["客厅", "餐厅", "卧室", "书房", "过道", "
 const WET_FLOOR_SPACE_TYPES = ["厨房", "卫生间", "阳台", "露台", "洗衣房"];
 const WALL_TILE_SPACE_TYPES = ["厨房", "卫生间", "阳台", "露台", "洗衣房"];
 const CURTAIN_SPACE_TYPES = ["客厅", "卧室", "书房"];
+const KITCHEN_CABINET_SPACE_TYPES = ["厨房"];
 
 const DEFAULT_RULES: QuoteRule[] = [
   { item_name: "墙面界面剂处理", metric: "latex_paint_area_m2", unit: "m2", unit_price: 7, space_types: DRY_SPACE_TYPES },
@@ -104,6 +107,7 @@ const DEFAULT_RULES: QuoteRule[] = [
   { item_name: "砌120厚砖墙", metric: "new_wall_area_m2", unit: "M2", unit_price: 170, space_types: undefined },
   { item_name: "拆改及拆墙", metric: "demolition_wall_area_m2", unit: "M2", unit_price: 60, space_types: undefined },
   { item_name: "室内门", metric: "interior_door_count", unit: "樘", unit_price: 1200, space_types: undefined },
+  { item_name: "橱柜", metric: "kitchen_cabinet_length_m", unit: "M", unit_price: 600, space_types: KITCHEN_CABINET_SPACE_TYPES },
   { item_name: "暗窗帘箱", metric: "curtain_wall_width_m", unit: "M", unit_price: 110, space_types: CURTAIN_SPACE_TYPES },
 ];
 
@@ -149,14 +153,6 @@ const APARTMENT_PENDING_METRICS: PendingQuoteMetric[] = [
     source_group: "定制",
   },
   {
-    item_name: "橱柜",
-    unit: "M",
-    unit_price: 600,
-    reason: "橱柜按延米、上下柜组合和台面规则计价，需要厨房柜体线或人工录入。",
-    suggested_metric: "kitchen_cabinet_length_m",
-    source_group: "定制",
-  },
-  {
     item_name: "地面瓷砖主材",
     unit: "片",
     unit_price: 50,
@@ -185,6 +181,7 @@ const METRIC_TO_ROW_FIELD: Record<QuoteMetric, QuantityRowMetric> = {
   new_wall_area_m2: "newWallAreaM2",
   demolition_wall_area_m2: "demolitionWallAreaM2",
   interior_door_count: "interiorDoorCount",
+  kitchen_cabinet_length_m: "kitchenCabinetLengthM",
 };
 
 export function defaultQuoteRules(): QuoteRule[] {
@@ -336,7 +333,8 @@ function isQuoteMetric(metric: unknown): metric is QuoteMetric {
     metric === "curtain_wall_width_m" ||
     metric === "new_wall_area_m2" ||
     metric === "demolition_wall_area_m2" ||
-    metric === "interior_door_count"
+    metric === "interior_door_count" ||
+    metric === "kitchen_cabinet_length_m"
   );
 }
 

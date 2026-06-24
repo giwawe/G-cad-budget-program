@@ -145,6 +145,7 @@ export function DrawingReview({
   const [showTileWalls, setShowTileWalls] = useState(true);
   const [showNewWalls, setShowNewWalls] = useState(true);
   const [showDemolitionWalls, setShowDemolitionWalls] = useState(true);
+  const [showCabinets, setShowCabinets] = useState(true);
   const [showWindows, setShowWindows] = useState(true);
   const [showDoors, setShowDoors] = useState(true);
   const [selectedWindowIndex, setSelectedWindowIndex] = useState<number | null>(null);
@@ -275,6 +276,7 @@ export function DrawingReview({
         <label className="drawingLayerToggle"><input type="checkbox" checked={showTileWalls} onChange={(event) => setShowTileWalls(event.target.checked)} />贴砖墙 {drawing.tile_walls.length}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showNewWalls} onChange={(event) => setShowNewWalls(event.target.checked)} />新砌墙 {drawing.new_walls.length}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showDemolitionWalls} onChange={(event) => setShowDemolitionWalls(event.target.checked)} />拆墙 {drawing.demolition_walls.length}</label>
+        <label className="drawingLayerToggle"><input type="checkbox" checked={showCabinets} onChange={(event) => setShowCabinets(event.target.checked)} />橱柜 {drawing.cabinets.length}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showWindows} onChange={(event) => setShowWindows(event.target.checked)} />窗 {drawing.window_openings.length}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showDoors} onChange={(event) => setShowDoors(event.target.checked)} />门 {drawing.door_openings.length}</label>
         {selectedWindow && (
@@ -299,6 +301,7 @@ export function DrawingReview({
             {showTileWalls && drawing.tile_walls.map((wall, index) => <line key={`tile-wall-${index}`} className="svgTileWall" x1={wall.start.x} y1={wall.start.y} x2={wall.end.x} y2={wall.end.y} />)}
             {showNewWalls && drawing.new_walls.map((wall, index) => <line key={`new-wall-${index}`} className="svgNewWall" x1={wall.start.x} y1={wall.start.y} x2={wall.end.x} y2={wall.end.y} />)}
             {showDemolitionWalls && drawing.demolition_walls.map((wall, index) => <line key={`demolition-wall-${index}`} className="svgDemolitionWall" x1={wall.start.x} y1={wall.start.y} x2={wall.end.x} y2={wall.end.y} />)}
+            {showCabinets && drawing.cabinets.map((cabinet, index) => <line key={`cabinet-${index}`} className="svgCabinet" x1={cabinet.start.x} y1={cabinet.start.y} x2={cabinet.end.x} y2={cabinet.end.y} />)}
             {showWindows && drawing.window_openings.map((window, index) => (
               <g
                 key={`window-${index}`}

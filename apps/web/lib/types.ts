@@ -25,6 +25,7 @@ export type QuantityRow = {
   demolitionWallLengthM: number;
   demolitionWallAreaM2: number;
   interiorDoorCount: number;
+  kitchenCabinetLengthM: number;
   waterproofAreaM2: number;
   evidence: string;
   anomalies: string[];
@@ -82,6 +83,7 @@ export type DrawingGeometry = {
   tile_walls: DrawingSegment[];
   new_walls: DrawingSegment[];
   demolition_walls: DrawingSegment[];
+  cabinets: DrawingSegment[];
   window_openings: DrawingWindow[];
   windows: DrawingSegment[];
   door_openings: DrawingDoor[];

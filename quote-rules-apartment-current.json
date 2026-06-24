@@ -93,6 +93,13 @@
     "unit_price": 1200
   },
   {
+    "item_name": "橱柜",
+    "metric": "kitchen_cabinet_length_m",
+    "unit": "M",
+    "unit_price": 600,
+    "space_types": ["厨房"]
+  },
+  {
     "item_name": "暗窗帘箱",
     "metric": "curtain_wall_width_m",
     "unit": "M",
