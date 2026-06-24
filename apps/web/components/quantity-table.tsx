@@ -76,13 +76,6 @@ export function QuantityTable({
             <th>乳胶漆面积</th>
             <th>贴砖墙长</th>
             <th>墙砖面积</th>
-            <th>地砖主材</th>
-            <th>强电面积</th>
-            <th>水路面积</th>
-            <th>新砌墙长</th>
-            <th>新砌墙面积</th>
-            <th>拆墙长度</th>
-            <th>拆墙面积</th>
             <th>橱柜地柜</th>
             <th>橱柜吊柜</th>
             <th>全屋定制</th>
@@ -108,13 +101,6 @@ export function QuantityTable({
             const latexPaintDifference = differencesByCell.get(differenceKey(row.spaceName, "latex_paint_area_m2"));
             const wallTileLengthDifference = differencesByCell.get(differenceKey(row.spaceName, "wall_tile_measure_length_m"));
             const wallTileDifference = differencesByCell.get(differenceKey(row.spaceName, "wall_tile_area_m2"));
-            const floorTilePieceCountDifference = differencesByCell.get(differenceKey(row.spaceName, "floor_tile_piece_count"));
-            const electricalScopeAreaDifference = differencesByCell.get(differenceKey(row.spaceName, "electrical_scope_area_m2"));
-            const plumbingScopeAreaDifference = differencesByCell.get(differenceKey(row.spaceName, "plumbing_scope_area_m2"));
-            const newWallLengthDifference = differencesByCell.get(differenceKey(row.spaceName, "new_wall_length_m"));
-            const newWallAreaDifference = differencesByCell.get(differenceKey(row.spaceName, "new_wall_area_m2"));
-            const demolitionWallLengthDifference = differencesByCell.get(differenceKey(row.spaceName, "demolition_wall_length_m"));
-            const demolitionWallAreaDifference = differencesByCell.get(differenceKey(row.spaceName, "demolition_wall_area_m2"));
             const kitchenBaseCabinetLengthDifference = differencesByCell.get(differenceKey(row.spaceName, "kitchen_base_cabinet_length_m"));
             const kitchenWallCabinetLengthDifference = differencesByCell.get(differenceKey(row.spaceName, "kitchen_wall_cabinet_length_m"));
             const customCabinetAreaDifference = differencesByCell.get(differenceKey(row.spaceName, "custom_cabinet_area_m2"));
@@ -202,34 +188,6 @@ export function QuantityTable({
               <td className={differenceClass(wallTileDifference)}>
                 {row.wallTileAreaM2.toFixed(2)} m2
                 <DifferenceValue difference={wallTileDifference} />
-              </td>
-              <td className={differenceClass(floorTilePieceCountDifference)}>
-                {row.floorTilePieceCount} 片
-                <DifferenceValue difference={floorTilePieceCountDifference} />
-              </td>
-              <td className={differenceClass(electricalScopeAreaDifference)}>
-                {row.electricalScopeAreaM2.toFixed(2)} m2
-                <DifferenceValue difference={electricalScopeAreaDifference} />
-              </td>
-              <td className={differenceClass(plumbingScopeAreaDifference)}>
-                {row.plumbingScopeAreaM2.toFixed(2)} m2
-                <DifferenceValue difference={plumbingScopeAreaDifference} />
-              </td>
-              <td className={differenceClass(newWallLengthDifference)}>
-                {row.newWallLengthM.toFixed(2)} m
-                <DifferenceValue difference={newWallLengthDifference} />
-              </td>
-              <td className={differenceClass(newWallAreaDifference)}>
-                {row.newWallAreaM2.toFixed(2)} m2
-                <DifferenceValue difference={newWallAreaDifference} />
-              </td>
-              <td className={differenceClass(demolitionWallLengthDifference)}>
-                {row.demolitionWallLengthM.toFixed(2)} m
-                <DifferenceValue difference={demolitionWallLengthDifference} />
-              </td>
-              <td className={differenceClass(demolitionWallAreaDifference)}>
-                {row.demolitionWallAreaM2.toFixed(2)} m2
-                <DifferenceValue difference={demolitionWallAreaDifference} />
               </td>
               <td className={differenceClass(kitchenBaseCabinetLengthDifference)}>
                 {row.kitchenBaseCabinetLengthM.toFixed(2)} m
