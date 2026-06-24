@@ -359,7 +359,7 @@ def test_suspected_large_door_opening_requires_review_without_default_deduction(
 
 
 def test_interior_door_count_only_counts_normal_doors():
-    space = SpaceInput(
+    living_room = SpaceInput(
         name="客厅",
         boundary_points_m=[(0, 0), (6, 0), (6, 5), (0, 5)],
         wall_lengths_m=[6, 5, 4],
@@ -371,10 +371,18 @@ def test_interior_door_count_only_counts_normal_doors():
             OpeningInput(width_m=1.3, review_required=True, opening_type="suspected_large_opening"),
         ],
     )
+    bedroom = SpaceInput(
+        name="客卧",
+        boundary_points_m=[(0, 0), (3, 0), (3, 3), (0, 3)],
+        wall_lengths_m=[3, 3, 3, 3],
+        doors=[OpeningInput(width_m=0.9, opening_type="normal_door", quote_category="interior_door")],
+    )
 
-    row = calculate_quantity_row(space, ProjectDefaults())
+    living_room_row = calculate_quantity_row(living_room, ProjectDefaults())
+    bedroom_row = calculate_quantity_row(bedroom, ProjectDefaults())
 
-    assert row.interior_door_count == 1
+    assert living_room_row.interior_door_count == 0
+    assert bedroom_row.interior_door_count == 1
 
 
 def test_height_priority_space_then_floor_then_project():
@@ -387,6 +395,8 @@ def test_height_priority_space_then_floor_then_project():
 
 def test_classification_and_excluded_spaces():
     assert classify_space_type("一层-主卧") == "卧室"
+    assert classify_space_type("一层-客卧") == "卧室"
+    assert classify_space_type("一层-公卫") == "卫生间"
     assert classify_space_type("二层-楼梯过道") == "楼梯过道"
     assert classify_space_type("衣帽间") == "衣帽间"
     assert classify_space_type("储藏室") == "储物间"

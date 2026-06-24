@@ -141,14 +141,14 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 空间分类：
 
 - 关键词分类在 `server/app/quantity/classification.py`。
-- 已覆盖：客厅、餐厅、厨房、卫生间、阳台、卧室、书房、衣帽间、储物间、洗衣房、门厅、楼梯过道、楼梯、过道、露台、外墙。
+- 已覆盖：客厅、餐厅、厨房、卫生间、阳台、卧室、书房、衣帽间、储物间、洗衣房、门厅、楼梯过道、楼梯、过道、露台、外墙。常用别名包含：客卧/主卧/次卧 -> 卧室，公卫/客卫/主卫/次卫 -> 卫生间。
 - `电梯井`、`设备井`、`管井`、`风井` 默认识别但不计价，状态为 `excluded`。
 
 门洞规则：
 
 - 普通门默认不扣墙面。
 - 室内门报价不要求设计师额外分图层，系统会自动判断门类型：块名或图层名含 `入户`、`进户`、`防盗`、`entry` 判为入户门；含 `推拉`、`移门`、`sliding` 判为推拉门；无关键词且门宽 `>=1.4m` 判为推拉门；剩余普通门判为室内门。
-- 只有判为室内门且 `opening_type=normal_door` 的门洞会生成 `interior_door_count`，默认报价规则“室内门”按樘数生成金额。
+- 只有判为室内门且 `opening_type=normal_door` 的门洞会生成 `interior_door_count`，且只在厨房、卫生间、卧室、书房、衣帽间、储物间、洗衣房等房间侧计数；客厅、餐厅、过道、门厅等公共空间不承接室内门数量，避免同一门洞在客厅和房间重复报价。默认报价规则“室内门”按樘数生成金额。
 - 大洞口门可按规则扣减。
 - 疑似大洞口会标记 review_required，并在异常里提示人工确认。
 - 入户门、推拉门、大洞口和疑似大洞口不计入 `interior_door_count`；跨空间门洞若重复归属，需要在校准 JSON 中人工修正。
@@ -160,12 +160,12 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 阳台、露台、洗衣房只有画了 `QUOTE_WALL_TILE` 时自动计算墙砖；公式为 `贴砖墙长 * 空间实际层高`，当前不单独扣除未匹配贴砖墙的门窗洞。
 - 厨房、卫生间、阳台、露台、洗衣房自动计算 `waterproof_area_m2`。
 - 防水面积公式：`地面面积 + 墙面计量长度 * 防水高度`；卫生间防水高度 `1.8m`，其它湿区 `0.3m`。
-- 地面瓷砖主材：`floor_tile_piece_count = ceil(地面面积 * 1.05 / (0.75 * 1.5))`，按 750X1500 规格、5% 损耗、向上取整；默认报价规则“地面瓷砖主材”按片数生成金额。
-- 水电默认 scope：`electrical_scope_area_m2` 和 `plumbing_scope_area_m2` 当前均默认等于空间地面面积，用于“强电布线”“水路布管”按施工面积生成金额；点位、回路、特殊水路范围仍可通过校准 JSON 或后续图层细化。
+- 地面瓷砖主材：`floor_tile_piece_count = ceil(地面面积 * 1.05 / (0.75 * 1.5))`，按 750X1500 规格、5% 损耗、向上取整；默认报价规则“地面瓷砖主材”按全屋片数汇总生成金额，不按空间拆行。
+- 水电默认 scope：`electrical_scope_area_m2` 和 `plumbing_scope_area_m2` 当前均默认等于空间地面面积，用于“强电布线”“水路布管”按全屋施工面积汇总生成金额，不按空间拆行；点位、回路、特殊水路范围仍可通过校准 JSON 或后续图层细化。
 - 全屋灯饰：`lighting_package_count` 是项目级套餐 metric，只要报价映射存在至少一个可计价空间，就生成 1 套“全屋灯饰”；该项目不按空间重复计费。
 - 工程量表显示 `wall_tile_measure_length_m`，校准模板也会导出 `wall_tile_measure_length_m` 和 `wall_tile_area_m2`。
-- 新砌墙：画在 `QUOTE_NEW_WALL` 的线段会生成 `new_wall_length_m` 和 `new_wall_area_m2`，公式为 `新砌墙长度 * 空间实际层高`；默认报价规则“砌120厚砖墙”按 `new_wall_area_m2` 生成金额。
-- 拆墙：画在 `QUOTE_DEMO_WALL` 的线段会生成 `demolition_wall_length_m` 和 `demolition_wall_area_m2`，公式为 `拆墙长度 * 空间实际层高`；默认报价规则“拆改及拆墙”按 `demolition_wall_area_m2` 生成金额。
+- 新砌墙：画在 `QUOTE_NEW_WALL` 的线段会生成 `new_wall_length_m` 和 `new_wall_area_m2`，公式为 `新砌墙长度 * 空间实际层高`；默认报价规则“砌120厚砖墙”按全屋 `new_wall_area_m2` 汇总生成金额，不按空间拆行。
+- 拆墙：画在 `QUOTE_DEMO_WALL` 的线段会生成 `demolition_wall_length_m` 和 `demolition_wall_area_m2`，公式为 `拆墙长度 * 空间实际层高`；默认报价规则“拆改及拆墙”按全屋 `demolition_wall_area_m2` 汇总生成金额，不按空间拆行。
 - 橱柜：地柜画在 `QUOTE_BASE_CABINET`，吊柜画在 `QUOTE_WALL_CABINET`，分别生成 `kitchen_base_cabinet_length_m` 和 `kitchen_wall_cabinet_length_m`，仅厨房空间计入；默认报价规则“橱柜地柜”和“橱柜吊柜”分别按对应 metric 生成金额。地柜和吊柜在 CAD 中可能重叠，必须分图层，不能用单一橱柜线混算。
 - 全屋定制：非厨房柜体画在 `QUOTE_CUSTOM`，默认生成 `custom_cabinet_area_m2`，公式为 `常规柜投影长度 * 2.6m`；同图层邻近文字可标注柜高，如 `H=800`、`高度800` 或 `H=0.8m`，高度低于 1m 的低柜按长度米取值，并入同一个 `custom_cabinet_area_m2` 数量，不单独生成低柜字段或报价项；厨房空间默认为 0，避免和橱柜地柜/吊柜重复计费。
 - 洁具：卫生间默认生成 `toilet_count=1` 和 `bathroom_vanity_count=1`，用于“马桶”和“浴室柜”报价；如果画了 `QUOTE_TOILET` 或 `QUOTE_BATHROOM_VANITY` 点位，则按点位数覆盖默认数量。
@@ -200,15 +200,15 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 轻钢龙骨平顶、顶面批嵌、顶面乳胶漆：按 `ceilingAreaM2`，仅匹配适用空间。
 - 地面找平：按 `floorAreaM2`，仅匹配厨房、卫生间、阳台、露台、洗衣房。
 - 地面砖铺贴(750X1500)：按 `floorAreaM2`，当前不限制空间类型。
-- 地面瓷砖主材：按 `floorTilePieceCount`，当前不限制空间类型；片数由地面面积按 750X1500、5% 损耗向上取整。
-- 强电布线：按 `electricalScopeAreaM2`，当前默认等于地面面积，不限制空间类型。
-- 水路布管：按 `plumbingScopeAreaM2`，当前默认等于地面面积，不限制空间类型。
+- 地面瓷砖主材：按 `floorTilePieceCount` 全屋汇总，当前不限制空间类型；片数由地面面积按 750X1500、5% 损耗向上取整。
+- 强电布线：按 `electricalScopeAreaM2` 全屋汇总，当前默认等于地面面积，不限制空间类型。
+- 水路布管：按 `plumbingScopeAreaM2` 全屋汇总，当前默认等于地面面积，不限制空间类型。
 - 全屋灯饰：按项目级 `lightingPackageCount=1`，有可计价空间时生成 1 套，不随空间重复。
 - 墙面贴瓷砖(600X1200)：按 `wallTileAreaM2`，匹配厨房、卫生间，以及画了 `QUOTE_WALL_TILE` 的阳台、露台、洗衣房。
 - 墙地面防漏处理：按 `waterproofAreaM2`，仅匹配厨房、卫生间、阳台、露台、洗衣房。
 - 窗台石铺贴：按 `windowsillLengthM`，有窗洞长度时生成。
-- 砌120厚砖墙：按 `newWallAreaM2`，画了 `QUOTE_NEW_WALL` 时生成。
-- 拆改及拆墙：按 `demolitionWallAreaM2`，画了 `QUOTE_DEMO_WALL` 时生成。
+- 砌120厚砖墙：按 `newWallAreaM2` 全屋汇总，画了 `QUOTE_NEW_WALL` 时生成。
+- 拆改及拆墙：按 `demolitionWallAreaM2` 全屋汇总，画了 `QUOTE_DEMO_WALL` 时生成。
 - 室内门：按 `interiorDoorCount`，普通 `QUOTE_DOOR` 门洞生成。
 - 橱柜地柜：按 `kitchenBaseCabinetLengthM`，厨房画了 `QUOTE_BASE_CABINET` 时生成。
 - 橱柜吊柜：按 `kitchenWallCabinetLengthM`，厨房画了 `QUOTE_WALL_CABINET` 时生成。

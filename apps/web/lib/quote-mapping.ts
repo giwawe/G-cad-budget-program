@@ -40,6 +40,12 @@ export type QuoteMetric =
   | "toilet_count"
   | "bathroom_vanity_count";
 type RowQuoteMetric = Exclude<QuoteMetric, "lighting_package_count">;
+type SummedProjectQuoteMetric =
+  | "floor_tile_piece_count"
+  | "electrical_scope_area_m2"
+  | "plumbing_scope_area_m2"
+  | "new_wall_area_m2"
+  | "demolition_wall_area_m2";
 
 export type QuoteRule = {
   item_name: string;
@@ -108,6 +114,13 @@ const WALL_TILE_SPACE_TYPES = ["厨房", "卫生间", "阳台", "露台", "洗�
 const CURTAIN_SPACE_TYPES = ["客厅", "卧室", "书房"];
 const KITCHEN_CABINET_SPACE_TYPES = ["厨房"];
 const BATHROOM_FIXTURE_SPACE_TYPES = ["卫生间"];
+const SUMMED_PROJECT_METRICS = new Set<QuoteMetric>([
+  "floor_tile_piece_count",
+  "electrical_scope_area_m2",
+  "plumbing_scope_area_m2",
+  "new_wall_area_m2",
+  "demolition_wall_area_m2",
+]);
 
 const DEFAULT_RULES: QuoteRule[] = [
   { item_name: "墙面界面剂处理", metric: "latex_paint_area_m2", unit: "m2", unit_price: 7, space_types: DRY_SPACE_TYPES },
@@ -157,6 +170,13 @@ const METRIC_TO_ROW_FIELD: Record<RowQuoteMetric, QuantityRowMetric> = {
   custom_cabinet_area_m2: "customCabinetAreaM2",
   toilet_count: "toiletCount",
   bathroom_vanity_count: "bathroomVanityCount",
+};
+const SUMMED_PROJECT_METRIC_TO_ROW_FIELD: Record<SummedProjectQuoteMetric, QuantityRowMetric> = {
+  floor_tile_piece_count: "floorTilePieceCount",
+  electrical_scope_area_m2: "electricalScopeAreaM2",
+  plumbing_scope_area_m2: "plumbingScopeAreaM2",
+  new_wall_area_m2: "newWallAreaM2",
+  demolition_wall_area_m2: "demolitionWallAreaM2",
 };
 
 export function defaultQuoteRules(): QuoteRule[] {
@@ -214,8 +234,8 @@ export function curtainQuoteCandidates(rows: QuantityRow[]): CurtainQuoteCandida
 
 export function buildQuoteMapping(rows: QuantityRow[], rules: QuoteRule[] = DEFAULT_RULES): QuoteMapping {
   const billableRows = rows.filter((row) => row.status !== "excluded");
-  const rowRules = rules.filter((rule): rule is QuoteRule & { metric: RowQuoteMetric } => rule.metric !== "lighting_package_count");
-  const projectRules = rules.filter((rule) => rule.metric === "lighting_package_count");
+  const rowRules = rules.filter((rule): rule is QuoteRule & { metric: RowQuoteMetric } => rule.metric !== "lighting_package_count" && !SUMMED_PROJECT_METRICS.has(rule.metric));
+  const projectRules = rules.filter((rule) => rule.metric === "lighting_package_count" || SUMMED_PROJECT_METRICS.has(rule.metric));
   const rowItems = billableRows.flatMap((row) =>
     rowRules.filter((rule) => ruleAppliesToRow(rule, row)).map((rule) => {
       const quantity = round2(row[METRIC_TO_ROW_FIELD[rule.metric]]);
@@ -250,16 +270,38 @@ function buildProjectQuoteItems(billableRows: QuantityRow[], rules: QuoteRule[])
   if (billableRows.length === 0) {
     return [];
   }
-  return rules.map((rule) => ({
-    floor: "全屋",
-    space_name: "全屋",
-    space_type: "全屋",
-    item_name: rule.item_name,
-    quantity: 1,
-    unit: rule.unit,
-    unit_price: rule.unit_price,
-    amount: round2(rule.unit_price),
-  })).filter((item) => item.quantity > 0);
+  return rules.map((rule) => {
+    const quantity = projectRuleQuantity(billableRows, rule);
+    return {
+      floor: "全屋",
+      space_name: "全屋",
+      space_type: "全屋",
+      item_name: rule.item_name,
+      quantity,
+      unit: rule.unit,
+      unit_price: rule.unit_price,
+      amount: round2(quantity * rule.unit_price),
+    };
+  }).filter((item) => item.quantity > 0);
+}
+
+function projectRuleQuantity(billableRows: QuantityRow[], rule: QuoteRule): number {
+  if (rule.metric === "lighting_package_count") {
+    return 1;
+  }
+  if (isSummedProjectMetric(rule.metric)) {
+    const rowField = SUMMED_PROJECT_METRIC_TO_ROW_FIELD[rule.metric];
+    return round2(
+      billableRows
+        .filter((row) => ruleAppliesToRow(rule, row))
+        .reduce((sum, row) => sum + row[rowField], 0),
+    );
+  }
+  return 0;
+}
+
+function isSummedProjectMetric(metric: QuoteMetric): metric is SummedProjectQuoteMetric {
+  return SUMMED_PROJECT_METRICS.has(metric);
 }
 
 export function quoteMappingFileName(fileName: string): string {

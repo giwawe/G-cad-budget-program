@@ -10,6 +10,7 @@ WATERPROOF_SPACE_TYPES = {"厨房", "卫生间", "阳台", "露台", "洗衣房"
 CURTAIN_CANDIDATE_SPACE_TYPES = {"客厅", "卧室", "书房"}
 KITCHEN_CABINET_SPACE_TYPES = {"厨房"}
 BATHROOM_FIXTURE_SPACE_TYPES = {"卫生间"}
+INTERIOR_DOOR_COUNT_SPACE_TYPES = {"厨房", "卫生间", "卧室", "书房", "衣帽间", "储物间", "洗衣房"}
 WALL_TILE_HEIGHT_M = 2.5
 CUSTOM_CABINET_DEFAULT_HEIGHT_M = 2.6
 CUSTOM_CABINET_LOW_HEIGHT_THRESHOLD_M = 1.0
@@ -72,7 +73,7 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
     new_wall_area_m2 = calculate_new_wall_area_m2(new_wall_length_m, height_m)
     demolition_wall_length_m = round(sum(space.demolition_wall_lengths_m), 2)
     demolition_wall_area_m2 = calculate_demolition_wall_area_m2(demolition_wall_length_m, height_m)
-    interior_door_count = calculate_interior_door_count(space.doors)
+    interior_door_count = calculate_interior_door_count(space_type, space.doors)
     kitchen_base_cabinet_length_m = calculate_kitchen_cabinet_length_m(space_type, space.base_cabinet_lengths_m)
     kitchen_wall_cabinet_length_m = calculate_kitchen_cabinet_length_m(space_type, space.wall_cabinet_lengths_m)
     custom_cabinet_area_m2 = calculate_custom_cabinet_area_m2(
@@ -183,7 +184,9 @@ def calculate_demolition_wall_area_m2(demolition_wall_length_m: float, height_m:
     return round(max(demolition_wall_length_m * height_m, 0), 2)
 
 
-def calculate_interior_door_count(doors: list) -> int:
+def calculate_interior_door_count(space_type: str, doors: list) -> int:
+    if space_type not in INTERIOR_DOOR_COUNT_SPACE_TYPES:
+        return 0
     return sum(1 for door in doors if door.opening_type == "normal_door" and door.quote_category == "interior_door")
 
 
