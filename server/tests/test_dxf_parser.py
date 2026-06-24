@@ -7,6 +7,7 @@ from server.tests.dxf_fixtures import (
     build_closed_window_polyline_dxf,
     build_closed_door_polyline_dxf,
     build_demolition_wall_dxf,
+    build_auto_door_type_dxf,
     build_insert_door_dxf,
     build_l_shaped_window_dxf,
     build_new_wall_dxf,
@@ -122,8 +123,19 @@ def test_quote_door_insert_is_recognized_as_one_door_opening():
 
     assert len(review.drawing.doors) == 1
     assert [door.width_m for door in review.spaces[0].doors] == [0.9]
+    assert review.spaces[0].doors[0].quote_category == "interior_door"
+    assert review.spaces[0].doors[0].opening_type == "normal_door"
     assert review.drawing.doors[0] == ((2.05, 0.065), (2.95, 0.065))
     assert review.drawing.door_openings[0].thickness_m == 0.13
+
+
+def test_auto_door_type_distinguishes_interior_entry_and_sliding_doors():
+    review = parser.parse_dxf_review(build_auto_door_type_dxf(), ProjectDefaults())
+
+    assert [door.quote_category for door in review.spaces[0].doors] == ["interior_door", "interior_door", "entry_door", "sliding_door", "sliding_door"]
+    assert review.spaces[0].doors[1].opening_type == "normal_door"
+    assert review.spaces[0].doors[3].opening_type == "suspected_large_opening"
+    assert review.spaces[0].doors[4].width_m == 1.5
 
 
 def test_closed_quote_door_polyline_is_normalized_to_one_centerline():

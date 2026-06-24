@@ -112,6 +112,7 @@ def _serialize_drawing(drawing: DrawingGeometry) -> dict:
                 "deduct_from_wall": door.deduct_from_wall,
                 "review_required": door.review_required,
                 "opening_type": door.opening_type,
+                "quote_category": door.quote_category,
                 "space_names": door.space_names,
             }
             for door in drawing.door_openings

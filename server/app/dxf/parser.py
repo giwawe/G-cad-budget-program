@@ -57,6 +57,7 @@ class DrawingText:
 class DrawingOpening:
     segments: list[tuple[Point, Point]]
     boundary_points: list[Point] = field(default_factory=list)
+    quote_category: str | None = None
 
 
 @dataclass(frozen=True)
@@ -77,6 +78,7 @@ class DrawingDoor:
     deduct_from_wall: bool
     review_required: bool
     opening_type: str
+    quote_category: str | None
     space_names: list[str]
 
 
@@ -193,9 +195,9 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
                     for opening in room_windows
                 ],
                 doors=[
-                    _door_input_for_segment(start, end)
-                    for start, end in [opening.segments[0] for opening in door_opening_inputs]
-                    if _opening_associated_with_room(room, start, end)
+                    _door_input_for_opening(opening)
+                    for opening in door_opening_inputs
+                    if _opening_associated_with_room(room, opening.segments[0][0], opening.segments[0][1])
                 ],
                 anomalies=["L形窗帘和窗帘箱长度需人工确认"] if has_l_shaped_window else [],
             )
@@ -271,15 +273,16 @@ def _entity_segments(entity, scale: float) -> list[tuple[Point, Point]]:
 
 
 def _door_openings(entity, scale: float) -> list[DrawingOpening]:
+    quote_category = _door_quote_category_from_entity(entity)
     if entity.dxftype() != "INSERT":
         if _entity_is_closed_polyline(entity):
             opening = _closed_polyline_opening(entity, scale)
             if opening:
-                return [opening]
-        return [DrawingOpening(segments=[segment]) for segment in _entity_segments(entity, scale)]
+                return [_opening_with_quote_category(opening, quote_category)]
+        return [DrawingOpening(segments=[segment], quote_category=quote_category) for segment in _entity_segments(entity, scale)]
     virtual_opening = _door_insert_opening_from_virtual_entities(entity, scale)
     if virtual_opening:
-        return [virtual_opening]
+        return [_opening_with_quote_category(virtual_opening, quote_category)]
     width_m = _door_insert_width_m(entity, scale)
     insert = _scale_point((entity.dxf.insert.x, entity.dxf.insert.y), scale)
     rotation = math.radians(float(getattr(entity.dxf, "rotation", 0) or 0))
@@ -292,7 +295,8 @@ def _door_openings(entity, scale: float) -> list[DrawingOpening]:
             (round(insert[0] - direction[0] * half_width, 3), round(insert[1] - direction[1] * half_width, 3)),
             (round(insert[0] + direction[0] * half_width, 3), round(insert[1] + direction[1] * half_width, 3)),
                 )
-            ]
+            ],
+            quote_category=quote_category,
         )
     ]
 
@@ -318,6 +322,10 @@ def _closed_polyline_opening(entity, scale: float) -> DrawingOpening | None:
         (round(sum(segment[1][0] for segment in oriented) / len(oriented), 3), round(sum(segment[1][1] for segment in oriented) / len(oriented), 3)),
     )
     return DrawingOpening(segments=[centerline, *oriented[:2]])
+
+
+def _opening_with_quote_category(opening: DrawingOpening, quote_category: str | None) -> DrawingOpening:
+    return DrawingOpening(segments=opening.segments, boundary_points=opening.boundary_points, quote_category=quote_category)
 
 
 def _group_openings(openings: list[DrawingOpening]) -> list[DrawingOpening]:
@@ -557,7 +565,32 @@ def _door_insert_width_m(entity, scale: float) -> float:
     return 0.9
 
 
-def _door_input_for_segment(start: Point, end: Point) -> OpeningInput:
+def _door_quote_category_from_entity(entity) -> str | None:
+    texts = [str(getattr(entity.dxf, "layer", ""))]
+    if entity.dxftype() == "INSERT":
+        texts.append(str(getattr(entity.dxf, "name", "")))
+    haystack = " ".join(texts).lower()
+    if any(keyword in haystack for keyword in ["入户", "进户", "防盗", "entry"]):
+        return "entry_door"
+    if any(keyword in haystack for keyword in ["推拉", "移门", "sliding"]):
+        return "sliding_door"
+    if any(keyword in haystack for keyword in ["室内", "房门", "interior"]):
+        return "interior_door"
+    return None
+
+
+def _resolve_door_quote_category(width_m: float, opening_type: str, quote_category: str | None) -> str | None:
+    if quote_category:
+        return quote_category
+    if width_m >= 1.4:
+        return "sliding_door"
+    if opening_type != "normal_door":
+        return None
+    return "interior_door"
+
+
+def _door_input_for_opening(opening: DrawingOpening) -> OpeningInput:
+    start, end = opening.segments[0]
     width_m = round(line_length(start, end), 2)
     opening_type, deduct_from_wall, review_required = _classify_door(width_m)
     return OpeningInput(
@@ -565,6 +598,7 @@ def _door_input_for_segment(start: Point, end: Point) -> OpeningInput:
         deduct_from_wall=deduct_from_wall,
         review_required=review_required,
         opening_type=opening_type,
+        quote_category=_resolve_door_quote_category(width_m, opening_type, opening.quote_category),
     )
 
 
@@ -591,6 +625,7 @@ def _drawing_door_for_opening(opening: DrawingOpening, named_rooms: list[tuple[s
         deduct_from_wall=deduct_from_wall,
         review_required=review_required,
         opening_type=opening_type,
+        quote_category=_resolve_door_quote_category(width_m, opening_type, opening.quote_category),
         space_names=[name for name, room in named_rooms if _opening_associated_with_room(room, segment[0], segment[1])],
     )
 

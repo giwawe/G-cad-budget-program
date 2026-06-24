@@ -149,7 +149,7 @@ def calculate_demolition_wall_area_m2(demolition_wall_length_m: float, height_m:
 
 
 def calculate_interior_door_count(doors: list) -> int:
-    return sum(1 for door in doors if door.opening_type == "normal_door")
+    return sum(1 for door in doors if door.opening_type == "normal_door" and door.quote_category == "interior_door")
 
 
 def calculate_curtain_wall_width_m(

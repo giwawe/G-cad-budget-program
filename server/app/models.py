@@ -24,6 +24,7 @@ class OpeningInput:
     deduct_from_wall: bool = False
     review_required: bool = False
     opening_type: str = "normal_door"
+    quote_category: str | None = None
 
 
 @dataclass(frozen=True)

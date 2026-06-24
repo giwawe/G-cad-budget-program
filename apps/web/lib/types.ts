@@ -71,6 +71,7 @@ export type DrawingDoor = {
   deduct_from_wall: boolean;
   review_required: boolean;
   opening_type: string;
+  quote_category?: string | null;
   space_names: string[];
 };
 

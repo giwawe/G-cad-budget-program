@@ -147,6 +147,31 @@ def build_closed_door_polyline_dxf() -> bytes:
     return _save_doc(doc)
 
 
+def build_auto_door_type_dxf() -> bytes:
+    doc = ezdxf.new("R2010")
+    msp = doc.modelspace()
+    for layer in ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_DOOR", "QUOTE_TEXT"]:
+        doc.layers.add(layer)
+    interior_block = doc.blocks.new(name="interior_door_model")
+    interior_block.add_line((-450, 0), (450, 0))
+    entry_block = doc.blocks.new(name="入户门_model")
+    entry_block.add_line((-450, 0), (450, 0))
+    sliding_block = doc.blocks.new(name="推拉门_model")
+    sliding_block.add_line((-600, 0), (600, 0))
+    msp.add_lwpolyline([(0, 0), (6000, 0), (6000, 4000), (0, 4000), (0, 0)], dxfattribs={"layer": "QUOTE_ROOM"})
+    msp.add_line((0, 0), (6000, 0), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((6000, 0), (6000, 4000), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((0, 4000), (6000, 4000), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((0, 0), (0, 4000), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((500, 0), (1400, 0), dxfattribs={"layer": "QUOTE_DOOR"})
+    msp.add_blockref("interior_door_model", (2250, 0), dxfattribs={"layer": "QUOTE_DOOR"})
+    msp.add_blockref("入户门_model", (3550, 0), dxfattribs={"layer": "QUOTE_DOOR"})
+    msp.add_blockref("推拉门_model", (5000, 0), dxfattribs={"layer": "QUOTE_DOOR"})
+    msp.add_line((1000, 4000), (2500, 4000), dxfattribs={"layer": "QUOTE_DOOR"})
+    msp.add_text("一层-客厅", dxfattribs={"layer": "QUOTE_TEXT", "insert": (3000, 2000)})
+    return _save_doc(doc)
+
+
 def build_two_room_quote_dxf_with_duplicate_close_point() -> bytes:
     doc = ezdxf.new("R2010")
     msp = doc.modelspace()

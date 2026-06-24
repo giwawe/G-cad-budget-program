@@ -257,7 +257,9 @@ def test_interior_door_count_only_counts_normal_doors():
         wall_lengths_m=[6, 5, 4],
         doors=[
             OpeningInput(width_m=0.9, opening_type="normal_door"),
-            OpeningInput(width_m=1.8, deduct_from_wall=True, opening_type="large_opening"),
+            OpeningInput(width_m=0.9, opening_type="normal_door", quote_category="interior_door"),
+            OpeningInput(width_m=0.9, opening_type="normal_door", quote_category="entry_door"),
+            OpeningInput(width_m=1.1, opening_type="normal_door", quote_category="sliding_door"),
             OpeningInput(width_m=1.3, review_required=True, opening_type="suspected_large_opening"),
         ],
     )
