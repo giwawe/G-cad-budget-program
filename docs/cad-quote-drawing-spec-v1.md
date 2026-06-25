@@ -38,7 +38,7 @@
 | `QUOTE_CUSTOM` | 非厨房全屋定制柜体投影延米线，可配邻近高度文字 | 计算全屋定制数量 |
 | `QUOTE_TOILET` | 可选马桶点位 | 覆盖卫生间默认马桶数量 |
 | `QUOTE_BATHROOM_VANITY` | 可选浴室柜点位 | 覆盖卫生间默认浴室柜数量 |
-| `QUOTE_EXT_WALL` | 建筑外墙外轮廓闭合多段线 | 计算方案建筑面积 |
+| `QUOTE_EXT_WALL` | 建筑外墙外轮廓闭合多段线 | 计算方案建筑面积；closed 标记或首尾点重合都视为闭合 |
 
 ### 2.3 预留或增强图层
 
@@ -98,7 +98,7 @@
 
 要求：
 
-- 使用闭合 `LWPOLYLINE` 或 `POLYLINE`。
+- 使用闭合 `LWPOLYLINE` 或 `POLYLINE`；可以设置 CAD closed 标记，也可以让多段线首尾点重合。
 - 只画建筑外墙外轮廓，不要画室内隔墙或房间边界。
 - 如果图中存在多条闭合 `QUOTE_EXT_WALL`，系统当前取面积最大的闭合轮廓作为 `building_area_m2`。
 - 没有闭合外墙轮廓时，建筑面积输出为 `0`，需要人工补画或人工确认。
@@ -106,7 +106,7 @@
 当前计算口径：
 
 ```text
-建筑面积 = 最大闭合 QUOTE_EXT_WALL 多段线面积
+建筑面积 = 最大闭合 QUOTE_EXT_WALL 多段线面积；closed 标记或首尾点重合都视为闭合
 ```
 
 ### 4.2 贴砖墙面线
@@ -330,7 +330,7 @@
 核心公式：
 
 ```text
-建筑面积 = 最大闭合 QUOTE_EXT_WALL 多段线面积；没有 QUOTE_EXT_WALL 时为 0
+建筑面积 = 最大闭合 QUOTE_EXT_WALL 多段线面积；closed 标记或首尾点重合都视为闭合，没有 QUOTE_EXT_WALL 时为 0
 地面面积 = QUOTE_ROOM 闭合边界面积
 顶面面积 = 地面面积
 墙面计量长度 = 与空间关联的 QUOTE_WALL 长度合计

@@ -327,9 +327,9 @@ def _polyline_points(entity, scale: float) -> list[Point]:
 
 
 def _closed_polyline_boundary_points(entity, scale: float) -> list[Point]:
-    if not _entity_is_closed_polyline(entity):
-        return []
     points = _polyline_points(entity, scale)
+    if not (_entity_is_closed_polyline(entity) or _polyline_endpoints_match(points)):
+        return []
     if len(points) > 1 and points[0] == points[-1]:
         points = points[:-1]
     return points if len(points) >= 4 else []
@@ -777,6 +777,10 @@ def _classify_door(width_m: float) -> tuple[str, bool, bool]:
 
 def _entity_is_closed_polyline(entity) -> bool:
     return bool(getattr(entity, "closed", False) or getattr(entity, "is_closed", False))
+
+
+def _polyline_endpoints_match(points: list[Point]) -> bool:
+    return len(points) > 1 and line_length(points[0], points[-1]) <= 0.001
 
 
 def _extract_base_drawing(modelspace, scale: float, bbox: dict[str, float]) -> tuple[list[tuple[Point, Point]], list[DrawingText]]:
