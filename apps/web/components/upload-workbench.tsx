@@ -7,6 +7,7 @@ import { QuantityTable } from "@/components/quantity-table";
 import { calibrationTemplateFileName, quantityRowsToCalibrationTemplate } from "@/lib/calibration-template";
 import { resolveCalibrationDifference } from "@/lib/calibration-differences";
 import { quantityRowAnchorHref } from "@/lib/quantity-row-anchor";
+import { buildQuantityHealthChecks } from "@/lib/quantity-health";
 import { updateQuantityRowCurtainWallWidth, updateQuantityRowStatus } from "@/lib/quantity-row-status";
 import {
   apartmentPendingQuoteMetrics,
@@ -200,6 +201,10 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
   const pendingQuoteMetrics = useMemo(() => apartmentPendingQuoteMetrics(), []);
   const curtainReadiness = useMemo(() => curtainQuoteReadiness(rows), [rows]);
   const projectSummaryItems = generatedQuoteMapping ? projectSummaryQuoteItems(generatedQuoteMapping.mapping) : [];
+  const healthChecks = useMemo(
+    () => buildQuantityHealthChecks({ rows, summary, quoteMapping: generatedQuoteMapping?.mapping ?? null }),
+    [rows, summary, generatedQuoteMapping],
+  );
 
   async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -651,6 +656,34 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
             {pendingQuoteMetrics.length > 0 ? `待补取数口径：${pendingQuoteMetrics.length} 项不参与当前金额` : "待补取数口径：已全部接入当前规则"}
           </small>
         </div>
+      </section>
+
+      <section className="healthPanel">
+        <div className="templateHeader">
+          <div>
+            <strong>算量健康检查</strong>
+            <span>{healthChecks.length > 0 ? `${healthChecks.length} 项需要关注` : "当前无待确认项"}</span>
+          </div>
+        </div>
+        {healthChecks.length > 0 ? (
+          <div className="healthList">
+            {healthChecks.map((check) => (
+              <div className={`healthCard ${check.severity}`} key={check.id}>
+                <strong>{check.title}</strong>
+                <span>{check.detail}</span>
+                {check.spaceNames && (
+                  <div>
+                    {check.spaceNames.map((spaceName) => (
+                      <a href={quantityRowAnchorHref(spaceName)} key={spaceName}>{spaceName}</a>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p>空间类型、建筑面积、窗帘确认和报价规则缺失项目前看起来正常。</p>
+        )}
       </section>
 
       {generatedTemplate && (
