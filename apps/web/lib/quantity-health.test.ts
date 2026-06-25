@@ -173,6 +173,10 @@ assert.equal(healthFixListFileName("样例数据"), "health-fix-list.md");
 const fixListMarkdown = buildHealthFixListMarkdown({
   fileName: "987654.dxf",
   checks: [checks[0], cabinetFixtureChecks[0]],
+  rows: [
+    { ...baseRow, spaceName: "客卧", status: "needs_fix" },
+    { ...baseRow, spaceName: "厨房", status: "pending_review" },
+  ],
   generatedAt: new Date("2026-06-25T10:20:30Z"),
 });
 
@@ -187,6 +191,7 @@ assert.equal(fixListMarkdown, `# CAD 修图清单
 1. 空间类型待确认
    - 级别：warning
    - 涉及空间：客卧
+   - 当前状态：客卧=需修图
    - 问题：客卧 被识别为其他，需改名或补充关键词，避免报价项目缺失。
    - 建议：检查空间名称和 QUOTE_TEXT，必要时改名或补充空间分类关键词。
 
@@ -195,6 +200,12 @@ assert.equal(fixListMarkdown, `# CAD 修图清单
 1. 厨房橱柜待确认
    - 级别：info
    - 涉及空间：厨房
+   - 当前状态：厨房=待确认
    - 问题：厨房 橱柜地柜和吊柜长度都为 0，如需橱柜报价请检查 QUOTE_BASE_CABINET / QUOTE_WALL_CABINET。
    - 建议：如需要橱柜报价，在实际地柜/吊柜位置补画对应柜体延米线。
+
+## 修图后复核
+
+1. CAD 修图完成后，请重新上传 DXF 并复查算量健康检查。
+2. 若仍有 warning，请先处理后再导出正式报价映射。
 `);

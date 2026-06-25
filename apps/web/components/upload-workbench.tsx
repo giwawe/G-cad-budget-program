@@ -373,7 +373,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
 
   function handleDownloadHealthFixList() {
     const downloadName = healthFixListFileName(fileName);
-    const content = buildHealthFixListMarkdown({ fileName, checks: healthChecks });
+    const content = buildHealthFixListMarkdown({ fileName, checks: healthChecks, rows });
     const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");

@@ -1,5 +1,5 @@
 import type { QuoteMapping } from "./quote-mapping";
-import type { QuantityRow, QuantitySummary } from "./types";
+import type { QuantityRow, QuantitySummary, ReviewStatus } from "./types";
 
 export type QuantityHealthSeverity = "warning" | "info";
 
@@ -50,10 +50,12 @@ export function healthFixListFileName(fileName: string): string {
 export function buildHealthFixListMarkdown({
   fileName,
   checks,
+  rows = [],
   generatedAt = new Date(),
 }: {
   fileName: string;
   checks: QuantityHealthCheck[];
+  rows?: QuantityRow[];
   generatedAt?: Date;
 }): string {
   const summary = summarizeQuantityHealthChecks(checks);
@@ -66,8 +68,9 @@ export function buildHealthFixListMarkdown({
     `生成时间：${generatedAt.toISOString()}`,
     `检查结果：${summary.label}`,
     "",
-    ...formatHealthSection("需优先处理", warningChecks),
-    ...formatHealthSection("提醒", infoChecks),
+    ...formatHealthSection("需优先处理", warningChecks, rows),
+    ...formatHealthSection("提醒", infoChecks, rows),
+    ...formatRepairReviewSection(checks),
   ];
   while (lines[lines.length - 1] === "") {
     lines.pop();
@@ -239,7 +242,7 @@ function formatHealthSummaryLabel(warning: number, info: number): string {
   return parts.join("，");
 }
 
-function formatHealthSection(title: string, checks: QuantityHealthCheck[]): string[] {
+function formatHealthSection(title: string, checks: QuantityHealthCheck[], rows: QuantityRow[]): string[] {
   if (checks.length === 0) {
     return [];
   }
@@ -250,11 +253,48 @@ function formatHealthSection(title: string, checks: QuantityHealthCheck[]): stri
       `${index + 1}. ${check.title}`,
       `   - 级别：${check.severity}`,
       `   - 涉及空间：${check.spaceNames?.length ? formatNames(check.spaceNames) : "全屋/项目级"}`,
+      ...formatStatusLine(check, rows),
       `   - 问题：${check.detail}`,
       `   - 建议：${healthFixSuggestion(check.id)}`,
       "",
     ]),
   ];
+}
+
+function formatStatusLine(check: QuantityHealthCheck, rows: QuantityRow[]): string[] {
+  if (!check.spaceNames?.length || rows.length === 0) {
+    return [];
+  }
+  const statuses = check.spaceNames.map((spaceName) => `${spaceName}=${reviewStatusLabel(rows.find((row) => row.spaceName === spaceName)?.status)}`);
+  return [`   - 当前状态：${statuses.join("、")}`];
+}
+
+function formatRepairReviewSection(checks: QuantityHealthCheck[]): string[] {
+  if (checks.length === 0) {
+    return [];
+  }
+  return [
+    "## 修图后复核",
+    "",
+    "1. CAD 修图完成后，请重新上传 DXF 并复查算量健康检查。",
+    "2. 若仍有 warning，请先处理后再导出正式报价映射。",
+    "",
+  ];
+}
+
+function reviewStatusLabel(status?: ReviewStatus): string {
+  switch (status) {
+    case "pending_review":
+      return "待确认";
+    case "confirmed":
+      return "已确认";
+    case "needs_fix":
+      return "需修图";
+    case "excluded":
+      return "不计价";
+    default:
+      return "未知";
+  }
 }
 
 function healthFixSuggestion(id: QuantityHealthCheck["id"]): string {
