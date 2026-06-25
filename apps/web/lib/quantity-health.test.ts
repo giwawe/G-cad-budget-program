@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { buildHealthFixListMarkdown, healthFixListFileName, buildQuantityHealthChecks, summarizeQuantityHealthChecks } from "./quantity-health.ts";
+import { buildHealthFixListMarkdown, filterQuantityHealthChecks, healthFixListFileName, buildQuantityHealthChecks, summarizeQuantityHealthChecks } from "./quantity-health.ts";
 import type { QuantityRow, QuantitySummary } from "./types.ts";
 import type { QuoteMapping } from "./quote-mapping.ts";
 
@@ -172,6 +172,13 @@ assert.deepEqual(summarizeQuantityHealthChecks(cabinetFixtureChecks), {
 assert.equal(cabinetFixtureChecks[0].detail, "厨房 橱柜地柜和吊柜长度都为 0，如需橱柜报价请检查 QUOTE_BASE_CABINET / QUOTE_WALL_CABINET。");
 assert.equal(cabinetFixtureChecks[1].detail, "西厨 厨房空间出现全屋定制面积，可能和橱柜地柜/吊柜重复计价。");
 assert.equal(cabinetFixtureChecks[2].detail, "公卫 马桶或浴室柜数量为 0，请确认是否应按默认 1 个/1 套或补画点位。");
+assert.deepEqual(filterQuantityHealthChecks(cabinetFixtureChecks, "all").map((check) => check.id), [
+  "kitchen-cabinet-missing",
+  "kitchen-custom-cabinet-overlap",
+  "bathroom-fixture-missing",
+]);
+assert.deepEqual(filterQuantityHealthChecks(cabinetFixtureChecks, "warning").map((check) => check.id), ["kitchen-custom-cabinet-overlap"]);
+assert.deepEqual(filterQuantityHealthChecks(cabinetFixtureChecks, "info").map((check) => check.id), ["kitchen-cabinet-missing", "bathroom-fixture-missing"]);
 
 assert.equal(healthFixListFileName("987654.dxf"), "987654.health-fix-list.md");
 assert.equal(healthFixListFileName("样例数据"), "health-fix-list.md");

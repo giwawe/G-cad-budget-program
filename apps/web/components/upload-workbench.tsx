@@ -7,7 +7,7 @@ import { QuantityTable } from "@/components/quantity-table";
 import { calibrationTemplateFileName, quantityRowsToCalibrationTemplate } from "@/lib/calibration-template";
 import { resolveCalibrationDifference } from "@/lib/calibration-differences";
 import { quantityRowAnchorHref } from "@/lib/quantity-row-anchor";
-import { buildHealthFixListMarkdown, buildQuantityHealthChecks, healthFixListFileName, summarizeQuantityHealthChecks } from "@/lib/quantity-health";
+import { buildHealthFixListMarkdown, buildQuantityHealthChecks, filterQuantityHealthChecks, healthFixListFileName, summarizeQuantityHealthChecks, type QuantityHealthFilter } from "@/lib/quantity-health";
 import { updateQuantityRowCurtainWallWidth, updateQuantityRowStatus, updateQuantityRowsStatusBySpaceNames } from "@/lib/quantity-row-status";
 import {
   apartmentPendingQuoteMetrics,
@@ -197,6 +197,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
   const [quoteRules, setQuoteRules] = useState<QuoteRule[]>(() => defaultQuoteRules());
   const [quoteRulesFileName, setQuoteRulesFileName] = useState(DEFAULT_QUOTE_RULES_NAME);
   const [generatedQuoteRules, setGeneratedQuoteRules] = useState<{ fileName: string; content: string } | null>(null);
+  const [healthFilter, setHealthFilter] = useState<QuantityHealthFilter>("all");
 
   const excludedCount = useMemo(() => rows.filter((row) => row.status === "excluded").length, [rows]);
   const pendingQuoteMetrics = useMemo(() => apartmentPendingQuoteMetrics(), []);
@@ -207,6 +208,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
     [rows, summary, generatedQuoteMapping],
   );
   const healthSummary = useMemo(() => summarizeQuantityHealthChecks(healthChecks), [healthChecks]);
+  const filteredHealthChecks = useMemo(() => filterQuantityHealthChecks(healthChecks, healthFilter), [healthChecks, healthFilter]);
 
   async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -722,9 +724,21 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
             导出修图清单
           </button>
         </div>
+        <div className="healthFilter" role="group" aria-label="健康检查筛选">
+          {healthFilterOptions.map((option) => (
+            <button
+              type="button"
+              className={healthFilter === option.value ? "active" : ""}
+              onClick={() => setHealthFilter(option.value)}
+              key={option.value}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
         {healthChecks.length > 0 ? (
           <div className="healthList">
-            {healthChecks.map((check) => (
+            {filteredHealthChecks.map((check) => (
               <div className={`healthCard ${check.severity}`} key={check.id}>
                 <strong>{check.title}</strong>
                 <span>{check.detail}</span>
@@ -740,6 +754,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
                 )}
               </div>
             ))}
+            {filteredHealthChecks.length === 0 && <p>当前筛选下暂无检查项。</p>}
           </div>
         ) : (
           <p>空间类型、建筑面积、窗帘确认和报价规则缺失项目前看起来正常。</p>
@@ -990,3 +1005,9 @@ const statusLabels: Record<ReviewStatus, string> = {
   needs_fix: "需修图",
   excluded: "不计价",
 };
+
+const healthFilterOptions: { value: QuantityHealthFilter; label: string }[] = [
+  { value: "all", label: "全部" },
+  { value: "warning", label: "需优先处理" },
+  { value: "info", label: "提醒" },
+];

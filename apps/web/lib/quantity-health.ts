@@ -28,6 +28,15 @@ export type QuantityHealthSummary = {
   label: string;
 };
 
+export type QuantityHealthFilter = "all" | QuantityHealthSeverity;
+
+export function filterQuantityHealthChecks(checks: QuantityHealthCheck[], filter: QuantityHealthFilter): QuantityHealthCheck[] {
+  if (filter === "all") {
+    return checks;
+  }
+  return checks.filter((check) => check.severity === filter);
+}
+
 export function summarizeQuantityHealthChecks(checks: QuantityHealthCheck[]): QuantityHealthSummary {
   const warning = checks.filter((check) => check.severity === "warning").length;
   const info = checks.filter((check) => check.severity === "info").length;
