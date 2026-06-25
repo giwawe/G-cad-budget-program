@@ -4,7 +4,14 @@ import type { QuantityRow, QuantitySummary } from "./types";
 export type QuantityHealthSeverity = "warning" | "info";
 
 export type QuantityHealthCheck = {
-  id: "space-type-other" | "building-area-missing" | "curtain-wall-width-pending" | "building-area-quote-missing";
+  id:
+    | "space-type-other"
+    | "building-area-missing"
+    | "curtain-wall-width-pending"
+    | "building-area-quote-missing"
+    | "bathroom-door-classification"
+    | "bedroom-interior-door-duplicate"
+    | "kitchen-sliding-door-missing";
   severity: QuantityHealthSeverity;
   title: string;
   detail: string;
@@ -30,6 +37,47 @@ export function buildQuantityHealthChecks({
       title: "空间类型待确认",
       detail: `${formatNames(otherSpaceNames)} 被识别为其他，需改名或补充关键词，避免报价项目缺失。`,
       spaceNames: otherSpaceNames,
+    });
+  }
+
+  const bathroomInteriorDoorNames = uniqueNames(
+    billableRows.filter((row) => row.spaceType === "卫生间" && row.interiorDoorCount > 0).map((row) => row.spaceName),
+  );
+  if (bathroomInteriorDoorNames.length > 0) {
+    checks.push({
+      id: "bathroom-door-classification",
+      severity: "warning",
+      title: "卫生间门分类待确认",
+      detail: `${formatNames(bathroomInteriorDoorNames)} 出现室内门数量，可能应归为卫生间门，避免室内门重复报价。`,
+      spaceNames: bathroomInteriorDoorNames,
+    });
+  }
+
+  const bedroomDuplicateDoorNames = uniqueNames(
+    billableRows.filter((row) => row.spaceType === "卧室" && row.interiorDoorCount > 1).map((row) => row.spaceName),
+  );
+  if (bedroomDuplicateDoorNames.length > 0) {
+    checks.push({
+      id: "bedroom-interior-door-duplicate",
+      severity: "warning",
+      title: "卧室室内门数量待确认",
+      detail: `${formatNames(bedroomDuplicateDoorNames)} 室内门数量超过 1，可能和套内卫生间门重复。`,
+      spaceNames: bedroomDuplicateDoorNames,
+    });
+  }
+
+  const kitchenMissingSlidingDoorNames = uniqueNames(
+    billableRows
+      .filter((row) => row.spaceType === "厨房" && row.doorWidthTotalM >= 1.2 && (row.slidingDoorAreaM2 <= 0 || row.slidingDoorCasingLengthM <= 0))
+      .map((row) => row.spaceName),
+  );
+  if (kitchenMissingSlidingDoorNames.length > 0) {
+    checks.push({
+      id: "kitchen-sliding-door-missing",
+      severity: "warning",
+      title: "厨房推拉门待确认",
+      detail: `${formatNames(kitchenMissingSlidingDoorNames)} 有 1.20m 以上门洞但推拉门面积或门套为 0，请确认是否应生成厨房推拉门报价。`,
+      spaceNames: kitchenMissingSlidingDoorNames,
     });
   }
 
