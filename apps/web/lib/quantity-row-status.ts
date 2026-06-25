@@ -9,6 +9,10 @@ export function updateQuantityRowsStatusBySpaceNames(rows: QuantityRow[], spaceN
   return rows.map((row) => (names.has(row.spaceName) ? { ...row, status } : row));
 }
 
+export function confirmQuantityRowsBySpaceNames(rows: QuantityRow[], spaceNames: string[]): QuantityRow[] {
+  return updateQuantityRowsStatusBySpaceNames(rows, spaceNames, "confirmed");
+}
+
 export function updateQuantityRowCurtainWallWidth(rows: QuantityRow[], spaceName: string, widthM: number): QuantityRow[] {
   const curtainWallWidthM = Math.round(Math.max(widthM, 0) * 100) / 100;
   return rows.map((row) => (row.spaceName === spaceName ? { ...row, curtainWallWidthM, curtainWallWidthSource: "manual" } : row));

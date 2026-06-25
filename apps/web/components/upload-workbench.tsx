@@ -8,7 +8,7 @@ import { calibrationTemplateFileName, quantityRowsToCalibrationTemplate } from "
 import { resolveCalibrationDifference } from "@/lib/calibration-differences";
 import { quantityRowAnchorHref } from "@/lib/quantity-row-anchor";
 import { buildHealthFixListMarkdown, buildQuantityHealthChecks, filterQuantityHealthChecks, healthFixListFileName, summarizeQuantityHealthChecks, type QuantityHealthFilter } from "@/lib/quantity-health";
-import { updateQuantityRowCurtainWallWidth, updateQuantityRowStatus, updateQuantityRowsStatusBySpaceNames } from "@/lib/quantity-row-status";
+import { confirmQuantityRowsBySpaceNames, updateQuantityRowCurtainWallWidth, updateQuantityRowStatus, updateQuantityRowsStatusBySpaceNames } from "@/lib/quantity-row-status";
 import {
   apartmentPendingQuoteMetrics,
   buildQuoteMapping,
@@ -492,6 +492,16 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
     setMessage(`${spaceNames.join("、")} 已标记为需修图`);
   }
 
+  function handleConfirmHealthCheckSpaces(spaceNames: string[]) {
+    if (spaceNames.length === 0) {
+      return;
+    }
+    setRows((current) => confirmQuantityRowsBySpaceNames(current, spaceNames));
+    setGeneratedQuoteMapping(null);
+    setGeneratedHealthFixList(null);
+    setMessage(`${spaceNames.join("、")} 已标记为已确认`);
+  }
+
   function handleChangeCurtainWallWidth(spaceName: string, widthM: number, source: "manual" | "calibration" = "manual") {
     if (!Number.isFinite(widthM)) {
       return;
@@ -749,6 +759,9 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
                     ))}
                     <button type="button" onClick={() => handleMarkHealthCheckNeedsFix(check.spaceNames ?? [])}>
                       标记需修图
+                    </button>
+                    <button type="button" onClick={() => handleConfirmHealthCheckSpaces(check.spaceNames ?? [])}>
+                      标记已确认
                     </button>
                   </div>
                 )}
