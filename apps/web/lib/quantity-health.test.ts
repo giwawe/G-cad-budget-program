@@ -73,6 +73,12 @@ const quoteMapping: QuoteMapping = {
     required_item_names: ["强电布线", "水路布管"],
     missing_item_names: ["强电布线", "水路布管"],
   },
+  quantity_health_readiness: {
+    total: 0,
+    warning: 0,
+    info: 0,
+    label: "当前无待确认项",
+  },
 };
 
 const checks = buildQuantityHealthChecks({

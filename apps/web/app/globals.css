@@ -387,6 +387,15 @@ code {
   padding-top: 8px;
 }
 
+.quoteGaps .quoteRisk {
+  border-bottom: 1px solid #f0dcae;
+  padding-bottom: 8px;
+}
+
+.quoteGaps .quoteRisk strong {
+  color: #8a3a13;
+}
+
 .quoteGaps .projectSummaryItems {
   align-items: stretch;
   border-bottom: 1px solid #f0dcae;

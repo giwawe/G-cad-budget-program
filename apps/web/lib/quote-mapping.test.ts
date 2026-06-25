@@ -99,6 +99,12 @@ const rows: QuantityRow[] = [
 
 const mapping = buildQuoteMapping(rows, undefined, { building_area_m2: 88.66 });
 
+assert.deepEqual(mapping.quantity_health_readiness, {
+  total: 0,
+  warning: 0,
+  info: 0,
+  label: "当前无待确认项",
+});
 assert.equal(mapping.items.length, 10);
 assert.equal(mapping.items[0].space_name, "厨房");
 assert.equal(mapping.items[0].space_type, "厨房");
@@ -217,6 +223,19 @@ assert.deepEqual(missingBuildingAreaMapping.building_area_quote_readiness, {
   building_area_m2: 0,
   required_item_names: ["按建筑面积计价项目"],
   missing_item_names: ["按建筑面积计价项目"],
+});
+
+const riskyMapping = buildQuoteMapping(rows, undefined, { building_area_m2: 88.66 }, {
+  total: 3,
+  warning: 2,
+  info: 1,
+  label: "2 项需优先处理，1 项提醒",
+});
+assert.deepEqual(riskyMapping.quantity_health_readiness, {
+  total: 3,
+  warning: 2,
+  info: 1,
+  label: "2 项需优先处理，1 项提醒",
 });
 
 const bedroomRows: QuantityRow[] = [

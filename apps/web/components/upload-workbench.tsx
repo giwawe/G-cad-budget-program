@@ -396,7 +396,10 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
   }
 
   function handleDownloadQuoteMapping() {
-    const mapping = buildQuoteMapping(rows, quoteRules, summary ?? undefined);
+    const baseMapping = buildQuoteMapping(rows, quoteRules, summary ?? undefined);
+    const quoteHealthChecks = buildQuantityHealthChecks({ rows, summary, quoteMapping: baseMapping });
+    const quoteHealthSummary = summarizeQuantityHealthChecks(quoteHealthChecks);
+    const mapping = buildQuoteMapping(rows, quoteRules, summary ?? undefined, quoteHealthSummary);
     const downloadName = quoteMappingFileName(fileName);
     const content = `${JSON.stringify(mapping, null, 2)}\n`;
     const blob = new Blob([content], { type: "application/json;charset=utf-8" });
@@ -409,7 +412,11 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
     link.remove();
     URL.revokeObjectURL(url);
     setGeneratedQuoteMapping({ fileName: downloadName, content, mapping });
-    setMessage(`已生成报价映射：${downloadName}`);
+    setMessage(
+      quoteHealthSummary.warning > 0
+        ? `已生成报价映射：${downloadName}；当前还有 ${quoteHealthSummary.warning} 项需优先处理，建议先导出修图清单或修图后复核。`
+        : `已生成报价映射：${downloadName}`,
+    );
   }
 
   async function handleCopyQuoteMapping() {
@@ -829,6 +836,14 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
             </div>
           </div>
           <div className="quoteGaps">
+            {generatedQuoteMapping.mapping.quantity_health_readiness.warning > 0 && (
+              <div className="quoteRisk">
+                <strong>报价前仍有风险</strong>
+                <span>
+                  {generatedQuoteMapping.mapping.quantity_health_readiness.label}；本次报价映射已生成，正式报价前建议先处理 warning 并重新导出。
+                </span>
+              </div>
+            )}
             {projectSummaryItems.length > 0 && (
               <div className="projectSummaryItems">
                 <strong>全屋汇总项</strong>

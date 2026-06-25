@@ -106,6 +106,7 @@ export type QuoteMapping = {
   curtain_quote_readiness: CurtainQuoteReadiness;
   curtain_quote_candidates: CurtainQuoteCandidate[];
   building_area_quote_readiness: BuildingAreaQuoteReadiness;
+  quantity_health_readiness: QuantityHealthReadiness;
 };
 
 export type CurtainQuoteReadiness = {
@@ -119,6 +120,13 @@ export type BuildingAreaQuoteReadiness = {
   building_area_m2: number;
   required_item_names: string[];
   missing_item_names: string[];
+};
+
+export type QuantityHealthReadiness = {
+  total: number;
+  warning: number;
+  info: number;
+  label: string;
 };
 
 export const DEFAULT_QUOTE_RULES_NAME = "商品房整装默认规则";
@@ -255,7 +263,12 @@ export function curtainQuoteCandidates(rows: QuantityRow[]): CurtainQuoteCandida
     }));
 }
 
-export function buildQuoteMapping(rows: QuantityRow[], rules: QuoteRule[] = DEFAULT_RULES, summary?: Pick<QuantitySummary, "building_area_m2">): QuoteMapping {
+export function buildQuoteMapping(
+  rows: QuantityRow[],
+  rules: QuoteRule[] = DEFAULT_RULES,
+  summary?: Pick<QuantitySummary, "building_area_m2">,
+  quantityHealthReadiness: QuantityHealthReadiness = { total: 0, warning: 0, info: 0, label: "当前无待确认项" },
+): QuoteMapping {
   const billableRows = rows.filter((row) => row.status !== "excluded");
   const buildingAreaM2 = round2(summary?.building_area_m2 ?? 0);
   const rowRules = rules.filter((rule): rule is QuoteRule & { metric: RowQuoteMetric } => !isProjectMetric(rule.metric) && !SUMMED_PROJECT_METRICS.has(rule.metric));
@@ -289,6 +302,7 @@ export function buildQuoteMapping(rows: QuantityRow[], rules: QuoteRule[] = DEFA
     curtain_quote_readiness: curtainQuoteReadiness(rows),
     curtain_quote_candidates: curtainQuoteCandidates(rows),
     building_area_quote_readiness: buildingAreaQuoteReadiness(rules, buildingAreaM2),
+    quantity_health_readiness: quantityHealthReadiness,
   };
 }
 
