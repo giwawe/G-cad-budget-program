@@ -300,8 +300,24 @@ code {
   text-decoration: none;
 }
 
+.healthCard button {
+  border: 1px solid #dfbd74;
+  border-radius: 999px;
+  background: #fff7e6;
+  color: #5f4410;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 3px 10px;
+}
+
 .healthCard.info a {
   border-color: #cbd5e1;
+  color: #334155;
+}
+
+.healthCard.info button {
+  border-color: #cbd5e1;
+  background: #f1f5f9;
   color: #334155;
 }
 
