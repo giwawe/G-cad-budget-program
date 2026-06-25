@@ -7,6 +7,7 @@ import {
   DEFAULT_QUOTE_RULES_NAME,
   defaultQuoteRules,
   formatCurtainReadinessSpaces,
+  projectSummaryQuoteItems,
   parseQuoteRules,
   quoteMappingFileName,
   quoteRulesTemplateFileName,
@@ -141,6 +142,12 @@ assert.deepEqual(mapping.items[9], {
   unit_price: 6000,
   amount: 6000,
 });
+assert.deepEqual(projectSummaryQuoteItems(mapping), [
+  mapping.items[6],
+  mapping.items[7],
+  mapping.items[8],
+  mapping.items[9],
+]);
 assert.equal(mapping.summary.item_count, 10);
 assert.equal(mapping.summary.space_count, 1);
 assert.equal(mapping.summary.total_amount, 23283.74);

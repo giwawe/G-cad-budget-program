@@ -301,6 +301,26 @@ code {
   padding-top: 8px;
 }
 
+.quoteGaps .projectSummaryItems {
+  align-items: stretch;
+  border-bottom: 1px solid #f0dcae;
+  padding-bottom: 8px;
+}
+
+.quoteGaps .projectSummaryItems div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.quoteGaps .projectSummaryItems span {
+  border: 1px solid #f0dcae;
+  border-radius: 6px;
+  background: #fffdf7;
+  padding: 5px 8px;
+}
+
 .quoteGaps .curtainReadinessDetails {
   display: grid;
   align-items: stretch;

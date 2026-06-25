@@ -206,6 +206,10 @@ export function apartmentPendingQuoteMetrics(): PendingQuoteMetric[] {
   return APARTMENT_PENDING_METRICS.map((item) => ({ ...item }));
 }
 
+export function projectSummaryQuoteItems(mapping: Pick<QuoteMapping, "items">): QuoteMappingItem[] {
+  return mapping.items.filter((item) => item.space_name === "全屋");
+}
+
 export function curtainQuoteReadiness(rows: QuantityRow[]): CurtainQuoteReadiness {
   const ready_space_names: string[] = [];
   const pending_space_names: string[] = [];

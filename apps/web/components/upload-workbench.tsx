@@ -16,6 +16,7 @@ import {
   defaultQuoteRules,
   formatCurtainReadinessSpaces,
   parseQuoteRules,
+  projectSummaryQuoteItems,
   quoteMappingFileName,
   quoteRulesTemplateFileName,
   type QuoteMapping,
@@ -198,6 +199,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
   const excludedCount = useMemo(() => rows.filter((row) => row.status === "excluded").length, [rows]);
   const pendingQuoteMetrics = useMemo(() => apartmentPendingQuoteMetrics(), []);
   const curtainReadiness = useMemo(() => curtainQuoteReadiness(rows), [rows]);
+  const projectSummaryItems = generatedQuoteMapping ? projectSummaryQuoteItems(generatedQuoteMapping.mapping) : [];
 
   async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -726,6 +728,18 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
             </div>
           </div>
           <div className="quoteGaps">
+            {projectSummaryItems.length > 0 && (
+              <div className="projectSummaryItems">
+                <strong>全屋汇总项</strong>
+                <div>
+                  {projectSummaryItems.map((item) => (
+                    <span key={`${item.space_name}-${item.item_name}`}>
+                      {item.item_name} {item.quantity.toFixed(2)} {item.unit} / {item.amount.toFixed(2)} 元
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
             <div>
               <strong>待补取数口径</strong>
               <span>{pendingQuoteMetrics.length > 0 ? `${pendingQuoteMetrics.length} 项暂不参与金额汇总，后续补齐 metric 后再接入。` : "当前默认规则已无待补取数口径。"}</span>
