@@ -276,6 +276,15 @@ code {
   line-height: 1.5;
 }
 
+.healthCard.info {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.healthCard.info span {
+  color: #475569;
+}
+
 .healthCard div {
   display: flex;
   flex-wrap: wrap;
@@ -289,6 +298,11 @@ code {
   font-size: 12px;
   padding: 3px 8px;
   text-decoration: none;
+}
+
+.healthCard.info a {
+  border-color: #cbd5e1;
+  color: #334155;
 }
 
 .quotePanel {

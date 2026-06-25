@@ -77,7 +77,7 @@ export function buildQuantityHealthChecks({
   if (kitchenMissingSlidingDoorNames.length > 0) {
     checks.push({
       id: "kitchen-sliding-door-missing",
-      severity: "warning",
+      severity: "info",
       title: "厨房推拉门待确认",
       detail: `${formatNames(kitchenMissingSlidingDoorNames)} 有 1.20m 以上门洞但推拉门面积或门套为 0，请确认是否应生成厨房推拉门报价。`,
       spaceNames: kitchenMissingSlidingDoorNames,
@@ -92,7 +92,7 @@ export function buildQuantityHealthChecks({
   if (kitchenMissingCabinetNames.length > 0) {
     checks.push({
       id: "kitchen-cabinet-missing",
-      severity: "warning",
+      severity: "info",
       title: "厨房橱柜待确认",
       detail: `${formatNames(kitchenMissingCabinetNames)} 橱柜地柜和吊柜长度都为 0，如需橱柜报价请检查 QUOTE_BASE_CABINET / QUOTE_WALL_CABINET。`,
       spaceNames: kitchenMissingCabinetNames,
@@ -118,7 +118,7 @@ export function buildQuantityHealthChecks({
   if (bathroomMissingFixtureNames.length > 0) {
     checks.push({
       id: "bathroom-fixture-missing",
-      severity: "warning",
+      severity: "info",
       title: "卫生间洁具待确认",
       detail: `${formatNames(bathroomMissingFixtureNames)} 马桶或浴室柜数量为 0，请确认是否应按默认 1 个/1 套或补画点位。`,
       spaceNames: bathroomMissingFixtureNames,

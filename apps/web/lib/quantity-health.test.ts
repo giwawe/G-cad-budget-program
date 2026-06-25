@@ -127,6 +127,7 @@ assert.deepEqual(doorChecks[0], {
   spaceNames: ["公卫"],
 });
 assert.equal(doorChecks[1].detail, "主卧 室内门数量超过 1，可能和套内卫生间门重复。");
+assert.equal(doorChecks[2].severity, "info");
 assert.equal(doorChecks[2].detail, "厨房 有 1.20m 以上门洞但推拉门面积或门套为 0，请确认是否应生成厨房推拉门报价。");
 
 const cabinetFixtureChecks = buildQuantityHealthChecks({
@@ -143,6 +144,7 @@ assert.deepEqual(cabinetFixtureChecks.map((check) => check.id), [
   "kitchen-custom-cabinet-overlap",
   "bathroom-fixture-missing",
 ]);
+assert.deepEqual(cabinetFixtureChecks.map((check) => check.severity), ["info", "warning", "info"]);
 assert.equal(cabinetFixtureChecks[0].detail, "厨房 橱柜地柜和吊柜长度都为 0，如需橱柜报价请检查 QUOTE_BASE_CABINET / QUOTE_WALL_CABINET。");
 assert.equal(cabinetFixtureChecks[1].detail, "西厨 厨房空间出现全屋定制面积，可能和橱柜地柜/吊柜重复计价。");
 assert.equal(cabinetFixtureChecks[2].detail, "公卫 马桶或浴室柜数量为 0，请确认是否应按默认 1 个/1 套或补画点位。");
