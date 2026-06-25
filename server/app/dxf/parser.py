@@ -167,7 +167,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         elif layer == "QUOTE_WALL_CABINET":
             wall_cabinet_segments.extend(_entity_segments(entity, defaults.unit_scale_to_m))
         elif layer == "QUOTE_CUSTOM":
-            custom_cabinet_segments.extend(_entity_segments(entity, defaults.unit_scale_to_m))
+            custom_cabinet_segments.extend(_custom_cabinet_segments(entity, defaults.unit_scale_to_m))
             if entity.dxftype() in {"TEXT", "MTEXT"}:
                 height_m = _custom_cabinet_height_from_text(_text_content(entity))
                 if height_m is not None:
@@ -345,6 +345,13 @@ def _entity_segments(entity, scale: float) -> list[tuple[Point, Point]]:
     if _entity_is_closed_polyline(entity) and points[0] != points[-1]:
         segments.append((points[-1], points[0]))
     return segments
+
+
+def _custom_cabinet_segments(entity, scale: float) -> list[tuple[Point, Point]]:
+    segments = _entity_segments(entity, scale)
+    if not _entity_is_closed_polyline(entity) or not segments:
+        return segments
+    return [max(segments, key=lambda segment: line_length(segment[0], segment[1]))]
 
 
 def _building_area_boundary(boundaries: list[list[Point]]) -> list[Point]:

@@ -182,6 +182,18 @@ def build_custom_cabinet_dxf() -> bytes:
     return _save_doc(doc)
 
 
+def build_closed_custom_cabinet_dxf() -> bytes:
+    doc = ezdxf.new("R2010")
+    msp = doc.modelspace()
+    for layer in ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_CUSTOM", "QUOTE_TEXT"]:
+        doc.layers.add(layer)
+    msp.add_lwpolyline([(0, 0), (4200, 0), (4200, 3000), (0, 3000), (0, 0)], dxfattribs={"layer": "QUOTE_ROOM"})
+    custom = msp.add_lwpolyline([(300, 300), (3300, 300), (3300, 900), (300, 900)], dxfattribs={"layer": "QUOTE_CUSTOM"})
+    custom.closed = True
+    msp.add_text("一层-主卧", dxfattribs={"layer": "QUOTE_TEXT", "insert": (2100, 1500)})
+    return _save_doc(doc)
+
+
 def build_bathroom_fixture_dxf() -> bytes:
     doc = ezdxf.new("R2010")
     msp = doc.modelspace()
