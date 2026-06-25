@@ -11,7 +11,10 @@ export type QuantityHealthCheck = {
     | "building-area-quote-missing"
     | "bathroom-door-classification"
     | "bedroom-interior-door-duplicate"
-    | "kitchen-sliding-door-missing";
+    | "kitchen-sliding-door-missing"
+    | "kitchen-cabinet-missing"
+    | "kitchen-custom-cabinet-overlap"
+    | "bathroom-fixture-missing";
   severity: QuantityHealthSeverity;
   title: string;
   detail: string;
@@ -78,6 +81,47 @@ export function buildQuantityHealthChecks({
       title: "厨房推拉门待确认",
       detail: `${formatNames(kitchenMissingSlidingDoorNames)} 有 1.20m 以上门洞但推拉门面积或门套为 0，请确认是否应生成厨房推拉门报价。`,
       spaceNames: kitchenMissingSlidingDoorNames,
+    });
+  }
+
+  const kitchenMissingCabinetNames = uniqueNames(
+    billableRows
+      .filter((row) => row.spaceType === "厨房" && row.kitchenBaseCabinetLengthM <= 0 && row.kitchenWallCabinetLengthM <= 0)
+      .map((row) => row.spaceName),
+  );
+  if (kitchenMissingCabinetNames.length > 0) {
+    checks.push({
+      id: "kitchen-cabinet-missing",
+      severity: "warning",
+      title: "厨房橱柜待确认",
+      detail: `${formatNames(kitchenMissingCabinetNames)} 橱柜地柜和吊柜长度都为 0，如需橱柜报价请检查 QUOTE_BASE_CABINET / QUOTE_WALL_CABINET。`,
+      spaceNames: kitchenMissingCabinetNames,
+    });
+  }
+
+  const kitchenCustomCabinetNames = uniqueNames(
+    billableRows.filter((row) => row.spaceType === "厨房" && row.customCabinetAreaM2 > 0).map((row) => row.spaceName),
+  );
+  if (kitchenCustomCabinetNames.length > 0) {
+    checks.push({
+      id: "kitchen-custom-cabinet-overlap",
+      severity: "warning",
+      title: "厨房全屋定制待确认",
+      detail: `${formatNames(kitchenCustomCabinetNames)} 厨房空间出现全屋定制面积，可能和橱柜地柜/吊柜重复计价。`,
+      spaceNames: kitchenCustomCabinetNames,
+    });
+  }
+
+  const bathroomMissingFixtureNames = uniqueNames(
+    billableRows.filter((row) => row.spaceType === "卫生间" && (row.toiletCount <= 0 || row.bathroomVanityCount <= 0)).map((row) => row.spaceName),
+  );
+  if (bathroomMissingFixtureNames.length > 0) {
+    checks.push({
+      id: "bathroom-fixture-missing",
+      severity: "warning",
+      title: "卫生间洁具待确认",
+      detail: `${formatNames(bathroomMissingFixtureNames)} 马桶或浴室柜数量为 0，请确认是否应按默认 1 个/1 套或补画点位。`,
+      spaceNames: bathroomMissingFixtureNames,
     });
   }
 

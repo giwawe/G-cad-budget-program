@@ -107,9 +107,9 @@ assert.deepEqual(buildQuantityHealthChecks({ rows: [baseRow], summary: { ...summ
 
 const doorChecks = buildQuantityHealthChecks({
   rows: [
-    { ...baseRow, spaceName: "公卫", spaceType: "卫生间", interiorDoorCount: 1, bathroomDoorCount: 0, doorWidthTotalM: 0.8 },
+    { ...baseRow, spaceName: "公卫", spaceType: "卫生间", interiorDoorCount: 1, bathroomDoorCount: 0, doorWidthTotalM: 0.8, toiletCount: 1, bathroomVanityCount: 1 },
     { ...baseRow, spaceName: "主卧", spaceType: "卧室", interiorDoorCount: 2, bathroomDoorCount: 0, doorWidthTotalM: 1.6 },
-    { ...baseRow, spaceName: "厨房", spaceType: "厨房", interiorDoorCount: 0, doorWidthTotalM: 1.4, slidingDoorAreaM2: 0, slidingDoorCasingLengthM: 0 },
+    { ...baseRow, spaceName: "厨房", spaceType: "厨房", interiorDoorCount: 0, doorWidthTotalM: 1.4, slidingDoorAreaM2: 0, slidingDoorCasingLengthM: 0, kitchenBaseCabinetLengthM: 2.4 },
   ],
   summary: { ...summary, building_area_m2: 88.66 },
 });
@@ -128,3 +128,21 @@ assert.deepEqual(doorChecks[0], {
 });
 assert.equal(doorChecks[1].detail, "主卧 室内门数量超过 1，可能和套内卫生间门重复。");
 assert.equal(doorChecks[2].detail, "厨房 有 1.20m 以上门洞但推拉门面积或门套为 0，请确认是否应生成厨房推拉门报价。");
+
+const cabinetFixtureChecks = buildQuantityHealthChecks({
+  rows: [
+    { ...baseRow, spaceName: "厨房", spaceType: "厨房", interiorDoorCount: 0, kitchenBaseCabinetLengthM: 0, kitchenWallCabinetLengthM: 0 },
+    { ...baseRow, spaceName: "西厨", spaceType: "厨房", interiorDoorCount: 0, kitchenBaseCabinetLengthM: 2.4, kitchenWallCabinetLengthM: 1.8, customCabinetAreaM2: 3.2 },
+    { ...baseRow, spaceName: "公卫", spaceType: "卫生间", interiorDoorCount: 0, toiletCount: 0, bathroomVanityCount: 0 },
+  ],
+  summary: { ...summary, building_area_m2: 88.66 },
+});
+
+assert.deepEqual(cabinetFixtureChecks.map((check) => check.id), [
+  "kitchen-cabinet-missing",
+  "kitchen-custom-cabinet-overlap",
+  "bathroom-fixture-missing",
+]);
+assert.equal(cabinetFixtureChecks[0].detail, "厨房 橱柜地柜和吊柜长度都为 0，如需橱柜报价请检查 QUOTE_BASE_CABINET / QUOTE_WALL_CABINET。");
+assert.equal(cabinetFixtureChecks[1].detail, "西厨 厨房空间出现全屋定制面积，可能和橱柜地柜/吊柜重复计价。");
+assert.equal(cabinetFixtureChecks[2].detail, "公卫 马桶或浴室柜数量为 0，请确认是否应按默认 1 个/1 套或补画点位。");
