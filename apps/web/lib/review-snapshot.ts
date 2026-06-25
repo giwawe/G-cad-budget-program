@@ -4,6 +4,7 @@ export type ReviewSnapshot = {
   exported_at: string;
   source_file: string;
   calibration_file: string | null;
+  accepted_health_check_keys: string[];
   summary: QuantitySummary | null;
   comparison: CalibrationComparison | null;
   rows: QuantityRow[];
@@ -13,12 +14,14 @@ export function buildReviewSnapshot({
   fileName,
   calibrationFileName,
   rows,
+  acceptedHealthCheckKeys = [],
   summary,
   comparison,
 }: {
   fileName: string;
   calibrationFileName: string;
   rows: QuantityRow[];
+  acceptedHealthCheckKeys?: string[];
   summary: QuantitySummary | null;
   comparison: CalibrationComparison | null;
 }): ReviewSnapshot {
@@ -26,6 +29,7 @@ export function buildReviewSnapshot({
     exported_at: new Date().toISOString(),
     source_file: fileName,
     calibration_file: calibrationFileName || null,
+    accepted_health_check_keys: acceptedHealthCheckKeys,
     summary,
     comparison,
     rows,
@@ -61,10 +65,18 @@ export function parseReviewSnapshot(content: string): ReviewSnapshot {
     exported_at: typeof snapshot.exported_at === "string" ? snapshot.exported_at : "",
     source_file: snapshot.source_file,
     calibration_file: typeof snapshot.calibration_file === "string" ? snapshot.calibration_file : null,
+    accepted_health_check_keys: normalizeAcceptedHealthCheckKeys(snapshot.accepted_health_check_keys),
     summary: normalizeSnapshotSummary(snapshot.summary ?? null),
     comparison: snapshot.comparison ?? null,
     rows: snapshot.rows.map(normalizeSnapshotRow),
   };
+}
+
+function normalizeAcceptedHealthCheckKeys(keys: unknown): string[] {
+  if (!Array.isArray(keys)) {
+    return [];
+  }
+  return keys.filter((key): key is string => typeof key === "string" && key.trim().length > 0);
 }
 
 function normalizeSnapshotSummary(summary: QuantitySummary | null): QuantitySummary | null {

@@ -7,7 +7,17 @@ import { QuantityTable } from "@/components/quantity-table";
 import { calibrationTemplateFileName, quantityRowsToCalibrationTemplate } from "@/lib/calibration-template";
 import { resolveCalibrationDifference } from "@/lib/calibration-differences";
 import { quantityRowAnchorHref } from "@/lib/quantity-row-anchor";
-import { buildHealthFixListMarkdown, buildQuantityHealthChecks, filterQuantityHealthChecks, healthFixListFileName, summarizeQuantityHealthChecks, type QuantityHealthFilter } from "@/lib/quantity-health";
+import {
+  buildHealthFixListMarkdown,
+  buildQuantityHealthChecks,
+  filterAcceptedHealthChecks,
+  filterQuantityHealthChecks,
+  healthCheckKey,
+  healthFixListFileName,
+  summarizeQuantityHealthChecks,
+  type QuantityHealthCheck,
+  type QuantityHealthFilter,
+} from "@/lib/quantity-health";
 import { confirmQuantityRowsBySpaceNames, updateQuantityRowCurtainWallWidth, updateQuantityRowStatus, updateQuantityRowsStatusBySpaceNames } from "@/lib/quantity-row-status";
 import {
   apartmentPendingQuoteMetrics,
@@ -198,15 +208,17 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
   const [quoteRulesFileName, setQuoteRulesFileName] = useState(DEFAULT_QUOTE_RULES_NAME);
   const [generatedQuoteRules, setGeneratedQuoteRules] = useState<{ fileName: string; content: string } | null>(null);
   const [healthFilter, setHealthFilter] = useState<QuantityHealthFilter>("all");
+  const [acceptedHealthCheckKeys, setAcceptedHealthCheckKeys] = useState<string[]>([]);
 
   const excludedCount = useMemo(() => rows.filter((row) => row.status === "excluded").length, [rows]);
   const pendingQuoteMetrics = useMemo(() => apartmentPendingQuoteMetrics(), []);
   const curtainReadiness = useMemo(() => curtainQuoteReadiness(rows), [rows]);
   const projectSummaryItems = generatedQuoteMapping ? projectSummaryQuoteItems(generatedQuoteMapping.mapping) : [];
-  const healthChecks = useMemo(
+  const rawHealthChecks = useMemo(
     () => buildQuantityHealthChecks({ rows, summary, quoteMapping: generatedQuoteMapping?.mapping ?? null }),
     [rows, summary, generatedQuoteMapping],
   );
+  const healthChecks = useMemo(() => filterAcceptedHealthChecks(rawHealthChecks, acceptedHealthCheckKeys), [rawHealthChecks, acceptedHealthCheckKeys]);
   const healthSummary = useMemo(() => summarizeQuantityHealthChecks(healthChecks), [healthChecks]);
   const filteredHealthChecks = useMemo(() => filterQuantityHealthChecks(healthChecks, healthFilter), [healthChecks, healthFilter]);
 
@@ -225,6 +237,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
     setGeneratedHealthFixList(null);
     setGeneratedQuoteMapping(null);
     setGeneratedQuoteRules(null);
+    setAcceptedHealthCheckKeys([]);
     setMessage(`正在上传到 ${getApiBaseUrl()}`);
 
     try {
@@ -285,6 +298,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
       setComparison(payload.comparison);
       setGeneratedQuoteMapping(null);
       setGeneratedHealthFixList(null);
+      setAcceptedHealthCheckKeys([]);
       setCalibrationFileName(calibrationFile.name);
       setMessage(payload.comparison.passed ? "校准通过：系统算量与校准 JSON 一致" : `发现 ${payload.comparison.differences.length} 项差异`);
     } catch (caught) {
@@ -314,6 +328,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
       setGeneratedHealthFixList(null);
       setGeneratedQuoteMapping(null);
       setGeneratedQuoteRules(null);
+      setAcceptedHealthCheckKeys(snapshot.accepted_health_check_keys);
       setGeneratedSnapshot({ fileName: snapshotFile.name, content: `${JSON.stringify(snapshot, null, 2)}\n` });
       setError("");
       setMessage(`已恢复校对快照：${snapshotFile.name}`);
@@ -351,7 +366,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
 
   function handleDownloadReviewSnapshot() {
     const downloadName = reviewSnapshotFileName(fileName);
-    const content = `${JSON.stringify(buildReviewSnapshot({ fileName, calibrationFileName, rows, summary, comparison }), null, 2)}\n`;
+    const content = `${JSON.stringify(buildReviewSnapshot({ fileName, calibrationFileName, rows, acceptedHealthCheckKeys, summary, comparison }), null, 2)}\n`;
     const blob = new Blob([content], { type: "application/json;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -399,7 +414,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
 
   function handleDownloadQuoteMapping() {
     const baseMapping = buildQuoteMapping(rows, quoteRules, summary ?? undefined);
-    const quoteHealthChecks = buildQuantityHealthChecks({ rows, summary, quoteMapping: baseMapping });
+    const quoteHealthChecks = filterAcceptedHealthChecks(buildQuantityHealthChecks({ rows, summary, quoteMapping: baseMapping }), acceptedHealthCheckKeys);
     const quoteHealthSummary = summarizeQuantityHealthChecks(quoteHealthChecks);
     const mapping = buildQuoteMapping(rows, quoteRules, summary ?? undefined, quoteHealthSummary);
     const downloadName = quoteMappingFileName(fileName);
@@ -492,14 +507,33 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
     setMessage(`${spaceNames.join("、")} 已标记为需修图`);
   }
 
-  function handleConfirmHealthCheckSpaces(spaceNames: string[]) {
-    if (spaceNames.length === 0) {
-      return;
-    }
-    setRows((current) => confirmQuantityRowsBySpaceNames(current, spaceNames));
+  function handleAcceptHealthCheck(check: QuantityHealthCheck) {
+    const key = healthCheckKey(check);
+    setAcceptedHealthCheckKeys((current) => (current.includes(key) ? current : [...current, key]));
     setGeneratedQuoteMapping(null);
     setGeneratedHealthFixList(null);
-    setMessage(`${spaceNames.join("、")} 已标记为已确认`);
+    setMessage(`${check.title} 已接受`);
+  }
+
+  function handleRestoreAcceptedHealthChecks() {
+    setAcceptedHealthCheckKeys([]);
+    setGeneratedQuoteMapping(null);
+    setGeneratedHealthFixList(null);
+    setMessage("已恢复显示全部健康检查项");
+  }
+
+  function handleConfirmHealthCheckSpaces(check: QuantityHealthCheck) {
+    if (!check.spaceNames?.length) {
+      return;
+    }
+    setRows((current) => confirmQuantityRowsBySpaceNames(current, check.spaceNames ?? []));
+    setAcceptedHealthCheckKeys((current) => {
+      const key = healthCheckKey(check);
+      return current.includes(key) ? current : [...current, key];
+    });
+    setGeneratedQuoteMapping(null);
+    setGeneratedHealthFixList(null);
+    setMessage(`${check.spaceNames.join("、")} 已标记为已确认，${check.title} 已接受`);
   }
 
   function handleChangeCurtainWallWidth(spaceName: string, widthM: number, source: "manual" | "calibration" = "manual") {
@@ -734,6 +768,12 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
             导出修图清单
           </button>
         </div>
+        {acceptedHealthCheckKeys.length > 0 && (
+          <p>
+            已接受 {acceptedHealthCheckKeys.length} 项检查，不再进入当前健康提示、修图清单和报价风险摘要。
+            <button type="button" onClick={handleRestoreAcceptedHealthChecks}>恢复已接受</button>
+          </p>
+        )}
         <div className="healthFilter" role="group" aria-label="健康检查筛选">
           {healthFilterOptions.map((option) => (
             <button
@@ -760,11 +800,14 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
                     <button type="button" onClick={() => handleMarkHealthCheckNeedsFix(check.spaceNames ?? [])}>
                       标记需修图
                     </button>
-                    <button type="button" onClick={() => handleConfirmHealthCheckSpaces(check.spaceNames ?? [])}>
+                    <button type="button" onClick={() => handleConfirmHealthCheckSpaces(check)}>
                       标记已确认
                     </button>
                   </div>
                 )}
+                <button type="button" onClick={() => handleAcceptHealthCheck(check)}>
+                  接受此项
+                </button>
               </div>
             ))}
             {filteredHealthChecks.length === 0 && <p>当前筛选下暂无检查项。</p>}

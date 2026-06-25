@@ -49,6 +49,7 @@ const snapshot = buildReviewSnapshot({
   fileName: "test-case.dxf",
   calibrationFileName: "test-case.calibration.json",
   rows,
+  acceptedHealthCheckKeys: ["space-type-other:客卧"],
   summary: {
     space_count: 1,
     building_area_m2: 20,
@@ -63,6 +64,7 @@ const snapshot = buildReviewSnapshot({
 assert.equal(snapshot.source_file, "test-case.dxf");
 assert.equal(snapshot.calibration_file, "test-case.calibration.json");
 assert.equal(snapshot.rows[0].status, "confirmed");
+assert.deepEqual(snapshot.accepted_health_check_keys, ["space-type-other:客卧"]);
 assert.equal(snapshot.summary.space_count, 1);
 assert.equal(snapshot.summary.building_area_m2, 20);
 assert.equal(reviewSnapshotFileName("test-case.dxf"), "test-case.review-snapshot.json");
@@ -72,6 +74,7 @@ const parsed = parseReviewSnapshot(JSON.stringify(snapshot));
 
 assert.equal(parsed.source_file, "test-case.dxf");
 assert.equal(parsed.rows[0].spaceName, "厨房");
+assert.deepEqual(parsed.accepted_health_check_keys, ["space-type-other:客卧"]);
 
 const legacySnapshot = {
   ...snapshot,
@@ -124,6 +127,13 @@ assert.equal(parsedLegacySnapshot.rows[0].kitchenWallCabinetLengthM, 0);
 assert.equal(parsedLegacySnapshot.rows[0].toiletCount, 0);
 assert.equal(parsedLegacySnapshot.rows[0].bathroomVanityCount, 0);
 assert.equal(parsedLegacySnapshot.summary?.building_area_m2, 0);
+assert.deepEqual(parsedLegacySnapshot.accepted_health_check_keys, ["space-type-other:客卧"]);
+
+const olderSnapshot = {
+  ...snapshot,
+  accepted_health_check_keys: undefined,
+};
+assert.deepEqual(parseReviewSnapshot(JSON.stringify(olderSnapshot)).accepted_health_check_keys, []);
 
 assert.throws(() => parseReviewSnapshot("{bad json"), /快照 JSON 格式无效/);
 assert.throws(() => parseReviewSnapshot(JSON.stringify({ rows: [] })), /快照缺少 source_file/);

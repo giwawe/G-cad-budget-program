@@ -1,5 +1,13 @@
 import assert from "node:assert/strict";
-import { buildHealthFixListMarkdown, filterQuantityHealthChecks, healthFixListFileName, buildQuantityHealthChecks, summarizeQuantityHealthChecks } from "./quantity-health.ts";
+import {
+  buildHealthFixListMarkdown,
+  buildQuantityHealthChecks,
+  filterAcceptedHealthChecks,
+  filterQuantityHealthChecks,
+  healthCheckKey,
+  healthFixListFileName,
+  summarizeQuantityHealthChecks,
+} from "./quantity-health.ts";
 import type { QuantityRow, QuantitySummary } from "./types.ts";
 import type { QuoteMapping } from "./quote-mapping.ts";
 
@@ -179,6 +187,12 @@ assert.deepEqual(filterQuantityHealthChecks(cabinetFixtureChecks, "all").map((ch
 ]);
 assert.deepEqual(filterQuantityHealthChecks(cabinetFixtureChecks, "warning").map((check) => check.id), ["kitchen-custom-cabinet-overlap"]);
 assert.deepEqual(filterQuantityHealthChecks(cabinetFixtureChecks, "info").map((check) => check.id), ["kitchen-cabinet-missing", "bathroom-fixture-missing"]);
+assert.equal(healthCheckKey({ ...cabinetFixtureChecks[0], spaceNames: ["厨房", "西厨"] }), "kitchen-cabinet-missing:厨房|西厨");
+assert.equal(healthCheckKey({ ...checks[1], spaceNames: undefined }), "building-area-missing:project");
+assert.deepEqual(
+  filterAcceptedHealthChecks(cabinetFixtureChecks, [healthCheckKey(cabinetFixtureChecks[0])]).map((check) => check.id),
+  ["kitchen-custom-cabinet-overlap", "bathroom-fixture-missing"],
+);
 
 assert.equal(healthFixListFileName("987654.dxf"), "987654.health-fix-list.md");
 assert.equal(healthFixListFileName("样例数据"), "health-fix-list.md");

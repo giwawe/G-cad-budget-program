@@ -37,6 +37,15 @@ export function filterQuantityHealthChecks(checks: QuantityHealthCheck[], filter
   return checks.filter((check) => check.severity === filter);
 }
 
+export function healthCheckKey(check: QuantityHealthCheck): string {
+  return `${check.id}:${check.spaceNames?.length ? check.spaceNames.join("|") : "project"}`;
+}
+
+export function filterAcceptedHealthChecks(checks: QuantityHealthCheck[], acceptedKeys: string[]): QuantityHealthCheck[] {
+  const accepted = new Set(acceptedKeys);
+  return checks.filter((check) => !accepted.has(healthCheckKey(check)));
+}
+
 export function summarizeQuantityHealthChecks(checks: QuantityHealthCheck[]): QuantityHealthSummary {
   const warning = checks.filter((check) => check.severity === "warning").length;
   const info = checks.filter((check) => check.severity === "info").length;
