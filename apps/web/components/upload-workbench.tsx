@@ -7,7 +7,7 @@ import { QuantityTable } from "@/components/quantity-table";
 import { calibrationTemplateFileName, quantityRowsToCalibrationTemplate } from "@/lib/calibration-template";
 import { resolveCalibrationDifference } from "@/lib/calibration-differences";
 import { quantityRowAnchorHref } from "@/lib/quantity-row-anchor";
-import { buildQuantityHealthChecks } from "@/lib/quantity-health";
+import { buildQuantityHealthChecks, summarizeQuantityHealthChecks } from "@/lib/quantity-health";
 import { updateQuantityRowCurtainWallWidth, updateQuantityRowStatus } from "@/lib/quantity-row-status";
 import {
   apartmentPendingQuoteMetrics,
@@ -205,6 +205,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
     () => buildQuantityHealthChecks({ rows, summary, quoteMapping: generatedQuoteMapping?.mapping ?? null }),
     [rows, summary, generatedQuoteMapping],
   );
+  const healthSummary = useMemo(() => summarizeQuantityHealthChecks(healthChecks), [healthChecks]);
 
   async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -662,7 +663,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
         <div className="templateHeader">
           <div>
             <strong>算量健康检查</strong>
-            <span>{healthChecks.length > 0 ? `${healthChecks.length} 项需要关注` : "当前无待确认项"}</span>
+            <span>{healthSummary.label}</span>
           </div>
         </div>
         {healthChecks.length > 0 ? (

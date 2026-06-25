@@ -21,6 +21,24 @@ export type QuantityHealthCheck = {
   spaceNames?: string[];
 };
 
+export type QuantityHealthSummary = {
+  total: number;
+  warning: number;
+  info: number;
+  label: string;
+};
+
+export function summarizeQuantityHealthChecks(checks: QuantityHealthCheck[]): QuantityHealthSummary {
+  const warning = checks.filter((check) => check.severity === "warning").length;
+  const info = checks.filter((check) => check.severity === "info").length;
+  return {
+    total: checks.length,
+    warning,
+    info,
+    label: formatHealthSummaryLabel(warning, info),
+  };
+}
+
 export function buildQuantityHealthChecks({
   rows,
   summary,
@@ -169,4 +187,18 @@ function uniqueNames(names: string[]): string[] {
 
 function formatNames(names: string[]): string {
   return names.join("、");
+}
+
+function formatHealthSummaryLabel(warning: number, info: number): string {
+  if (warning === 0 && info === 0) {
+    return "当前无待确认项";
+  }
+  const parts: string[] = [];
+  if (warning > 0) {
+    parts.push(`${warning} 项需优先处理`);
+  }
+  if (info > 0) {
+    parts.push(`${info} 项提醒`);
+  }
+  return parts.join("，");
 }

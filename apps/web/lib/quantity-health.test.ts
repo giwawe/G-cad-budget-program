@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { buildQuantityHealthChecks } from "./quantity-health.ts";
+import { buildQuantityHealthChecks, summarizeQuantityHealthChecks } from "./quantity-health.ts";
 import type { QuantityRow, QuantitySummary } from "./types.ts";
 import type { QuoteMapping } from "./quote-mapping.ts";
 
@@ -102,7 +102,19 @@ assert.deepEqual(checks[0], {
 assert.equal(checks[1].detail, "当前建筑面积为 0，请检查是否绘制了闭合 QUOTE_EXT_WALL 外墙轮廓。");
 assert.equal(checks[2].detail, "客厅、主卧 需要人工确认窗帘/窗帘箱延米，确认后暗窗帘箱才进入金额汇总。");
 assert.equal(checks[3].detail, "强电布线、水路布管 依赖建筑面积，当前未进入金额汇总。");
+assert.deepEqual(summarizeQuantityHealthChecks(checks), {
+  total: 4,
+  warning: 4,
+  info: 0,
+  label: "4 项需优先处理",
+});
 
+assert.deepEqual(summarizeQuantityHealthChecks([]), {
+  total: 0,
+  warning: 0,
+  info: 0,
+  label: "当前无待确认项",
+});
 assert.deepEqual(buildQuantityHealthChecks({ rows: [baseRow], summary: { ...summary, building_area_m2: 88.66 } }), []);
 
 const doorChecks = buildQuantityHealthChecks({
@@ -145,6 +157,12 @@ assert.deepEqual(cabinetFixtureChecks.map((check) => check.id), [
   "bathroom-fixture-missing",
 ]);
 assert.deepEqual(cabinetFixtureChecks.map((check) => check.severity), ["info", "warning", "info"]);
+assert.deepEqual(summarizeQuantityHealthChecks(cabinetFixtureChecks), {
+  total: 3,
+  warning: 1,
+  info: 2,
+  label: "1 项需优先处理，2 项提醒",
+});
 assert.equal(cabinetFixtureChecks[0].detail, "厨房 橱柜地柜和吊柜长度都为 0，如需橱柜报价请检查 QUOTE_BASE_CABINET / QUOTE_WALL_CABINET。");
 assert.equal(cabinetFixtureChecks[1].detail, "西厨 厨房空间出现全屋定制面积，可能和橱柜地柜/吊柜重复计价。");
 assert.equal(cabinetFixtureChecks[2].detail, "公卫 马桶或浴室柜数量为 0，请确认是否应按默认 1 个/1 套或补画点位。");
