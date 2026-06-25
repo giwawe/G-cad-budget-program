@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { buildQuantityHealthChecks, summarizeQuantityHealthChecks } from "./quantity-health.ts";
+import { buildHealthFixListMarkdown, healthFixListFileName, buildQuantityHealthChecks, summarizeQuantityHealthChecks } from "./quantity-health.ts";
 import type { QuantityRow, QuantitySummary } from "./types.ts";
 import type { QuoteMapping } from "./quote-mapping.ts";
 
@@ -166,3 +166,35 @@ assert.deepEqual(summarizeQuantityHealthChecks(cabinetFixtureChecks), {
 assert.equal(cabinetFixtureChecks[0].detail, "厨房 橱柜地柜和吊柜长度都为 0，如需橱柜报价请检查 QUOTE_BASE_CABINET / QUOTE_WALL_CABINET。");
 assert.equal(cabinetFixtureChecks[1].detail, "西厨 厨房空间出现全屋定制面积，可能和橱柜地柜/吊柜重复计价。");
 assert.equal(cabinetFixtureChecks[2].detail, "公卫 马桶或浴室柜数量为 0，请确认是否应按默认 1 个/1 套或补画点位。");
+
+assert.equal(healthFixListFileName("987654.dxf"), "987654.health-fix-list.md");
+assert.equal(healthFixListFileName("样例数据"), "health-fix-list.md");
+
+const fixListMarkdown = buildHealthFixListMarkdown({
+  fileName: "987654.dxf",
+  checks: [checks[0], cabinetFixtureChecks[0]],
+  generatedAt: new Date("2026-06-25T10:20:30Z"),
+});
+
+assert.equal(fixListMarkdown, `# CAD 修图清单
+
+来源文件：987654.dxf
+生成时间：2026-06-25T10:20:30.000Z
+检查结果：1 项需优先处理，1 项提醒
+
+## 需优先处理
+
+1. 空间类型待确认
+   - 级别：warning
+   - 涉及空间：客卧
+   - 问题：客卧 被识别为其他，需改名或补充关键词，避免报价项目缺失。
+   - 建议：检查空间名称和 QUOTE_TEXT，必要时改名或补充空间分类关键词。
+
+## 提醒
+
+1. 厨房橱柜待确认
+   - 级别：info
+   - 涉及空间：厨房
+   - 问题：厨房 橱柜地柜和吊柜长度都为 0，如需橱柜报价请检查 QUOTE_BASE_CABINET / QUOTE_WALL_CABINET。
+   - 建议：如需要橱柜报价，在实际地柜/吊柜位置补画对应柜体延米线。
+`);

@@ -39,6 +39,42 @@ export function summarizeQuantityHealthChecks(checks: QuantityHealthCheck[]): Qu
   };
 }
 
+export function healthFixListFileName(fileName: string): string {
+  const trimmed = fileName.trim();
+  if (!trimmed || trimmed === "样例数据") {
+    return "health-fix-list.md";
+  }
+  return `${trimmed.replace(/\.[^.]+$/, "")}.health-fix-list.md`;
+}
+
+export function buildHealthFixListMarkdown({
+  fileName,
+  checks,
+  generatedAt = new Date(),
+}: {
+  fileName: string;
+  checks: QuantityHealthCheck[];
+  generatedAt?: Date;
+}): string {
+  const summary = summarizeQuantityHealthChecks(checks);
+  const warningChecks = checks.filter((check) => check.severity === "warning");
+  const infoChecks = checks.filter((check) => check.severity === "info");
+  const lines = [
+    "# CAD 修图清单",
+    "",
+    `来源文件：${fileName}`,
+    `生成时间：${generatedAt.toISOString()}`,
+    `检查结果：${summary.label}`,
+    "",
+    ...formatHealthSection("需优先处理", warningChecks),
+    ...formatHealthSection("提醒", infoChecks),
+  ];
+  while (lines[lines.length - 1] === "") {
+    lines.pop();
+  }
+  return `${lines.join("\n")}\n`;
+}
+
 export function buildQuantityHealthChecks({
   rows,
   summary,
@@ -201,4 +237,47 @@ function formatHealthSummaryLabel(warning: number, info: number): string {
     parts.push(`${info} 项提醒`);
   }
   return parts.join("，");
+}
+
+function formatHealthSection(title: string, checks: QuantityHealthCheck[]): string[] {
+  if (checks.length === 0) {
+    return [];
+  }
+  return [
+    `## ${title}`,
+    "",
+    ...checks.flatMap((check, index) => [
+      `${index + 1}. ${check.title}`,
+      `   - 级别：${check.severity}`,
+      `   - 涉及空间：${check.spaceNames?.length ? formatNames(check.spaceNames) : "全屋/项目级"}`,
+      `   - 问题：${check.detail}`,
+      `   - 建议：${healthFixSuggestion(check.id)}`,
+      "",
+    ]),
+  ];
+}
+
+function healthFixSuggestion(id: QuantityHealthCheck["id"]): string {
+  switch (id) {
+    case "space-type-other":
+      return "检查空间名称和 QUOTE_TEXT，必要时改名或补充空间分类关键词。";
+    case "building-area-missing":
+      return "补画闭合 QUOTE_EXT_WALL 外墙轮廓，确保建筑面积可按外墙闭合多段线读取。";
+    case "curtain-wall-width-pending":
+      return "确认窗帘/窗帘箱实际延米，L 形或回退最长墙的空间需人工填入校准值。";
+    case "building-area-quote-missing":
+      return "先补齐 QUOTE_EXT_WALL 建筑面积，再重新导出报价映射。";
+    case "bathroom-door-classification":
+      return "检查卫生间门洞是否应标记为卫生间门，避免进入室内门报价。";
+    case "bedroom-interior-door-duplicate":
+      return "核对卧室门洞归属，套内卫生间门应归为卫生间门，不应重复算室内门。";
+    case "kitchen-sliding-door-missing":
+      return "确认该门洞是开放洞口还是厨房推拉门；如为推拉门，检查门洞宽度或标记。";
+    case "kitchen-cabinet-missing":
+      return "如需要橱柜报价，在实际地柜/吊柜位置补画对应柜体延米线。";
+    case "kitchen-custom-cabinet-overlap":
+      return "厨房空间优先使用 QUOTE_BASE_CABINET / QUOTE_WALL_CABINET，避免 QUOTE_CUSTOM 重复计价。";
+    case "bathroom-fixture-missing":
+      return "确认卫生间是否需要默认马桶/浴室柜；若数量特殊，用 QUOTE_TOILET / QUOTE_BATHROOM_VANITY 点位覆盖。";
+  }
 }

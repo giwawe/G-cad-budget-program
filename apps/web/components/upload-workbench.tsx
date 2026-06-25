@@ -7,7 +7,7 @@ import { QuantityTable } from "@/components/quantity-table";
 import { calibrationTemplateFileName, quantityRowsToCalibrationTemplate } from "@/lib/calibration-template";
 import { resolveCalibrationDifference } from "@/lib/calibration-differences";
 import { quantityRowAnchorHref } from "@/lib/quantity-row-anchor";
-import { buildQuantityHealthChecks, summarizeQuantityHealthChecks } from "@/lib/quantity-health";
+import { buildHealthFixListMarkdown, buildQuantityHealthChecks, healthFixListFileName, summarizeQuantityHealthChecks } from "@/lib/quantity-health";
 import { updateQuantityRowCurtainWallWidth, updateQuantityRowStatus } from "@/lib/quantity-row-status";
 import {
   apartmentPendingQuoteMetrics,
@@ -192,6 +192,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
   const [comparison, setComparison] = useState<CalibrationComparison | null>(null);
   const [generatedTemplate, setGeneratedTemplate] = useState<{ fileName: string; content: string } | null>(null);
   const [generatedSnapshot, setGeneratedSnapshot] = useState<{ fileName: string; content: string } | null>(null);
+  const [generatedHealthFixList, setGeneratedHealthFixList] = useState<{ fileName: string; content: string } | null>(null);
   const [generatedQuoteMapping, setGeneratedQuoteMapping] = useState<{ fileName: string; content: string; mapping: QuoteMapping } | null>(null);
   const [quoteRules, setQuoteRules] = useState<QuoteRule[]>(() => defaultQuoteRules());
   const [quoteRulesFileName, setQuoteRulesFileName] = useState(DEFAULT_QUOTE_RULES_NAME);
@@ -219,6 +220,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
     setCalibrationFileName("");
     setGeneratedTemplate(null);
     setGeneratedSnapshot(null);
+    setGeneratedHealthFixList(null);
     setGeneratedQuoteMapping(null);
     setGeneratedQuoteRules(null);
     setMessage(`正在上传到 ${getApiBaseUrl()}`);
@@ -280,6 +282,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
       setSummary(payload.summary);
       setComparison(payload.comparison);
       setGeneratedQuoteMapping(null);
+      setGeneratedHealthFixList(null);
       setCalibrationFileName(calibrationFile.name);
       setMessage(payload.comparison.passed ? "校准通过：系统算量与校准 JSON 一致" : `发现 ${payload.comparison.differences.length} 项差异`);
     } catch (caught) {
@@ -306,6 +309,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
       setCurrentDxfFile(null);
       setDrawing(null);
       setGeneratedTemplate(null);
+      setGeneratedHealthFixList(null);
       setGeneratedQuoteMapping(null);
       setGeneratedQuoteRules(null);
       setGeneratedSnapshot({ fileName: snapshotFile.name, content: `${JSON.stringify(snapshot, null, 2)}\n` });
@@ -367,6 +371,30 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
     setMessage(`已复制校对快照：${generatedSnapshot.fileName}`);
   }
 
+  function handleDownloadHealthFixList() {
+    const downloadName = healthFixListFileName(fileName);
+    const content = buildHealthFixListMarkdown({ fileName, checks: healthChecks });
+    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = downloadName;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setGeneratedHealthFixList({ fileName: downloadName, content });
+    setMessage(`已生成 CAD 修图清单：${downloadName}`);
+  }
+
+  async function handleCopyHealthFixList() {
+    if (!generatedHealthFixList) {
+      return;
+    }
+    await navigator.clipboard.writeText(generatedHealthFixList.content);
+    setMessage(`已复制 CAD 修图清单：${generatedHealthFixList.fileName}`);
+  }
+
   function handleDownloadQuoteMapping() {
     const mapping = buildQuoteMapping(rows, quoteRules, summary ?? undefined);
     const downloadName = quoteMappingFileName(fileName);
@@ -426,6 +454,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
       setQuoteRules(parsedRules);
       setQuoteRulesFileName(rulesFile.name);
       setGeneratedQuoteMapping(null);
+      setGeneratedHealthFixList(null);
       setGeneratedQuoteRules({ fileName: rulesFile.name, content: `${JSON.stringify(parsedRules, null, 2)}\n` });
       setError("");
       setMessage(`已导入报价规则：${rulesFile.name}`);
@@ -440,6 +469,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
   function handleChangeStatus(spaceName: string, status: ReviewStatus) {
     setRows((current) => updateQuantityRowStatus(current, spaceName, status));
     setGeneratedQuoteMapping(null);
+    setGeneratedHealthFixList(null);
     setMessage(`${spaceName} 状态已更新为 ${statusLabels[status]}`);
   }
 
@@ -452,6 +482,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
       setComparison((current) => (current ? resolveCalibrationDifference(current, spaceName, "curtain_wall_width_m") : current));
     }
     setGeneratedQuoteMapping(null);
+    setGeneratedHealthFixList(null);
     setMessage(source === "calibration" ? `${spaceName} 窗帘墙宽候选已应用校准值` : `${spaceName} 窗帘墙宽候选已更新`);
   }
 
@@ -483,6 +514,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
     });
     setRows((current) => current.map((row) => (row.spaceName === previousName ? { ...row, spaceName: trimmedName } : row)));
     setGeneratedQuoteMapping(null);
+    setGeneratedHealthFixList(null);
   }
 
   function handleToggleDoorDeduction(index: number) {
@@ -512,6 +544,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
     setRows(nextRows);
     setSummary(summarizeRows(nextRows));
     setGeneratedQuoteMapping(null);
+    setGeneratedHealthFixList(null);
     setDrawing({
       ...drawing,
       door_openings: drawing.door_openings.map((item, doorIndex) =>
@@ -532,6 +565,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
     setRows(nextRows);
     setSummary(summarizeRows(nextRows));
     setGeneratedQuoteMapping(null);
+    setGeneratedHealthFixList(null);
     setDrawing({
       ...drawing,
       window_openings: drawing.window_openings.map((item, windowIndex) =>
@@ -552,6 +586,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
     setRows(nextRows);
     setSummary(summarizeRows(nextRows));
     setGeneratedQuoteMapping(null);
+    setGeneratedHealthFixList(null);
     setDrawing({
       ...drawing,
       window_openings: drawing.window_openings.map((item, windowIndex) => (windowIndex === index ? { ...item, height_m: nextHeight } : item)),
@@ -665,6 +700,10 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
             <strong>算量健康检查</strong>
             <span>{healthSummary.label}</span>
           </div>
+          <button type="button" disabled={healthChecks.length === 0} onClick={handleDownloadHealthFixList}>
+            <Download aria-hidden="true" size={18} />
+            导出修图清单
+          </button>
         </div>
         {healthChecks.length > 0 ? (
           <div className="healthList">
@@ -686,6 +725,21 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
           <p>空间类型、建筑面积、窗帘确认和报价规则缺失项目前看起来正常。</p>
         )}
       </section>
+
+      {generatedHealthFixList && (
+        <section className="templatePanel">
+          <div className="templateHeader">
+            <div>
+              <strong>CAD 修图清单已生成</strong>
+              <span>{generatedHealthFixList.fileName}</span>
+            </div>
+            <button type="button" onClick={handleCopyHealthFixList}>
+              复制 Markdown
+            </button>
+          </div>
+          <textarea readOnly value={generatedHealthFixList.content} aria-label="CAD 修图清单 Markdown" />
+        </section>
+      )}
 
       {generatedTemplate && (
         <section className="templatePanel">
