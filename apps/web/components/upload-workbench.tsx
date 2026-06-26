@@ -34,10 +34,11 @@ import {
   type QuoteRule,
 } from "@/lib/quote-mapping";
 import { buildReviewSnapshot, parseReviewSnapshot, reviewSnapshotFileName } from "@/lib/review-snapshot";
-import type { CalibrationComparison, CurtainWallWidthSource, DrawingGeometry, QuantityRow, QuantitySummary, ReviewStatus } from "@/lib/types";
+import type { CalibrationComparison, CeilingFinishType, CurtainWallWidthSource, DrawingGeometry, QuantityRow, QuantitySummary, ReviewStatus } from "@/lib/types";
 
 const DEFAULT_DOOR_HEIGHT_M = 2.1;
 const FULL_WALL_TILE_SPACE_TYPES = new Set(["厨房", "卫生间"]);
+const DEFAULT_INTEGRATED_CEILING_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 
 type ApiQuantityRow = {
   floor: string;
@@ -45,6 +46,7 @@ type ApiQuantityRow = {
   space_type: string;
   floor_area_m2: number;
   ceiling_area_m2: number;
+  ceiling_finish_type?: CeilingFinishType;
   wall_measure_length_m: number;
   height_m: number;
   window_width_total_m: number;
@@ -113,6 +115,7 @@ function toQuantityRow(row: ApiQuantityRow): QuantityRow {
     spaceType: row.space_type,
     floorAreaM2: row.floor_area_m2,
     ceilingAreaM2: row.ceiling_area_m2,
+    ceilingFinishType: row.ceiling_finish_type ?? defaultCeilingFinishType(row.space_type),
     wallMeasureLengthM: row.wall_measure_length_m,
     heightM: row.height_m,
     windowWidthTotalM: row.window_width_total_m,
@@ -147,6 +150,10 @@ function toQuantityRow(row: ApiQuantityRow): QuantityRow {
     anomalies: row.anomalies,
     status: row.status,
   };
+}
+
+function defaultCeilingFinishType(spaceType: string): CeilingFinishType {
+  return DEFAULT_INTEGRATED_CEILING_SPACE_TYPES.has(spaceType) ? "integrated" : "gypsum";
 }
 
 function summarizeRows(rows: QuantityRow[]): QuantitySummary {
@@ -569,6 +576,13 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
     setGeneratedQuoteMapping(null);
     setGeneratedHealthFixList(null);
     setMessage(source === "calibration" ? `${spaceName} 窗帘墙宽候选已应用校准值` : `${spaceName} 窗帘墙宽候选已更新`);
+  }
+
+  function handleChangeCeilingFinishType(spaceName: string, finishType: CeilingFinishType) {
+    setRows((current) => current.map((row) => (row.spaceName === spaceName ? { ...row, ceilingFinishType: finishType } : row)));
+    setGeneratedQuoteMapping(null);
+    setGeneratedHealthFixList(null);
+    setMessage(`${spaceName} 顶面类型已更新为 ${finishType === "integrated" ? "集成吊顶" : "石膏板吊顶"}`);
   }
 
   function handleRenameSpace(index: number, name: string) {
@@ -1073,7 +1087,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
             <p>第一期重点验证 DXF 自动算出的空间面积、墙面计量长度、窗洞扣减和计算依据。</p>
           </div>
         </div>
-        <QuantityTable rows={rows} differences={comparison?.differences ?? []} onChangeStatus={handleChangeStatus} onChangeCurtainWallWidth={handleChangeCurtainWallWidth} />
+        <QuantityTable rows={rows} differences={comparison?.differences ?? []} onChangeStatus={handleChangeStatus} onChangeCurtainWallWidth={handleChangeCurtainWallWidth} onChangeCeilingFinishType={handleChangeCeilingFinishType} />
       </section>
     </main>
   );

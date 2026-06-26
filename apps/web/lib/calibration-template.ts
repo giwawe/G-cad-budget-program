@@ -4,6 +4,7 @@ export type CalibrationTemplateRow = {
   space_name: string;
   space_type: string;
   floor_area_m2: number;
+  ceiling_finish_type: QuantityRow["ceilingFinishType"];
   wall_measure_length_m: number;
   window_width_total_m: number;
   windowsill_length_m: number;
@@ -48,6 +49,7 @@ export function quantityRowsToCalibrationTemplate(rows: QuantityRow[], summary?:
     space_name: row.spaceName,
     space_type: row.spaceType,
     floor_area_m2: row.floorAreaM2,
+    ceiling_finish_type: row.ceilingFinishType ?? defaultCeilingFinishType(row.spaceType),
     wall_measure_length_m: row.wallMeasureLengthM,
     window_width_total_m: row.windowWidthTotalM,
     windowsill_length_m: row.windowsillLengthM,
@@ -88,6 +90,10 @@ export function quantityRowsToCalibrationTemplate(rows: QuantityRow[], summary?:
     },
     rows: templateRows,
   };
+}
+
+function defaultCeilingFinishType(spaceType: string): QuantityRow["ceilingFinishType"] {
+  return spaceType === "厨房" || spaceType === "卫生间" ? "integrated" : "gypsum";
 }
 
 export function calibrationTemplateFileName(fileName: string): string {

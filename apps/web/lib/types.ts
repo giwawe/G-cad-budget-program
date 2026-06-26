@@ -1,5 +1,6 @@
 export type ReviewStatus = "pending_review" | "confirmed" | "needs_fix" | "excluded";
 export type CurtainWallWidthSource = "matched_window_wall" | "matched_l_shape_window" | "fallback_longest_wall" | "not_applicable" | "manual_required_l_shape_window" | "manual";
+export type CeilingFinishType = "integrated" | "gypsum";
 
 export type QuantityRow = {
   floor: string;
@@ -7,6 +8,7 @@ export type QuantityRow = {
   spaceType: string;
   floorAreaM2: number;
   ceilingAreaM2: number;
+  ceilingFinishType?: CeilingFinishType;
   wallMeasureLengthM: number;
   heightM: number;
   windowWidthTotalM: number;

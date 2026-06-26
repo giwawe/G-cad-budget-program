@@ -1,7 +1,7 @@
 import { AlertTriangle, CheckCircle2, CircleDashed, MinusCircle } from "lucide-react";
 import { curtainWallCalibrationTarget, differenceKey, indexDifferencesByCell } from "@/lib/calibration-differences";
 import { quantityRowAnchorId } from "@/lib/quantity-row-anchor";
-import type { CalibrationDifference, CurtainWallWidthSource, QuantityRow, ReviewStatus } from "@/lib/types";
+import type { CalibrationDifference, CeilingFinishType, CurtainWallWidthSource, QuantityRow, ReviewStatus } from "@/lib/types";
 
 const statusLabels: Record<ReviewStatus, string> = {
   pending_review: "待确认",
@@ -26,6 +26,13 @@ const curtainWallSourceLabels: Record<CurtainWallWidthSource, string> = {
   manual: "人工校准",
 };
 
+const ceilingFinishLabels: Record<CeilingFinishType, string> = {
+  integrated: "集成吊顶",
+  gypsum: "石膏板吊顶",
+};
+
+const OPTIONAL_CEILING_FINISH_SPACE_TYPES = new Set(["厨房", "卫生间"]);
+
 function DifferenceValue({ difference }: { difference?: CalibrationDifference }) {
   if (!difference) {
     return null;
@@ -47,11 +54,13 @@ export function QuantityTable({
   differences = [],
   onChangeStatus,
   onChangeCurtainWallWidth,
+  onChangeCeilingFinishType,
 }: {
   rows: QuantityRow[];
   differences?: CalibrationDifference[];
   onChangeStatus?: (spaceName: string, status: ReviewStatus) => void;
   onChangeCurtainWallWidth?: (spaceName: string, widthM: number, source?: "manual" | "calibration") => void;
+  onChangeCeilingFinishType?: (spaceName: string, finishType: CeilingFinishType) => void;
 }) {
   const differencesByCell = indexDifferencesByCell(differences);
 
@@ -64,6 +73,7 @@ export function QuantityTable({
             <th>空间</th>
             <th>类型</th>
             <th>地面面积</th>
+            <th>顶面类型</th>
             <th>墙线长度</th>
             <th>层高</th>
             <th>窗台石长度</th>
@@ -119,6 +129,21 @@ export function QuantityTable({
               <td className={differenceClass(floorAreaDifference)}>
                 {row.floorAreaM2.toFixed(2)} m2
                 <DifferenceValue difference={floorAreaDifference} />
+              </td>
+              <td>
+                {onChangeCeilingFinishType && OPTIONAL_CEILING_FINISH_SPACE_TYPES.has(row.spaceType) ? (
+                  <select
+                    aria-label={`${row.spaceName} 顶面类型`}
+                    className="statusSelect"
+                    value={row.ceilingFinishType ?? "integrated"}
+                    onChange={(event) => onChangeCeilingFinishType(row.spaceName, event.target.value as CeilingFinishType)}
+                  >
+                    <option value="integrated">集成吊顶</option>
+                    <option value="gypsum">石膏板吊顶</option>
+                  </select>
+                ) : (
+                  ceilingFinishLabels[row.ceilingFinishType ?? "gypsum"]
+                )}
               </td>
               <td className={differenceClass(wallLengthDifference)}>
                 {row.wallMeasureLengthM.toFixed(2)} m

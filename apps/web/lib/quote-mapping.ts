@@ -133,6 +133,9 @@ export const DEFAULT_QUOTE_RULES_NAME = "商品房整装默认规则";
 
 const DRY_SPACE_TYPES = ["客厅", "餐厅", "卧室", "书房", "过道", "门厅", "楼梯过道", "衣帽间", "储物间", "露台"];
 const CEILING_SPACE_TYPES = ["客厅", "餐厅", "卧室", "书房", "过道", "门厅", "楼梯过道", "衣帽间", "储物间"];
+const KITCHEN_BATHROOM_SPACE_TYPES = ["厨房", "卫生间"];
+const GYPSUM_CEILING_SPACE_TYPES = [...CEILING_SPACE_TYPES, ...KITCHEN_BATHROOM_SPACE_TYPES];
+const CEILING_PAINT_SPACE_TYPES = [...DRY_SPACE_TYPES, ...KITCHEN_BATHROOM_SPACE_TYPES];
 const WET_FLOOR_SPACE_TYPES = ["厨房", "卫生间", "阳台", "露台", "洗衣房"];
 const CURTAIN_SPACE_TYPES = ["客厅", "卧室", "书房"];
 const KITCHEN_CABINET_SPACE_TYPES = ["厨房"];
@@ -149,9 +152,10 @@ const DEFAULT_RULES: QuoteRule[] = [
   { item_name: "墙面界面剂处理", metric: "latex_paint_area_m2", unit: "m2", unit_price: 7, space_types: DRY_SPACE_TYPES },
   { item_name: "墙面批嵌", metric: "latex_paint_area_m2", unit: "m2", unit_price: 25, space_types: DRY_SPACE_TYPES },
   { item_name: "墙面乳胶漆", metric: "latex_paint_area_m2", unit: "m2", unit_price: 20, space_types: DRY_SPACE_TYPES },
-  { item_name: "轻钢龙骨平顶", metric: "ceiling_area_m2", unit: "m2", unit_price: 180, space_types: CEILING_SPACE_TYPES },
-  { item_name: "顶面批嵌", metric: "ceiling_area_m2", unit: "m2", unit_price: 25, space_types: DRY_SPACE_TYPES },
-  { item_name: "顶面乳胶漆", metric: "ceiling_area_m2", unit: "m2", unit_price: 20, space_types: DRY_SPACE_TYPES },
+  { item_name: "厨房卫生间集成吊顶", metric: "ceiling_area_m2", unit: "m2", unit_price: 0, space_types: KITCHEN_BATHROOM_SPACE_TYPES },
+  { item_name: "轻钢龙骨平顶", metric: "ceiling_area_m2", unit: "m2", unit_price: 180, space_types: GYPSUM_CEILING_SPACE_TYPES },
+  { item_name: "顶面批嵌", metric: "ceiling_area_m2", unit: "m2", unit_price: 25, space_types: CEILING_PAINT_SPACE_TYPES },
+  { item_name: "顶面乳胶漆", metric: "ceiling_area_m2", unit: "m2", unit_price: 20, space_types: CEILING_PAINT_SPACE_TYPES },
   { item_name: "地面找平", metric: "floor_area_m2", unit: "m2", unit_price: 56, space_types: WET_FLOOR_SPACE_TYPES },
   { item_name: "地面砖铺贴(750X1500)", metric: "floor_area_m2", unit: "m2", unit_price: 96, space_types: undefined },
   { item_name: "地面瓷砖主材", metric: "floor_tile_piece_count", unit: "片", unit_price: 50, space_types: undefined },
@@ -445,6 +449,15 @@ function isQuoteMetric(metric: unknown): metric is QuoteMetric {
 function ruleAppliesToRow(rule: QuoteRule, row: QuantityRow) {
   if (rule.metric === "curtain_wall_width_m" && row.curtainWallWidthSource !== "manual") {
     return false;
+  }
+  if (rule.metric === "ceiling_area_m2" && KITCHEN_BATHROOM_SPACE_TYPES.includes(row.spaceType)) {
+    const finishType = row.ceilingFinishType ?? "integrated";
+    if (rule.item_name === "厨房卫生间集成吊顶") {
+      return finishType === "integrated";
+    }
+    if (["轻钢龙骨平顶", "顶面批嵌", "顶面乳胶漆"].includes(rule.item_name)) {
+      return finishType === "gypsum";
+    }
   }
   return !rule.space_types || rule.space_types.length === 0 || rule.space_types.includes(row.spaceType);
 }

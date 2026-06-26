@@ -1,4 +1,4 @@
-import type { CalibrationComparison, QuantityRow, QuantitySummary } from "./types";
+import type { CalibrationComparison, CeilingFinishType, QuantityRow, QuantitySummary } from "./types";
 
 export type ReviewSnapshot = {
   exported_at: string;
@@ -92,6 +92,7 @@ function normalizeSnapshotSummary(summary: QuantitySummary | null): QuantitySumm
 function normalizeSnapshotRow(row: QuantityRow): QuantityRow {
   return {
     ...row,
+    ceilingFinishType: normalizeCeilingFinishType(row.ceilingFinishType, row.spaceType),
     windowsillLengthM: typeof row.windowsillLengthM === "number" ? row.windowsillLengthM : row.windowWidthTotalM,
     curtainWallWidthM: typeof row.curtainWallWidthM === "number" ? row.curtainWallWidthM : 0,
     curtainWallWidthSource: row.curtainWallWidthSource ?? "not_applicable",
@@ -115,4 +116,11 @@ function normalizeSnapshotRow(row: QuantityRow): QuantityRow {
     bathroomVanityCount: typeof row.bathroomVanityCount === "number" ? row.bathroomVanityCount : 0,
     waterproofAreaM2: typeof row.waterproofAreaM2 === "number" ? row.waterproofAreaM2 : 0,
   };
+}
+
+function normalizeCeilingFinishType(finishType: unknown, spaceType: string): CeilingFinishType {
+  if (finishType === "integrated" || finishType === "gypsum") {
+    return finishType;
+  }
+  return spaceType === "厨房" || spaceType === "卫生间" ? "integrated" : "gypsum";
 }

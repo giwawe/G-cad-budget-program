@@ -210,7 +210,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 报价映射默认规则在 `apps/web/lib/quote-mapping.ts`：
 
 - 墙面界面剂处理、墙面批嵌、墙面乳胶漆：按 `latexPaintAreaM2`，仅匹配干区和露台等适用空间。
-- 轻钢龙骨平顶、顶面批嵌、顶面乳胶漆：按 `ceilingAreaM2`，仅匹配干区适用空间；厨房、卫生间顶面为集成吊顶，不进入顶面批嵌/顶面乳胶漆，`ceilingAreaM2` 仍保留给后续或自定义“集成吊顶”报价规则使用。
+- 厨房、卫生间顶面类型是可校对选项：默认 `ceilingFinishType=integrated`，按“厨房卫生间集成吊顶”候选项输出，当前单价为 0 等待报价规则补价；人工切换为 `gypsum` 后，按 `ceilingAreaM2` 进入轻钢龙骨平顶、顶面批嵌、顶面乳胶漆。其它干区默认按石膏板/普通顶面处理。
 - 地面找平：按 `floorAreaM2`，仅匹配厨房、卫生间、阳台、露台、洗衣房。
 - 地面砖铺贴(750X1500)：按 `floorAreaM2`，当前不限制空间类型。
 - 地面瓷砖主材：按 `floorTilePieceCount` 全屋汇总，当前不限制空间类型；片数由地面面积按 750X1500、5% 损耗向上取整。
