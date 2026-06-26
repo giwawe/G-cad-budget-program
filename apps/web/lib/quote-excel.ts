@@ -16,6 +16,7 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string):
     ["清单项", String(mapping.summary.item_count)],
     ["估算合计", formatMoney(mapping.summary.total_amount)],
   ];
+  const riskRows = quoteExcelRiskRows(mapping);
   const itemRows = mapping.items.map((item) => [
     item.floor,
     item.space_name,
@@ -45,6 +46,12 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string):
       ${summaryRows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("\n      ")}
     </tbody>
   </table>
+  <h2>风险摘要</h2>
+  <table>
+    <tbody>
+      ${riskRows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("\n      ")}
+    </tbody>
+  </table>
   <table>
     <thead>
       <tr><th>楼层</th><th>空间</th><th>类型</th><th>清单项</th><th>工程量</th><th>单位</th><th>单价</th><th>小计</th></tr>
@@ -56,6 +63,27 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string):
 </body>
 </html>
 `;
+}
+
+function quoteExcelRiskRows(mapping: QuoteMapping): string[][] {
+  const rows: string[][] = [["健康检查", mapping.quantity_health_readiness.label]];
+  if (mapping.building_area_quote_readiness.missing_item_names.length > 0) {
+    rows.push([
+      "建筑面积",
+      `${mapping.building_area_quote_readiness.missing_item_names.join("、")} 需要 QUOTE_EXT_WALL 建筑面积，当前为 0。`,
+    ]);
+  }
+
+  const zeroPriceItems = mapping.items.filter((item) => item.quantity > 0 && item.unit_price <= 0);
+  if (zeroPriceItems.length > 0) {
+    rows.push([
+      "零单价",
+      zeroPriceItems
+        .map((item) => `${item.item_name}：${item.space_name} ${formatMoney(item.quantity)} ${item.unit}`)
+        .join("；"),
+    ]);
+  }
+  return rows;
 }
 
 function formatQuantity(value: number): string {

@@ -64,3 +64,39 @@ assert.ok(html.includes("<th>楼层</th><th>空间</th><th>类型</th><th>清单
 assert.ok(html.includes("<td>厨房卫生间集成吊顶</td><td>4.48</td><td>m2</td><td>260.00</td><td>1164.80</td>"));
 assert.ok(html.includes("<td>强电布线 &amp; 水路复核</td>"), "item names should be escaped");
 assert.ok(!html.includes("强电布线 & 水路复核</td>"), "raw ampersands should not leak into HTML");
+
+const riskyHtml = buildQuoteExcelHtml(
+  {
+    ...mapping,
+    items: [
+      ...mapping.items,
+      {
+        floor: "一层",
+        space_name: "卫生间",
+        space_type: "卫生间",
+        item_name: "厨房卫生间集成吊顶",
+        quantity: 3.2,
+        unit: "m2",
+        unit_price: 0,
+        amount: 0,
+      },
+    ],
+    building_area_quote_readiness: {
+      building_area_m2: 0,
+      required_item_names: ["强电布线", "水路布管"],
+      missing_item_names: ["强电布线", "水路布管"],
+    },
+    quantity_health_readiness: {
+      total: 3,
+      warning: 1,
+      info: 2,
+      label: "1 项需优先处理，2 项提醒",
+    },
+  },
+  "风险项目",
+);
+
+assert.ok(riskyHtml.includes("<h2>风险摘要</h2>"));
+assert.ok(riskyHtml.includes("<td>健康检查</td><td>1 项需优先处理，2 项提醒</td>"));
+assert.ok(riskyHtml.includes("<td>建筑面积</td><td>强电布线、水路布管 需要 QUOTE_EXT_WALL 建筑面积，当前为 0。</td>"));
+assert.ok(riskyHtml.includes("<td>零单价</td><td>厨房卫生间集成吊顶：卫生间 3.20 m2</td>"));
