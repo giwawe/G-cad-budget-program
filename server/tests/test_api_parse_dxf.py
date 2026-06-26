@@ -21,7 +21,7 @@ def test_parse_dxf_upload_returns_quantity_rows():
     assert rows[0]["wall_measure_length_m"] == 15
     assert rows[0]["window_area_m2"] == 5.76
     assert rows[0]["door_width_total_m"] == 0.9
-    assert rows[0]["latex_paint_area_m2"] == 36.24
+    assert rows[0]["latex_paint_area_m2"] == 38.76
 
 
 def test_parse_real_dxf_upload_fixture_returns_rows():

@@ -9,7 +9,7 @@
     "door_width_total_m": 0.88,
     "door_deduct_area_m2": 0,
     "wall_gross_area_m2": 43.96,
-    "latex_paint_area_m2": 38.92,
+    "latex_paint_area_m2": 41.38,
     "status": "pending_review",
     "anomalies": []
   },
@@ -23,7 +23,7 @@
     "door_width_total_m": 0.88,
     "door_deduct_area_m2": 0,
     "wall_gross_area_m2": 22.2,
-    "latex_paint_area_m2": 20.83,
+    "latex_paint_area_m2": 23.3,
     "status": "pending_review",
     "anomalies": []
   },
@@ -37,7 +37,7 @@
     "door_width_total_m": 1.76,
     "door_deduct_area_m2": 0,
     "wall_gross_area_m2": 45.98,
-    "latex_paint_area_m2": 40.4,
+    "latex_paint_area_m2": 45.32,
     "status": "pending_review",
     "anomalies": []
   },
@@ -51,7 +51,7 @@
     "door_width_total_m": 0.88,
     "door_deduct_area_m2": 0,
     "wall_gross_area_m2": 38.05,
-    "latex_paint_area_m2": 34.86,
+    "latex_paint_area_m2": 37.33,
     "status": "pending_review",
     "anomalies": []
   },
@@ -65,7 +65,7 @@
     "door_width_total_m": 0.88,
     "door_deduct_area_m2": 0,
     "wall_gross_area_m2": 16.6,
-    "latex_paint_area_m2": 15.39,
+    "latex_paint_area_m2": 17.86,
     "status": "pending_review",
     "anomalies": []
   },
@@ -107,7 +107,7 @@
     "door_width_total_m": 1.0,
     "door_deduct_area_m2": 0,
     "wall_gross_area_m2": 25.54,
-    "latex_paint_area_m2": 25.54,
+    "latex_paint_area_m2": 28.34,
     "status": "pending_review",
     "anomalies": []
   },
@@ -121,7 +121,7 @@
     "door_width_total_m": 3.52,
     "door_deduct_area_m2": 0,
     "wall_gross_area_m2": 56.95,
-    "latex_paint_area_m2": 56.95,
+    "latex_paint_area_m2": 66.81,
     "status": "pending_review",
     "anomalies": []
   }

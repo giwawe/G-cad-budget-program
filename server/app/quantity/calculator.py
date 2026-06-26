@@ -56,7 +56,8 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
     )
     door_area_for_wall_tile_m2 = round(sum(door.width_m * (door.height_m or defaults.default_door_height_m) for door in space.doors), 2)
     wall_gross_area_m2 = round(wall_measure_length_m * height_m, 2)
-    latex_paint_area_m2 = round(max(wall_gross_area_m2 - window_area_m2 - door_deduct_area_m2, 0), 2)
+    latex_paint_base_area_m2 = round((wall_measure_length_m + door_width_total_m) * height_m, 2)
+    latex_paint_area_m2 = round(max(latex_paint_base_area_m2 - window_area_m2 - door_deduct_area_m2, 0), 2)
     wall_tile_measure_length_m = calculate_wall_tile_measure_length_m(space_type, wall_measure_length_m, space.wall_tile_lengths_m)
     wall_tile_area_m2 = calculate_wall_tile_area_m2(
         space_type,
@@ -107,8 +108,8 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
 
     evidence = (
         f"墙面展开面积 {wall_measure_length_m}m * {height_m}m = {wall_gross_area_m2}m2；"
-        f"乳胶漆面积 {wall_gross_area_m2}m2 - 窗洞 {window_area_m2}m2 - 门洞 {door_deduct_area_m2}m2 = {latex_paint_area_m2}m2；"
-        "普通房门门洞默认不扣减，大洞口门按规则扣减。"
+        f"乳胶漆基数 {wall_measure_length_m}m + 门洞 {door_width_total_m}m = {latex_paint_base_area_m2}m2；"
+        f"乳胶漆面积 {latex_paint_base_area_m2}m2 - 窗洞 {window_area_m2}m2 - 已选门洞扣减 {door_deduct_area_m2}m2 = {latex_paint_area_m2}m2。"
     )
 
     return QuantityRow(

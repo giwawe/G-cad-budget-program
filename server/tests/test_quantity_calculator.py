@@ -13,7 +13,7 @@ def test_polygon_area_and_closed_length():
     assert contains_point(points, (5, 2)) is False
 
 
-def test_latex_area_deducts_windows_but_not_doors():
+def test_latex_area_adds_door_width_back_before_optional_deduction():
     defaults = ProjectDefaults(project_height_m=2.8, default_window_height_m=1.5, default_door_height_m=2.1)
     space = SpaceInput(
         floor="一层",
@@ -34,12 +34,13 @@ def test_latex_area_deducts_windows_but_not_doors():
     assert row.wall_gross_area_m2 == 42
     assert row.window_area_m2 == 4.8
     assert row.door_width_total_m == 0.9
-    assert row.latex_paint_area_m2 == 37.2
+    assert row.latex_paint_area_m2 == 39.72
     assert row.windowsill_length_m == 3.2
     assert row.wall_tile_area_m2 == 0
     assert row.waterproof_area_m2 == 0
     assert row.status == ReviewStatus.pending_review
-    assert "门洞默认不扣减" in row.evidence
+    assert "乳胶漆基数 15m + 门洞 0.9m" in row.evidence
+    assert "已选门洞扣减 0m2" in row.evidence
 
 
 def test_floor_tile_piece_count_uses_750x1500_tile_with_5_percent_loss_and_ceiling():
@@ -328,7 +329,7 @@ def test_curtain_wall_width_is_zero_for_kitchen_bathroom_and_corridor():
         assert row.curtain_wall_width_source == "not_applicable"
 
 
-def test_large_door_opening_deducts_latex_area():
+def test_large_door_opening_adds_door_width_back_and_deducts_selected_opening_area():
     defaults = ProjectDefaults(project_height_m=2.8, default_window_height_m=1.5, default_door_height_m=2.1)
     space = SpaceInput(
         name="客厅",
@@ -340,7 +341,8 @@ def test_large_door_opening_deducts_latex_area():
     row = calculate_quantity_row(space, defaults)
 
     assert row.door_deduct_area_m2 == 3.78
-    assert row.latex_paint_area_m2 == 38.22
+    assert row.latex_paint_area_m2 == 43.26
+    assert "已选门洞扣减 3.78m2" in row.evidence
 
 
 def test_suspected_large_door_opening_requires_review_without_default_deduction():

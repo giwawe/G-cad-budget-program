@@ -593,6 +593,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
         return row;
       }
       const doorDeductAreaM2 = round2(Math.max(row.doorDeductAreaM2 + delta, 0));
+      const latexPaintBaseAreaM2 = round2((row.wallMeasureLengthM + row.doorWidthTotalM) * row.heightM);
       const latexPaintAreaM2 = round2(Math.max(row.latexPaintAreaM2 - delta, 0));
       const wallTileAreaM2 = calculateOpeningAdjustedWallTileArea(row, row.windowAreaM2, row.doorWidthTotalM);
       return {
@@ -600,7 +601,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
         doorDeductAreaM2,
         latexPaintAreaM2,
         wallTileAreaM2,
-        evidence: `墙面展开面积 ${row.wallMeasureLengthM.toFixed(2)}m * ${row.heightM.toFixed(2)}m = ${row.wallGrossAreaM2.toFixed(2)}m2；乳胶漆面积 ${row.wallGrossAreaM2.toFixed(2)}m2 - 窗洞 ${row.windowAreaM2.toFixed(2)}m2 - 门洞 ${doorDeductAreaM2.toFixed(2)}m2 = ${latexPaintAreaM2.toFixed(2)}m2；门洞扣减已人工调整。`,
+        evidence: `墙面展开面积 ${row.wallMeasureLengthM.toFixed(2)}m * ${row.heightM.toFixed(2)}m = ${row.wallGrossAreaM2.toFixed(2)}m2；乳胶漆基数 ${row.wallMeasureLengthM.toFixed(2)}m + 门洞 ${row.doorWidthTotalM.toFixed(2)}m = ${latexPaintBaseAreaM2.toFixed(2)}m2；乳胶漆面积 ${latexPaintBaseAreaM2.toFixed(2)}m2 - 窗洞 ${row.windowAreaM2.toFixed(2)}m2 - 已选门洞扣减 ${doorDeductAreaM2.toFixed(2)}m2 = ${latexPaintAreaM2.toFixed(2)}m2；门洞扣减已人工调整。`,
       };
     });
 
@@ -663,13 +664,14 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
       }
       const windowAreaM2 = round2(Math.max(row.windowAreaM2 + delta, 0));
       const latexPaintAreaM2 = round2(Math.max(row.latexPaintAreaM2 - delta, 0));
+      const latexPaintBaseAreaM2 = round2((row.wallMeasureLengthM + row.doorWidthTotalM) * row.heightM);
       const wallTileAreaM2 = calculateOpeningAdjustedWallTileArea(row, windowAreaM2);
       return {
         ...row,
         windowAreaM2,
         latexPaintAreaM2,
         wallTileAreaM2,
-        evidence: `墙面展开面积 ${row.wallMeasureLengthM.toFixed(2)}m * ${row.heightM.toFixed(2)}m = ${row.wallGrossAreaM2.toFixed(2)}m2；乳胶漆面积 ${row.wallGrossAreaM2.toFixed(2)}m2 - 窗洞 ${windowAreaM2.toFixed(2)}m2 - 门洞 ${row.doorDeductAreaM2.toFixed(2)}m2 = ${latexPaintAreaM2.toFixed(2)}m2；${note}`,
+        evidence: `墙面展开面积 ${row.wallMeasureLengthM.toFixed(2)}m * ${row.heightM.toFixed(2)}m = ${row.wallGrossAreaM2.toFixed(2)}m2；乳胶漆基数 ${row.wallMeasureLengthM.toFixed(2)}m + 门洞 ${row.doorWidthTotalM.toFixed(2)}m = ${latexPaintBaseAreaM2.toFixed(2)}m2；乳胶漆面积 ${latexPaintBaseAreaM2.toFixed(2)}m2 - 窗洞 ${windowAreaM2.toFixed(2)}m2 - 已选门洞扣减 ${row.doorDeductAreaM2.toFixed(2)}m2 = ${latexPaintAreaM2.toFixed(2)}m2；${note}`,
       };
     });
   }
