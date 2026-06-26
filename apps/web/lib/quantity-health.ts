@@ -14,7 +14,8 @@ export type QuantityHealthCheck = {
     | "kitchen-sliding-door-missing"
     | "kitchen-cabinet-missing"
     | "kitchen-custom-cabinet-overlap"
-    | "bathroom-fixture-missing";
+    | "bathroom-fixture-missing"
+    | "integrated-ceiling-price-missing";
   severity: QuantityHealthSeverity;
   title: string;
   detail: string;
@@ -235,6 +236,21 @@ export function buildQuantityHealthChecks({
     });
   }
 
+  const zeroPriceIntegratedCeilingNames = uniqueNames(
+    (quoteMapping?.items ?? [])
+      .filter((item) => item.item_name === "厨房卫生间集成吊顶" && item.quantity > 0 && item.unit_price <= 0)
+      .map((item) => item.space_name),
+  );
+  if (zeroPriceIntegratedCeilingNames.length > 0) {
+    checks.push({
+      id: "integrated-ceiling-price-missing",
+      severity: "info",
+      title: "集成吊顶单价待补",
+      detail: `${formatNames(zeroPriceIntegratedCeilingNames)} 已生成集成吊顶工程量，但当前单价为 0，请在报价规则中补充单价后再导出正式报价。`,
+      spaceNames: zeroPriceIntegratedCeilingNames,
+    });
+  }
+
   return checks;
 }
 
@@ -337,5 +353,7 @@ function healthFixSuggestion(id: QuantityHealthCheck["id"]): string {
       return "厨房空间优先使用 QUOTE_BASE_CABINET / QUOTE_WALL_CABINET，避免 QUOTE_CUSTOM 重复计价。";
     case "bathroom-fixture-missing":
       return "确认卫生间是否需要默认马桶/浴室柜；若数量特殊，用 QUOTE_TOILET / QUOTE_BATHROOM_VANITY 点位覆盖。";
+    case "integrated-ceiling-price-missing":
+      return "在报价规则 JSON 中为“厨房卫生间集成吊顶”补充真实单价；若该空间实际做石膏板吊顶，请在工程量表切换顶面类型。";
   }
 }

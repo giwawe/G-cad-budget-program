@@ -180,6 +180,47 @@ assert.deepEqual(summarizeQuantityHealthChecks(cabinetFixtureChecks), {
 assert.equal(cabinetFixtureChecks[0].detail, "厨房 橱柜地柜和吊柜长度都为 0，如需橱柜报价请检查 QUOTE_BASE_CABINET / QUOTE_WALL_CABINET。");
 assert.equal(cabinetFixtureChecks[1].detail, "西厨 厨房空间出现全屋定制面积，可能和橱柜地柜/吊柜重复计价。");
 assert.equal(cabinetFixtureChecks[2].detail, "公卫 马桶或浴室柜数量为 0，请确认是否应按默认 1 个/1 套或补画点位。");
+
+const zeroPriceIntegratedCeilingChecks = buildQuantityHealthChecks({
+  rows: [{ ...baseRow, spaceName: "厨房", spaceType: "厨房", ceilingFinishType: "integrated", kitchenBaseCabinetLengthM: 2.4 }],
+  summary: { ...summary, building_area_m2: 88.66 },
+  quoteMapping: {
+    ...quoteMapping,
+    items: [
+      {
+        floor: "一层",
+        space_name: "厨房",
+        space_type: "厨房",
+        item_name: "厨房卫生间集成吊顶",
+        quantity: 4.48,
+        unit: "m2",
+        unit_price: 0,
+        amount: 0,
+      },
+    ],
+    curtain_quote_readiness: {
+      ready_count: 0,
+      pending_count: 0,
+      ready_space_names: [],
+      pending_space_names: [],
+    },
+    building_area_quote_readiness: {
+      building_area_m2: 88.66,
+      required_item_names: [],
+      missing_item_names: [],
+    },
+  },
+});
+
+assert.deepEqual(zeroPriceIntegratedCeilingChecks.map((check) => check.id), ["integrated-ceiling-price-missing"]);
+assert.deepEqual(zeroPriceIntegratedCeilingChecks[0], {
+  id: "integrated-ceiling-price-missing",
+  severity: "info",
+  title: "集成吊顶单价待补",
+  detail: "厨房 已生成集成吊顶工程量，但当前单价为 0，请在报价规则中补充单价后再导出正式报价。",
+  spaceNames: ["厨房"],
+});
+
 assert.deepEqual(filterQuantityHealthChecks(cabinetFixtureChecks, "all").map((check) => check.id), [
   "kitchen-cabinet-missing",
   "kitchen-custom-cabinet-overlap",
