@@ -37,6 +37,7 @@ import { buildReviewSnapshot, parseReviewSnapshot, reviewSnapshotFileName } from
 import type { CalibrationComparison, CurtainWallWidthSource, DrawingGeometry, QuantityRow, QuantitySummary, ReviewStatus } from "@/lib/types";
 
 const DEFAULT_DOOR_HEIGHT_M = 2.1;
+const FULL_WALL_TILE_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 
 type ApiQuantityRow = {
   floor: string;
@@ -167,7 +168,7 @@ function calculateWallTileArea(row: QuantityRow, windowAreaM2 = row.windowAreaM2
   if (row.spaceType === "厨房" || row.spaceType === "卫生间") {
     return round2(Math.max(row.wallMeasureLengthM * 2.5 - windowAreaM2 - doorWidthTotalM * DEFAULT_DOOR_HEIGHT_M, 0));
   }
-  if (["阳台", "露台", "洗衣房"].includes(row.spaceType) && row.wallTileMeasureLengthM > 0) {
+  if (row.wallTileMeasureLengthM > 0) {
     return round2(Math.max(row.wallTileMeasureLengthM * row.heightM, 0));
   }
   return 0;
@@ -182,6 +183,27 @@ function calculateOpeningAdjustedWallTileArea(row: QuantityRow, windowAreaM2 = r
     return row.wallTileAreaM2;
   }
   return calculateWallTileArea(row, windowAreaM2, doorWidthTotalM);
+}
+
+function calculateLatexPaintArea(spaceType: string, latexPaintBaseAreaM2: number, windowAreaM2: number, doorDeductAreaM2: number, wallTileAreaM2: number) {
+  if (FULL_WALL_TILE_SPACE_TYPES.has(spaceType) && wallTileAreaM2 > 0) {
+    return 0;
+  }
+  return round2(Math.max(latexPaintBaseAreaM2 - windowAreaM2 - doorDeductAreaM2 - wallTileAreaM2, 0));
+}
+
+function formatLatexPaintEvidence(
+  spaceType: string,
+  latexPaintBaseAreaM2: number,
+  windowAreaM2: number,
+  doorDeductAreaM2: number,
+  wallTileAreaM2: number,
+  latexPaintAreaM2: number,
+) {
+  if (FULL_WALL_TILE_SPACE_TYPES.has(spaceType) && wallTileAreaM2 > 0) {
+    return `厨房/卫生间墙面默认贴砖 ${wallTileAreaM2.toFixed(2)}m2，墙面乳胶漆面积计 0m2`;
+  }
+  return `墙面乳胶漆面积 ${latexPaintBaseAreaM2.toFixed(2)}m2 - 窗洞 ${windowAreaM2.toFixed(2)}m2 - 已选门洞扣减 ${doorDeductAreaM2.toFixed(2)}m2 - 贴砖墙面 ${wallTileAreaM2.toFixed(2)}m2 = ${latexPaintAreaM2.toFixed(2)}m2`;
 }
 
 export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] }) {
@@ -594,14 +616,15 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
       }
       const doorDeductAreaM2 = round2(Math.max(row.doorDeductAreaM2 + delta, 0));
       const latexPaintBaseAreaM2 = round2((row.wallMeasureLengthM + row.doorWidthTotalM) * row.heightM);
-      const latexPaintAreaM2 = round2(Math.max(row.latexPaintAreaM2 - delta, 0));
       const wallTileAreaM2 = calculateOpeningAdjustedWallTileArea(row, row.windowAreaM2, row.doorWidthTotalM);
+      const latexPaintAreaM2 = calculateLatexPaintArea(row.spaceType, latexPaintBaseAreaM2, row.windowAreaM2, doorDeductAreaM2, wallTileAreaM2);
+      const latexPaintEvidence = formatLatexPaintEvidence(row.spaceType, latexPaintBaseAreaM2, row.windowAreaM2, doorDeductAreaM2, wallTileAreaM2, latexPaintAreaM2);
       return {
         ...row,
         doorDeductAreaM2,
         latexPaintAreaM2,
         wallTileAreaM2,
-        evidence: `墙面展开面积 ${row.wallMeasureLengthM.toFixed(2)}m * ${row.heightM.toFixed(2)}m = ${row.wallGrossAreaM2.toFixed(2)}m2；墙面乳胶漆基数 ${row.wallMeasureLengthM.toFixed(2)}m + 门洞 ${row.doorWidthTotalM.toFixed(2)}m = ${latexPaintBaseAreaM2.toFixed(2)}m2；墙面乳胶漆面积 ${latexPaintBaseAreaM2.toFixed(2)}m2 - 窗洞 ${row.windowAreaM2.toFixed(2)}m2 - 已选门洞扣减 ${doorDeductAreaM2.toFixed(2)}m2 = ${latexPaintAreaM2.toFixed(2)}m2；门洞扣减已人工调整。`,
+        evidence: `墙面展开面积 ${row.wallMeasureLengthM.toFixed(2)}m * ${row.heightM.toFixed(2)}m = ${row.wallGrossAreaM2.toFixed(2)}m2；墙面乳胶漆基数 ${row.wallMeasureLengthM.toFixed(2)}m + 门洞 ${row.doorWidthTotalM.toFixed(2)}m = ${latexPaintBaseAreaM2.toFixed(2)}m2；${latexPaintEvidence}；门洞扣减已人工调整。`,
       };
     });
 
@@ -663,15 +686,16 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
         return row;
       }
       const windowAreaM2 = round2(Math.max(row.windowAreaM2 + delta, 0));
-      const latexPaintAreaM2 = round2(Math.max(row.latexPaintAreaM2 - delta, 0));
       const latexPaintBaseAreaM2 = round2((row.wallMeasureLengthM + row.doorWidthTotalM) * row.heightM);
       const wallTileAreaM2 = calculateOpeningAdjustedWallTileArea(row, windowAreaM2);
+      const latexPaintAreaM2 = calculateLatexPaintArea(row.spaceType, latexPaintBaseAreaM2, windowAreaM2, row.doorDeductAreaM2, wallTileAreaM2);
+      const latexPaintEvidence = formatLatexPaintEvidence(row.spaceType, latexPaintBaseAreaM2, windowAreaM2, row.doorDeductAreaM2, wallTileAreaM2, latexPaintAreaM2);
       return {
         ...row,
         windowAreaM2,
         latexPaintAreaM2,
         wallTileAreaM2,
-        evidence: `墙面展开面积 ${row.wallMeasureLengthM.toFixed(2)}m * ${row.heightM.toFixed(2)}m = ${row.wallGrossAreaM2.toFixed(2)}m2；墙面乳胶漆基数 ${row.wallMeasureLengthM.toFixed(2)}m + 门洞 ${row.doorWidthTotalM.toFixed(2)}m = ${latexPaintBaseAreaM2.toFixed(2)}m2；墙面乳胶漆面积 ${latexPaintBaseAreaM2.toFixed(2)}m2 - 窗洞 ${windowAreaM2.toFixed(2)}m2 - 已选门洞扣减 ${row.doorDeductAreaM2.toFixed(2)}m2 = ${latexPaintAreaM2.toFixed(2)}m2；${note}`,
+        evidence: `墙面展开面积 ${row.wallMeasureLengthM.toFixed(2)}m * ${row.heightM.toFixed(2)}m = ${row.wallGrossAreaM2.toFixed(2)}m2；墙面乳胶漆基数 ${row.wallMeasureLengthM.toFixed(2)}m + 门洞 ${row.doorWidthTotalM.toFixed(2)}m = ${latexPaintBaseAreaM2.toFixed(2)}m2；${latexPaintEvidence}；${note}`,
       };
     });
   }

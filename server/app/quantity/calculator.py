@@ -55,8 +55,6 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
     )
     door_area_for_wall_tile_m2 = round(sum(door.width_m * (door.height_m or defaults.default_door_height_m) for door in space.doors), 2)
     wall_gross_area_m2 = round(wall_measure_length_m * height_m, 2)
-    latex_paint_base_area_m2 = round((wall_measure_length_m + door_width_total_m) * height_m, 2)
-    latex_paint_area_m2 = round(max(latex_paint_base_area_m2 - window_area_m2 - door_deduct_area_m2, 0), 2)
     wall_tile_measure_length_m = calculate_wall_tile_measure_length_m(space_type, wall_measure_length_m, space.wall_tile_lengths_m)
     wall_tile_area_m2 = calculate_wall_tile_area_m2(
         space_type,
@@ -65,6 +63,14 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
         height_m,
         window_area_m2,
         door_area_for_wall_tile_m2,
+    )
+    latex_paint_base_area_m2 = round((wall_measure_length_m + door_width_total_m) * height_m, 2)
+    latex_paint_area_m2 = calculate_latex_paint_area_m2(
+        space_type,
+        latex_paint_base_area_m2,
+        window_area_m2,
+        door_deduct_area_m2,
+        wall_tile_area_m2,
     )
     floor_tile_piece_count = calculate_floor_tile_piece_count(floor_area_m2)
     electrical_scope_area_m2 = floor_area_m2
@@ -108,7 +114,7 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
     evidence = (
         f"墙面展开面积 {wall_measure_length_m}m * {height_m}m = {wall_gross_area_m2}m2；"
         f"墙面乳胶漆基数 {wall_measure_length_m}m + 门洞 {door_width_total_m}m = {latex_paint_base_area_m2}m2；"
-        f"墙面乳胶漆面积 {latex_paint_base_area_m2}m2 - 窗洞 {window_area_m2}m2 - 已选门洞扣减 {door_deduct_area_m2}m2 = {latex_paint_area_m2}m2。"
+        f"{latex_paint_evidence(space_type, latex_paint_base_area_m2, window_area_m2, door_deduct_area_m2, wall_tile_area_m2, latex_paint_area_m2)}"
     )
 
     return QuantityRow(
@@ -174,6 +180,34 @@ def calculate_wall_tile_area_m2(
     if wall_tile_measure_length_m > 0:
         return round(max(wall_tile_measure_length_m * height_m, 0), 2)
     return 0
+
+
+def calculate_latex_paint_area_m2(
+    space_type: str,
+    latex_paint_base_area_m2: float,
+    window_area_m2: float,
+    door_deduct_area_m2: float,
+    wall_tile_area_m2: float,
+) -> float:
+    if space_type in FULL_WALL_TILE_SPACE_TYPES and wall_tile_area_m2 > 0:
+        return 0
+    return round(max(latex_paint_base_area_m2 - window_area_m2 - door_deduct_area_m2 - wall_tile_area_m2, 0), 2)
+
+
+def latex_paint_evidence(
+    space_type: str,
+    latex_paint_base_area_m2: float,
+    window_area_m2: float,
+    door_deduct_area_m2: float,
+    wall_tile_area_m2: float,
+    latex_paint_area_m2: float,
+) -> str:
+    if space_type in FULL_WALL_TILE_SPACE_TYPES and wall_tile_area_m2 > 0:
+        return f"厨房/卫生间墙面默认贴砖 {wall_tile_area_m2}m2，墙面乳胶漆面积计 0m2。"
+    return (
+        f"墙面乳胶漆面积 {latex_paint_base_area_m2}m2 - 窗洞 {window_area_m2}m2 "
+        f"- 已选门洞扣减 {door_deduct_area_m2}m2 - 贴砖墙面 {wall_tile_area_m2}m2 = {latex_paint_area_m2}m2。"
+    )
 
 
 def calculate_floor_tile_piece_count(floor_area_m2: float) -> int:

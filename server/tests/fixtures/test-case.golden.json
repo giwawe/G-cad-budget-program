@@ -23,7 +23,7 @@
     "door_width_total_m": 0.88,
     "door_deduct_area_m2": 0,
     "wall_gross_area_m2": 22.2,
-    "latex_paint_area_m2": 23.3,
+    "latex_paint_area_m2": 0,
     "status": "pending_review",
     "anomalies": []
   },
@@ -65,7 +65,7 @@
     "door_width_total_m": 0.88,
     "door_deduct_area_m2": 0,
     "wall_gross_area_m2": 16.6,
-    "latex_paint_area_m2": 17.86,
+    "latex_paint_area_m2": 0,
     "status": "pending_review",
     "anomalies": []
   },
@@ -107,7 +107,7 @@
     "door_width_total_m": 1.0,
     "door_deduct_area_m2": 0,
     "wall_gross_area_m2": 25.54,
-    "latex_paint_area_m2": 28.34,
+    "latex_paint_area_m2": 0,
     "status": "pending_review",
     "anomalies": []
   },

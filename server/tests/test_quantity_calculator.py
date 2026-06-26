@@ -72,6 +72,7 @@ def test_kitchen_wall_tile_uses_default_tile_height_and_deducts_all_openings():
 
     assert row.wall_measure_length_m == 9.12
     assert row.wall_tile_area_m2 == 19.9
+    assert row.latex_paint_area_m2 == 0
     assert row.waterproof_area_m2 == 7.22
 
 
@@ -89,6 +90,7 @@ def test_bathroom_wall_tile_uses_default_tile_height_and_waterproof_uses_1_8m():
     row = calculate_quantity_row(space, defaults)
 
     assert row.wall_tile_area_m2 == 20.68
+    assert row.latex_paint_area_m2 == 0
     assert row.waterproof_area_m2 == 21.84
 
 
@@ -120,6 +122,7 @@ def test_balcony_wall_tile_uses_marked_tile_wall_lengths_and_actual_height():
 
     assert row.wall_tile_measure_length_m == 5
     assert row.wall_tile_area_m2 == 14
+    assert row.latex_paint_area_m2 == 14
     assert row.waterproof_area_m2 == 9
 
 
@@ -137,6 +140,7 @@ def test_living_room_wall_tile_uses_marked_tile_wall_lengths_and_actual_height()
 
     assert row.wall_tile_measure_length_m == 4
     assert row.wall_tile_area_m2 == 11.2
+    assert row.latex_paint_area_m2 == 28
 
 
 def test_kitchen_wall_tile_ignores_marked_tile_wall_lengths_and_uses_default_tile_height():
