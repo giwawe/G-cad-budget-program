@@ -19,6 +19,7 @@ import {
   type QuantityHealthFilter,
 } from "@/lib/quantity-health";
 import { confirmQuantityRowsBySpaceNames, updateQuantityRowCurtainWallWidth, updateQuantityRowStatus, updateQuantityRowsStatusBySpaceNames } from "@/lib/quantity-row-status";
+import { buildQuoteExcelHtml, quoteExcelFileName } from "@/lib/quote-excel";
 import {
   apartmentPendingQuoteMetrics,
   buildQuoteMapping,
@@ -484,6 +485,21 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
     }
     await navigator.clipboard.writeText(generatedQuoteMapping.content);
     setMessage(`已复制报价映射：${generatedQuoteMapping.fileName}`);
+  }
+
+  function handleDownloadQuoteExcel(mapping: QuoteMapping) {
+    const downloadName = quoteExcelFileName(fileName);
+    const content = buildQuoteExcelHtml(mapping, fileName);
+    const blob = new Blob([content], { type: "application/vnd.ms-excel;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = downloadName;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setMessage(`已生成 Excel 报价草稿：${downloadName}`);
   }
 
   function handleDownloadQuoteRulesTemplate() {
@@ -1000,6 +1016,10 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
             </div>
             <button type="button" onClick={handleCopyQuoteMapping}>
               复制 JSON
+            </button>
+            <button type="button" onClick={() => handleDownloadQuoteExcel(generatedQuoteMapping.mapping)}>
+              <Download aria-hidden="true" size={18} />
+              下载 Excel 草稿
             </button>
           </div>
           <div className="quoteSummary">
