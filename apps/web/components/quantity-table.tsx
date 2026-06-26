@@ -87,7 +87,7 @@ export function QuantityTable({
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => {
+          {rows.map((row, index) => {
             const floorAreaDifference = differencesByCell.get(differenceKey(row.spaceName, "floor_area_m2"));
             const wallLengthDifference = differencesByCell.get(differenceKey(row.spaceName, "wall_measure_length_m"));
             const windowsillDifference = differencesByCell.get(differenceKey(row.spaceName, "windowsill_length_m"));
@@ -109,7 +109,7 @@ export function QuantityTable({
             const bathroomVanityCountDifference = differencesByCell.get(differenceKey(row.spaceName, "bathroom_vanity_count"));
             const waterproofDifference = differencesByCell.get(differenceKey(row.spaceName, "waterproof_area_m2"));
             return (
-            <tr id={quantityRowAnchorId(row.spaceName)} key={`${row.floor}-${row.spaceName}`} className={differences.some((difference) => difference.space_name === row.spaceName) ? "quantityDiffRow" : undefined}>
+            <tr id={quantityRowAnchorId(row.spaceName)} key={`${row.floor}-${row.spaceName}-${index}`} className={differences.some((difference) => difference.space_name === row.spaceName) ? "quantityDiffRow" : undefined}>
               <td>{row.floor}</td>
               <td>
                 <strong>{row.spaceName}</strong>

@@ -306,7 +306,7 @@ export function DrawingReview({
             {drawing.base_segments.map((segment, index) => <line key={`base-${index}`} className="svgBase" x1={segment.start.x} y1={segment.start.y} x2={segment.end.x} y2={segment.end.y} />)}
             {drawing.walls.map((wall, index) => <line key={`wall-${index}`} className="svgWall" x1={wall.start.x} y1={wall.start.y} x2={wall.end.x} y2={wall.end.y} />)}
             {showExteriorWalls && drawing.exterior_wall_boundaries.map((boundary, index) => <polygon key={`exterior-wall-${index}`} points={pointList(boundary)} className="svgExteriorWall" />)}
-            {drawing.spaces.map((space, index) => <polygon key={space.name} points={pointList(space.points)} className="svgSpace" style={{ fill: palette[index % palette.length], stroke: palette[index % palette.length] }} />)}
+            {drawing.spaces.map((space, index) => <polygon key={`space-${index}-${space.name}`} points={pointList(space.points)} className="svgSpace" style={{ fill: palette[index % palette.length], stroke: palette[index % palette.length] }} />)}
             {showMeasuredWalls && drawing.measured_walls.map((wall, index) => <line key={`measured-wall-${index}`} className="svgMeasuredWall" x1={wall.start.x} y1={wall.start.y} x2={wall.end.x} y2={wall.end.y} />)}
             {showTileWalls && drawing.tile_walls.map((wall, index) => <line key={`tile-wall-${index}`} className="svgTileWall" x1={wall.start.x} y1={wall.start.y} x2={wall.end.x} y2={wall.end.y} />)}
             {showNewWalls && drawing.new_walls.map((wall, index) => <line key={`new-wall-${index}`} className="svgNewWall" x1={wall.start.x} y1={wall.start.y} x2={wall.end.x} y2={wall.end.y} />)}

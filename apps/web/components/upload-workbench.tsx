@@ -794,8 +794,8 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
                 <span>{check.detail}</span>
                 {check.spaceNames && (
                   <div>
-                    {check.spaceNames.map((spaceName) => (
-                      <a href={quantityRowAnchorHref(spaceName)} key={spaceName}>{spaceName}</a>
+                    {check.spaceNames.map((spaceName, index) => (
+                      <a href={quantityRowAnchorHref(spaceName)} key={`${spaceName}-${index}`}>{spaceName}</a>
                     ))}
                     <button type="button" onClick={() => handleMarkHealthCheckNeedsFix(check.spaceNames ?? [])}>
                       标记需修图
@@ -919,8 +919,8 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
               <div className="projectSummaryItems">
                 <strong>全屋汇总项</strong>
                 <div>
-                  {projectSummaryItems.map((item) => (
-                    <span key={`${item.space_name}-${item.item_name}`}>
+                  {projectSummaryItems.map((item, index) => (
+                    <span key={`${item.space_name}-${item.item_name}-${index}`}>
                       {item.item_name} {item.quantity.toFixed(2)} {item.unit} / {item.amount.toFixed(2)} 元
                     </span>
                   ))}
@@ -973,8 +973,8 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
                 </tr>
               </thead>
               <tbody>
-                {generatedQuoteMapping.mapping.items.slice(0, 8).map((item) => (
-                  <tr key={`${item.space_name}-${item.item_name}`}>
+                {generatedQuoteMapping.mapping.items.slice(0, 8).map((item, index) => (
+                  <tr key={`${item.space_name}-${item.item_name}-${index}`}>
                     <td>{item.space_name}</td>
                     <td>{item.space_type}</td>
                     <td>{item.item_name}</td>
@@ -1015,8 +1015,8 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
                   </code>
                 </div>
               ))}
-              {comparison.differences.slice(0, 12).map((difference) => (
-                <a href={quantityRowAnchorHref(difference.space_name)} key={`${difference.space_name}-${difference.field}`}>
+              {comparison.differences.slice(0, 12).map((difference, index) => (
+                <a href={quantityRowAnchorHref(difference.space_name)} key={`${difference.space_name}-${difference.field}-${index}`}>
                   <strong>{difference.space_name}</strong>
                   <span>{difference.field}</span>
                   <code>
