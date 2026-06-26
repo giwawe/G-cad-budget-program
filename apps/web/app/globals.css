@@ -479,6 +479,33 @@ code {
   color: #8a3a13;
 }
 
+.quoteGaps .quoteExportRiskDetails {
+  display: grid;
+  align-items: stretch;
+  border-bottom: 1px solid #f0dcae;
+  padding-bottom: 8px;
+}
+
+.quoteGaps .quoteExportRiskDetails strong {
+  color: #8a3a13;
+}
+
+.quoteGaps .quoteExportRiskDetails ul {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  list-style: disc;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.quoteGaps .quoteExportRiskDetails li {
+  border: 0;
+  background: transparent;
+  color: #80611d;
+  padding: 0;
+}
+
 .quoteGaps .quoteReminder {
   border-bottom: 1px solid #f0dcae;
   padding-bottom: 8px;

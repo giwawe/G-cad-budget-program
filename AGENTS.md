@@ -77,6 +77,7 @@ node --experimental-strip-types apps\web\lib\calibration-differences.test.ts
 node --experimental-strip-types apps\web\lib\calibration-template.test.ts
 node --experimental-strip-types apps\web\lib\quantity-health.test.ts
 node --experimental-strip-types apps\web\components\quantity-table-columns.test.ts
+node --experimental-strip-types apps\web\components\quote-export-risk-details.test.ts
 ```
 
 这些 Node 测试会打印 `MODULE_TYPELESS_PACKAGE_JSON` warning，当前可忽略，不要为了消 warning 贸然改 package type。
@@ -204,6 +205,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 导出报价映射后会显示窗帘/窗帘箱可报价候选空间数、仍待确认空间数和对应空间名；导出的报价映射 JSON 会附带 `curtain_quote_readiness` 摘要，并把人工确认后的暗窗帘箱写入 `curtain_quote_candidates` 候选清单和 `items` 金额汇总。
 - 导出报价映射 JSON 会附带 `building_area_quote_readiness` 摘要；如果报价规则中存在 `building_area_m2` 项目但当前建筑面积为 0，页面会提示这些项目未进入金额汇总。
 - 导出报价映射 JSON 会附带 `quantity_health_readiness` 摘要，记录当前未接受健康检查的 warning/info 数量和提示文案，便于报价文件流转时保留风险状态。
+- 报价映射面板会提前展示导出前风险明细，复用导出确认里的 warning、集成吊顶零单价、建筑面积缺失和窗帘待确认提示，避免报价员等到点击导出时才看到风险原因。
 - 报价映射面板如果发现“厨房卫生间集成吊顶”已有工程量但 `unit_price <= 0`，会额外显示集成吊顶单价待补提醒，提示报价员在报价规则 JSON 中补 `unit_price`；如果实际做石膏板吊顶，则回到工程量表切换顶面类型。该提醒不阻断导出。
 - 报价映射面板会单独展示“全屋汇总项”，把地砖主材、强电布线、水路布管、砌墙、拆墙、全屋灯饰等 `space_name="全屋"` 的清单集中列出，避免这些项目从空间工程量表隐藏后不直观。
 - 窗帘墙宽候选列可在工程量表中直接编辑；编辑后会清空已生成的报价映射，避免沿用旧结果。

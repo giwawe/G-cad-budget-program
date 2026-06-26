@@ -247,6 +247,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
   const curtainReadiness = useMemo(() => curtainQuoteReadiness(rows), [rows]);
   const projectSummaryItems = generatedQuoteMapping ? projectSummaryQuoteItems(generatedQuoteMapping.mapping) : [];
   const integratedCeilingPriceReminderItemsForMapping = generatedQuoteMapping ? integratedCeilingPriceReminderItems(generatedQuoteMapping.mapping) : [];
+  const quoteExportRisks = generatedQuoteMapping ? exportQuoteMappingConfirmationMessages(generatedQuoteMapping.mapping) : [];
   const rawHealthChecks = useMemo(
     () => buildQuantityHealthChecks({ rows, summary, quoteMapping: generatedQuoteMapping?.mapping ?? null }),
     [rows, summary, generatedQuoteMapping],
@@ -1020,6 +1021,16 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
             </div>
           </div>
           <div className="quoteGaps">
+            {quoteExportRisks.length > 0 && (
+              <div className="quoteExportRiskDetails">
+                <strong>导出前风险明细</strong>
+                <ul>
+                  {quoteExportRisks.map((risk, index) => (
+                    <li key={`${risk}-${index}`}>{risk}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
             {generatedQuoteMapping.mapping.quantity_health_readiness.warning > 0 && (
               <div className="quoteRisk">
                 <strong>报价前仍有风险</strong>
