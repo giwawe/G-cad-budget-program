@@ -730,7 +730,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
           <div className="fieldGrid">
             <label>项目名称<input defaultValue="商品房算量验证" /></label>
             <label>默认层高<input defaultValue="2.80 m" /></label>
-            <label>默认窗高<input defaultValue="1.50 m" /></label>
+            <label>默认窗高<input defaultValue="1.80 m" /></label>
             <label>默认门高<input defaultValue="2.10 m" /></label>
           </div>
         </div>

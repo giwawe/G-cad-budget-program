@@ -60,7 +60,7 @@ def test_real_second_fixture_groups_window_entities_into_physical_windows():
     assert len(review.drawing.window_openings) == 8
     assert len(review.drawing.windows) == 45
     assert all(window.width_m > 0 for window in review.drawing.window_openings)
-    assert {window.height_m for window in review.drawing.window_openings} == {1.5}
+    assert {window.height_m for window in review.drawing.window_openings} == {1.8}
     assert all(window.included_in_wall_deduction for window in review.drawing.window_openings)
     assert all(window.space_names for window in review.drawing.window_openings)
     assert all(len(window.boundary_points) >= 4 for window in review.drawing.window_openings)
@@ -80,7 +80,7 @@ def test_closed_quote_window_polyline_keeps_closing_segment_in_review_drawing():
     assert len(review.drawing.window_openings) == 1
     assert len(review.drawing.windows) == 4
     assert review.drawing.window_openings[0].width_m == 2.0
-    assert review.drawing.window_openings[0].height_m == 1.5
+    assert review.drawing.window_openings[0].height_m == 1.8
     assert review.drawing.window_openings[0].included_in_wall_deduction is True
     assert review.drawing.window_openings[0].boundary_points == [(1.0, 0.0), (3.0, 0.0), (3.0, 0.24), (1.0, 0.24)]
 

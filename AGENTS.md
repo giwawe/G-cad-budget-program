@@ -133,7 +133,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 默认参数：
 
 - 项目层高：`2.8m`
-- 默认窗高：`1.5m`
+- 默认窗高：`1.8m`
 - 默认门高：`2.1m`
 - DXF 单位换算：默认 `mm -> m`，`unit_scale_to_m = 0.001`
 

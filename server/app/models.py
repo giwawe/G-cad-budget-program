@@ -12,7 +12,7 @@ class ReviewStatus(str, Enum):
 @dataclass(frozen=True)
 class ProjectDefaults:
     project_height_m: float = 2.8
-    default_window_height_m: float = 1.5
+    default_window_height_m: float = 1.8
     default_door_height_m: float = 2.1
     unit_scale_to_m: float = 0.001
 

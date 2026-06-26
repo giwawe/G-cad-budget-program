@@ -32,7 +32,7 @@ def health() -> dict[str, str]:
 
 @app.get("/api/sample-quantities")
 def sample_quantities():
-    defaults = ProjectDefaults(project_height_m=2.8, default_window_height_m=1.5)
+    defaults = ProjectDefaults(project_height_m=2.8, default_window_height_m=1.8)
     spaces = [
         SpaceInput(
             floor="一层",

@@ -19,9 +19,9 @@ def test_parse_dxf_upload_returns_quantity_rows():
     assert rows[0]["space_name"] == "一层-客厅"
     assert rows[0]["floor_area_m2"] == 30
     assert rows[0]["wall_measure_length_m"] == 15
-    assert rows[0]["window_area_m2"] == 4.8
+    assert rows[0]["window_area_m2"] == 5.76
     assert rows[0]["door_width_total_m"] == 0.9
-    assert rows[0]["latex_paint_area_m2"] == 37.2
+    assert rows[0]["latex_paint_area_m2"] == 36.24
 
 
 def test_parse_real_dxf_upload_fixture_returns_rows():
@@ -119,7 +119,7 @@ def test_parse_real_dxf_review_payload_includes_drawing_summary_and_measured_wal
     assert payload["drawing"]["window_openings"]
     first_window = payload["drawing"]["window_openings"][0]
     assert first_window["width_m"] > 0
-    assert first_window["height_m"] == 1.5
+    assert first_window["height_m"] == 1.8
     assert first_window["included_in_wall_deduction"] is True
     assert first_window["space_names"]
 
