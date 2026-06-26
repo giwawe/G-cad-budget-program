@@ -172,7 +172,7 @@ export function DrawingReview({
         <div><span>地面面积</span><strong>{summary.floor_area_total_m2.toFixed(2)} m2</strong></div>
         <div><span>墙线长度</span><strong>{summary.wall_measure_length_total_m.toFixed(2)} m</strong></div>
         <div><span>窗洞面积</span><strong>{summary.window_area_total_m2.toFixed(2)} m2</strong></div>
-        <div><span>乳胶漆面积</span><strong>{summary.latex_paint_area_total_m2.toFixed(2)} m2</strong></div>
+        <div><span>墙面乳胶漆</span><strong>{summary.latex_paint_area_total_m2.toFixed(2)} m2</strong></div>
       </div>
 
       <div className="drawingToolbar">

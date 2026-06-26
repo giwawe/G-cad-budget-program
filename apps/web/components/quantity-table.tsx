@@ -74,7 +74,7 @@ export function QuantityTable({
             <th>卫生间门</th>
             <th>推拉门面积</th>
             <th>推拉门门套</th>
-            <th>乳胶漆面积</th>
+            <th>墙面乳胶漆</th>
             <th>贴砖墙长</th>
             <th>墙砖面积</th>
             <th>橱柜地柜</th>

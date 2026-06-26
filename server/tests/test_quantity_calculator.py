@@ -39,7 +39,7 @@ def test_latex_area_adds_door_width_back_before_optional_deduction():
     assert row.wall_tile_area_m2 == 0
     assert row.waterproof_area_m2 == 0
     assert row.status == ReviewStatus.pending_review
-    assert "乳胶漆基数 15m + 门洞 0.9m" in row.evidence
+    assert "墙面乳胶漆基数 15m + 门洞 0.9m" in row.evidence
     assert "已选门洞扣减 0m2" in row.evidence
 
 

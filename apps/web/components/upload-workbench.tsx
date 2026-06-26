@@ -601,7 +601,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
         doorDeductAreaM2,
         latexPaintAreaM2,
         wallTileAreaM2,
-        evidence: `墙面展开面积 ${row.wallMeasureLengthM.toFixed(2)}m * ${row.heightM.toFixed(2)}m = ${row.wallGrossAreaM2.toFixed(2)}m2；乳胶漆基数 ${row.wallMeasureLengthM.toFixed(2)}m + 门洞 ${row.doorWidthTotalM.toFixed(2)}m = ${latexPaintBaseAreaM2.toFixed(2)}m2；乳胶漆面积 ${latexPaintBaseAreaM2.toFixed(2)}m2 - 窗洞 ${row.windowAreaM2.toFixed(2)}m2 - 已选门洞扣减 ${doorDeductAreaM2.toFixed(2)}m2 = ${latexPaintAreaM2.toFixed(2)}m2；门洞扣减已人工调整。`,
+        evidence: `墙面展开面积 ${row.wallMeasureLengthM.toFixed(2)}m * ${row.heightM.toFixed(2)}m = ${row.wallGrossAreaM2.toFixed(2)}m2；墙面乳胶漆基数 ${row.wallMeasureLengthM.toFixed(2)}m + 门洞 ${row.doorWidthTotalM.toFixed(2)}m = ${latexPaintBaseAreaM2.toFixed(2)}m2；墙面乳胶漆面积 ${latexPaintBaseAreaM2.toFixed(2)}m2 - 窗洞 ${row.windowAreaM2.toFixed(2)}m2 - 已选门洞扣减 ${doorDeductAreaM2.toFixed(2)}m2 = ${latexPaintAreaM2.toFixed(2)}m2；门洞扣减已人工调整。`,
       };
     });
 
@@ -671,7 +671,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
         windowAreaM2,
         latexPaintAreaM2,
         wallTileAreaM2,
-        evidence: `墙面展开面积 ${row.wallMeasureLengthM.toFixed(2)}m * ${row.heightM.toFixed(2)}m = ${row.wallGrossAreaM2.toFixed(2)}m2；乳胶漆基数 ${row.wallMeasureLengthM.toFixed(2)}m + 门洞 ${row.doorWidthTotalM.toFixed(2)}m = ${latexPaintBaseAreaM2.toFixed(2)}m2；乳胶漆面积 ${latexPaintBaseAreaM2.toFixed(2)}m2 - 窗洞 ${windowAreaM2.toFixed(2)}m2 - 已选门洞扣减 ${row.doorDeductAreaM2.toFixed(2)}m2 = ${latexPaintAreaM2.toFixed(2)}m2；${note}`,
+        evidence: `墙面展开面积 ${row.wallMeasureLengthM.toFixed(2)}m * ${row.heightM.toFixed(2)}m = ${row.wallGrossAreaM2.toFixed(2)}m2；墙面乳胶漆基数 ${row.wallMeasureLengthM.toFixed(2)}m + 门洞 ${row.doorWidthTotalM.toFixed(2)}m = ${latexPaintBaseAreaM2.toFixed(2)}m2；墙面乳胶漆面积 ${latexPaintBaseAreaM2.toFixed(2)}m2 - 窗洞 ${windowAreaM2.toFixed(2)}m2 - 已选门洞扣减 ${row.doorDeductAreaM2.toFixed(2)}m2 = ${latexPaintAreaM2.toFixed(2)}m2；${note}`,
       };
     });
   }

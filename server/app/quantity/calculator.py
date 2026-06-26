@@ -108,8 +108,8 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
 
     evidence = (
         f"墙面展开面积 {wall_measure_length_m}m * {height_m}m = {wall_gross_area_m2}m2；"
-        f"乳胶漆基数 {wall_measure_length_m}m + 门洞 {door_width_total_m}m = {latex_paint_base_area_m2}m2；"
-        f"乳胶漆面积 {latex_paint_base_area_m2}m2 - 窗洞 {window_area_m2}m2 - 已选门洞扣减 {door_deduct_area_m2}m2 = {latex_paint_area_m2}m2。"
+        f"墙面乳胶漆基数 {wall_measure_length_m}m + 门洞 {door_width_total_m}m = {latex_paint_base_area_m2}m2；"
+        f"墙面乳胶漆面积 {latex_paint_base_area_m2}m2 - 窗洞 {window_area_m2}m2 - 已选门洞扣减 {door_deduct_area_m2}m2 = {latex_paint_area_m2}m2。"
     )
 
     return QuantityRow(
