@@ -225,7 +225,7 @@ export function curtainQuoteReadiness(rows: QuantityRow[]): CurtainQuoteReadines
     if (row.status === "excluded") {
       continue;
     }
-    if ((row.curtainWallWidthSource === "manual" || row.curtainWallWidthSource === "matched_window_wall") && row.curtainWallWidthM > 0) {
+    if ((row.curtainWallWidthSource === "manual" || row.curtainWallWidthSource === "matched_window_wall" || row.curtainWallWidthSource === "matched_l_shape_window") && row.curtainWallWidthM > 0) {
       ready_space_names.push(row.spaceName);
     } else if (row.curtainWallWidthSource === "fallback_longest_wall" || row.curtainWallWidthSource === "manual_required_l_shape_window") {
       pending_space_names.push(row.spaceName);

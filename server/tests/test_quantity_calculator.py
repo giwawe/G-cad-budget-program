@@ -17,7 +17,7 @@ def test_latex_area_deducts_windows_but_not_doors():
     defaults = ProjectDefaults(project_height_m=2.8, default_window_height_m=1.5, default_door_height_m=2.1)
     space = SpaceInput(
         floor="一层",
-        name="一层-客厅",
+        name="一层-餐厅",
         boundary_points_m=[(0, 0), (6, 0), (6, 5), (0, 5)],
         wall_lengths_m=[6, 5, 4],
         windows=[OpeningInput(width_m=3.2)],
@@ -292,23 +292,22 @@ def test_curtain_wall_width_prefers_window_wall_candidate():
     assert row.curtain_wall_width_source == "matched_window_wall"
 
 
-def test_l_shaped_window_curtain_wall_width_requires_manual_review():
+def test_l_shaped_window_curtain_wall_width_uses_l_shape_candidate():
     space = SpaceInput(
         floor="一层",
-        name="一层-客厅",
+        name="一层-餐厅",
         boundary_points_m=[(0, 0), (6, 0), (6, 4), (0, 4)],
         wall_lengths_m=[6, 4, 6, 4],
-        curtain_wall_width_candidate_m=0,
-        curtain_wall_width_source="manual_required_l_shape_window",
+        curtain_wall_width_candidate_m=3.4,
+        curtain_wall_width_source="matched_l_shape_window",
         windows=[OpeningInput(width_m=1.8)],
-        anomalies=["L形窗帘和窗帘箱长度需人工确认"],
     )
 
     row = calculate_quantity_row(space, ProjectDefaults())
 
-    assert row.curtain_wall_width_m == 0
-    assert row.curtain_wall_width_source == "manual_required_l_shape_window"
-    assert any("L形窗" in anomaly for anomaly in row.anomalies)
+    assert row.curtain_wall_width_m == 3.4
+    assert row.curtain_wall_width_source == "matched_l_shape_window"
+    assert row.anomalies == []
 
 
 def test_curtain_wall_width_is_zero_for_kitchen_bathroom_and_corridor():

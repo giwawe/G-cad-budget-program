@@ -178,7 +178,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 建筑面积：`building_area_m2` 从 `QUOTE_EXT_WALL` 闭合多段线读取，closed 标记或首尾点重合都视为闭合；当前取面积最大的闭合外墙轮廓，写入 API summary、图形校对页和报价映射 summary；它不是每个 `QUOTE_ROOM` 面积的简单求和，暂不混入空间工程量行。
 - 窗台石当前自动计算 `windowsill_length_m`，v1 直接等于 `window_width_total_m`，用于窗台石铺贴报价。
 - 窗帘和窗帘箱不能按窗洞宽度计量，应按窗户所在墙面的整面墙宽度；厨房、卫生间、过道等空间默认不做窗帘/窗帘箱。
-- `curtain_wall_width_m` 是窗帘墙宽候选取数：客厅、卧室、书房有窗时优先按窗洞中心线匹配邻近且平行的 `QUOTE_WALL`，取窗户所在墙面的整面墙宽；匹配不到时回退到该空间最长一段 `QUOTE_WALL`；其它空间为 `0`。L 形/转角窗帘和窗帘箱长度不自动计算，候选值为 `0` 并要求人工确认。`curtain_wall_width_source` 标记来源：`matched_window_wall`、`fallback_longest_wall`、`manual_required_l_shape_window`、`not_applicable` 或前端人工编辑后的 `manual`。前端工程量表可人工校准并随校对快照保存/恢复；只有来源为 `manual` 且长度大于 0 时，暗窗帘箱才进入报价规则和金额汇总。
+- `curtain_wall_width_m` 是窗帘墙宽候选取数：客厅、餐厅、卧室、书房有窗时优先识别 L 形窗并按两条非平行长窗边合计；非 L 形窗按窗洞中心线匹配邻近且平行的 `QUOTE_WALL`，取窗户所在墙面的整面墙宽；匹配不到时回退到该空间最长一段 `QUOTE_WALL`；其它空间为 `0`。`curtain_wall_width_source` 标记来源：`matched_l_shape_window`、`matched_window_wall`、`fallback_longest_wall`、`manual_required_l_shape_window`、`not_applicable` 或前端人工编辑后的 `manual`。前端工程量表可人工校准并随校对快照保存/恢复；只有来源为 `manual` 且长度大于 0 时，暗窗帘箱才进入报价规则和金额汇总。
 
 ## 前端已实现能力
 
@@ -205,7 +205,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 导出报价映射 JSON 会附带 `quantity_health_readiness` 摘要，记录当前未接受健康检查的 warning/info 数量和提示文案，便于报价文件流转时保留风险状态。
 - 报价映射面板会单独展示“全屋汇总项”，把地砖主材、强电布线、水路布管、砌墙、拆墙、全屋灯饰等 `space_name="全屋"` 的清单集中列出，避免这些项目从空间工程量表隐藏后不直观。
 - 窗帘墙宽候选列可在工程量表中直接编辑；编辑后会清空已生成的报价映射，避免沿用旧结果。
-- 窗帘墙宽候选列会显示候选来源，`回退最长墙` 代表未匹配到窗户所在墙面，需要人工重点确认；`L形窗人工确认` 代表转角窗不能按直线墙宽自动取数。
+- 窗帘墙宽候选列会显示候选来源，`L形窗自动` 代表已按 L 形窗两条非平行长窗边合计，`回退最长墙` 代表未匹配到窗户所在墙面，需要人工重点确认；`L形窗人工确认` 兼容旧快照，代表转角窗仍需人工确认。
 
 报价映射默认规则在 `apps/web/lib/quote-mapping.ts`：
 

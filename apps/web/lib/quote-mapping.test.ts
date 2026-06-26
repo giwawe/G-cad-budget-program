@@ -99,6 +99,45 @@ const rows: QuantityRow[] = [
 
 const mapping = buildQuoteMapping(rows, undefined, { building_area_m2: 88.66 });
 
+function curtainOnlyRow(spaceName: string, spaceType: string, curtainWallWidthM: number, curtainWallWidthSource: QuantityRow["curtainWallWidthSource"]): QuantityRow {
+  return {
+    ...rows[0],
+    spaceName,
+    spaceType,
+    floorAreaM2: 0,
+    ceilingAreaM2: 0,
+    wallMeasureLengthM: 0,
+    windowWidthTotalM: 0,
+    windowsillLengthM: 0,
+    curtainWallWidthM,
+    curtainWallWidthSource,
+    windowAreaM2: 0,
+    doorWidthTotalM: 0,
+    doorDeductAreaM2: 0,
+    wallGrossAreaM2: 0,
+    latexPaintAreaM2: 0,
+    wallTileMeasureLengthM: 0,
+    wallTileAreaM2: 0,
+    floorTilePieceCount: 0,
+    electricalScopeAreaM2: 0,
+    plumbingScopeAreaM2: 0,
+    customCabinetAreaM2: 0,
+    newWallLengthM: 0,
+    newWallAreaM2: 0,
+    demolitionWallLengthM: 0,
+    demolitionWallAreaM2: 0,
+    interiorDoorCount: 0,
+    bathroomDoorCount: 0,
+    slidingDoorAreaM2: 0,
+    slidingDoorCasingLengthM: 0,
+    kitchenBaseCabinetLengthM: 0,
+    kitchenWallCabinetLengthM: 0,
+    toiletCount: 0,
+    bathroomVanityCount: 0,
+    waterproofAreaM2: 0,
+  };
+}
+
 assert.deepEqual(mapping.quantity_health_readiness, {
   total: 0,
   warning: 0,
@@ -535,17 +574,18 @@ assert.equal(windowsillItem?.quantity, 1.8);
 assert.equal(windowsillItem?.amount, 131.4);
 
 const curtainReadiness = curtainQuoteReadiness([
-  { ...rows[0], spaceName: "主卧", spaceType: "卧室", curtainWallWidthM: 4.2, curtainWallWidthSource: "manual" },
-  { ...rows[0], spaceName: "次卧", spaceType: "卧室", curtainWallWidthM: 3.6, curtainWallWidthSource: "matched_window_wall" },
-  { ...rows[0], spaceName: "书房", spaceType: "书房", curtainWallWidthM: 3.2, curtainWallWidthSource: "fallback_longest_wall" },
-  { ...rows[0], spaceName: "客厅", spaceType: "客厅", curtainWallWidthM: 0, curtainWallWidthSource: "manual_required_l_shape_window" },
+  curtainOnlyRow("主卧", "卧室", 4.2, "manual"),
+  curtainOnlyRow("次卧", "卧室", 3.6, "matched_window_wall"),
+  curtainOnlyRow("餐厅", "餐厅", 4.8, "matched_l_shape_window"),
+  curtainOnlyRow("书房", "书房", 3.2, "fallback_longest_wall"),
+  curtainOnlyRow("客厅", "客厅", 0, "manual_required_l_shape_window"),
   { ...rows[1], spaceName: "电梯井", curtainWallWidthM: 5, curtainWallWidthSource: "manual" },
 ]);
 
 assert.deepEqual(curtainReadiness, {
-  ready_count: 2,
+  ready_count: 3,
   pending_count: 2,
-  ready_space_names: ["主卧", "次卧"],
+  ready_space_names: ["主卧", "次卧", "餐厅"],
   pending_space_names: ["书房", "客厅"],
 });
 assert.equal(formatCurtainReadinessSpaces(["主卧", "次卧"]), "主卧、次卧");
@@ -553,14 +593,15 @@ assert.equal(formatCurtainReadinessSpaces(["主卧", "次卧", "书房", "客厅
 assert.equal(formatCurtainReadinessSpaces([]), "暂无");
 
 const curtainCandidateMapping = buildQuoteMapping([
-  { ...rows[0], spaceName: "主卧", spaceType: "卧室", curtainWallWidthM: 4.2, curtainWallWidthSource: "manual" },
-  { ...rows[0], spaceName: "次卧", spaceType: "卧室", curtainWallWidthM: 3.6, curtainWallWidthSource: "matched_window_wall" },
-  { ...rows[0], spaceName: "客厅", spaceType: "客厅", curtainWallWidthM: 0, curtainWallWidthSource: "manual_required_l_shape_window" },
+  curtainOnlyRow("主卧", "卧室", 4.2, "manual"),
+  curtainOnlyRow("次卧", "卧室", 3.6, "matched_window_wall"),
+  curtainOnlyRow("餐厅", "餐厅", 4.8, "matched_l_shape_window"),
+  curtainOnlyRow("客厅", "客厅", 0, "manual_required_l_shape_window"),
 ], undefined, { building_area_m2: 88.66 });
 assert.deepEqual(curtainCandidateMapping.curtain_quote_readiness, {
-  ready_count: 2,
+  ready_count: 3,
   pending_count: 1,
-  ready_space_names: ["主卧", "次卧"],
+  ready_space_names: ["主卧", "次卧", "餐厅"],
   pending_space_names: ["客厅"],
 });
 assert.deepEqual(curtainCandidateMapping.curtain_quote_candidates, [
@@ -588,7 +629,7 @@ assert.deepEqual(curtainCandidateMapping.items.filter((item) => item.item_name =
     amount: 462,
   },
 ]);
-assert.equal(curtainCandidateMapping.summary.total_amount, 25041.43);
+assert.equal(curtainCandidateMapping.summary.total_amount, 15992.95);
 
 assert.throws(() => parseQuoteRules("{bad json"), /报价规则 JSON 格式无效/);
 assert.throws(() => parseQuoteRules(JSON.stringify({ item_name: "x" })), /报价规则必须是数组/);

@@ -93,12 +93,12 @@ def test_curtain_wall_width_candidate_uses_window_wall_not_longest_wall():
     assert review.spaces[0].curtain_wall_width_source == "matched_window_wall"
 
 
-def test_l_shaped_window_requires_manual_curtain_wall_width():
+def test_l_shaped_window_uses_l_shape_length_for_curtain_wall_width():
     review = parser.parse_dxf_review(build_l_shaped_window_dxf(), ProjectDefaults())
 
-    assert review.spaces[0].curtain_wall_width_candidate_m == 0
-    assert review.spaces[0].curtain_wall_width_source == "manual_required_l_shape_window"
-    assert any("L形窗" in anomaly for anomaly in review.spaces[0].anomalies)
+    assert review.spaces[0].curtain_wall_width_candidate_m == 3.4
+    assert review.spaces[0].curtain_wall_width_source == "matched_l_shape_window"
+    assert review.spaces[0].anomalies == []
 
 
 def test_quote_ext_wall_closed_polyline_calculates_building_area():

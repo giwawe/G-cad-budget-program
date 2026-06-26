@@ -225,8 +225,9 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         room_toilets = [point for point in toilet_points if contains_point(room, point) or _point_on_boundary(room, point)]
         room_bathroom_vanities = [point for point in bathroom_vanity_points if contains_point(room, point) or _point_on_boundary(room, point)]
         room_windows = [opening for opening in grouped_window_opening_inputs if _opening_associated_with_room(room, *_opening_centerline(opening))]
-        has_l_shaped_window = any(_opening_is_l_shaped_window(opening) for opening in room_windows)
-        curtain_wall_width_candidate_m = 0 if has_l_shaped_window else _curtain_wall_width_candidate(room_walls, room_windows)
+        l_shaped_window_length_m = _l_shaped_window_length(room_windows)
+        has_l_shaped_window = l_shaped_window_length_m > 0
+        curtain_wall_width_candidate_m = l_shaped_window_length_m or _curtain_wall_width_candidate(room_walls, room_windows)
         measured_walls.extend(room_walls)
         measured_tile_walls.extend(room_tile_walls)
         measured_new_walls.extend(room_new_walls)
@@ -263,7 +264,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
                     for opening in door_opening_inputs
                     if _opening_associated_with_room(room, opening.segments[0][0], opening.segments[0][1])
                 ],
-                anomalies=["L形窗帘和窗帘箱长度需人工确认"] if has_l_shaped_window else [],
+                anomalies=[],
             )
         )
     grouped_window_openings = [_drawing_window_for_opening(opening, named_rooms, defaults) for opening in grouped_window_opening_inputs]
@@ -547,7 +548,7 @@ def _curtain_wall_width_candidate(room_walls: list[tuple[Point, Point]], window_
 
 def _curtain_wall_width_source(candidate_m: float, has_l_shaped_window: bool) -> str:
     if has_l_shaped_window:
-        return "manual_required_l_shape_window"
+        return "matched_l_shape_window"
     return "matched_window_wall" if candidate_m > 0 else "not_applicable"
 
 
@@ -558,6 +559,23 @@ def _opening_is_l_shaped_window(opening: DrawingOpening) -> bool:
             if not _segments_are_parallel(first, second):
                 return True
     return False
+
+
+def _l_shaped_window_length(openings: list[DrawingOpening]) -> float:
+    lengths = [_l_shaped_opening_length(opening) for opening in openings if _opening_is_l_shaped_window(opening)]
+    return round(max(lengths), 2) if lengths else 0
+
+
+def _l_shaped_opening_length(opening: DrawingOpening) -> float:
+    selected_segments: list[tuple[Point, Point]] = []
+    for segment in sorted(opening.segments, key=lambda item: line_length(item[0], item[1]), reverse=True):
+        length = line_length(segment[0], segment[1])
+        if length < 0.45:
+            continue
+        if any(_segments_are_parallel(segment, selected) for selected in selected_segments):
+            continue
+        selected_segments.append(segment)
+    return sum(line_length(segment[0], segment[1]) for segment in selected_segments)
 
 
 def _window_matches_wall(window_segment: tuple[Point, Point], wall: tuple[Point, Point]) -> bool:

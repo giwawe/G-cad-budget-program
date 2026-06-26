@@ -19,6 +19,7 @@ const statusIcons: Record<ReviewStatus, React.ReactNode> = {
 
 const curtainWallSourceLabels: Record<CurtainWallWidthSource, string> = {
   matched_window_wall: "窗所在墙",
+  matched_l_shape_window: "L形窗自动",
   fallback_longest_wall: "回退最长墙",
   not_applicable: "不适用",
   manual_required_l_shape_window: "L形窗人工确认",

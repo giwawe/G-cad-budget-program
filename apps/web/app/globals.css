@@ -1034,6 +1034,11 @@ td .curtainWallSource.matched_window_wall {
   color: #047857;
 }
 
+td .curtainWallSource.matched_l_shape_window {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
 td .curtainWallSource.manual {
   background: #eef2ff;
   color: #4338ca;

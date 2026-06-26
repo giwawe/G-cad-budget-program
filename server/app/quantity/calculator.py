@@ -7,7 +7,7 @@ from server.app.quantity.geometry import polygon_area
 FULL_WALL_TILE_SPACE_TYPES = {"厨房", "卫生间"}
 MARKED_WALL_TILE_SPACE_TYPES = {"阳台", "露台", "洗衣房"}
 WATERPROOF_SPACE_TYPES = {"厨房", "卫生间", "阳台", "露台", "洗衣房"}
-CURTAIN_CANDIDATE_SPACE_TYPES = {"客厅", "卧室", "书房"}
+CURTAIN_CANDIDATE_SPACE_TYPES = {"客厅", "餐厅", "卧室", "书房"}
 KITCHEN_CABINET_SPACE_TYPES = {"厨房"}
 BATHROOM_FIXTURE_SPACE_TYPES = {"卫生间"}
 INTERIOR_DOOR_COUNT_SPACE_TYPES = {"厨房", "卫生间", "卧室", "书房", "衣帽间", "储物间", "洗衣房"}
