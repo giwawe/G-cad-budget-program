@@ -29,6 +29,8 @@ QUOTE_LAYERS = {
     "QUOTE_EXT_WALL",
     "QUOTE_TEXT",
 }
+L_SHAPED_WINDOW_MIN_SEGMENT_LENGTH_M = 0.45
+L_SHAPED_WINDOW_MIN_SEGMENT_COUNT = 6
 
 Point = tuple[float, float]
 
@@ -521,6 +523,8 @@ def _polygon_signed_area(points: list[Point]) -> float:
 
 
 def _opening_width(opening: DrawingOpening) -> float:
+    if _opening_is_l_shaped_window(opening):
+        return _l_shaped_opening_length(opening)
     bbox = _segments_bbox(opening.segments)
     return max(bbox["max_x"] - bbox["min_x"], bbox["max_y"] - bbox["min_y"])
 
@@ -553,7 +557,9 @@ def _curtain_wall_width_source(candidate_m: float, has_l_shaped_window: bool) ->
 
 
 def _opening_is_l_shaped_window(opening: DrawingOpening) -> bool:
-    long_segments = [segment for segment in opening.segments if line_length(segment[0], segment[1]) >= 0.45]
+    if len(opening.segments) != 2 and len(opening.segments) < L_SHAPED_WINDOW_MIN_SEGMENT_COUNT:
+        return False
+    long_segments = [segment for segment in opening.segments if line_length(segment[0], segment[1]) >= L_SHAPED_WINDOW_MIN_SEGMENT_LENGTH_M]
     for first_index, first in enumerate(long_segments):
         for second in long_segments[first_index + 1 :]:
             if not _segments_are_parallel(first, second):
@@ -570,7 +576,7 @@ def _l_shaped_opening_length(opening: DrawingOpening) -> float:
     selected_segments: list[tuple[Point, Point]] = []
     for segment in sorted(opening.segments, key=lambda item: line_length(item[0], item[1]), reverse=True):
         length = line_length(segment[0], segment[1])
-        if length < 0.45:
+        if length < L_SHAPED_WINDOW_MIN_SEGMENT_LENGTH_M:
             continue
         if any(_segments_are_parallel(segment, selected) for selected in selected_segments):
             continue

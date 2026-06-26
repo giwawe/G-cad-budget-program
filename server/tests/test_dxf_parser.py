@@ -10,6 +10,7 @@ from server.tests.dxf_fixtures import (
     build_closed_window_polyline_dxf,
     build_closed_door_polyline_dxf,
     build_custom_cabinet_dxf,
+    build_deep_rectangular_window_dxf,
     build_demolition_wall_dxf,
     build_ext_wall_area_dxf,
     build_ext_wall_area_repeated_endpoint_dxf,
@@ -85,6 +86,13 @@ def test_closed_quote_window_polyline_keeps_closing_segment_in_review_drawing():
     assert review.drawing.window_openings[0].boundary_points == [(1.0, 0.0), (3.0, 0.0), (3.0, 0.24), (1.0, 0.24)]
 
 
+def test_deep_rectangular_window_uses_long_side_as_width_not_perimeter():
+    review = parser.parse_dxf_review(build_deep_rectangular_window_dxf(), ProjectDefaults())
+
+    assert review.spaces[0].windows[0].width_m == 2.0
+    assert review.drawing.window_openings[0].width_m == 2.0
+
+
 def test_curtain_wall_width_candidate_uses_window_wall_not_longest_wall():
     review = parser.parse_dxf_review(build_window_on_short_wall_dxf(), ProjectDefaults())
 
@@ -96,6 +104,8 @@ def test_curtain_wall_width_candidate_uses_window_wall_not_longest_wall():
 def test_l_shaped_window_uses_l_shape_length_for_curtain_wall_width():
     review = parser.parse_dxf_review(build_l_shaped_window_dxf(), ProjectDefaults())
 
+    assert review.spaces[0].windows[0].width_m == 3.4
+    assert review.drawing.window_openings[0].width_m == 3.4
     assert review.spaces[0].curtain_wall_width_candidate_m == 3.4
     assert review.spaces[0].curtain_wall_width_source == "matched_l_shape_window"
     assert review.spaces[0].anomalies == []
