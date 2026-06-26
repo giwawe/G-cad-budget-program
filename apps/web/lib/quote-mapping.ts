@@ -235,6 +235,24 @@ export function integratedCeilingPriceReminderItems(mapping: Pick<QuoteMapping, 
   return mapping.items.filter((item) => item.item_name === "厨房卫生间集成吊顶" && item.quantity > 0 && item.unit_price <= 0);
 }
 
+export function exportQuoteMappingConfirmationMessages(mapping: QuoteMapping): string[] {
+  const messages: string[] = [];
+  if (mapping.quantity_health_readiness.warning > 0) {
+    messages.push(`仍有 ${mapping.quantity_health_readiness.warning} 项 warning 健康检查未处理。`);
+  }
+  const zeroPriceIntegratedCeilingCount = integratedCeilingPriceReminderItems(mapping).length;
+  if (zeroPriceIntegratedCeilingCount > 0) {
+    messages.push(`厨房卫生间集成吊顶已有 ${zeroPriceIntegratedCeilingCount} 个空间工程量但单价为 0。`);
+  }
+  if (mapping.building_area_quote_readiness.missing_item_names.length > 0) {
+    messages.push(`${mapping.building_area_quote_readiness.missing_item_names.join("、")} 需要 QUOTE_EXT_WALL 建筑面积，当前为 0。`);
+  }
+  if (mapping.curtain_quote_readiness.pending_count > 0) {
+    messages.push(`窗帘/窗帘箱仍有 ${mapping.curtain_quote_readiness.pending_count} 个空间待人工确认：${formatCurtainReadinessSpaces(mapping.curtain_quote_readiness.pending_space_names)}。`);
+  }
+  return messages;
+}
+
 export function curtainQuoteReadiness(rows: QuantityRow[]): CurtainQuoteReadiness {
   const ready_space_names: string[] = [];
   const pending_space_names: string[] = [];

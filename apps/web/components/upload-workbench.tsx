@@ -25,6 +25,7 @@ import {
   curtainQuoteReadiness,
   DEFAULT_QUOTE_RULES_NAME,
   defaultQuoteRules,
+  exportQuoteMappingConfirmationMessages,
   formatCurtainReadinessSpaces,
   integratedCeilingPriceReminderItems,
   parseQuoteRules,
@@ -449,6 +450,14 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
     const quoteHealthChecks = filterAcceptedHealthChecks(buildQuantityHealthChecks({ rows, summary, quoteMapping: baseMapping }), acceptedHealthCheckKeys);
     const quoteHealthSummary = summarizeQuantityHealthChecks(quoteHealthChecks);
     const mapping = buildQuoteMapping(rows, quoteRules, summary ?? undefined, quoteHealthSummary);
+    const confirmationMessages = exportQuoteMappingConfirmationMessages(mapping);
+    if (confirmationMessages.length > 0) {
+      const confirmed = window.confirm(`当前报价映射仍有待确认风险，将作为草稿报价导出：\n\n${confirmationMessages.join("\n")}\n\n是否继续导出？`);
+      if (!confirmed) {
+        setMessage("已取消导出报价映射，请先处理风险项或接受对应健康检查。");
+        return;
+      }
+    }
     const downloadName = quoteMappingFileName(fileName);
     const content = `${JSON.stringify(mapping, null, 2)}\n`;
     const blob = new Blob([content], { type: "application/json;charset=utf-8" });

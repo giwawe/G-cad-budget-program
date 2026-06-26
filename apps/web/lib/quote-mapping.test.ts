@@ -6,6 +6,7 @@ import {
   curtainQuoteReadiness,
   DEFAULT_QUOTE_RULES_NAME,
   defaultQuoteRules,
+  exportQuoteMappingConfirmationMessages,
   formatCurtainReadinessSpaces,
   integratedCeilingPriceReminderItems,
   projectSummaryQuoteItems,
@@ -306,6 +307,20 @@ assert.deepEqual(riskyMapping.quantity_health_readiness, {
   info: 1,
   label: "2 项需优先处理，1 项提醒",
 });
+
+const exportRiskMapping = buildQuoteMapping(
+  [{ ...rows[0], spaceName: "厨房" }, { ...rows[0], spaceName: "主卧", spaceType: "卧室", curtainWallWidthSource: "fallback_longest_wall" }],
+  [{ item_name: "按建筑面积计价项目", metric: "building_area_m2", unit: "m2", unit_price: 10 }, ...defaultQuoteRules()],
+  { building_area_m2: 0 },
+  { total: 2, warning: 1, info: 1, label: "1 项需优先处理，1 项提醒" },
+);
+assert.deepEqual(exportQuoteMappingConfirmationMessages(exportRiskMapping), [
+  "仍有 1 项 warning 健康检查未处理。",
+  "厨房卫生间集成吊顶已有 1 个空间工程量但单价为 0。",
+  "按建筑面积计价项目、强电布线、水路布管 需要 QUOTE_EXT_WALL 建筑面积，当前为 0。",
+  "窗帘/窗帘箱仍有 1 个空间待人工确认：主卧。",
+]);
+assert.deepEqual(exportQuoteMappingConfirmationMessages(buildQuoteMapping([{ ...rows[0], ceilingFinishType: "gypsum", curtainWallWidthSource: "not_applicable" }], updateQuoteRuleUnitPrice(defaultQuoteRules(), 3, 120), { building_area_m2: 88.66 })), []);
 
 const bedroomRows: QuantityRow[] = [
   { ...rows[0], spaceName: "主卧", spaceType: "卧室", latexPaintAreaM2: 30, wallTileAreaM2: 0, waterproofAreaM2: 0 },
