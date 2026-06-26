@@ -17,6 +17,7 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string):
     ["估算合计", formatMoney(mapping.summary.total_amount)],
   ];
   const riskRows = quoteExcelRiskRows(mapping);
+  const spaceSubtotalRows = quoteExcelSpaceSubtotalRows(mapping);
   const itemRows = mapping.items.map((item) => [
     item.floor,
     item.space_name,
@@ -52,6 +53,15 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string):
       ${riskRows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("\n      ")}
     </tbody>
   </table>
+  <h2>空间小计</h2>
+  <table>
+    <thead>
+      <tr><th>楼层</th><th>空间</th><th>类型</th><th>清单项数</th><th>小计</th></tr>
+    </thead>
+    <tbody>
+      ${spaceSubtotalRows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("\n      ")}
+    </tbody>
+  </table>
   <table>
     <thead>
       <tr><th>楼层</th><th>空间</th><th>类型</th><th>清单项</th><th>工程量</th><th>单位</th><th>单价</th><th>小计</th></tr>
@@ -63,6 +73,33 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string):
 </body>
 </html>
 `;
+}
+
+function quoteExcelSpaceSubtotalRows(mapping: QuoteMapping): string[][] {
+  const subtotals = new Map<string, { floor: string; spaceName: string; spaceType: string; itemCount: number; amount: number }>();
+  for (const item of mapping.items) {
+    const key = `${item.floor}\u0000${item.space_name}\u0000${item.space_type}`;
+    const subtotal = subtotals.get(key);
+    if (subtotal) {
+      subtotal.itemCount += 1;
+      subtotal.amount = round2(subtotal.amount + item.amount);
+      continue;
+    }
+    subtotals.set(key, {
+      floor: item.floor,
+      spaceName: item.space_name,
+      spaceType: item.space_type,
+      itemCount: 1,
+      amount: item.amount,
+    });
+  }
+  return [...subtotals.values()].map((subtotal) => [
+    subtotal.floor,
+    subtotal.spaceName,
+    subtotal.spaceType,
+    String(subtotal.itemCount),
+    formatMoney(subtotal.amount),
+  ]);
 }
 
 function quoteExcelRiskRows(mapping: QuoteMapping): string[][] {

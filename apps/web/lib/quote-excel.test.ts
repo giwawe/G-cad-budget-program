@@ -15,6 +15,16 @@ const mapping: QuoteMapping = {
       amount: 1164.8,
     },
     {
+      floor: "一层",
+      space_name: "厨房",
+      space_type: "厨房",
+      item_name: "地面找平",
+      quantity: 4.48,
+      unit: "m2",
+      unit_price: 56,
+      amount: 250.88,
+    },
+    {
       floor: "全屋",
       space_name: "全屋",
       space_type: "全屋",
@@ -28,8 +38,8 @@ const mapping: QuoteMapping = {
   summary: {
     space_count: 3,
     building_area_m2: 88.66,
-    item_count: 2,
-    total_amount: 8080.28,
+    item_count: 3,
+    total_amount: 8331.16,
   },
   curtain_quote_readiness: {
     ready_count: 1,
@@ -59,7 +69,12 @@ const html = buildQuoteExcelHtml(mapping, "A&B 项目");
 assert.ok(html.startsWith("\uFEFF<html"), "Excel HTML should include UTF-8 BOM for Chinese compatibility");
 assert.ok(html.includes("<title>A&amp;B 项目报价草稿</title>"));
 assert.ok(html.includes("<td>建筑面积</td><td>88.66</td>"));
-assert.ok(html.includes("<td>估算合计</td><td>8080.28</td>"));
+assert.ok(html.includes("<td>估算合计</td><td>8331.16</td>"));
+assert.ok(html.includes("<h2>空间小计</h2>"));
+assert.ok(html.includes("<th>楼层</th><th>空间</th><th>类型</th><th>清单项数</th><th>小计</th>"));
+assert.ok(html.includes("<td>一层</td><td>厨房</td><td>厨房</td><td>2</td><td>1415.68</td>"));
+assert.ok(html.includes("<td>全屋</td><td>全屋</td><td>全屋</td><td>1</td><td>6915.48</td>"));
+assert.ok(html.indexOf("<h2>空间小计</h2>") < html.indexOf("<th>楼层</th><th>空间</th><th>类型</th><th>清单项</th>"));
 assert.ok(html.includes("<th>楼层</th><th>空间</th><th>类型</th><th>清单项</th><th>工程量</th><th>单位</th><th>单价</th><th>小计</th>"));
 assert.ok(html.includes("<td>厨房卫生间集成吊顶</td><td>4.48</td><td>m2</td><td>260.00</td><td>1164.80</td>"));
 assert.ok(html.includes("<td>强电布线 &amp; 水路复核</td>"), "item names should be escaped");
