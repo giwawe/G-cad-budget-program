@@ -134,7 +134,6 @@ export const DEFAULT_QUOTE_RULES_NAME = "商品房整装默认规则";
 const DRY_SPACE_TYPES = ["客厅", "餐厅", "卧室", "书房", "过道", "门厅", "楼梯过道", "衣帽间", "储物间", "露台"];
 const CEILING_SPACE_TYPES = ["客厅", "餐厅", "卧室", "书房", "过道", "门厅", "楼梯过道", "衣帽间", "储物间"];
 const WET_FLOOR_SPACE_TYPES = ["厨房", "卫生间", "阳台", "露台", "洗衣房"];
-const WALL_TILE_SPACE_TYPES = ["厨房", "卫生间", "阳台", "露台", "洗衣房"];
 const CURTAIN_SPACE_TYPES = ["客厅", "卧室", "书房"];
 const KITCHEN_CABINET_SPACE_TYPES = ["厨房"];
 const BATHROOM_FIXTURE_SPACE_TYPES = ["卫生间"];
@@ -158,7 +157,7 @@ const DEFAULT_RULES: QuoteRule[] = [
   { item_name: "地面瓷砖主材", metric: "floor_tile_piece_count", unit: "片", unit_price: 50, space_types: undefined },
   { item_name: "强电布线", metric: "building_area_m2", unit: "M2", unit_price: 78, space_types: undefined },
   { item_name: "水路布管", metric: "building_area_m2", unit: "M2", unit_price: 29.5, space_types: undefined },
-  { item_name: "墙面贴瓷砖(600X1200)", metric: "wall_tile_area_m2", unit: "m2", unit_price: 100, space_types: WALL_TILE_SPACE_TYPES },
+  { item_name: "墙面贴瓷砖(600X1200)", metric: "wall_tile_area_m2", unit: "m2", unit_price: 100, space_types: undefined },
   { item_name: "墙地面防漏处理", metric: "waterproof_area_m2", unit: "m2", unit_price: 51.5, space_types: WET_FLOOR_SPACE_TYPES },
   { item_name: "窗台石铺贴", metric: "windowsill_length_m", unit: "M", unit_price: 73, space_types: undefined },
   { item_name: "砌120厚砖墙", metric: "new_wall_area_m2", unit: "M2", unit_price: 170, space_types: undefined },

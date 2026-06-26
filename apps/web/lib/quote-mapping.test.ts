@@ -222,6 +222,9 @@ assert.deepEqual(bedroomDefaultMapping.items.map((item) => item.item_name), [
 assert.deepEqual(bedroomDefaultMapping.items.filter((item) => ["地面瓷砖主材", "强电布线", "水路布管"].includes(item.item_name)).map((item) => item.space_name), ["全屋", "全屋", "全屋"]);
 assert.equal(bedroomDefaultMapping.summary.total_amount, 24427.11);
 
+const livingRoomWallTileMapping = buildQuoteMapping([{ ...rows[0], spaceName: "客厅", spaceType: "客厅", wallTileAreaM2: 11.2, waterproofAreaM2: 0, customCabinetAreaM2: 0, kitchenBaseCabinetLengthM: 0, kitchenWallCabinetLengthM: 0 }]);
+assert.ok(livingRoomWallTileMapping.items.some((item) => item.space_name === "客厅" && item.item_name === "墙面贴瓷砖(600X1200)" && item.quantity === 11.2));
+
 const customMapping = buildQuoteMapping(rows, [{ item_name: "厨房墙面定制漆", metric: "latex_paint_area_m2", unit: "m2", unit_price: 30 }]);
 
 assert.equal(customMapping.items.length, 1);
@@ -295,7 +298,7 @@ assert.equal(rules.length, 24);
 assert.equal(rules[0].item_name, "墙面界面剂处理");
 assert.equal(rules[0].metric, "latex_paint_area_m2");
 assert.equal(rules[0].unit_price, 7);
-assert.deepEqual(rules.find((rule) => rule.item_name === "墙面贴瓷砖(600X1200)")?.space_types, ["厨房", "卫生间", "阳台", "露台", "洗衣房"]);
+assert.equal(rules.find((rule) => rule.item_name === "墙面贴瓷砖(600X1200)")?.space_types, undefined);
 assert.deepEqual(rules.at(-1), {
   item_name: "暗窗帘箱",
   metric: "curtain_wall_width_m",

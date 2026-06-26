@@ -5,7 +5,6 @@ from server.app.quantity.classification import classify_space_type, is_excluded_
 from server.app.quantity.geometry import polygon_area
 
 FULL_WALL_TILE_SPACE_TYPES = {"厨房", "卫生间"}
-MARKED_WALL_TILE_SPACE_TYPES = {"阳台", "露台", "洗衣房"}
 WATERPROOF_SPACE_TYPES = {"厨房", "卫生间", "阳台", "露台", "洗衣房"}
 CURTAIN_CANDIDATE_SPACE_TYPES = {"客厅", "餐厅", "卧室", "书房"}
 KITCHEN_CABINET_SPACE_TYPES = {"厨房"}
@@ -157,7 +156,7 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
 def calculate_wall_tile_measure_length_m(space_type: str, wall_measure_length_m: float, wall_tile_lengths_m: list[float]) -> float:
     if space_type in FULL_WALL_TILE_SPACE_TYPES:
         return wall_measure_length_m
-    if space_type in MARKED_WALL_TILE_SPACE_TYPES:
+    if wall_tile_lengths_m:
         return round(sum(wall_tile_lengths_m), 2)
     return 0
 
@@ -172,7 +171,7 @@ def calculate_wall_tile_area_m2(
 ) -> float:
     if space_type in FULL_WALL_TILE_SPACE_TYPES:
         return round(max(wall_measure_length_m * WALL_TILE_HEIGHT_M - window_area_m2 - door_area_m2, 0), 2)
-    if space_type in MARKED_WALL_TILE_SPACE_TYPES and wall_tile_measure_length_m > 0:
+    if wall_tile_measure_length_m > 0:
         return round(max(wall_tile_measure_length_m * height_m, 0), 2)
     return 0
 

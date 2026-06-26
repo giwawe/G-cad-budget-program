@@ -123,6 +123,22 @@ def test_balcony_wall_tile_uses_marked_tile_wall_lengths_and_actual_height():
     assert row.waterproof_area_m2 == 9
 
 
+def test_living_room_wall_tile_uses_marked_tile_wall_lengths_and_actual_height():
+    space = SpaceInput(
+        floor="一层",
+        name="一层-客厅",
+        boundary_points_m=[(0, 0), (4, 0), (4, 3), (0, 3)],
+        wall_lengths_m=[4, 3, 4, 3],
+        wall_tile_lengths_m=[2.5, 1.5],
+        height_m=2.8,
+    )
+
+    row = calculate_quantity_row(space, ProjectDefaults())
+
+    assert row.wall_tile_measure_length_m == 4
+    assert row.wall_tile_area_m2 == 11.2
+
+
 def test_kitchen_wall_tile_ignores_marked_tile_wall_lengths_and_uses_default_tile_height():
     space = SpaceInput(
         floor="一层",
