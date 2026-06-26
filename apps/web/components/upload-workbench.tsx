@@ -26,6 +26,7 @@ import {
   DEFAULT_QUOTE_RULES_NAME,
   defaultQuoteRules,
   formatCurtainReadinessSpaces,
+  integratedCeilingPriceReminderItems,
   parseQuoteRules,
   projectSummaryQuoteItems,
   quoteMappingFileName,
@@ -243,6 +244,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
   const pendingQuoteMetrics = useMemo(() => apartmentPendingQuoteMetrics(), []);
   const curtainReadiness = useMemo(() => curtainQuoteReadiness(rows), [rows]);
   const projectSummaryItems = generatedQuoteMapping ? projectSummaryQuoteItems(generatedQuoteMapping.mapping) : [];
+  const integratedCeilingPriceReminderItemsForMapping = generatedQuoteMapping ? integratedCeilingPriceReminderItems(generatedQuoteMapping.mapping) : [];
   const rawHealthChecks = useMemo(
     () => buildQuantityHealthChecks({ rows, summary, quoteMapping: generatedQuoteMapping?.mapping ?? null }),
     [rows, summary, generatedQuoteMapping],
@@ -952,6 +954,14 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
                 <strong>报价前仍有风险</strong>
                 <span>
                   {generatedQuoteMapping.mapping.quantity_health_readiness.label}；本次报价映射已生成，正式报价前建议先处理 warning 并重新导出。
+                </span>
+              </div>
+            )}
+            {integratedCeilingPriceReminderItemsForMapping.length > 0 && (
+              <div className="quoteReminder">
+                <strong>集成吊顶单价待补</strong>
+                <span>
+                  当前已有 {integratedCeilingPriceReminderItemsForMapping.length} 个空间生成集成吊顶工程量，但金额为 0；请在报价规则 JSON 中补 unit_price。若实际做石膏板吊顶，请在工程量表切换顶面类型。
                 </span>
               </div>
             )}

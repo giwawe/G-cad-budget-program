@@ -430,6 +430,15 @@ code {
   color: #8a3a13;
 }
 
+.quoteGaps .quoteReminder {
+  border-bottom: 1px solid #f0dcae;
+  padding-bottom: 8px;
+}
+
+.quoteGaps .quoteReminder strong {
+  color: #7a4b00;
+}
+
 .quoteGaps .projectSummaryItems {
   align-items: stretch;
   border-bottom: 1px solid #f0dcae;

@@ -7,6 +7,7 @@ import {
   DEFAULT_QUOTE_RULES_NAME,
   defaultQuoteRules,
   formatCurtainReadinessSpaces,
+  integratedCeilingPriceReminderItems,
   projectSummaryQuoteItems,
   parseQuoteRules,
   quoteMappingFileName,
@@ -235,11 +236,24 @@ assert.ok(kitchenDefaultMapping.items.some((item) => item.space_name === "厨房
 assert.ok(kitchenDefaultMapping.items.some((item) => item.space_name === "厨房" && item.item_name === "墙地面防漏处理"));
 assert.ok(kitchenDefaultMapping.items.some((item) => item.space_name === "厨房" && item.item_name === "厨房卫生间集成吊顶" && item.quantity === 4.48 && item.unit_price === 0));
 assert.ok(!kitchenDefaultMapping.items.some((item) => item.space_name === "厨房" && ["墙面乳胶漆", "顶面批嵌", "顶面乳胶漆"].includes(item.item_name)));
+assert.deepEqual(integratedCeilingPriceReminderItems(kitchenDefaultMapping), [
+  {
+    floor: "一层",
+    space_name: "厨房",
+    space_type: "厨房",
+    item_name: "厨房卫生间集成吊顶",
+    quantity: 4.48,
+    unit: "m2",
+    unit_price: 0,
+    amount: 0,
+  },
+]);
 
 const kitchenGypsumCeilingMapping = buildQuoteMapping([{ ...rows[0], ceilingFinishType: "gypsum" }]);
 assert.ok(!kitchenGypsumCeilingMapping.items.some((item) => item.space_name === "厨房" && item.item_name === "厨房卫生间集成吊顶"));
 assert.ok(kitchenGypsumCeilingMapping.items.some((item) => item.space_name === "厨房" && item.item_name === "顶面批嵌" && item.quantity === 4.48));
 assert.ok(kitchenGypsumCeilingMapping.items.some((item) => item.space_name === "厨房" && item.item_name === "顶面乳胶漆" && item.quantity === 4.48));
+assert.deepEqual(integratedCeilingPriceReminderItems(kitchenGypsumCeilingMapping), []);
 
 const customMapping = buildQuoteMapping(rows, [{ item_name: "厨房墙面定制漆", metric: "latex_paint_area_m2", unit: "m2", unit_price: 30 }]);
 

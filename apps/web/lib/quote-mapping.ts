@@ -221,6 +221,10 @@ export function projectSummaryQuoteItems(mapping: Pick<QuoteMapping, "items">): 
   return mapping.items.filter((item) => item.space_name === "全屋");
 }
 
+export function integratedCeilingPriceReminderItems(mapping: Pick<QuoteMapping, "items">): QuoteMappingItem[] {
+  return mapping.items.filter((item) => item.item_name === "厨房卫生间集成吊顶" && item.quantity > 0 && item.unit_price <= 0);
+}
+
 export function curtainQuoteReadiness(rows: QuantityRow[]): CurtainQuoteReadiness {
   const ready_space_names: string[] = [];
   const pending_space_names: string[] = [];
