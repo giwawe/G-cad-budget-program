@@ -217,7 +217,15 @@ function formatLatexPaintEvidence(
   return `墙面乳胶漆面积 ${latexPaintBaseAreaM2.toFixed(2)}m2 - 窗洞 ${windowAreaM2.toFixed(2)}m2 - 已选门洞扣减 ${doorDeductAreaM2.toFixed(2)}m2 - 贴砖墙面 ${wallTileAreaM2.toFixed(2)}m2 = ${latexPaintAreaM2.toFixed(2)}m2`;
 }
 
-export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] }) {
+export function UploadWorkbench({
+  initialFileName = "样例数据",
+  initialRows,
+  initialSummary = null,
+}: {
+  initialFileName?: string;
+  initialRows: QuantityRow[];
+  initialSummary?: QuantitySummary | null;
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
   const calibrationInputRef = useRef<HTMLInputElement>(null);
   const snapshotInputRef = useRef<HTMLInputElement>(null);
@@ -225,13 +233,13 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
   const [rows, setRows] = useState<QuantityRow[]>(initialRows);
   const [currentDxfFile, setCurrentDxfFile] = useState<File | null>(null);
   const [calibrationFileName, setCalibrationFileName] = useState("");
-  const [fileName, setFileName] = useState("样例数据");
+  const [fileName, setFileName] = useState(initialFileName);
   const [isUploading, setIsUploading] = useState(false);
   const [isComparing, setIsComparing] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [drawing, setDrawing] = useState<DrawingGeometry | null>(null);
-  const [summary, setSummary] = useState<QuantitySummary | null>(null);
+  const [summary, setSummary] = useState<QuantitySummary | null>(initialSummary);
   const [comparison, setComparison] = useState<CalibrationComparison | null>(null);
   const [generatedTemplate, setGeneratedTemplate] = useState<{ fileName: string; content: string } | null>(null);
   const [generatedSnapshot, setGeneratedSnapshot] = useState<{ fileName: string; content: string } | null>(null);

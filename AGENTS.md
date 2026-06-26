@@ -31,6 +31,7 @@
 - `apps/web/lib/review-snapshot.ts`：校对快照导出与导入解析。
 - `apps/web/lib/quote-mapping.ts`：从算量结果生成报价映射 JSON。
 - `apps/web/lib/quote-excel.ts`：从报价映射生成可用 Excel 打开的报价草稿 `.xls` HTML。
+- `apps/web/lib/default-project.ts`：首页默认方案，当前来自 `server/tests/fixtures/10.dxf` 的稳定解析结果。
 
 ## 本地运行
 
@@ -203,6 +204,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 报价映射生成后可下载 Excel 报价草稿 `.xls`；当前用 Excel 兼容 HTML 表格承载项目摘要、风险摘要、空间小计和清单明细，空间小计与明细表末尾都会显示合计行，方便报价员直接打开、补价和流转。
 - 下载/导入报价规则 JSON；导入后报价映射会使用当前规则重新计算金额。
 - 工作台会展示当前报价规则单价表，报价员可直接编辑 `unit_price`；编辑后会清空已生成的报价映射和规则 JSON 预览，重新导出报价映射后使用新单价。
+- 首页默认打开 `10.dxf` 方案，包含 8 个空间和 `summary.building_area_m2 = 136.24`，用于替代旧的三空间硬编码样例；默认数据维护在 `apps/web/lib/default-project.ts`，源 DXF 保存在 `server/tests/fixtures/10.dxf`。
 - 页面会提示商品房整装待补取数口径清单，这些项目暂不参与金额汇总。
 - 导出报价映射后会显示窗帘/窗帘箱可报价候选空间数；导出的报价映射 JSON 会附带 `curtain_quote_readiness` 摘要，并把自动候选或人工校准后的暗窗帘箱写入 `curtain_quote_candidates` 候选清单和 `items` 金额汇总。
 - 导出报价映射 JSON 会附带 `building_area_quote_readiness` 摘要；如果报价规则中存在 `building_area_m2` 项目但当前建筑面积为 0，页面会提示这些项目未进入金额汇总。
@@ -258,6 +260,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 
 - `server/tests/fixtures/test-case.dxf`
 - `server/tests/fixtures/test-case-2.dxf`
+- `server/tests/fixtures/10.dxf`
 - `server/tests/fixtures/test-case.golden.json`
 
 重要测试覆盖：
