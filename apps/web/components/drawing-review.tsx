@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, KeyboardEvent, MouseEvent, PointerEvent, WheelEvent, useRef, useState } from "react";
+import { segmentRectPoints, windowBlockPolygons } from "@/lib/drawing-window-shape";
 import type { DrawingGeometry, DrawingPoint, QuantityRow, QuantitySummary } from "@/lib/types";
 
 const palette = ["#2f80ed", "#27ae60", "#f2994a", "#9b51e0", "#00a6a6", "#eb5757", "#6fcf97", "#f2c94c", "#56ccf2"];
@@ -12,103 +13,6 @@ function centerOf(points: DrawingPoint[]) {
 
 function pointList(points: DrawingPoint[]) {
   return points.map((point) => `${point.x},${point.y}`).join(" ");
-}
-
-function segmentRectPoints(segment: { start: DrawingPoint; end: DrawingPoint }, thickness: number) {
-  const dx = segment.end.x - segment.start.x;
-  const dy = segment.end.y - segment.start.y;
-  const length = Math.hypot(dx, dy) || 1;
-  const halfThickness = Math.max(0.04, Math.min(0.45, thickness || 0.12)) / 2;
-  const nx = (-dy / length) * halfThickness;
-  const ny = (dx / length) * halfThickness;
-
-  return [
-    { x: segment.start.x + nx, y: segment.start.y + ny },
-    { x: segment.end.x + nx, y: segment.end.y + ny },
-    { x: segment.end.x - nx, y: segment.end.y - ny },
-    { x: segment.start.x - nx, y: segment.start.y - ny },
-  ];
-}
-
-function openingPolygonPoints(segments: { start: DrawingPoint; end: DrawingPoint }[]) {
-  const pointByKey = new Map<string, DrawingPoint>();
-  const edges = segments.map((segment, id) => {
-    const startKey = pointKey(segment.start);
-    const endKey = pointKey(segment.end);
-    pointByKey.set(startKey, segment.start);
-    pointByKey.set(endKey, segment.end);
-    return { id, startKey, endKey };
-  });
-  const incident = new Map<string, typeof edges>();
-  for (const edge of edges) {
-    incident.set(edge.startKey, [...(incident.get(edge.startKey) ?? []), edge]);
-    incident.set(edge.endKey, [...(incident.get(edge.endKey) ?? []), edge]);
-  }
-
-  const cycles: DrawingPoint[][] = [];
-  for (const edge of edges) {
-    findCycles(edge.endKey, edge.startKey, [edge.startKey, edge.endKey], new Set([edge.id]), incident, pointByKey, cycles);
-  }
-  const bestCycle = cycles.sort((first, second) => Math.abs(polygonSignedArea(second)) - Math.abs(polygonSignedArea(first)))[0];
-  if (bestCycle) {
-    return bestCycle;
-  }
-
-  const points = segments.flatMap((segment) => [segment.start, segment.end]);
-  const xs = points.map((point) => point.x);
-  const ys = points.map((point) => point.y);
-  return [
-    { x: Math.min(...xs), y: Math.min(...ys) },
-    { x: Math.max(...xs), y: Math.min(...ys) },
-    { x: Math.max(...xs), y: Math.max(...ys) },
-    { x: Math.min(...xs), y: Math.max(...ys) },
-  ];
-}
-
-function windowPolygonPoints(window: { segments: { start: DrawingPoint; end: DrawingPoint }[]; boundary_points?: DrawingPoint[] }) {
-  if (window.boundary_points && window.boundary_points.length >= 4) {
-    return window.boundary_points;
-  }
-  return openingPolygonPoints(window.segments);
-}
-
-function findCycles(
-  currentKey: string,
-  startKey: string,
-  pathKeys: string[],
-  usedEdgeIds: Set<number>,
-  incident: Map<string, { id: number; startKey: string; endKey: string }[]>,
-  pointByKey: Map<string, DrawingPoint>,
-  cycles: DrawingPoint[][],
-) {
-  if (pathKeys.length > 10) {
-    return;
-  }
-  for (const edge of incident.get(currentKey) ?? []) {
-    if (usedEdgeIds.has(edge.id)) {
-      continue;
-    }
-    const nextKey = edge.startKey === currentKey ? edge.endKey : edge.startKey;
-    if (nextKey === startKey && pathKeys.length >= 4) {
-      cycles.push(pathKeys.map((key) => pointByKey.get(key)).filter((point): point is DrawingPoint => Boolean(point)));
-      continue;
-    }
-    if (pathKeys.includes(nextKey)) {
-      continue;
-    }
-    findCycles(nextKey, startKey, [...pathKeys, nextKey], new Set([...usedEdgeIds, edge.id]), incident, pointByKey, cycles);
-  }
-}
-
-function pointKey(point: DrawingPoint) {
-  return `${point.x.toFixed(3)},${point.y.toFixed(3)}`;
-}
-
-function polygonSignedArea(points: DrawingPoint[]) {
-  return points.reduce((sum, point, index) => {
-    const next = points[(index + 1) % points.length];
-    return sum + point.x * next.y - next.x * point.y;
-  }, 0) / 2;
 }
 
 function chineseOnly(name: string) {
@@ -281,8 +185,8 @@ export function DrawingReview({
         <label className="drawingLayerToggle"><input type="checkbox" checked={showTileWalls} onChange={(event) => setShowTileWalls(event.target.checked)} />贴砖墙 {drawing.tile_walls.length}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showNewWalls} onChange={(event) => setShowNewWalls(event.target.checked)} />新砌墙 {drawing.new_walls.length}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showDemolitionWalls} onChange={(event) => setShowDemolitionWalls(event.target.checked)} />拆墙 {drawing.demolition_walls.length}</label>
-        <label className="drawingLayerToggle"><input type="checkbox" checked={showBaseCabinets} onChange={(event) => setShowBaseCabinets(event.target.checked)} />地柜 {drawing.base_cabinets.length}</label>
-        <label className="drawingLayerToggle"><input type="checkbox" checked={showWallCabinets} onChange={(event) => setShowWallCabinets(event.target.checked)} />吊柜 {drawing.wall_cabinets.length}</label>
+        <label className="drawingLayerToggle"><input type="checkbox" checked={showBaseCabinets} onChange={(event) => setShowBaseCabinets(event.target.checked)} />地柜 {drawing.base_cabinets.length + (drawing.base_cabinet_boundaries?.length ?? 0)}</label>
+        <label className="drawingLayerToggle"><input type="checkbox" checked={showWallCabinets} onChange={(event) => setShowWallCabinets(event.target.checked)} />吊柜 {drawing.wall_cabinets.length + (drawing.wall_cabinet_boundaries?.length ?? 0)}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showCustomCabinets} onChange={(event) => setShowCustomCabinets(event.target.checked)} />定制柜 {drawing.custom_cabinets.length}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showExteriorWalls} onChange={(event) => setShowExteriorWalls(event.target.checked)} />外墙 {drawing.exterior_wall_boundaries.length}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showBathroomFixtures} onChange={(event) => setShowBathroomFixtures(event.target.checked)} />洁具 {drawing.toilets.length + drawing.bathroom_vanities.length}</label>
@@ -311,7 +215,9 @@ export function DrawingReview({
             {showTileWalls && drawing.tile_walls.map((wall, index) => <line key={`tile-wall-${index}`} className="svgTileWall" x1={wall.start.x} y1={wall.start.y} x2={wall.end.x} y2={wall.end.y} />)}
             {showNewWalls && drawing.new_walls.map((wall, index) => <line key={`new-wall-${index}`} className="svgNewWall" x1={wall.start.x} y1={wall.start.y} x2={wall.end.x} y2={wall.end.y} />)}
             {showDemolitionWalls && drawing.demolition_walls.map((wall, index) => <line key={`demolition-wall-${index}`} className="svgDemolitionWall" x1={wall.start.x} y1={wall.start.y} x2={wall.end.x} y2={wall.end.y} />)}
+            {showBaseCabinets && drawing.base_cabinet_boundaries?.map((boundary, index) => <polygon key={`base-cabinet-boundary-${index}`} className="svgBaseCabinet" points={pointList(boundary)} />)}
             {showBaseCabinets && drawing.base_cabinets.map((cabinet, index) => <line key={`base-cabinet-${index}`} className="svgBaseCabinet" x1={cabinet.start.x} y1={cabinet.start.y} x2={cabinet.end.x} y2={cabinet.end.y} />)}
+            {showWallCabinets && drawing.wall_cabinet_boundaries?.map((boundary, index) => <polygon key={`wall-cabinet-boundary-${index}`} className="svgWallCabinet" points={pointList(boundary)} />)}
             {showWallCabinets && drawing.wall_cabinets.map((cabinet, index) => <line key={`wall-cabinet-${index}`} className="svgWallCabinet" x1={cabinet.start.x} y1={cabinet.start.y} x2={cabinet.end.x} y2={cabinet.end.y} />)}
             {showCustomCabinets && drawing.custom_cabinets.map((cabinet, index) => <line key={`custom-cabinet-${index}`} className="svgCustomCabinet" x1={cabinet.start.x} y1={cabinet.start.y} x2={cabinet.end.x} y2={cabinet.end.y} />)}
             {showBathroomFixtures && drawing.toilets.map((point, index) => <circle key={`toilet-${index}`} className="svgToilet" cx={point.x} cy={point.y} r="0.16" />)}
@@ -332,11 +238,12 @@ export function DrawingReview({
                   onToggleWindowDeduction(index);
                 }}
               >
-                {!window.included_in_wall_deduction && <polygon className="svgWindowBlock" points={pointList(windowPolygonPoints(window))} />}
+                {!window.included_in_wall_deduction &&
+                  windowBlockPolygons(window).map((polygon, polygonIndex) => <polygon key={`window-block-${index}-${polygonIndex}`} className="svgWindowBlock" points={pointList(polygon)} />)}
                 {window.segments.map((segment, segmentIndex) => (
                   <line key={`window-line-${index}-${segmentIndex}`} className="svgWindow" x1={segment.start.x} y1={segment.start.y} x2={segment.end.x} y2={segment.end.y} />
                 ))}
-                <polygon className="svgWindowHitArea" points={pointList(windowPolygonPoints(window))} />
+                {windowBlockPolygons(window).map((polygon, polygonIndex) => <polygon key={`window-hit-${index}-${polygonIndex}`} className="svgWindowHitArea" points={pointList(polygon)} />)}
                 <title>{window.included_in_wall_deduction ? "窗洞已计入扣减，点击改为不计入" : "窗洞未计入扣减，点击改为计入"}</title>
               </g>
             ))}

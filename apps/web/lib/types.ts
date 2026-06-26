@@ -95,6 +95,8 @@ export type DrawingGeometry = {
   demolition_walls: DrawingSegment[];
   base_cabinets: DrawingSegment[];
   wall_cabinets: DrawingSegment[];
+  base_cabinet_boundaries?: DrawingPoint[][];
+  wall_cabinet_boundaries?: DrawingPoint[][];
   custom_cabinets: DrawingSegment[];
   exterior_wall_boundaries: DrawingPoint[][];
   building_area_m2: number;

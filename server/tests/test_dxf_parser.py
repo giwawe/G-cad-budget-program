@@ -17,6 +17,7 @@ from server.tests.dxf_fixtures import (
     build_auto_door_type_dxf,
     build_insert_door_dxf,
     build_kitchen_cabinet_dxf,
+    build_kitchen_cabinet_outline_dxf,
     build_l_shaped_window_dxf,
     build_new_wall_dxf,
     build_simple_quote_dxf,
@@ -159,6 +160,18 @@ def test_quote_cabinet_segments_are_assigned_to_kitchen_space():
     assert review.drawing.wall_cabinets == [((0.3, 0.3), (3.3, 0.3))]
 
 
+def test_quote_kitchen_cabinet_outlines_use_projection_length_not_perimeter():
+    review = parser.parse_dxf_review(build_kitchen_cabinet_outline_dxf(), ProjectDefaults())
+
+    assert review.spaces[0].name == "一层-厨房"
+    assert review.spaces[0].base_cabinet_lengths_m == [4.4]
+    assert review.spaces[0].wall_cabinet_lengths_m == [1.2]
+    assert review.drawing.base_cabinets == []
+    assert review.drawing.wall_cabinets == []
+    assert review.drawing.base_cabinet_boundaries == [[(0.3, 0.3), (3.3, 0.3), (3.3, 0.9), (0.9, 0.9), (0.9, 2.3), (0.3, 2.3)]]
+    assert review.drawing.wall_cabinet_boundaries == [[(3.6, 0.3), (4.8, 0.3), (4.8, 0.65), (3.6, 0.65)]]
+
+
 def test_quote_custom_cabinet_segments_are_assigned_to_space():
     review = parser.parse_dxf_review(build_custom_cabinet_dxf(), ProjectDefaults())
 
@@ -172,7 +185,7 @@ def test_closed_quote_custom_cabinet_uses_projection_length_not_perimeter():
     review = parser.parse_dxf_review(build_closed_custom_cabinet_dxf(), ProjectDefaults())
 
     assert review.spaces[0].custom_cabinet_lengths_m == [3.0]
-    assert review.drawing.custom_cabinets == [((0.3, 0.3), (3.3, 0.3))]
+    assert review.drawing.custom_cabinets == [((3.3, 0.9), (0.3, 0.9))]
 
 
 def test_quote_bathroom_fixture_points_are_assigned_to_bathroom_space():

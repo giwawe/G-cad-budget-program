@@ -177,6 +177,32 @@ def build_kitchen_cabinet_dxf() -> bytes:
     return _save_doc(doc)
 
 
+def build_kitchen_cabinet_outline_dxf() -> bytes:
+    doc = ezdxf.new("R2010")
+    msp = doc.modelspace()
+    for layer in ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_BASE_CABINET", "QUOTE_WALL_CABINET", "QUOTE_TEXT"]:
+        doc.layers.add(layer)
+    msp.add_lwpolyline([(0, 0), (5000, 0), (5000, 4000), (0, 4000), (0, 0)], dxfattribs={"layer": "QUOTE_ROOM"})
+    msp.add_line((0, 0), (5000, 0), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((5000, 0), (5000, 4000), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((0, 4000), (5000, 4000), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((0, 0), (0, 4000), dxfattribs={"layer": "QUOTE_WALL"})
+    base = msp.add_lwpolyline(
+        [(300, 300), (3300, 300), (3300, 900), (900, 900), (900, 2300), (300, 2300)],
+        dxfattribs={"layer": "QUOTE_BASE_CABINET"},
+    )
+    base.closed = True
+    wall = msp.add_lwpolyline(
+        [(3600, 300), (4800, 300), (4800, 650), (3600, 650), (3600, 300)],
+        dxfattribs={"layer": "QUOTE_WALL_CABINET"},
+    )
+    wall.closed = False
+    msp.add_line((3300, 300), (3300, 650), dxfattribs={"layer": "QUOTE_BASE_CABINET"})
+    msp.add_line((3600, 650), (3950, 650), dxfattribs={"layer": "QUOTE_WALL_CABINET"})
+    msp.add_text("一层-厨房", dxfattribs={"layer": "QUOTE_TEXT", "insert": (2500, 2000)})
+    return _save_doc(doc)
+
+
 def build_custom_cabinet_dxf() -> bytes:
     doc = ezdxf.new("R2010")
     msp = doc.modelspace()

@@ -95,6 +95,8 @@ def _serialize_drawing(drawing: DrawingGeometry) -> dict:
         "demolition_walls": [_segment_to_dict(segment) for segment in drawing.demolition_walls],
         "base_cabinets": [_segment_to_dict(segment) for segment in drawing.base_cabinets],
         "wall_cabinets": [_segment_to_dict(segment) for segment in drawing.wall_cabinets],
+        "base_cabinet_boundaries": [[_point_to_dict(point) for point in boundary] for boundary in drawing.base_cabinet_boundaries],
+        "wall_cabinet_boundaries": [[_point_to_dict(point) for point in boundary] for boundary in drawing.wall_cabinet_boundaries],
         "custom_cabinets": [_segment_to_dict(segment) for segment in drawing.custom_cabinets],
         "exterior_wall_boundaries": [[_point_to_dict(point) for point in boundary] for boundary in drawing.exterior_wall_boundaries],
         "building_area_m2": drawing.building_area_m2,

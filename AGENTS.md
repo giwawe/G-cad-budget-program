@@ -123,8 +123,8 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 乳胶漆面积 = 墙面展开面积 - 窗洞面积 - 门洞扣减
 新砌墙面积 = 与空间关联的 QUOTE_NEW_WALL 长度合计 * 层高
 拆墙面积 = 与空间关联的 QUOTE_DEMO_WALL 长度合计 * 层高
-厨房地柜长度 = 厨房空间内 QUOTE_BASE_CABINET 长度合计
-厨房吊柜长度 = 厨房空间内 QUOTE_WALL_CABINET 长度合计
+厨房地柜长度 = 厨房空间内 QUOTE_BASE_CABINET 延米线长度合计；若画成柜体轮廓，按轮廓面积 ÷ 柜体深度换算投影延米，不按周长累计
+厨房吊柜长度 = 厨房空间内 QUOTE_WALL_CABINET 延米线长度合计；若画成柜体轮廓，按轮廓面积 ÷ 柜体深度换算投影延米，不按周长累计
 全屋定制面积 = 非厨房空间内 QUOTE_CUSTOM 常规柜投影长度 * 2.6m + 高度低于 1m 的低柜长度；闭合柜体轮廓取最长边，不取周长
 马桶数量 = 卫生间默认 1 个；画了 QUOTE_TOILET 点位时按点位数
 浴室柜数量 = 卫生间默认 1 套；画了 QUOTE_BATHROOM_VANITY 点位时按点位数
@@ -172,7 +172,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 工程量表默认不按空间显示地砖主材片数、强电备用面积、水路备用面积、新砌墙和拆墙字段；这些字段仍保留在校准模板与报价映射中，按全屋汇总生成金额。
 - 新砌墙：画在 `QUOTE_NEW_WALL` 的线段会生成 `new_wall_length_m` 和 `new_wall_area_m2`，公式为 `新砌墙长度 * 空间实际层高`；默认报价规则“砌120厚砖墙”按全屋 `new_wall_area_m2` 汇总生成金额，不按空间拆行。
 - 拆墙：画在 `QUOTE_DEMO_WALL` 的线段会生成 `demolition_wall_length_m` 和 `demolition_wall_area_m2`，公式为 `拆墙长度 * 空间实际层高`；默认报价规则“拆改及拆墙”按全屋 `demolition_wall_area_m2` 汇总生成金额，不按空间拆行。
-- 橱柜：地柜画在 `QUOTE_BASE_CABINET`，吊柜画在 `QUOTE_WALL_CABINET`，分别生成 `kitchen_base_cabinet_length_m` 和 `kitchen_wall_cabinet_length_m`，仅厨房空间计入；默认报价规则“橱柜地柜”和“橱柜吊柜”分别按对应 metric 生成金额。地柜和吊柜在 CAD 中可能重叠，必须分图层，不能用单一橱柜线混算。
+- 橱柜：地柜画在 `QUOTE_BASE_CABINET`，吊柜画在 `QUOTE_WALL_CABINET`，分别生成 `kitchen_base_cabinet_length_m` 和 `kitchen_wall_cabinet_length_m`，仅厨房空间计入；默认报价规则“橱柜地柜”和“橱柜吊柜”分别按对应 metric 生成金额。地柜和吊柜在 CAD 中可能重叠，必须分图层，不能用单一橱柜线混算。普通延米线按线长累计；闭合或近似闭合柜体轮廓按 `轮廓面积 ÷ 柜体深度` 换算投影延米，不按周长累计；单独短深度/收口线默认不计入延米。
 - 全屋定制：非厨房柜体画在 `QUOTE_CUSTOM`，默认生成 `custom_cabinet_area_m2`，公式为 `常规柜投影长度 * 2.6m`；如果 `QUOTE_CUSTOM` 是闭合柜体轮廓，按最长边取一次投影长度，不把轮廓周长累加。同图层邻近文字可标注柜高，如 `H=800`、`高度800` 或 `H=0.8m`，高度低于 1m 的低柜按长度米取值，并入同一个 `custom_cabinet_area_m2` 数量，不单独生成低柜字段或报价项；厨房空间默认为 0，避免和橱柜地柜/吊柜重复计费。
 - 洁具：卫生间默认生成 `toilet_count=1` 和 `bathroom_vanity_count=1`，用于“马桶”和“浴室柜”报价；如果画了 `QUOTE_TOILET` 或 `QUOTE_BATHROOM_VANITY` 点位，则按点位数覆盖默认数量。
 - 建筑面积：`building_area_m2` 从 `QUOTE_EXT_WALL` 闭合多段线读取，closed 标记或首尾点重合都视为闭合；当前取面积最大的闭合外墙轮廓，写入 API summary、图形校对页和报价映射 summary；它不是每个 `QUOTE_ROOM` 面积的简单求和，暂不混入空间工程量行。

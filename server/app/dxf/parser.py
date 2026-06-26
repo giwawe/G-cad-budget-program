@@ -31,6 +31,10 @@ QUOTE_LAYERS = {
 }
 L_SHAPED_WINDOW_MIN_SEGMENT_LENGTH_M = 0.45
 L_SHAPED_WINDOW_MIN_SEGMENT_COUNT = 6
+KITCHEN_CABINET_OUTLINE_DEPTH_MIN_M = 0.25
+KITCHEN_CABINET_OUTLINE_DEPTH_MAX_M = 0.8
+KITCHEN_CABINET_OUTLINE_MIN_AREA_M2 = 0.05
+KITCHEN_CABINET_STANDALONE_DEPTH_MARKER_MAX_M = 0.4
 
 Point = tuple[float, float]
 
@@ -100,6 +104,8 @@ class DrawingGeometry:
     demolition_walls: list[tuple[Point, Point]]
     base_cabinets: list[tuple[Point, Point]]
     wall_cabinets: list[tuple[Point, Point]]
+    base_cabinet_boundaries: list[list[Point]]
+    wall_cabinet_boundaries: list[list[Point]]
     custom_cabinets: list[tuple[Point, Point]]
     exterior_wall_boundaries: list[list[Point]]
     building_area_m2: float
@@ -139,7 +145,10 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
     demolition_wall_segments: list[tuple[Point, Point]] = []
     base_cabinet_segments: list[tuple[Point, Point]] = []
     wall_cabinet_segments: list[tuple[Point, Point]] = []
+    base_cabinet_boundaries: list[list[Point]] = []
+    wall_cabinet_boundaries: list[list[Point]] = []
     custom_cabinet_segments: list[tuple[Point, Point]] = []
+    custom_cabinet_boundaries: list[list[Point]] = []
     custom_cabinet_height_markers: list[tuple[Point, float]] = []
     exterior_wall_boundaries: list[list[Point]] = []
     toilet_points: list[Point] = []
@@ -165,11 +174,20 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         elif layer == "QUOTE_DEMO_WALL":
             demolition_wall_segments.extend(_entity_segments(entity, defaults.unit_scale_to_m))
         elif layer == "QUOTE_BASE_CABINET":
-            base_cabinet_segments.extend(_entity_segments(entity, defaults.unit_scale_to_m))
+            base_cabinet_segments.extend(_kitchen_cabinet_segments(entity, defaults.unit_scale_to_m))
+            boundary = _kitchen_cabinet_outline_boundary(entity, defaults.unit_scale_to_m)
+            if boundary:
+                base_cabinet_boundaries.append(boundary)
         elif layer == "QUOTE_WALL_CABINET":
-            wall_cabinet_segments.extend(_entity_segments(entity, defaults.unit_scale_to_m))
+            wall_cabinet_segments.extend(_kitchen_cabinet_segments(entity, defaults.unit_scale_to_m))
+            boundary = _kitchen_cabinet_outline_boundary(entity, defaults.unit_scale_to_m)
+            if boundary:
+                wall_cabinet_boundaries.append(boundary)
         elif layer == "QUOTE_CUSTOM":
             custom_cabinet_segments.extend(_custom_cabinet_segments(entity, defaults.unit_scale_to_m))
+            boundary = _custom_cabinet_boundary(entity, defaults.unit_scale_to_m)
+            if boundary:
+                custom_cabinet_boundaries.append(boundary)
             if entity.dxftype() in {"TEXT", "MTEXT"}:
                 height_m = _custom_cabinet_height_from_text(_text_content(entity))
                 if height_m is not None:
@@ -212,6 +230,8 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
     measured_demolition_walls: list[tuple[Point, Point]] = []
     measured_base_cabinets: list[tuple[Point, Point]] = []
     measured_wall_cabinets: list[tuple[Point, Point]] = []
+    measured_base_cabinet_boundaries: list[list[Point]] = []
+    measured_wall_cabinet_boundaries: list[list[Point]] = []
     measured_custom_cabinets: list[tuple[Point, Point]] = []
     measured_toilets: list[Point] = []
     measured_bathroom_vanities: list[Point] = []
@@ -222,7 +242,15 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         room_demolition_walls = [(start, end) for start, end in demolition_wall_segments if _segment_in_room(room, start, end)]
         room_base_cabinets = [(start, end) for start, end in base_cabinet_segments if _segment_in_room(room, start, end)]
         room_wall_cabinets = [(start, end) for start, end in wall_cabinet_segments if _segment_in_room(room, start, end)]
+        room_base_cabinet_boundaries = [boundary for boundary in base_cabinet_boundaries if _boundary_in_room(room, boundary)]
+        room_wall_cabinet_boundaries = [boundary for boundary in wall_cabinet_boundaries if _boundary_in_room(room, boundary)]
         room_custom_cabinets = [(start, end) for start, end in custom_cabinet_segments if _segment_in_room(room, start, end)]
+        room_custom_cabinet_boundaries = [boundary for boundary in custom_cabinet_boundaries if _boundary_in_room(room, boundary)]
+        room_custom_cabinet_display_segments = [
+            _custom_cabinet_display_segment_for_room(boundary, room)
+            for boundary in room_custom_cabinet_boundaries
+        ]
+        room_custom_cabinet_display_segments = [segment for segment in room_custom_cabinet_display_segments if segment]
         room_custom_cabinet_heights = [_height_for_custom_cabinet_segment(segment, custom_cabinet_height_markers) for segment in room_custom_cabinets]
         room_toilets = [point for point in toilet_points if contains_point(room, point) or _point_on_boundary(room, point)]
         room_bathroom_vanities = [point for point in bathroom_vanity_points if contains_point(room, point) or _point_on_boundary(room, point)]
@@ -236,7 +264,16 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         measured_demolition_walls.extend(room_demolition_walls)
         measured_base_cabinets.extend(room_base_cabinets)
         measured_wall_cabinets.extend(room_wall_cabinets)
-        measured_custom_cabinets.extend(room_custom_cabinets)
+        measured_base_cabinet_boundaries.extend(room_base_cabinet_boundaries)
+        measured_wall_cabinet_boundaries.extend(room_wall_cabinet_boundaries)
+        measured_custom_cabinets.extend(
+            [
+                segment
+                for segment in room_custom_cabinets
+                if not _segment_inside_any_boundary(segment, room_custom_cabinet_boundaries)
+            ]
+        )
+        measured_custom_cabinets.extend(room_custom_cabinet_display_segments)
         measured_toilets.extend(room_toilets)
         measured_bathroom_vanities.extend(room_bathroom_vanities)
         drawing_spaces.append(DrawingSpace(name=name, points=room))
@@ -286,8 +323,10 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         tile_walls=measured_tile_walls,
         new_walls=measured_new_walls,
         demolition_walls=measured_demolition_walls,
-        base_cabinets=measured_base_cabinets,
-        wall_cabinets=measured_wall_cabinets,
+        base_cabinets=[segment for segment in measured_base_cabinets if not _segment_inside_any_boundary(segment, measured_base_cabinet_boundaries)],
+        wall_cabinets=[segment for segment in measured_wall_cabinets if not _segment_inside_any_boundary(segment, measured_wall_cabinet_boundaries)],
+        base_cabinet_boundaries=measured_base_cabinet_boundaries,
+        wall_cabinet_boundaries=measured_wall_cabinet_boundaries,
         custom_cabinets=measured_custom_cabinets,
         exterior_wall_boundaries=drawing_exterior_wall_boundaries,
         building_area_m2=building_area_m2,
@@ -355,6 +394,93 @@ def _custom_cabinet_segments(entity, scale: float) -> list[tuple[Point, Point]]:
     if not _entity_is_closed_polyline(entity) or not segments:
         return segments
     return [max(segments, key=lambda segment: line_length(segment[0], segment[1]))]
+
+
+def _custom_cabinet_boundary(entity, scale: float) -> list[Point]:
+    if not _entity_is_closed_polyline(entity):
+        return []
+    points = _polyline_points(entity, scale)
+    if len(points) > 1 and points[0] == points[-1]:
+        points = points[:-1]
+    return points if len(points) >= 4 else []
+
+
+def _custom_cabinet_display_segment_for_room(boundary: list[Point], room: list[Point]) -> tuple[Point, Point] | None:
+    segments = [(boundary[index], boundary[(index + 1) % len(boundary)]) for index in range(len(boundary))]
+    if not segments:
+        return None
+    longest_length = max(line_length(start, end) for start, end in segments)
+    candidates = [
+        segment
+        for segment in segments
+        if abs(line_length(segment[0], segment[1]) - longest_length) <= 0.03
+    ]
+    room_center = _points_center(room)
+    return min(candidates, key=lambda segment: line_length(_segment_midpoint(segment), room_center))
+
+
+def _kitchen_cabinet_segments(entity, scale: float) -> list[tuple[Point, Point]]:
+    if entity.dxftype() == "LINE":
+        segment = (_scale_point((entity.dxf.start.x, entity.dxf.start.y), scale), _scale_point((entity.dxf.end.x, entity.dxf.end.y), scale))
+        if line_length(segment[0], segment[1]) <= KITCHEN_CABINET_STANDALONE_DEPTH_MARKER_MAX_M:
+            return []
+        return [segment]
+    projection_segment = _kitchen_cabinet_outline_projection_segment(entity, scale)
+    if projection_segment:
+        return [projection_segment]
+    return _entity_segments(entity, scale)
+
+
+def _kitchen_cabinet_outline_projection_segment(entity, scale: float) -> tuple[Point, Point] | None:
+    if entity.dxftype() not in {"LWPOLYLINE", "POLYLINE"}:
+        return None
+    points = _polyline_points(entity, scale)
+    if len(points) < 4:
+        return None
+    if _polyline_endpoints_match(points):
+        points = points[:-1]
+    if len(points) < 4:
+        return None
+    outline_segments = [(points[index], points[index + 1]) for index in range(len(points) - 1)]
+    if points[0] != points[-1]:
+        outline_segments.append((points[-1], points[0]))
+    lengths = [line_length(start, end) for start, end in outline_segments]
+    usable_lengths = [length for length in lengths if length > 0.05]
+    if len(usable_lengths) < 4:
+        return None
+    depth_candidates = [
+        length
+        for length in usable_lengths
+        if KITCHEN_CABINET_OUTLINE_DEPTH_MIN_M <= length <= KITCHEN_CABINET_OUTLINE_DEPTH_MAX_M
+    ]
+    if not depth_candidates:
+        return None
+    area_m2 = polygon_area(points)
+    if area_m2 < KITCHEN_CABINET_OUTLINE_MIN_AREA_M2:
+        return None
+    depth_m = min(depth_candidates)
+    projection_length_m = round(area_m2 / depth_m, 2)
+    if projection_length_m <= 0 or projection_length_m >= sum(usable_lengths) * 0.8:
+        return None
+    longest_segment = max(outline_segments, key=lambda segment: line_length(segment[0], segment[1]))
+    direction = _segment_unit_direction(longest_segment)
+    if direction == (0, 0):
+        return None
+    midpoint = _segment_midpoint(longest_segment)
+    half_length = projection_length_m / 2
+    return (
+        (round(midpoint[0] - direction[0] * half_length, 3), round(midpoint[1] - direction[1] * half_length, 3)),
+        (round(midpoint[0] + direction[0] * half_length, 3), round(midpoint[1] + direction[1] * half_length, 3)),
+    )
+
+
+def _kitchen_cabinet_outline_boundary(entity, scale: float) -> list[Point]:
+    if not _kitchen_cabinet_outline_projection_segment(entity, scale):
+        return []
+    points = _polyline_points(entity, scale)
+    if len(points) > 1 and points[0] == points[-1]:
+        points = points[:-1]
+    return points if len(points) >= 4 else []
 
 
 def _building_area_boundary(boundaries: list[list[Point]]) -> list[Point]:
@@ -970,6 +1096,23 @@ def _floor_from_name(name: str) -> str:
 def _segment_in_room(room: list[Point], start: Point, end: Point) -> bool:
     midpoint = ((start[0] + end[0]) / 2, (start[1] + end[1]) / 2)
     return contains_point(room, midpoint) or _point_on_boundary(room, midpoint)
+
+
+def _boundary_in_room(room: list[Point], boundary: list[Point]) -> bool:
+    center = _points_center(boundary)
+    return contains_point(room, center) or _point_on_boundary(room, center)
+
+
+def _points_center(points: list[Point]) -> Point:
+    return (
+        round(sum(point[0] for point in points) / len(points), 3),
+        round(sum(point[1] for point in points) / len(points), 3),
+    )
+
+
+def _segment_inside_any_boundary(segment: tuple[Point, Point], boundaries: list[list[Point]]) -> bool:
+    midpoint = _segment_midpoint(segment)
+    return any(contains_point(boundary, midpoint) or _point_on_boundary(boundary, midpoint) for boundary in boundaries)
 
 
 def _opening_associated_with_room(room: list[Point], start: Point, end: Point) -> bool:

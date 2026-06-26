@@ -735,23 +735,28 @@ code {
 }
 
 .svgBaseCabinet {
+  fill: rgba(168, 85, 247, 0.2);
   stroke: #a855f7;
   stroke-linecap: round;
+  stroke-linejoin: round;
   stroke-width: 0.46;
   opacity: 1;
   vector-effect: non-scaling-stroke;
 }
 
 .svgWallCabinet {
+  fill: rgba(236, 72, 153, 0.18);
   stroke: #ec4899;
   stroke-dasharray: 0.2 0.1;
   stroke-linecap: round;
+  stroke-linejoin: round;
   stroke-width: 0.46;
   opacity: 1;
   vector-effect: non-scaling-stroke;
 }
 
 .svgCustomCabinet {
+  fill: none;
   stroke: #14b8a6;
   stroke-linecap: round;
   stroke-width: 0.46;
