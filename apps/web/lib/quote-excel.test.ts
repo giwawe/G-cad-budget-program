@@ -74,9 +74,11 @@ assert.ok(html.includes("<h2>空间小计</h2>"));
 assert.ok(html.includes("<th>楼层</th><th>空间</th><th>类型</th><th>清单项数</th><th>小计</th>"));
 assert.ok(html.includes("<td>一层</td><td>厨房</td><td>厨房</td><td>2</td><td>1415.68</td>"));
 assert.ok(html.includes("<td>全屋</td><td>全屋</td><td>全屋</td><td>1</td><td>6915.48</td>"));
+assert.ok(html.includes("<td>合计</td><td></td><td></td><td>3</td><td>8331.16</td>"));
 assert.ok(html.indexOf("<h2>空间小计</h2>") < html.indexOf("<th>楼层</th><th>空间</th><th>类型</th><th>清单项</th>"));
 assert.ok(html.includes("<th>楼层</th><th>空间</th><th>类型</th><th>清单项</th><th>工程量</th><th>单位</th><th>单价</th><th>小计</th>"));
 assert.ok(html.includes("<td>厨房卫生间集成吊顶</td><td>4.48</td><td>m2</td><td>260.00</td><td>1164.80</td>"));
+assert.ok(html.includes("<td>合计</td><td></td><td></td><td></td><td></td><td></td><td></td><td>8331.16</td>"));
 assert.ok(html.includes("<td>强电布线 &amp; 水路复核</td>"), "item names should be escaped");
 assert.ok(!html.includes("强电布线 & 水路复核</td>"), "raw ampersands should not leak into HTML");
 

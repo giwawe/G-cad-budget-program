@@ -38,6 +38,7 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string):
     table { border-collapse: collapse; margin-bottom: 16px; }
     th, td { border: 1px solid #999; padding: 6px 8px; }
     th { background: #e8eef8; font-weight: 700; }
+    tfoot td { font-weight: 700; }
   </style>
 </head>
 <body>
@@ -61,6 +62,9 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string):
     <tbody>
       ${spaceSubtotalRows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("\n      ")}
     </tbody>
+    <tfoot>
+      <tr><td>合计</td><td></td><td></td><td>${escapeHtml(String(mapping.summary.item_count))}</td><td>${escapeHtml(formatMoney(mapping.summary.total_amount))}</td></tr>
+    </tfoot>
   </table>
   <table>
     <thead>
@@ -69,6 +73,9 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string):
     <tbody>
       ${itemRows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("\n      ")}
     </tbody>
+    <tfoot>
+      <tr><td>合计</td><td></td><td></td><td></td><td></td><td></td><td></td><td>${escapeHtml(formatMoney(mapping.summary.total_amount))}</td></tr>
+    </tfoot>
   </table>
 </body>
 </html>
