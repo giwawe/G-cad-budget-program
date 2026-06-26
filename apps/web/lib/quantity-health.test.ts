@@ -70,10 +70,10 @@ const quoteMapping: QuoteMapping = {
     total_amount: 0,
   },
   curtain_quote_readiness: {
-    ready_count: 0,
-    pending_count: 2,
-    ready_space_names: [],
-    pending_space_names: ["客厅", "主卧"],
+    ready_count: 2,
+    pending_count: 0,
+    ready_space_names: ["客厅", "主卧"],
+    pending_space_names: [],
   },
   curtain_quote_candidates: [],
   building_area_quote_readiness: {
@@ -103,7 +103,6 @@ const checks = buildQuantityHealthChecks({
 assert.deepEqual(checks.map((check) => check.id), [
   "space-type-other",
   "building-area-missing",
-  "curtain-wall-width-pending",
   "building-area-quote-missing",
 ]);
 assert.deepEqual(checks[0], {
@@ -114,13 +113,12 @@ assert.deepEqual(checks[0], {
   spaceNames: ["客卧"],
 });
 assert.equal(checks[1].detail, "当前建筑面积为 0，请检查是否绘制了闭合 QUOTE_EXT_WALL 外墙轮廓。");
-assert.equal(checks[2].detail, "客厅、主卧 需要人工确认窗帘/窗帘箱延米，确认后暗窗帘箱才进入金额汇总。");
-assert.equal(checks[3].detail, "强电布线、水路布管 依赖建筑面积，当前未进入金额汇总。");
+assert.equal(checks[2].detail, "强电布线、水路布管 依赖建筑面积，当前未进入金额汇总。");
 assert.deepEqual(summarizeQuantityHealthChecks(checks), {
-  total: 4,
-  warning: 4,
+  total: 3,
+  warning: 3,
   info: 0,
-  label: "4 项需优先处理",
+  label: "3 项需优先处理",
 });
 
 assert.deepEqual(summarizeQuantityHealthChecks([]), {

@@ -22,7 +22,7 @@ const curtainWallSourceLabels: Record<CurtainWallWidthSource, string> = {
   matched_l_shape_window: "L形窗自动",
   fallback_longest_wall: "回退最长墙",
   not_applicable: "不适用",
-  manual_required_l_shape_window: "L形窗人工确认",
+  manual_required_l_shape_window: "旧版L形窗",
   manual: "人工校准",
 };
 
@@ -171,7 +171,7 @@ export function QuantityTable({
                   `${row.curtainWallWidthM.toFixed(2)} m`
                 )}
                 <small className={`curtainWallSource ${row.curtainWallWidthSource}`}>{curtainWallSourceLabels[row.curtainWallWidthSource]}</small>
-                {row.curtainWallWidthSource === "manual_required_l_shape_window" && <small className="curtainWallHelp">请填实际窗帘/窗帘箱延米</small>}
+                {row.curtainWallWidthSource === "manual_required_l_shape_window" && <small className="curtainWallHelp">旧快照来源，可按窗长或手工校准</small>}
                 {onChangeCurtainWallWidth && curtainWallCalibrationValue !== null && (
                   <button className="inlineApplyButton" type="button" onClick={() => onChangeCurtainWallWidth(row.spaceName, curtainWallCalibrationValue, "calibration")}>
                     应用校准 {curtainWallCalibrationValue.toFixed(2)} m

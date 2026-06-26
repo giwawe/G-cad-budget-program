@@ -7,7 +7,6 @@ export type QuantityHealthCheck = {
   id:
     | "space-type-other"
     | "building-area-missing"
-    | "curtain-wall-width-pending"
     | "building-area-quote-missing"
     | "bathroom-door-classification"
     | "bedroom-interior-door-duplicate"
@@ -210,22 +209,6 @@ export function buildQuantityHealthChecks({
     });
   }
 
-  const curtainPendingNames = uniqueNames([
-    ...(quoteMapping?.curtain_quote_readiness.pending_space_names ?? []),
-    ...billableRows
-      .filter((row) => row.curtainWallWidthSource === "fallback_longest_wall" || row.curtainWallWidthSource === "manual_required_l_shape_window")
-      .map((row) => row.spaceName),
-  ]);
-  if (curtainPendingNames.length > 0) {
-    checks.push({
-      id: "curtain-wall-width-pending",
-      severity: "warning",
-      title: "窗帘/窗帘箱待确认",
-      detail: `${formatNames(curtainPendingNames)} 需要人工确认窗帘/窗帘箱延米，确认后暗窗帘箱才进入金额汇总。`,
-      spaceNames: curtainPendingNames,
-    });
-  }
-
   const missingBuildingAreaItems = quoteMapping?.building_area_quote_readiness.missing_item_names ?? [];
   if (missingBuildingAreaItems.length > 0) {
     checks.push({
@@ -337,8 +320,6 @@ function healthFixSuggestion(id: QuantityHealthCheck["id"]): string {
       return "检查空间名称和 QUOTE_TEXT，必要时改名或补充空间分类关键词。";
     case "building-area-missing":
       return "补画闭合 QUOTE_EXT_WALL 外墙轮廓，确保建筑面积可按外墙闭合多段线读取。";
-    case "curtain-wall-width-pending":
-      return "确认窗帘/窗帘箱实际延米，L 形或回退最长墙的空间需人工填入校准值。";
     case "building-area-quote-missing":
       return "先补齐 QUOTE_EXT_WALL 建筑面积，再重新导出报价映射。";
     case "bathroom-door-classification":

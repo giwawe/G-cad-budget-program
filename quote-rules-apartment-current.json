@@ -24,7 +24,7 @@
     "item_name": "厨房卫生间集成吊顶",
     "metric": "ceiling_area_m2",
     "unit": "m2",
-    "unit_price": 0,
+    "unit_price": 260,
     "space_types": ["厨房", "卫生间"]
   },
   {
@@ -161,6 +161,6 @@
     "metric": "curtain_wall_width_m",
     "unit": "M",
     "unit_price": 110,
-    "space_types": ["客厅", "卧室", "书房"]
+    "space_types": ["客厅", "餐厅", "卧室", "书房"]
   }
 ]

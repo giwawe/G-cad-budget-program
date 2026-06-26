@@ -1065,7 +1065,7 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
             </div>
             <div className="curtainReadiness">
               <strong>窗帘/窗帘箱可报价候选 {curtainReadiness.ready_count} 个空间</strong>
-              <span>仍待确认 {curtainReadiness.pending_count} 个空间；人工确认后暗窗帘箱进入金额汇总。</span>
+              <span>已按自动候选或人工校准值进入暗窗帘箱金额汇总，报价员仍可在工程量表中调整。</span>
             </div>
             {generatedQuoteMapping.mapping.building_area_quote_readiness.missing_item_names.length > 0 && (
               <div className="curtainReadiness">
@@ -1077,8 +1077,8 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
             )}
             <div className="curtainReadinessDetails">
               <span>可候选：{formatCurtainReadinessSpaces(curtainReadiness.ready_space_names)}</span>
-              <span>待确认：{formatCurtainReadinessSpaces(curtainReadiness.pending_space_names)}</span>
-              <span>已导出人工确认候选：{generatedQuoteMapping.mapping.curtain_quote_candidates.length} 项</span>
+              <span>不适用或未识别：{rows.length - curtainReadiness.ready_count} 个空间</span>
+              <span>已导出报价候选：{generatedQuoteMapping.mapping.curtain_quote_candidates.length} 项</span>
             </div>
             {pendingQuoteMetrics.length > 0 && (
               <ul>

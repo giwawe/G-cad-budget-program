@@ -331,6 +331,22 @@ def test_l_shaped_window_curtain_wall_width_uses_l_shape_candidate():
     assert row.anomalies == []
 
 
+def test_legacy_manual_required_l_shape_window_uses_existing_auto_rule():
+    space = SpaceInput(
+        floor="一层",
+        name="一层-客厅",
+        boundary_points_m=[(0, 0), (5, 0), (5, 3.6), (0, 3.6)],
+        wall_lengths_m=[5, 3.6, 5, 3.6],
+        curtain_wall_width_source="manual_required_l_shape_window",
+        windows=[OpeningInput(width_m=2.2)],
+    )
+
+    row = calculate_quantity_row(space, ProjectDefaults())
+
+    assert row.curtain_wall_width_m == 5
+    assert row.curtain_wall_width_source == "fallback_longest_wall"
+
+
 def test_curtain_wall_width_is_zero_for_kitchen_bathroom_and_corridor():
     defaults = ProjectDefaults()
     for name in ["一层-厨房", "一层-卫生间", "一层-过道"]:

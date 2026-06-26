@@ -91,7 +91,7 @@ export type CurtainQuoteCandidate = {
   quantity: number;
   unit: "M";
   unit_price: number;
-  source: "manual";
+  source: "manual" | "matched_window_wall" | "matched_l_shape_window" | "fallback_longest_wall";
   note: string;
 };
 
@@ -137,7 +137,7 @@ const KITCHEN_BATHROOM_SPACE_TYPES = ["厨房", "卫生间"];
 const GYPSUM_CEILING_SPACE_TYPES = [...CEILING_SPACE_TYPES, ...KITCHEN_BATHROOM_SPACE_TYPES];
 const CEILING_PAINT_SPACE_TYPES = [...DRY_SPACE_TYPES, ...KITCHEN_BATHROOM_SPACE_TYPES];
 const WET_FLOOR_SPACE_TYPES = ["厨房", "卫生间", "阳台", "露台", "洗衣房"];
-const CURTAIN_SPACE_TYPES = ["客厅", "卧室", "书房"];
+const CURTAIN_SPACE_TYPES = ["客厅", "餐厅", "卧室", "书房"];
 const KITCHEN_CABINET_SPACE_TYPES = ["厨房"];
 const BATHROOM_FIXTURE_SPACE_TYPES = ["卫生间"];
 const SUMMED_PROJECT_METRICS = new Set<QuoteMetric>([
@@ -152,7 +152,7 @@ const DEFAULT_RULES: QuoteRule[] = [
   { item_name: "墙面界面剂处理", metric: "latex_paint_area_m2", unit: "m2", unit_price: 7, space_types: DRY_SPACE_TYPES },
   { item_name: "墙面批嵌", metric: "latex_paint_area_m2", unit: "m2", unit_price: 25, space_types: DRY_SPACE_TYPES },
   { item_name: "墙面乳胶漆", metric: "latex_paint_area_m2", unit: "m2", unit_price: 20, space_types: DRY_SPACE_TYPES },
-  { item_name: "厨房卫生间集成吊顶", metric: "ceiling_area_m2", unit: "m2", unit_price: 0, space_types: KITCHEN_BATHROOM_SPACE_TYPES },
+  { item_name: "厨房卫生间集成吊顶", metric: "ceiling_area_m2", unit: "m2", unit_price: 260, space_types: KITCHEN_BATHROOM_SPACE_TYPES },
   { item_name: "轻钢龙骨平顶", metric: "ceiling_area_m2", unit: "m2", unit_price: 180, space_types: GYPSUM_CEILING_SPACE_TYPES },
   { item_name: "顶面批嵌", metric: "ceiling_area_m2", unit: "m2", unit_price: 25, space_types: CEILING_PAINT_SPACE_TYPES },
   { item_name: "顶面乳胶漆", metric: "ceiling_area_m2", unit: "m2", unit_price: 20, space_types: CEILING_PAINT_SPACE_TYPES },
@@ -247,30 +247,24 @@ export function exportQuoteMappingConfirmationMessages(mapping: QuoteMapping): s
   if (mapping.building_area_quote_readiness.missing_item_names.length > 0) {
     messages.push(`${mapping.building_area_quote_readiness.missing_item_names.join("、")} 需要 QUOTE_EXT_WALL 建筑面积，当前为 0。`);
   }
-  if (mapping.curtain_quote_readiness.pending_count > 0) {
-    messages.push(`窗帘/窗帘箱仍有 ${mapping.curtain_quote_readiness.pending_count} 个空间待人工确认：${formatCurtainReadinessSpaces(mapping.curtain_quote_readiness.pending_space_names)}。`);
-  }
   return messages;
 }
 
 export function curtainQuoteReadiness(rows: QuantityRow[]): CurtainQuoteReadiness {
   const ready_space_names: string[] = [];
-  const pending_space_names: string[] = [];
   for (const row of rows) {
     if (row.status === "excluded") {
       continue;
     }
-    if ((row.curtainWallWidthSource === "manual" || row.curtainWallWidthSource === "matched_window_wall" || row.curtainWallWidthSource === "matched_l_shape_window") && row.curtainWallWidthM > 0) {
+    if (curtainWallWidthIsQuoteReady(row.curtainWallWidthSource) && row.curtainWallWidthM > 0) {
       ready_space_names.push(row.spaceName);
-    } else if (row.curtainWallWidthSource === "fallback_longest_wall" || row.curtainWallWidthSource === "manual_required_l_shape_window") {
-      pending_space_names.push(row.spaceName);
     }
   }
   return {
     ready_count: ready_space_names.length,
-    pending_count: pending_space_names.length,
+    pending_count: 0,
     ready_space_names,
-    pending_space_names,
+    pending_space_names: [],
   };
 }
 
@@ -284,7 +278,7 @@ export function formatCurtainReadinessSpaces(spaceNames: string[], limit = 4): s
 
 export function curtainQuoteCandidates(rows: QuantityRow[]): CurtainQuoteCandidate[] {
   return rows
-    .filter((row) => row.status !== "excluded" && row.curtainWallWidthSource === "manual" && row.curtainWallWidthM > 0)
+    .filter((row) => row.status !== "excluded" && curtainWallWidthIsQuoteReady(row.curtainWallWidthSource) && row.curtainWallWidthM > 0)
     .map((row) => ({
       floor: row.floor,
       space_name: row.spaceName,
@@ -293,8 +287,8 @@ export function curtainQuoteCandidates(rows: QuantityRow[]): CurtainQuoteCandida
       quantity: round2(row.curtainWallWidthM),
       unit: "M",
       unit_price: 110,
-      source: "manual",
-      note: "人工确认后已进入金额汇总",
+      source: row.curtainWallWidthSource as CurtainQuoteCandidate["source"],
+      note: "已进入金额汇总",
     }));
 }
 
@@ -479,7 +473,7 @@ function isQuoteMetric(metric: unknown): metric is QuoteMetric {
 }
 
 function ruleAppliesToRow(rule: QuoteRule, row: QuantityRow) {
-  if (rule.metric === "curtain_wall_width_m" && row.curtainWallWidthSource !== "manual") {
+  if (rule.metric === "curtain_wall_width_m" && !curtainWallWidthIsQuoteReady(row.curtainWallWidthSource)) {
     return false;
   }
   if (rule.metric === "ceiling_area_m2" && KITCHEN_BATHROOM_SPACE_TYPES.includes(row.spaceType)) {
@@ -492,6 +486,10 @@ function ruleAppliesToRow(rule: QuoteRule, row: QuantityRow) {
     }
   }
   return !rule.space_types || rule.space_types.length === 0 || rule.space_types.includes(row.spaceType);
+}
+
+function curtainWallWidthIsQuoteReady(source: QuantityRow["curtainWallWidthSource"]) {
+  return source === "manual" || source === "matched_window_wall" || source === "matched_l_shape_window" || source === "fallback_longest_wall";
 }
 
 function normalizeSpaceTypes(spaceTypes: unknown): string[] | undefined {
