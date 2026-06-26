@@ -31,7 +31,7 @@ const rows: QuantityRow[] = [
     doorWidthTotalM: 1,
     doorDeductAreaM2: 0,
     wallGrossAreaM2: 25.54,
-    latexPaintAreaM2: 25.54,
+    latexPaintAreaM2: 0,
     wallTileMeasureLengthM: 9.12,
     wallTileAreaM2: 20.7,
     floorTilePieceCount: 5,
@@ -202,7 +202,7 @@ const excludedOnlyMapping = buildQuoteMapping([rows[1]]);
 assert.equal(excludedOnlyMapping.items.length, 0);
 assert.equal(excludedOnlyMapping.summary.total_amount, 0);
 
-const bedroomDefaultMapping = buildQuoteMapping([{ ...rows[0], spaceName: "主卧", spaceType: "卧室", wallTileAreaM2: 0, waterproofAreaM2: 0, customCabinetAreaM2: 9.8, kitchenBaseCabinetLengthM: 0, kitchenWallCabinetLengthM: 0 }], undefined, { building_area_m2: 88.66 });
+const bedroomDefaultMapping = buildQuoteMapping([{ ...rows[0], spaceName: "主卧", spaceType: "卧室", latexPaintAreaM2: 25.54, wallTileAreaM2: 0, waterproofAreaM2: 0, customCabinetAreaM2: 9.8, kitchenBaseCabinetLengthM: 0, kitchenWallCabinetLengthM: 0 }], undefined, { building_area_m2: 88.66 });
 
 assert.equal(bedroomDefaultMapping.items.length, 12);
 assert.deepEqual(bedroomDefaultMapping.items.map((item) => item.item_name), [
@@ -225,14 +225,15 @@ assert.equal(bedroomDefaultMapping.summary.total_amount, 24427.11);
 const livingRoomWallTileMapping = buildQuoteMapping([{ ...rows[0], spaceName: "客厅", spaceType: "客厅", wallTileAreaM2: 11.2, waterproofAreaM2: 0, customCabinetAreaM2: 0, kitchenBaseCabinetLengthM: 0, kitchenWallCabinetLengthM: 0 }]);
 assert.ok(livingRoomWallTileMapping.items.some((item) => item.space_name === "客厅" && item.item_name === "墙面贴瓷砖(600X1200)" && item.quantity === 11.2));
 
+const kitchenDefaultMapping = buildQuoteMapping([rows[0]]);
+assert.ok(kitchenDefaultMapping.items.some((item) => item.space_name === "厨房" && item.item_name === "墙面贴瓷砖(600X1200)"));
+assert.ok(kitchenDefaultMapping.items.some((item) => item.space_name === "厨房" && item.item_name === "墙地面防漏处理"));
+assert.ok(!kitchenDefaultMapping.items.some((item) => item.space_name === "厨房" && ["墙面乳胶漆", "顶面批嵌", "顶面乳胶漆"].includes(item.item_name)));
+
 const customMapping = buildQuoteMapping(rows, [{ item_name: "厨房墙面定制漆", metric: "latex_paint_area_m2", unit: "m2", unit_price: 30 }]);
 
-assert.equal(customMapping.items.length, 1);
-assert.equal(customMapping.items[0].item_name, "厨房墙面定制漆");
-assert.equal(customMapping.items[0].quantity, 25.54);
-assert.equal(customMapping.items[0].unit_price, 30);
-assert.equal(customMapping.items[0].amount, 766.2);
-assert.equal(customMapping.summary.total_amount, 766.2);
+assert.equal(customMapping.items.length, 0);
+assert.equal(customMapping.summary.total_amount, 0);
 
 const buildingAreaMapping = buildQuoteMapping(
   rows,
