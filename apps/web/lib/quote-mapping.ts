@@ -213,6 +213,16 @@ export function defaultQuoteRules(): QuoteRule[] {
   return DEFAULT_RULES.map((rule) => ({ ...rule, space_types: rule.space_types ? [...rule.space_types] : undefined }));
 }
 
+export function updateQuoteRuleUnitPrice(rules: QuoteRule[], index: number, unitPrice: number): QuoteRule[] {
+  if (!Number.isInteger(index) || index < 0 || index >= rules.length) {
+    throw new Error("报价规则不存在");
+  }
+  if (!Number.isFinite(unitPrice) || unitPrice < 0) {
+    throw new Error(`报价规则 unit_price 无效：${String(unitPrice)}`);
+  }
+  return rules.map((rule, ruleIndex) => (ruleIndex === index ? { ...rule, unit_price: round2(unitPrice) } : rule));
+}
+
 export function apartmentPendingQuoteMetrics(): PendingQuoteMetric[] {
   return APARTMENT_PENDING_METRICS.map((item) => ({ ...item }));
 }

@@ -33,6 +33,7 @@ import {
   quoteRulesTemplateFileName,
   type QuoteMapping,
   type QuoteRule,
+  updateQuoteRuleUnitPrice,
 } from "@/lib/quote-mapping";
 import { buildReviewSnapshot, parseReviewSnapshot, reviewSnapshotFileName } from "@/lib/review-snapshot";
 import type { CalibrationComparison, CeilingFinishType, CurtainWallWidthSource, DrawingGeometry, QuantityRow, QuantitySummary, ReviewStatus } from "@/lib/types";
@@ -521,6 +522,25 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
     }
   }
 
+  function handleChangeQuoteRuleUnitPrice(index: number, value: string) {
+    if (!value.trim()) {
+      return;
+    }
+    const unitPrice = Number(value);
+    try {
+      setQuoteRules((current) => updateQuoteRuleUnitPrice(current, index, unitPrice));
+      setQuoteRulesFileName((current) => (current.endsWith("（已编辑）") ? current : `${current}（已编辑）`));
+      setGeneratedQuoteMapping(null);
+      setGeneratedHealthFixList(null);
+      setGeneratedQuoteRules(null);
+      setError("");
+      setMessage("报价规则单价已更新，重新导出报价映射后生效");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "报价规则单价更新失败");
+      setMessage("");
+    }
+  }
+
   function handleChangeStatus(spaceName: string, status: ReviewStatus) {
     setRows((current) => updateQuantityRowStatus(current, spaceName, status));
     setGeneratedQuoteMapping(null);
@@ -796,6 +816,48 @@ export function UploadWorkbench({ initialRows }: { initialRows: QuantityRow[] })
           <small className="infoText">
             {pendingQuoteMetrics.length > 0 ? `待补取数口径：${pendingQuoteMetrics.length} 项不参与当前金额` : "待补取数口径：已全部接入当前规则"}
           </small>
+        </div>
+      </section>
+
+      <section className="quoteRulesPanel">
+        <div className="templateHeader">
+          <div>
+            <strong>报价规则单价</strong>
+            <span>{quoteRulesFileName}</span>
+          </div>
+        </div>
+        <div className="quoteRulesTable">
+          <table>
+            <thead>
+              <tr>
+                <th>清单项</th>
+                <th>取数指标</th>
+                <th>适用空间</th>
+                <th>单位</th>
+                <th>单价</th>
+              </tr>
+            </thead>
+            <tbody>
+              {quoteRules.map((rule, index) => (
+                <tr key={`${rule.item_name}-${rule.metric}-${index}`}>
+                  <td>{rule.item_name}</td>
+                  <td><code>{rule.metric}</code></td>
+                  <td>{rule.space_types?.join("、") ?? "全部"}</td>
+                  <td>{rule.unit}</td>
+                  <td>
+                    <input
+                      aria-label={`${rule.item_name} 单价`}
+                      min="0"
+                      step="0.01"
+                      type="number"
+                      value={rule.unit_price}
+                      onChange={(event) => handleChangeQuoteRuleUnitPrice(index, event.target.value)}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
 

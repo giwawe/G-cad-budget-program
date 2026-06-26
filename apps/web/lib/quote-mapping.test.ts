@@ -12,6 +12,7 @@ import {
   parseQuoteRules,
   quoteMappingFileName,
   quoteRulesTemplateFileName,
+  updateQuoteRuleUnitPrice,
 } from "./quote-mapping.ts";
 import type { QuantityRow } from "./types.ts";
 
@@ -421,6 +422,15 @@ rules[0].unit_price = 99;
 rules[0].space_types?.push("厨房");
 assert.equal(defaultQuoteRules()[0].unit_price, 7);
 assert.deepEqual(defaultQuoteRules()[0].space_types, ["客厅", "餐厅", "卧室", "书房", "过道", "门厅", "楼梯过道", "衣帽间", "储物间", "露台"]);
+
+const editedRules = updateQuoteRuleUnitPrice(defaultQuoteRules(), 3, 128.456);
+assert.equal(editedRules[3].item_name, "厨房卫生间集成吊顶");
+assert.equal(editedRules[3].unit_price, 128.46);
+assert.equal(defaultQuoteRules()[3].unit_price, 0);
+assert.notEqual(editedRules[3], defaultQuoteRules()[3]);
+assert.equal(editedRules[2].unit_price, defaultQuoteRules()[2].unit_price);
+assert.throws(() => updateQuoteRuleUnitPrice(defaultQuoteRules(), 3, -1), /报价规则 unit_price 无效/);
+assert.throws(() => updateQuoteRuleUnitPrice(defaultQuoteRules(), 999, 1), /报价规则不存在/);
 
 const apartmentRules = parseQuoteRules(readFileSync(new URL("../../../quote-rules-apartment-current.json", import.meta.url), "utf8"));
 assert.deepEqual(apartmentRules, defaultQuoteRules());
