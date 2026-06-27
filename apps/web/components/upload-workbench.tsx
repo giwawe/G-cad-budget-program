@@ -19,7 +19,7 @@ import {
   type QuantityHealthFilter,
 } from "@/lib/quantity-health";
 import { confirmQuantityRowsBySpaceNames, updateQuantityRowCurtainWallWidth, updateQuantityRowStatus, updateQuantityRowsStatusBySpaceNames } from "@/lib/quantity-row-status";
-import { buildQuoteExcelHtml, quoteExcelFileName } from "@/lib/quote-excel";
+import { buildQuoteExcelHtml, MANUAL_QUOTE_DRAFT_ITEMS, quoteExcelFileName } from "@/lib/quote-excel";
 import {
   apartmentPendingQuoteMetrics,
   buildQuoteMapping,
@@ -1118,6 +1118,10 @@ export function UploadWorkbench({
             <div>
               <strong>待补取数口径</strong>
               <span>{pendingQuoteMetrics.length > 0 ? `${pendingQuoteMetrics.length} 项暂不参与金额汇总，后续补齐 metric 后再接入。` : "当前默认规则已无待补取数口径。"}</span>
+            </div>
+            <div className="curtainReadiness">
+              <strong>人工补项 {MANUAL_QUOTE_DRAFT_ITEMS.length} 项</strong>
+              <span>Excel 草稿会单独带出这些漏项，数量、单位、单价留空给报价员补填，不参与当前自动合计。</span>
             </div>
             <div className="curtainReadiness">
               <strong>窗帘/窗帘箱可报价候选 {curtainReadiness.ready_count} 个空间</strong>

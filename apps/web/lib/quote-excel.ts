@@ -1,5 +1,46 @@
 import type { QuoteMapping } from "./quote-mapping";
 
+export type ManualQuoteDraftItem = {
+  floor: string;
+  space_name: string;
+  space_type: string;
+  item_name: string;
+};
+
+export const MANUAL_QUOTE_DRAFT_ITEMS: ManualQuoteDraftItem[] = [
+  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "拆改及拆墙" },
+  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "砌240厚砖墙" },
+  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "外墙批嵌以及修补" },
+  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "砖墙门窗洞过梁" },
+  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "水泥墙开槽" },
+  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "打混凝土过梁孔" },
+  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "厨房、卫生间排污管包隔音棉" },
+  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "补线、管槽及零星修补" },
+  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "包上/下水管道(单管)" },
+  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "弱电布线" },
+  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "全屋插座开关" },
+  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "墙面瓷砖" },
+  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "瓷砖加工费" },
+  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "入户门" },
+  { floor: "一层", space_name: "阳台", space_type: "阳台", item_name: "阳台推拉门" },
+  { floor: "一层", space_name: "阳台", space_type: "阳台", item_name: "阳台推拉门双包套" },
+  { floor: "一层", space_name: "全屋", space_type: "全屋", item_name: "铝合金封门窗" },
+  { floor: "一层", space_name: "卫生间", space_type: "卫生间", item_name: "卫生间门" },
+  { floor: "一层", space_name: "卫生间", space_type: "卫生间", item_name: "蹲坑" },
+  { floor: "一层", space_name: "卫生间", space_type: "卫生间", item_name: "淋浴隔断" },
+  { floor: "一层", space_name: "卫生间", space_type: "卫生间", item_name: "玻璃淋浴房" },
+  { floor: "一层", space_name: "卫生间", space_type: "卫生间", item_name: "花洒" },
+  { floor: "一层", space_name: "卫生间", space_type: "卫生间", item_name: "卫浴五件套" },
+  { floor: "一层", space_name: "厨房", space_type: "厨房", item_name: "厨房推拉门" },
+  { floor: "一层", space_name: "厨房", space_type: "厨房", item_name: "厨房推拉门双包套" },
+  { floor: "一层", space_name: "客厅", space_type: "客厅", item_name: "背景墙" },
+  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "材料搬运费" },
+  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "垃圾清运费" },
+  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "地面砖现场维护费" },
+  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "美缝" },
+  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "全屋保洁" },
+];
+
 export function quoteExcelFileName(fileName: string): string {
   const trimmed = fileName.trim();
   if (!trimmed || trimmed === "样例数据") {
@@ -28,6 +69,7 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string):
     formatMoney(item.unit_price),
     formatMoney(item.amount),
   ]);
+  const manualItemRows = MANUAL_QUOTE_DRAFT_ITEMS.map((item) => [item.floor, item.space_name, item.space_type, item.item_name, "", "", "", ""]);
 
   return `\uFEFF<html>
 <head>
@@ -76,6 +118,15 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string):
     <tfoot>
       <tr><td>合计</td><td></td><td></td><td></td><td></td><td></td><td></td><td>${escapeHtml(formatMoney(mapping.summary.total_amount))}</td></tr>
     </tfoot>
+  </table>
+  <h2>人工补项</h2>
+  <table>
+    <thead>
+      <tr><th>楼层</th><th>空间</th><th>类型</th><th>清单项</th><th>工程量</th><th>单位</th><th>单价</th><th>小计</th></tr>
+    </thead>
+    <tbody>
+      ${manualItemRows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("\n      ")}
+    </tbody>
   </table>
 </body>
 </html>
