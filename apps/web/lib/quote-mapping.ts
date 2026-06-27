@@ -25,6 +25,7 @@ type QuantityRowMetric =
 export type QuoteMetric =
   | "building_area_m2"
   | "tile_area_m2"
+  | "cleaning_package_count"
   | "latex_paint_area_m2"
   | "floor_area_m2"
   | "floor_tile_piece_count"
@@ -52,6 +53,7 @@ export type QuoteMetric =
 type ProjectQuoteMetric =
   | "building_area_m2"
   | "tile_area_m2"
+  | "cleaning_package_count"
   | "lighting_package_count"
   | "switch_socket_package_count";
 type SummedProjectQuoteMetric =
@@ -174,6 +176,7 @@ const DEFAULT_RULES: QuoteRule[] = [
   quoteRule("瓷砖加工费", "tile_area_m2", "M2", 20, 0, 0),
   quoteRule("美缝", "tile_area_m2", "M2", 0, 12, 0),
   quoteRule("强电布线", "building_area_m2", "M2", 40, 0, 38),
+  quoteRule("弱电布线", "building_area_m2", "M2", 15, 0, 10),
   quoteRule("水路布管", "building_area_m2", "M2", 17.5, 0, 12),
   quoteRule("材料搬运费", "building_area_m2", "M2", 0, 0, 8),
   quoteRule("垃圾清运费", "building_area_m2", "M2", 0, 0, 10),
@@ -193,6 +196,7 @@ const DEFAULT_RULES: QuoteRule[] = [
   quoteRule("浴室柜", "bathroom_vanity_count", "套", 1500, 0, 0, BATHROOM_FIXTURE_SPACE_TYPES),
   quoteRule("全屋插座开关", "switch_socket_package_count", "套", 6000, 0, 0),
   quoteRule("全屋灯饰", "lighting_package_count", "套", 15000, 0, 0),
+  quoteRule("全屋保洁", "cleaning_package_count", "套", 4500, 0, 0),
   quoteRule("暗窗帘箱", "curtain_wall_width_m", "M", 65, 0, 45, CURTAIN_SPACE_TYPES),
 ];
 
@@ -390,6 +394,9 @@ function projectRuleQuantity(billableRows: QuantityRow[], rule: QuoteRule, build
   if (rule.metric === "lighting_package_count") {
     return 1;
   }
+  if (rule.metric === "cleaning_package_count") {
+    return 1;
+  }
   if (rule.metric === "switch_socket_package_count") {
     return 1;
   }
@@ -422,6 +429,7 @@ function isProjectMetric(metric: QuoteMetric): metric is ProjectQuoteMetric {
   return (
     metric === "building_area_m2" ||
     metric === "tile_area_m2" ||
+    metric === "cleaning_package_count" ||
     metric === "lighting_package_count" ||
     metric === "switch_socket_package_count"
   );
@@ -492,6 +500,7 @@ function isQuoteMetric(metric: unknown): metric is QuoteMetric {
   return (
     metric === "building_area_m2" ||
     metric === "tile_area_m2" ||
+    metric === "cleaning_package_count" ||
     metric === "latex_paint_area_m2" ||
     metric === "floor_area_m2" ||
     metric === "floor_tile_piece_count" ||

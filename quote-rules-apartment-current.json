@@ -125,6 +125,15 @@
     "labor_price": 38
   },
   {
+    "item_name": "弱电布线",
+    "metric": "building_area_m2",
+    "unit": "M2",
+    "unit_price": 25,
+    "material_price": 15,
+    "auxiliary_price": 0,
+    "labor_price": 10
+  },
+  {
     "item_name": "水路布管",
     "metric": "building_area_m2",
     "unit": "M2",
@@ -299,6 +308,15 @@
     "unit": "套",
     "unit_price": 15000,
     "material_price": 15000,
+    "auxiliary_price": 0,
+    "labor_price": 0
+  },
+  {
+    "item_name": "全屋保洁",
+    "metric": "cleaning_package_count",
+    "unit": "套",
+    "unit_price": 4500,
+    "material_price": 4500,
     "auxiliary_price": 0,
     "labor_price": 0
   },

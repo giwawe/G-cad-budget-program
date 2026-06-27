@@ -42,7 +42,6 @@ export const MANUAL_QUOTE_DRAFT_ITEMS: ManualQuoteDraftItem[] = [
   { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "厨房、卫生间排污管包隔音棉" },
   { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "补线、管槽及零星修补" },
   { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "包上/下水管道(单管)" },
-  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "弱电布线" },
   { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "墙面瓷砖" },
   { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "入户门" },
   { floor: "一层", space_name: "阳台", space_type: "阳台", item_name: "阳台推拉门" },
@@ -54,7 +53,6 @@ export const MANUAL_QUOTE_DRAFT_ITEMS: ManualQuoteDraftItem[] = [
   { floor: "一层", space_name: "卫生间", space_type: "卫生间", item_name: "花洒" },
   { floor: "一层", space_name: "卫生间", space_type: "卫生间", item_name: "卫浴五件套" },
   { floor: "一层", space_name: "客厅", space_type: "客厅", item_name: "背景墙" },
-  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "全屋保洁" },
 ];
 
 type QuoteTemplatePrice = {
@@ -78,6 +76,7 @@ const TEMPLATE_PRICES: Record<string, QuoteTemplatePrice> = {
   瓷砖加工费: { material: 20, auxiliary: 0, labor: 0, note: "按当前贴砖面积生成候选，报价员可按实际加工米数调整。" },
   美缝: { material: 0, auxiliary: 12, labor: 0, note: "按当前地面铺砖面积与墙面贴砖面积生成候选。" },
   强电布线: { material: 40, auxiliary: 0, labor: 38, note: "强电布线，含插座、开关安装人工费。" },
+  弱电布线: { material: 15, auxiliary: 0, labor: 10, note: "弱电布线，按建筑面积生成候选。" },
   水路布管: { material: 17.5, auxiliary: 0, labor: 12, note: "给水、污水废水管及配件辅料。" },
   材料搬运费: { material: 0, auxiliary: 0, labor: 8, note: "按建筑面积计，设计师可按是否含吊机调整单价。" },
   垃圾清运费: { material: 0, auxiliary: 0, labor: 10, note: "按建筑面积计，外运车费另计。" },
@@ -97,6 +96,7 @@ const TEMPLATE_PRICES: Record<string, QuoteTemplatePrice> = {
   浴室柜: { material: 1500, auxiliary: 0, labor: 0, note: "岩板一体盆，含龙头及上下水。" },
   全屋插座开关: { material: 6000, auxiliary: 0, labor: 0, note: "全屋插座开关，默认 1 套。" },
   全屋灯饰: { material: 15000, auxiliary: 0, labor: 0, note: "主灯、防眩射灯、筒灯。" },
+  全屋保洁: { material: 4500, auxiliary: 0, labor: 0, note: "最后全屋开荒保洁，默认 1 套。" },
   暗窗帘箱: { material: 65, auxiliary: 0, labor: 45, note: "木工板立架，石膏板饰面。" },
 };
 
