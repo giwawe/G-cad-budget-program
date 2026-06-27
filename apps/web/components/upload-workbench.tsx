@@ -456,6 +456,15 @@ export function UploadWorkbench({
   }
 
   function handleDownloadQuoteMapping() {
+    const mapping = buildCurrentQuoteMapping();
+    if (!mapping) {
+      return;
+    }
+    const quoteHealthSummary = mapping.quantity_health_readiness;
+    downloadQuoteMappingJson(mapping, quoteHealthSummary.warning);
+  }
+
+  function buildCurrentQuoteMapping() {
     const baseMapping = buildQuoteMapping(rows, quoteRules, summary ?? undefined);
     const quoteHealthChecks = filterAcceptedHealthChecks(buildQuantityHealthChecks({ rows, summary, quoteMapping: baseMapping }), acceptedHealthCheckKeys);
     const quoteHealthSummary = summarizeQuantityHealthChecks(quoteHealthChecks);
@@ -464,10 +473,14 @@ export function UploadWorkbench({
     if (confirmationMessages.length > 0) {
       const confirmed = window.confirm(`当前报价映射仍有待确认风险，将作为草稿报价导出：\n\n${confirmationMessages.join("\n")}\n\n是否继续导出？`);
       if (!confirmed) {
-        setMessage("已取消导出报价映射，请先处理风险项或接受对应健康检查。");
-        return;
+        setMessage("已取消导出草稿报价，请先处理风险项或接受对应健康检查。");
+        return null;
       }
     }
+    return mapping;
+  }
+
+  function downloadQuoteMappingJson(mapping: QuoteMapping, warningCount: number) {
     const downloadName = quoteMappingFileName(fileName);
     const content = `${JSON.stringify(mapping, null, 2)}\n`;
     const blob = new Blob([content], { type: "application/json;charset=utf-8" });
@@ -481,8 +494,8 @@ export function UploadWorkbench({
     URL.revokeObjectURL(url);
     setGeneratedQuoteMapping({ fileName: downloadName, content, mapping });
     setMessage(
-      quoteHealthSummary.warning > 0
-        ? `已生成报价映射：${downloadName}；当前还有 ${quoteHealthSummary.warning} 项需优先处理，建议先导出修图清单或修图后复核。`
+      warningCount > 0
+        ? `已生成报价映射：${downloadName}；当前还有 ${warningCount} 项需优先处理，建议先导出修图清单或修图后复核。`
         : `已生成报价映射：${downloadName}`,
     );
   }
@@ -508,6 +521,17 @@ export function UploadWorkbench({
     link.remove();
     URL.revokeObjectURL(url);
     setMessage(`已生成 Excel 报价草稿：${downloadName}`);
+  }
+
+  function handleDownloadQuoteExcelDraft() {
+    const mapping = buildCurrentQuoteMapping();
+    if (!mapping) {
+      return;
+    }
+    const downloadName = quoteMappingFileName(fileName);
+    const content = `${JSON.stringify(mapping, null, 2)}\n`;
+    setGeneratedQuoteMapping({ fileName: downloadName, content, mapping });
+    handleDownloadQuoteExcel(mapping);
   }
 
   function handleDownloadQuoteRulesTemplate() {
@@ -801,6 +825,10 @@ export function UploadWorkbench({
           <button type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadQuoteMapping}>
             <ReceiptText aria-hidden="true" size={18} />
             导出报价映射
+          </button>
+          <button type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadQuoteExcelDraft}>
+            <Download aria-hidden="true" size={18} />
+            导出 Excel 草稿
           </button>
           <button type="button" disabled={isUploading || isComparing} onClick={handleDownloadQuoteRulesTemplate}>
             <Download aria-hidden="true" size={18} />
