@@ -156,9 +156,6 @@ function quoteTemplateRows(mapping: QuoteMapping): string[][] {
     const manualItems = MANUAL_QUOTE_DRAFT_ITEMS
       .filter((item) => remainingManualItems.has(item) && templateSectionForItem(item.item_name, item.space_type)?.title === section.title)
       .sort((a, b) => templateItemOrder(section, a.item_name) - templateItemOrder(section, b.item_name));
-    if (sectionItems.length === 0 && manualItems.length === 0) {
-      continue;
-    }
     rows.push(sectionHeaderRow(section));
     sectionItems.forEach((item, index) => {
       remainingItems.delete(item);
