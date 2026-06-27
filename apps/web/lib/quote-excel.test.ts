@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { buildQuoteExcelHtml, quoteExcelFileName } from "./quote-excel.ts";
+import { buildQuoteExcelHtml, MANUAL_QUOTE_DRAFT_ITEMS, quoteExcelFileName } from "./quote-excel.ts";
 import type { QuoteMapping } from "./quote-mapping.ts";
 
 const mapping: QuoteMapping = {
@@ -80,9 +80,11 @@ assert.ok(html.includes("<th>楼层</th><th>空间</th><th>类型</th><th>清单
 assert.ok(html.includes("<td>厨房卫生间集成吊顶</td><td>4.48</td><td>m2</td><td>260.00</td><td>1164.80</td>"));
 assert.ok(html.includes("<td>合计</td><td></td><td></td><td></td><td></td><td></td><td></td><td>8331.16</td>"));
 assert.ok(html.includes("<h2>人工补项</h2>"), "Excel draft should include manual quote items from the marked source sheet");
+assert.equal(MANUAL_QUOTE_DRAFT_ITEMS.length, 27);
 assert.ok(html.includes("<td>全屋</td><td>全屋</td><td>全屋</td><td>砌240厚砖墙</td><td></td><td></td><td></td><td></td>"));
-assert.ok(html.includes("<td>一层</td><td>卫生间</td><td>卫生间</td><td>卫生间门</td><td></td><td></td><td></td><td></td>"));
-assert.ok(html.includes("<td>一层</td><td>厨房</td><td>厨房</td><td>厨房推拉门双包套</td><td></td><td></td><td></td><td></td>"));
+assert.ok(html.includes("<td>全屋</td><td>全屋</td><td>全屋</td><td>全屋保洁</td><td></td><td></td><td></td><td></td>"));
+assert.ok(!html.includes("<td>一层</td><td>卫生间</td><td>卫生间</td><td>卫生间门</td><td></td><td></td><td></td><td></td>"));
+assert.ok(!html.includes("<td>一层</td><td>厨房</td><td>厨房</td><td>厨房推拉门双包套</td><td></td><td></td><td></td><td></td>"));
 assert.ok(html.indexOf("<h2>人工补项</h2>") > html.indexOf("<td>合计</td><td></td><td></td><td></td><td></td><td></td><td></td><td>8331.16</td>"));
 assert.ok(html.includes("<td>强电布线 &amp; 水路复核</td>"), "item names should be escaped");
 assert.ok(!html.includes("强电布线 & 水路复核</td>"), "raw ampersands should not leak into HTML");

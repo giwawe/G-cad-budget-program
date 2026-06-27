@@ -117,6 +117,27 @@
     "unit_price": 1200
   },
   {
+    "item_name": "卫生间门",
+    "metric": "bathroom_door_count",
+    "unit": "樘",
+    "unit_price": 0,
+    "space_types": ["卫生间"]
+  },
+  {
+    "item_name": "厨房推拉门",
+    "metric": "sliding_door_area_m2",
+    "unit": "m2",
+    "unit_price": 0,
+    "space_types": ["厨房"]
+  },
+  {
+    "item_name": "厨房推拉门双包套",
+    "metric": "sliding_door_casing_length_m",
+    "unit": "M",
+    "unit_price": 0,
+    "space_types": ["厨房"]
+  },
+  {
     "item_name": "橱柜地柜",
     "metric": "kitchen_base_cabinet_length_m",
     "unit": "M",

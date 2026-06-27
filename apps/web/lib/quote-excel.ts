@@ -8,7 +8,6 @@ export type ManualQuoteDraftItem = {
 };
 
 export const MANUAL_QUOTE_DRAFT_ITEMS: ManualQuoteDraftItem[] = [
-  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "拆改及拆墙" },
   { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "砌240厚砖墙" },
   { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "外墙批嵌以及修补" },
   { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "砖墙门窗洞过梁" },
@@ -25,14 +24,11 @@ export const MANUAL_QUOTE_DRAFT_ITEMS: ManualQuoteDraftItem[] = [
   { floor: "一层", space_name: "阳台", space_type: "阳台", item_name: "阳台推拉门" },
   { floor: "一层", space_name: "阳台", space_type: "阳台", item_name: "阳台推拉门双包套" },
   { floor: "一层", space_name: "全屋", space_type: "全屋", item_name: "铝合金封门窗" },
-  { floor: "一层", space_name: "卫生间", space_type: "卫生间", item_name: "卫生间门" },
   { floor: "一层", space_name: "卫生间", space_type: "卫生间", item_name: "蹲坑" },
   { floor: "一层", space_name: "卫生间", space_type: "卫生间", item_name: "淋浴隔断" },
   { floor: "一层", space_name: "卫生间", space_type: "卫生间", item_name: "玻璃淋浴房" },
   { floor: "一层", space_name: "卫生间", space_type: "卫生间", item_name: "花洒" },
   { floor: "一层", space_name: "卫生间", space_type: "卫生间", item_name: "卫浴五件套" },
-  { floor: "一层", space_name: "厨房", space_type: "厨房", item_name: "厨房推拉门" },
-  { floor: "一层", space_name: "厨房", space_type: "厨房", item_name: "厨房推拉门双包套" },
   { floor: "一层", space_name: "客厅", space_type: "客厅", item_name: "背景墙" },
   { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "材料搬运费" },
   { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "垃圾清运费" },

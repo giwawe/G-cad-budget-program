@@ -323,7 +323,7 @@ assert.equal(dryAreaMapping.summary.total_amount, 600);
 
 const rules = defaultQuoteRules();
 assert.equal(DEFAULT_QUOTE_RULES_NAME, "商品房整装默认规则");
-assert.equal(rules.length, 25);
+assert.equal(rules.length, 28);
 assert.equal(rules[0].item_name, "墙面界面剂处理");
 assert.equal(rules[0].metric, "latex_paint_area_m2");
 assert.equal(rules[0].unit_price, 7);
@@ -544,6 +544,48 @@ assert.deepEqual(interiorDoorMapping.items.filter((item) => item.item_name === "
     unit: "樘",
     unit_price: 1200,
     amount: 2400,
+  },
+]);
+
+const bathroomDoorMapping = buildQuoteMapping([
+  { ...rows[0], spaceName: "公卫", spaceType: "卫生间", wallTileAreaM2: 20.7, waterproofAreaM2: 21.84, bathroomDoorCount: 1 },
+]);
+assert.deepEqual(bathroomDoorMapping.items.filter((item) => item.item_name === "卫生间门"), [
+  {
+    floor: "一层",
+    space_name: "公卫",
+    space_type: "卫生间",
+    item_name: "卫生间门",
+    quantity: 1,
+    unit: "樘",
+    unit_price: 0,
+    amount: 0,
+  },
+]);
+
+const kitchenSlidingDoorMapping = buildQuoteMapping([
+  { ...rows[0], spaceName: "厨房", spaceType: "厨房", slidingDoorAreaM2: 3.68, slidingDoorCasingLengthM: 5.95 },
+]);
+assert.deepEqual(kitchenSlidingDoorMapping.items.filter((item) => item.item_name === "厨房推拉门" || item.item_name === "厨房推拉门双包套"), [
+  {
+    floor: "一层",
+    space_name: "厨房",
+    space_type: "厨房",
+    item_name: "厨房推拉门",
+    quantity: 3.68,
+    unit: "m2",
+    unit_price: 0,
+    amount: 0,
+  },
+  {
+    floor: "一层",
+    space_name: "厨房",
+    space_type: "厨房",
+    item_name: "厨房推拉门双包套",
+    quantity: 5.95,
+    unit: "M",
+    unit_price: 0,
+    amount: 0,
   },
 ]);
 
