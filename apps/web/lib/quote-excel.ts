@@ -109,17 +109,11 @@ export function quoteExcelFileName(fileName: string): string {
 }
 
 export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string): string {
-  const title = `${projectName.trim() || "报价映射"}报价草稿`;
-  const summaryRows = [
-    ["计价空间", String(mapping.summary.space_count)],
-    ["建筑面积", formatQuantity(mapping.summary.building_area_m2)],
-    ["清单项", String(mapping.summary.item_count)],
-    ["估算合计", formatMoney(mapping.summary.total_amount)],
-  ];
+  const title = `${projectName.trim() || "报价映射"}清单式报价表`;
   const riskRows = quoteExcelRiskRows(mapping);
-  const spaceSubtotalRows = quoteExcelSpaceSubtotalRows(mapping);
   const groupedQuoteRows = quoteTemplateRows(mapping);
-  const manualItemRows = manualQuoteTemplateRows();
+  const summaryRows = quoteTemplateSummaryRows(mapping, projectName);
+  const riskNoteRows = quoteTemplateRiskNoteRows(riskRows);
 
   return `\uFEFF<html>
 <head>
@@ -134,49 +128,16 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string):
   </style>
 </head>
 <body>
-  <h1>${escapeHtml(title)}</h1>
-  <table>
-    <tbody>
-      ${summaryRows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("\n      ")}
-    </tbody>
-  </table>
-  <h2>风险摘要</h2>
-  <table>
-    <tbody>
-      ${riskRows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("\n      ")}
-    </tbody>
-  </table>
-  <h2>空间小计</h2>
   <table>
     <thead>
-      <tr><th>楼层</th><th>空间</th><th>类型</th><th>清单项数</th><th>小计</th></tr>
-    </thead>
-    <tbody>
-      ${spaceSubtotalRows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("\n      ")}
-    </tbody>
-    <tfoot>
-      <tr><td>合计</td><td></td><td></td><td>${escapeHtml(String(mapping.summary.item_count))}</td><td>${escapeHtml(formatMoney(mapping.summary.total_amount))}</td></tr>
-    </tfoot>
-  </table>
-  <h2>清单式报价表</h2>
-  <table>
-    <thead>
-      <tr><th>编号</th><th>项目名称</th><th>单位</th><th>数量</th><th>主材单价</th><th>辅材单价</th><th>人工费</th><th>总价</th><th>材料及工艺说明</th></tr>
+      <tr>${summaryRows[0].map((cell) => `<th>${escapeHtml(cell)}</th>`).join("")}</tr>
+      <tr>${summaryRows[1].map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>
+      <tr>${summaryRows[2].map((cell) => `<th>${escapeHtml(cell)}</th>`).join("")}</tr>
+      <tr>${summaryRows[3].map((cell) => `<th>${escapeHtml(cell)}</th>`).join("")}</tr>
     </thead>
     <tbody>
       ${groupedQuoteRows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("\n      ")}
-    </tbody>
-    <tfoot>
-      <tr><td>合计</td><td></td><td></td><td></td><td></td><td></td><td></td><td>${escapeHtml(formatMoney(mapping.summary.total_amount))}</td><td></td></tr>
-    </tfoot>
-  </table>
-  <h2>人工补项</h2>
-  <table>
-    <thead>
-      <tr><th>编号</th><th>项目名称</th><th>单位</th><th>数量</th><th>主材单价</th><th>辅材单价</th><th>人工费</th><th>总价</th><th>材料及工艺说明</th></tr>
-    </thead>
-    <tbody>
-      ${manualItemRows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("\n      ")}
+      ${riskNoteRows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("\n      ")}
     </tbody>
   </table>
 </body>
@@ -186,18 +147,26 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string):
 
 function quoteTemplateRows(mapping: QuoteMapping): string[][] {
   const remainingItems = new Set(mapping.items);
+  const remainingManualItems = new Set(MANUAL_QUOTE_DRAFT_ITEMS);
   const rows: string[][] = [];
   for (const section of TEMPLATE_SECTIONS) {
     const sectionItems = mapping.items
       .filter((item) => remainingItems.has(item) && templateSectionForItem(item.item_name, item.space_type)?.title === section.title)
       .sort((a, b) => templateItemOrder(section, a.item_name) - templateItemOrder(section, b.item_name));
-    if (sectionItems.length === 0) {
+    const manualItems = MANUAL_QUOTE_DRAFT_ITEMS
+      .filter((item) => remainingManualItems.has(item) && templateSectionForItem(item.item_name, item.space_type)?.title === section.title)
+      .sort((a, b) => templateItemOrder(section, a.item_name) - templateItemOrder(section, b.item_name));
+    if (sectionItems.length === 0 && manualItems.length === 0) {
       continue;
     }
     rows.push(sectionHeaderRow(section));
     sectionItems.forEach((item, index) => {
       remainingItems.delete(item);
       rows.push(quoteItemTemplateRow(item, index + 1));
+    });
+    manualItems.forEach((item, index) => {
+      remainingManualItems.delete(item);
+      rows.push(manualItemTemplateRow(item, sectionItems.length + index + 1));
     });
     rows.push(sectionSubtotalRow(sectionItems.reduce((sum, item) => sum + item.amount, 0)));
   }
@@ -209,26 +178,14 @@ function quoteTemplateRows(mapping: QuoteMapping): string[][] {
     rows.push(sectionSubtotalRow([...remainingItems].reduce((sum, item) => sum + item.amount, 0)));
   }
 
-  rows.push(["A", "直接费合计", "", "", "", "", "", formatMoney(mapping.summary.total_amount), ""]);
-  return rows;
-}
-
-function manualQuoteTemplateRows(): string[][] {
-  const rows: string[][] = [];
-  const remainingItems = new Set(MANUAL_QUOTE_DRAFT_ITEMS);
-  for (const section of TEMPLATE_SECTIONS) {
-    const sectionItems = MANUAL_QUOTE_DRAFT_ITEMS
-      .filter((item) => remainingItems.has(item) && templateSectionForItem(item.item_name, item.space_type)?.title === section.title)
-      .sort((a, b) => templateItemOrder(section, a.item_name) - templateItemOrder(section, b.item_name));
-    if (sectionItems.length === 0) {
-      continue;
-    }
-    rows.push(sectionHeaderRow(section));
-    sectionItems.forEach((item, index) => {
-      remainingItems.delete(item);
-      rows.push([String(index + 1), item.item_name, "", "", "", "", "", "", ""]);
-    });
+  if (remainingManualItems.size > 0) {
+    const otherSection = { code: "补", title: "未归类人工补项", itemNames: [] };
+    rows.push(sectionHeaderRow(otherSection));
+    [...remainingManualItems].forEach((item, index) => rows.push(manualItemTemplateRow(item, index + 1)));
+    rows.push(sectionSubtotalRow(0));
   }
+
+  rows.push(...quoteTemplateTotalRows(mapping.summary.total_amount));
   return rows;
 }
 
@@ -247,12 +204,47 @@ function quoteItemTemplateRow(item: QuoteMapping["items"][number], index: number
   ];
 }
 
+function manualItemTemplateRow(item: ManualQuoteDraftItem, index: number): string[] {
+  return [String(index), item.item_name, "", "", "", "", "", "", ""];
+}
+
 function sectionHeaderRow(section: Pick<QuoteTemplateSection, "code" | "title">): string[] {
   return [section.code, section.title, "", "", "", "", "", "", ""];
 }
 
 function sectionSubtotalRow(amount: number): string[] {
   return ["", "小 计", "", "", "", "", "", formatMoney(amount), ""];
+}
+
+function quoteTemplateSummaryRows(mapping: QuoteMapping, projectName: string): string[][] {
+  const now = new Date();
+  const dateLabel = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  return [
+    ["工程(预) 算表", "", "", "", "", "", "", "", ""],
+    [`名称：${projectName.trim() || "报价映射"}`, "", `装修面积：${formatQuantity(mapping.summary.building_area_m2)}`, "", "", "", "", `日期：${dateLabel}`, ""],
+    ["编号", "项目名称", "单位", "数量", "材料费(元)", "", "人工费\n(元)", "总价(元)", "材  料  及  工  艺  说  明"],
+    ["", "", "", "", "主材\n单价", "辅材\n单价", "", "", ""],
+  ];
+}
+
+function quoteTemplateTotalRows(totalAmount: number): string[][] {
+  const managementFee = round2(totalAmount * 0.05);
+  const tax = round2((totalAmount + managementFee) * 0.03);
+  const projectTotal = round2(totalAmount + managementFee + tax);
+  return [
+    ["A", "直接费合计", "", "", "", "", "", formatMoney(totalAmount), ""],
+    ["B", "工程管理费(D=A* 5%)", "", "", "", "", "", formatMoney(managementFee), ""],
+    ["C", "税金E=(A+B)* 3%", "", "", "", "", "", formatMoney(tax), ""],
+    ["D", "工程总造价F=(A+B+C)", "", "", "", "", "", formatMoney(projectTotal), ""],
+  ];
+}
+
+function quoteTemplateRiskNoteRows(riskRows: string[][]): string[][] {
+  const relevantRows = riskRows.filter((row) => row[0] !== "健康检查" || row[1] !== "当前无待确认项");
+  if (relevantRows.length === 0) {
+    return [];
+  }
+  return [["", "报价风险备注", "", "", "", "", "", "", ""], ...relevantRows.map((row) => ["", row[0], "", "", "", "", "", "", row[1]])];
 }
 
 function templateSectionForItem(itemName: string, spaceType: string): QuoteTemplateSection | undefined {
@@ -289,33 +281,6 @@ function templateItemOrder(section: QuoteTemplateSection, itemName: string): num
   }
   const partialIndex = section.itemNames.findIndex((templateName) => itemName.includes(templateName));
   return partialIndex >= 0 ? partialIndex : Number.MAX_SAFE_INTEGER;
-}
-
-function quoteExcelSpaceSubtotalRows(mapping: QuoteMapping): string[][] {
-  const subtotals = new Map<string, { floor: string; spaceName: string; spaceType: string; itemCount: number; amount: number }>();
-  for (const item of mapping.items) {
-    const key = `${item.floor}\u0000${item.space_name}\u0000${item.space_type}`;
-    const subtotal = subtotals.get(key);
-    if (subtotal) {
-      subtotal.itemCount += 1;
-      subtotal.amount = round2(subtotal.amount + item.amount);
-      continue;
-    }
-    subtotals.set(key, {
-      floor: item.floor,
-      spaceName: item.space_name,
-      spaceType: item.space_type,
-      itemCount: 1,
-      amount: item.amount,
-    });
-  }
-  return [...subtotals.values()].map((subtotal) => [
-    subtotal.floor,
-    subtotal.spaceName,
-    subtotal.spaceType,
-    String(subtotal.itemCount),
-    formatMoney(subtotal.amount),
-  ]);
 }
 
 function quoteExcelRiskRows(mapping: QuoteMapping): string[][] {
