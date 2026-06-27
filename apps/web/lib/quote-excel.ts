@@ -7,6 +7,32 @@ export type ManualQuoteDraftItem = {
   item_name: string;
 };
 
+type QuoteTemplateSection = {
+  code: string;
+  title: string;
+  itemNames: string[];
+};
+
+const TEMPLATE_SECTIONS: QuoteTemplateSection[] = [
+  { code: "一", title: "全屋拆改工程（可选）", itemNames: ["拆改及拆墙", "砌120厚砖墙", "砌240厚砖墙", "外墙批嵌", "外墙批嵌以及修补", "材料搬运费"] },
+  { code: "二", title: "玄关工程", itemNames: ["轻钢龙骨平顶", "顶面批嵌", "顶面乳胶漆", "墙面界面剂处理", "墙面批嵌", "墙面乳胶漆", "地台石铺贴", "地面砖铺贴(750X1500)"] },
+  { code: "三", title: "卧室工程", itemNames: ["轻钢龙骨平顶", "暗窗帘箱", "顶面批嵌", "顶面乳胶漆", "墙面界面剂处理", "墙面批嵌", "墙面乳胶漆", "地面砖铺贴(750X1500)", "窗台石铺贴"] },
+  { code: "四", title: "过道工程", itemNames: ["轻钢龙骨平顶", "顶面批嵌", "顶面乳胶漆", "墙面界面剂处理", "墙面批嵌", "墙面乳胶漆", "地面砖铺贴(750X1500)"] },
+  { code: "五", title: "卫生间工程", itemNames: ["地面找平", "墙地面防漏处理", "墙面贴瓷砖(600X1200)", "地面砖铺贴(750X1500)", "厨房卫生间集成吊顶"] },
+  { code: "六", title: "厨房工程", itemNames: ["地面找平", "墙地面防漏处理", "墙面贴瓷砖(600X1200)", "地面砖铺贴(750X1500)", "厨房卫生间集成吊顶"] },
+  { code: "七", title: "餐厅工程", itemNames: ["轻钢龙骨平顶", "暗窗帘箱", "顶面批嵌", "顶面乳胶漆", "墙面界面剂处理", "墙面批嵌", "墙面乳胶漆", "地面砖铺贴(750X1500)", "窗台石铺贴"] },
+  { code: "八", title: "主卧工程", itemNames: ["轻钢龙骨平顶", "暗窗帘箱", "顶面批嵌", "顶面乳胶漆", "墙面界面剂处理", "墙面批嵌", "墙面乳胶漆", "地面砖铺贴(750X1500)", "窗台石铺贴"] },
+  { code: "九", title: "次卧工程", itemNames: ["轻钢龙骨平顶", "暗窗帘箱", "顶面批嵌", "顶面乳胶漆", "墙面界面剂处理", "墙面批嵌", "墙面乳胶漆", "地面砖铺贴(750X1500)", "窗台石铺贴"] },
+  { code: "十", title: "露台工程", itemNames: ["地面找平", "墙地面防漏处理", "顶面批嵌", "顶面乳胶漆", "墙面界面剂处理", "墙面批嵌", "墙面乳胶漆", "墙面贴瓷砖(600X1200)", "地面砖铺贴(750X1500)"] },
+  { code: "十一", title: "其他工程", itemNames: ["外墙批嵌以及修补", "砖墙门窗洞过梁", "水泥墙开槽", "打混凝土过梁孔", "厨房、卫生间排污管包隔音棉", "补线、管槽及零星修补", "包上/下水管道(单管)", "垃圾清运费", "材料搬运费", "地面砖现场维护费"] },
+  { code: "十二", title: "水电工程", itemNames: ["强电布线", "弱电布线", "水路布管"] },
+  { code: "十三", title: "主材项目", itemNames: ["地面瓷砖", "墙面瓷砖", "瓷砖加工费"] },
+  { code: "十四", title: "全屋定制、衣柜、橱柜、全屋家具", itemNames: ["全屋定制", "橱柜", "背景墙"] },
+  { code: "十五", title: "室内门", itemNames: ["入户门", "室内门", "卫生间门", "厨房推拉门", "厨房推拉门双包套", "阳台推拉门", "阳台推拉门双包套", "铝合金封门窗"] },
+  { code: "十六", title: "集成吊顶、卫浴、全屋开关灯饰", itemNames: ["厨房卫生间集成吊顶", "浴室柜", "马桶", "蹲坑", "淋浴隔断", "玻璃淋浴房", "花洒", "卫浴五件套", "全屋插座开关", "全屋灯饰"] },
+  { code: "十七", title: "其他（窗帘、美缝、窗台石等）", itemNames: ["美缝", "窗帘", "窗台石", "窗台石铺贴", "全屋保洁"] },
+];
+
 export const MANUAL_QUOTE_DRAFT_ITEMS: ManualQuoteDraftItem[] = [
   { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "砌240厚砖墙" },
   { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "外墙批嵌以及修补" },
@@ -92,21 +118,8 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string):
   ];
   const riskRows = quoteExcelRiskRows(mapping);
   const spaceSubtotalRows = quoteExcelSpaceSubtotalRows(mapping);
-  const itemRows = mapping.items.map((item, index) => {
-    const price = templatePriceForItem(item.item_name, item.unit_price);
-    return [
-      String(index + 1),
-      item.item_name,
-      item.unit,
-      formatQuantity(item.quantity),
-      formatMoney(price.material),
-      formatMoney(price.auxiliary),
-      formatMoney(price.labor),
-      formatMoney(item.amount),
-      price.note,
-    ];
-  });
-  const manualItemRows = MANUAL_QUOTE_DRAFT_ITEMS.map((item, index) => [String(index + 1), item.item_name, "", "", "", "", "", "", ""]);
+  const groupedQuoteRows = quoteTemplateRows(mapping);
+  const manualItemRows = manualQuoteTemplateRows();
 
   return `\uFEFF<html>
 <head>
@@ -151,7 +164,7 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string):
       <tr><th>编号</th><th>项目名称</th><th>单位</th><th>数量</th><th>主材单价</th><th>辅材单价</th><th>人工费</th><th>总价</th><th>材料及工艺说明</th></tr>
     </thead>
     <tbody>
-      ${itemRows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("\n      ")}
+      ${groupedQuoteRows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("\n      ")}
     </tbody>
     <tfoot>
       <tr><td>合计</td><td></td><td></td><td></td><td></td><td></td><td></td><td>${escapeHtml(formatMoney(mapping.summary.total_amount))}</td><td></td></tr>
@@ -169,6 +182,113 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string):
 </body>
 </html>
 `;
+}
+
+function quoteTemplateRows(mapping: QuoteMapping): string[][] {
+  const remainingItems = new Set(mapping.items);
+  const rows: string[][] = [];
+  for (const section of TEMPLATE_SECTIONS) {
+    const sectionItems = mapping.items
+      .filter((item) => remainingItems.has(item) && templateSectionForItem(item.item_name, item.space_type)?.title === section.title)
+      .sort((a, b) => templateItemOrder(section, a.item_name) - templateItemOrder(section, b.item_name));
+    if (sectionItems.length === 0) {
+      continue;
+    }
+    rows.push(sectionHeaderRow(section));
+    sectionItems.forEach((item, index) => {
+      remainingItems.delete(item);
+      rows.push(quoteItemTemplateRow(item, index + 1));
+    });
+    rows.push(sectionSubtotalRow(sectionItems.reduce((sum, item) => sum + item.amount, 0)));
+  }
+
+  if (remainingItems.size > 0) {
+    const otherSection = { code: "补", title: "未归类自动清单", itemNames: [] };
+    rows.push(sectionHeaderRow(otherSection));
+    [...remainingItems].forEach((item, index) => rows.push(quoteItemTemplateRow(item, index + 1)));
+    rows.push(sectionSubtotalRow([...remainingItems].reduce((sum, item) => sum + item.amount, 0)));
+  }
+
+  rows.push(["A", "直接费合计", "", "", "", "", "", formatMoney(mapping.summary.total_amount), ""]);
+  return rows;
+}
+
+function manualQuoteTemplateRows(): string[][] {
+  const rows: string[][] = [];
+  const remainingItems = new Set(MANUAL_QUOTE_DRAFT_ITEMS);
+  for (const section of TEMPLATE_SECTIONS) {
+    const sectionItems = MANUAL_QUOTE_DRAFT_ITEMS
+      .filter((item) => remainingItems.has(item) && templateSectionForItem(item.item_name, item.space_type)?.title === section.title)
+      .sort((a, b) => templateItemOrder(section, a.item_name) - templateItemOrder(section, b.item_name));
+    if (sectionItems.length === 0) {
+      continue;
+    }
+    rows.push(sectionHeaderRow(section));
+    sectionItems.forEach((item, index) => {
+      remainingItems.delete(item);
+      rows.push([String(index + 1), item.item_name, "", "", "", "", "", "", ""]);
+    });
+  }
+  return rows;
+}
+
+function quoteItemTemplateRow(item: QuoteMapping["items"][number], index: number): string[] {
+  const price = templatePriceForItem(item.item_name, item.unit_price);
+  return [
+    String(index),
+    item.item_name,
+    item.unit,
+    formatQuantity(item.quantity),
+    formatMoney(price.material),
+    formatMoney(price.auxiliary),
+    formatMoney(price.labor),
+    formatMoney(item.amount),
+    price.note,
+  ];
+}
+
+function sectionHeaderRow(section: Pick<QuoteTemplateSection, "code" | "title">): string[] {
+  return [section.code, section.title, "", "", "", "", "", "", ""];
+}
+
+function sectionSubtotalRow(amount: number): string[] {
+  return ["", "小 计", "", "", "", "", "", formatMoney(amount), ""];
+}
+
+function templateSectionForItem(itemName: string, spaceType: string): QuoteTemplateSection | undefined {
+  if (itemName === "厨房卫生间集成吊顶") {
+    const preferredTitle = spaceType === "厨房" ? "厨房工程" : spaceType === "卫生间" ? "卫生间工程" : "集成吊顶、卫浴、全屋开关灯饰";
+    return TEMPLATE_SECTIONS.find((section) => section.title === preferredTitle);
+  }
+  if ([
+    "轻钢龙骨平顶",
+    "顶面批嵌",
+    "顶面乳胶漆",
+    "墙面界面剂处理",
+    "墙面批嵌",
+    "墙面乳胶漆",
+    "地面找平",
+    "墙地面防漏处理",
+    "墙面贴瓷砖(600X1200)",
+    "地面砖铺贴(750X1500)",
+    "暗窗帘箱",
+    "窗台石铺贴",
+  ].includes(itemName)) {
+    const spaceSection = TEMPLATE_SECTIONS.find((section) => section.title === `${spaceType}工程`);
+    if (spaceSection?.itemNames.includes(itemName)) {
+      return spaceSection;
+    }
+  }
+  return TEMPLATE_SECTIONS.find((section) => section.itemNames.includes(itemName) || section.itemNames.some((templateName) => itemName.includes(templateName)));
+}
+
+function templateItemOrder(section: QuoteTemplateSection, itemName: string): number {
+  const index = section.itemNames.indexOf(itemName);
+  if (index >= 0) {
+    return index;
+  }
+  const partialIndex = section.itemNames.findIndex((templateName) => itemName.includes(templateName));
+  return partialIndex >= 0 ? partialIndex : Number.MAX_SAFE_INTEGER;
 }
 
 function quoteExcelSpaceSubtotalRows(mapping: QuoteMapping): string[][] {
