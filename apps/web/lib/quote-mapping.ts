@@ -41,25 +41,30 @@ export type QuoteMetric =
   | "bathroom_door_count"
   | "sliding_door_area_m2"
   | "sliding_door_casing_length_m"
+  | "kitchen_cabinet_length_m"
   | "kitchen_base_cabinet_length_m"
   | "kitchen_wall_cabinet_length_m"
   | "custom_cabinet_area_m2"
   | "toilet_count"
   | "bathroom_vanity_count";
 type ProjectQuoteMetric = "building_area_m2" | "lighting_package_count";
-type RowQuoteMetric = Exclude<QuoteMetric, ProjectQuoteMetric>;
 type SummedProjectQuoteMetric =
   | "floor_tile_piece_count"
   | "electrical_scope_area_m2"
   | "plumbing_scope_area_m2"
+  | "kitchen_cabinet_length_m"
   | "new_wall_area_m2"
   | "demolition_wall_area_m2";
+type RowQuoteMetric = Exclude<QuoteMetric, ProjectQuoteMetric | SummedProjectQuoteMetric>;
 
 export type QuoteRule = {
   item_name: string;
   metric: QuoteMetric;
   unit: string;
   unit_price: number;
+  material_price?: number;
+  auxiliary_price?: number;
+  labor_price?: number;
   space_types?: string[];
 };
 
@@ -144,39 +149,39 @@ const SUMMED_PROJECT_METRICS = new Set<QuoteMetric>([
   "floor_tile_piece_count",
   "electrical_scope_area_m2",
   "plumbing_scope_area_m2",
+  "kitchen_cabinet_length_m",
   "new_wall_area_m2",
   "demolition_wall_area_m2",
 ]);
 
 const DEFAULT_RULES: QuoteRule[] = [
-  { item_name: "墙面界面剂处理", metric: "latex_paint_area_m2", unit: "m2", unit_price: 7, space_types: DRY_SPACE_TYPES },
-  { item_name: "墙面批嵌", metric: "latex_paint_area_m2", unit: "m2", unit_price: 25, space_types: DRY_SPACE_TYPES },
-  { item_name: "墙面乳胶漆", metric: "latex_paint_area_m2", unit: "m2", unit_price: 20, space_types: DRY_SPACE_TYPES },
-  { item_name: "厨房卫生间集成吊顶", metric: "ceiling_area_m2", unit: "m2", unit_price: 260, space_types: KITCHEN_BATHROOM_SPACE_TYPES },
-  { item_name: "轻钢龙骨平顶", metric: "ceiling_area_m2", unit: "m2", unit_price: 180, space_types: GYPSUM_CEILING_SPACE_TYPES },
-  { item_name: "顶面批嵌", metric: "ceiling_area_m2", unit: "m2", unit_price: 25, space_types: CEILING_PAINT_SPACE_TYPES },
-  { item_name: "顶面乳胶漆", metric: "ceiling_area_m2", unit: "m2", unit_price: 20, space_types: CEILING_PAINT_SPACE_TYPES },
-  { item_name: "地面找平", metric: "floor_area_m2", unit: "m2", unit_price: 56, space_types: WET_FLOOR_SPACE_TYPES },
-  { item_name: "地面砖铺贴(750X1500)", metric: "floor_area_m2", unit: "m2", unit_price: 96, space_types: undefined },
-  { item_name: "地面瓷砖主材", metric: "floor_tile_piece_count", unit: "片", unit_price: 50, space_types: undefined },
-  { item_name: "强电布线", metric: "building_area_m2", unit: "M2", unit_price: 78, space_types: undefined },
-  { item_name: "水路布管", metric: "building_area_m2", unit: "M2", unit_price: 29.5, space_types: undefined },
-  { item_name: "墙面贴瓷砖(600X1200)", metric: "wall_tile_area_m2", unit: "m2", unit_price: 100, space_types: undefined },
-  { item_name: "墙地面防漏处理", metric: "waterproof_area_m2", unit: "m2", unit_price: 51.5, space_types: WET_FLOOR_SPACE_TYPES },
-  { item_name: "窗台石铺贴", metric: "windowsill_length_m", unit: "M", unit_price: 73, space_types: undefined },
-  { item_name: "砌120厚砖墙", metric: "new_wall_area_m2", unit: "M2", unit_price: 170, space_types: undefined },
-  { item_name: "拆改及拆墙", metric: "demolition_wall_area_m2", unit: "M2", unit_price: 60, space_types: undefined },
-  { item_name: "室内门", metric: "interior_door_count", unit: "樘", unit_price: 1200, space_types: undefined },
-  { item_name: "卫生间门", metric: "bathroom_door_count", unit: "樘", unit_price: 0, space_types: BATHROOM_FIXTURE_SPACE_TYPES },
-  { item_name: "厨房推拉门", metric: "sliding_door_area_m2", unit: "m2", unit_price: 0, space_types: KITCHEN_CABINET_SPACE_TYPES },
-  { item_name: "厨房推拉门双包套", metric: "sliding_door_casing_length_m", unit: "M", unit_price: 0, space_types: KITCHEN_CABINET_SPACE_TYPES },
-  { item_name: "橱柜地柜", metric: "kitchen_base_cabinet_length_m", unit: "M", unit_price: 600, space_types: KITCHEN_CABINET_SPACE_TYPES },
-  { item_name: "橱柜吊柜", metric: "kitchen_wall_cabinet_length_m", unit: "M", unit_price: 600, space_types: KITCHEN_CABINET_SPACE_TYPES },
-  { item_name: "全屋定制", metric: "custom_cabinet_area_m2", unit: "M2", unit_price: 600, space_types: undefined },
-  { item_name: "马桶", metric: "toilet_count", unit: "个", unit_price: 2500, space_types: BATHROOM_FIXTURE_SPACE_TYPES },
-  { item_name: "浴室柜", metric: "bathroom_vanity_count", unit: "套", unit_price: 3000, space_types: BATHROOM_FIXTURE_SPACE_TYPES },
-  { item_name: "全屋灯饰", metric: "lighting_package_count", unit: "套", unit_price: 6000, space_types: undefined },
-  { item_name: "暗窗帘箱", metric: "curtain_wall_width_m", unit: "M", unit_price: 110, space_types: CURTAIN_SPACE_TYPES },
+  quoteRule("墙面界面剂处理", "latex_paint_area_m2", "m2", 0, 4, 3, DRY_SPACE_TYPES),
+  quoteRule("墙面批嵌", "latex_paint_area_m2", "m2", 0, 15, 10, DRY_SPACE_TYPES),
+  quoteRule("墙面乳胶漆", "latex_paint_area_m2", "m2", 10, 0, 10, DRY_SPACE_TYPES),
+  quoteRule("厨房卫生间集成吊顶", "ceiling_area_m2", "m2", 260, 0, 0, KITCHEN_BATHROOM_SPACE_TYPES),
+  quoteRule("轻钢龙骨平顶", "ceiling_area_m2", "m2", 110, 10, 60, GYPSUM_CEILING_SPACE_TYPES),
+  quoteRule("顶面批嵌", "ceiling_area_m2", "m2", 0, 15, 10, CEILING_PAINT_SPACE_TYPES),
+  quoteRule("顶面乳胶漆", "ceiling_area_m2", "m2", 10, 0, 10, CEILING_PAINT_SPACE_TYPES),
+  quoteRule("地面找平", "floor_area_m2", "m2", 0, 26, 30, WET_FLOOR_SPACE_TYPES),
+  quoteRule("地面砖铺贴(750X1500)", "floor_area_m2", "m2", 0, 36, 60),
+  quoteRule("地面瓷砖", "floor_tile_piece_count", "片", 50, 0, 0),
+  quoteRule("强电布线", "building_area_m2", "M2", 40, 0, 38),
+  quoteRule("水路布管", "building_area_m2", "M2", 17.5, 0, 12),
+  quoteRule("墙面贴瓷砖(600X1200)", "wall_tile_area_m2", "m2", 0, 40, 60),
+  quoteRule("墙地面防漏处理", "waterproof_area_m2", "m2", 28, 10.5, 13, WET_FLOOR_SPACE_TYPES),
+  quoteRule("窗台石铺贴", "windowsill_length_m", "M", 0, 28, 45),
+  quoteRule("砌120厚砖墙", "new_wall_area_m2", "M2", 80, 0, 90),
+  quoteRule("拆改及拆墙", "demolition_wall_area_m2", "M2", 0, 0, 60),
+  quoteRule("室内门", "interior_door_count", "樘", 1200, 0, 0),
+  quoteRule("卫生间门", "bathroom_door_count", "樘", 1200, 0, 0, BATHROOM_FIXTURE_SPACE_TYPES),
+  quoteRule("厨房推拉门", "sliding_door_area_m2", "m2", 550, 0, 0, KITCHEN_CABINET_SPACE_TYPES),
+  quoteRule("厨房推拉门双包套", "sliding_door_casing_length_m", "M", 300, 0, 0, KITCHEN_CABINET_SPACE_TYPES),
+  quoteRule("橱柜", "kitchen_cabinet_length_m", "M", 600, 0, 0, KITCHEN_CABINET_SPACE_TYPES),
+  quoteRule("全屋定制", "custom_cabinet_area_m2", "M2", 600, 0, 0),
+  quoteRule("马桶", "toilet_count", "套", 1500, 0, 0, BATHROOM_FIXTURE_SPACE_TYPES),
+  quoteRule("浴室柜", "bathroom_vanity_count", "套", 1500, 0, 0, BATHROOM_FIXTURE_SPACE_TYPES),
+  quoteRule("全屋灯饰", "lighting_package_count", "套", 15000, 0, 0),
+  quoteRule("暗窗帘箱", "curtain_wall_width_m", "M", 65, 0, 45, CURTAIN_SPACE_TYPES),
 ];
 
 const APARTMENT_PENDING_METRICS: PendingQuoteMetric[] = [];
@@ -184,16 +189,11 @@ const APARTMENT_PENDING_METRICS: PendingQuoteMetric[] = [];
 const METRIC_TO_ROW_FIELD: Record<RowQuoteMetric, QuantityRowMetric> = {
   latex_paint_area_m2: "latexPaintAreaM2",
   floor_area_m2: "floorAreaM2",
-  floor_tile_piece_count: "floorTilePieceCount",
-  electrical_scope_area_m2: "electricalScopeAreaM2",
-  plumbing_scope_area_m2: "plumbingScopeAreaM2",
   ceiling_area_m2: "ceilingAreaM2",
   wall_tile_area_m2: "wallTileAreaM2",
   waterproof_area_m2: "waterproofAreaM2",
   windowsill_length_m: "windowsillLengthM",
   curtain_wall_width_m: "curtainWallWidthM",
-  new_wall_area_m2: "newWallAreaM2",
-  demolition_wall_area_m2: "demolitionWallAreaM2",
   interior_door_count: "interiorDoorCount",
   bathroom_door_count: "bathroomDoorCount",
   sliding_door_area_m2: "slidingDoorAreaM2",
@@ -210,6 +210,7 @@ const SUMMED_PROJECT_METRIC_TO_ROW_FIELD: Record<SummedProjectQuoteMetric, Quant
   plumbing_scope_area_m2: "plumbingScopeAreaM2",
   new_wall_area_m2: "newWallAreaM2",
   demolition_wall_area_m2: "demolitionWallAreaM2",
+  kitchen_cabinet_length_m: "kitchenBaseCabinetLengthM",
 };
 
 export function defaultQuoteRules(): QuoteRule[] {
@@ -223,7 +224,11 @@ export function updateQuoteRuleUnitPrice(rules: QuoteRule[], index: number, unit
   if (!Number.isFinite(unitPrice) || unitPrice < 0) {
     throw new Error(`报价规则 unit_price 无效：${String(unitPrice)}`);
   }
-  return rules.map((rule, ruleIndex) => (ruleIndex === index ? { ...rule, unit_price: round2(unitPrice) } : rule));
+  return rules.map((rule, ruleIndex) =>
+    ruleIndex === index
+      ? { ...rule, unit_price: round2(unitPrice), material_price: round2(unitPrice), auxiliary_price: 0, labor_price: 0 }
+      : rule,
+  );
 }
 
 export function apartmentPendingQuoteMetrics(): PendingQuoteMetric[] {
@@ -373,6 +378,13 @@ function projectRuleQuantity(billableRows: QuantityRow[], rule: QuoteRule, build
   if (rule.metric === "lighting_package_count") {
     return 1;
   }
+  if (rule.metric === "kitchen_cabinet_length_m") {
+    return round2(
+      billableRows
+        .filter((row) => ruleAppliesToRow(rule, row))
+        .reduce((sum, row) => sum + row.kitchenBaseCabinetLengthM + row.kitchenWallCabinetLengthM, 0),
+    );
+  }
   if (isSummedProjectMetric(rule.metric)) {
     const rowField = SUMMED_PROJECT_METRIC_TO_ROW_FIELD[rule.metric];
     return round2(
@@ -438,11 +450,13 @@ function normalizeQuoteRule(rule: unknown, index: number): QuoteRule {
   if (typeof candidate.unit_price !== "number" || !Number.isFinite(candidate.unit_price) || candidate.unit_price < 0) {
     throw new Error(`报价规则 unit_price 无效：${String(candidate.unit_price)}`);
   }
+  const priceParts = normalizeQuoteRulePriceParts(candidate, index);
   return {
     item_name: candidate.item_name.trim(),
     metric: candidate.metric,
     unit: candidate.unit.trim(),
     unit_price: round2(candidate.unit_price),
+    ...priceParts,
     space_types: normalizeSpaceTypes(candidate.space_types),
   };
 }
@@ -467,6 +481,7 @@ function isQuoteMetric(metric: unknown): metric is QuoteMetric {
     metric === "bathroom_door_count" ||
     metric === "sliding_door_area_m2" ||
     metric === "sliding_door_casing_length_m" ||
+    metric === "kitchen_cabinet_length_m" ||
     metric === "kitchen_base_cabinet_length_m" ||
     metric === "kitchen_wall_cabinet_length_m" ||
     metric === "custom_cabinet_area_m2" ||
@@ -503,6 +518,46 @@ function normalizeSpaceTypes(spaceTypes: unknown): string[] | undefined {
     throw new Error("报价规则 space_types 无效");
   }
   return spaceTypes.map((item) => item.trim());
+}
+
+function normalizeQuoteRulePriceParts(rule: Partial<QuoteRule>, index: number): Pick<QuoteRule, "material_price" | "auxiliary_price" | "labor_price"> {
+  const priceKeys: Array<keyof Pick<QuoteRule, "material_price" | "auxiliary_price" | "labor_price">> = ["material_price", "auxiliary_price", "labor_price"];
+  const hasAnyPart = priceKeys.some((key) => rule[key] !== undefined);
+  if (!hasAnyPart) {
+    return {};
+  }
+  for (const key of priceKeys) {
+    const value = rule[key];
+    if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+      throw new Error(`报价规则第 ${index + 1} 项 ${key} 无效：${String(value)}`);
+    }
+  }
+  return {
+    material_price: round2(rule.material_price ?? 0),
+    auxiliary_price: round2(rule.auxiliary_price ?? 0),
+    labor_price: round2(rule.labor_price ?? 0),
+  };
+}
+
+function quoteRule(
+  item_name: string,
+  metric: QuoteMetric,
+  unit: string,
+  material_price: number,
+  auxiliary_price: number,
+  labor_price: number,
+  space_types?: string[],
+): QuoteRule {
+  return {
+    item_name,
+    metric,
+    unit,
+    unit_price: round2(material_price + auxiliary_price + labor_price),
+    material_price,
+    auxiliary_price,
+    labor_price,
+    space_types,
+  };
 }
 
 function round2(value: number) {

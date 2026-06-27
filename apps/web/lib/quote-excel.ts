@@ -37,6 +37,43 @@ export const MANUAL_QUOTE_DRAFT_ITEMS: ManualQuoteDraftItem[] = [
   { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "全屋保洁" },
 ];
 
+type QuoteTemplatePrice = {
+  material: number;
+  auxiliary: number;
+  labor: number;
+  note: string;
+};
+
+const TEMPLATE_PRICES: Record<string, QuoteTemplatePrice> = {
+  墙面界面剂处理: { material: 0, auxiliary: 4, labor: 3, note: "立邦界面处理剂" },
+  墙面批嵌: { material: 0, auxiliary: 15, labor: 10, note: "二底二面基础腻子找平，含打磨。" },
+  墙面乳胶漆: { material: 10, auxiliary: 0, labor: 10, note: "乳胶漆一底两面。" },
+  厨房卫生间集成吊顶: { material: 260, auxiliary: 0, labor: 0, note: "厨房、卫生间集成吊顶，设计师可调整单价。" },
+  轻钢龙骨平顶: { material: 110, auxiliary: 10, labor: 60, note: "含龙骨及配件，含辅料。" },
+  顶面批嵌: { material: 0, auxiliary: 15, labor: 10, note: "二底二面基础腻子找平，含打磨。" },
+  顶面乳胶漆: { material: 10, auxiliary: 0, labor: 10, note: "乳胶漆一底两面。" },
+  地面找平: { material: 0, auxiliary: 26, labor: 30, note: "水泥砂浆找平，厚度≤50mm。" },
+  "地面砖铺贴(750X1500)": { material: 0, auxiliary: 36, labor: 60, note: "主材甲供，辅料为水泥、黄沙。" },
+  地面瓷砖: { material: 50, auxiliary: 0, labor: 0, note: "750*1500 瓷砖。" },
+  强电布线: { material: 40, auxiliary: 0, labor: 38, note: "强电布线，含插座、开关安装人工费。" },
+  水路布管: { material: 17.5, auxiliary: 0, labor: 12, note: "给水、污水废水管及配件辅料。" },
+  "墙面贴瓷砖(600X1200)": { material: 0, auxiliary: 40, labor: 60, note: "辅料为水泥、黄沙、瓷砖背胶、胶泥。" },
+  墙地面防漏处理: { material: 28, auxiliary: 10.5, labor: 13, note: "墙地面清理，涂刷防水涂料。" },
+  窗台石铺贴: { material: 0, auxiliary: 28, labor: 45, note: "主材及磨边业主甲供，辅料为水泥、黄沙。" },
+  砌120厚砖墙: { material: 80, auxiliary: 0, labor: 90, note: "水泥、沙、砖、人工辅料。" },
+  拆改及拆墙: { material: 0, auxiliary: 0, labor: 60, note: "人工拆除。" },
+  室内门: { material: 1200, auxiliary: 0, labor: 0, note: "室内静音门。" },
+  卫生间门: { material: 1200, auxiliary: 0, labor: 0, note: "铝合金玻璃门。" },
+  厨房推拉门: { material: 550, auxiliary: 0, labor: 0, note: "铝合金推拉门。" },
+  厨房推拉门双包套: { material: 300, auxiliary: 0, labor: 0, note: "极窄铝合金双包套。" },
+  橱柜: { material: 600, auxiliary: 0, labor: 0, note: "橱柜柜体、柜门、五金、安装及辅料。" },
+  全屋定制: { material: 600, auxiliary: 0, labor: 0, note: "全屋定制柜体、柜门、五金、安装及辅料。" },
+  马桶: { material: 1500, auxiliary: 0, labor: 0, note: "轻智能马桶。" },
+  浴室柜: { material: 1500, auxiliary: 0, labor: 0, note: "岩板一体盆，含龙头及上下水。" },
+  全屋灯饰: { material: 15000, auxiliary: 0, labor: 0, note: "主灯、防眩射灯、筒灯。" },
+  暗窗帘箱: { material: 65, auxiliary: 0, labor: 45, note: "木工板立架，石膏板饰面。" },
+};
+
 export function quoteExcelFileName(fileName: string): string {
   const trimmed = fileName.trim();
   if (!trimmed || trimmed === "样例数据") {
@@ -55,17 +92,21 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string):
   ];
   const riskRows = quoteExcelRiskRows(mapping);
   const spaceSubtotalRows = quoteExcelSpaceSubtotalRows(mapping);
-  const itemRows = mapping.items.map((item) => [
-    item.floor,
-    item.space_name,
-    item.space_type,
-    item.item_name,
-    formatQuantity(item.quantity),
-    item.unit,
-    formatMoney(item.unit_price),
-    formatMoney(item.amount),
-  ]);
-  const manualItemRows = MANUAL_QUOTE_DRAFT_ITEMS.map((item) => [item.floor, item.space_name, item.space_type, item.item_name, "", "", "", ""]);
+  const itemRows = mapping.items.map((item, index) => {
+    const price = templatePriceForItem(item.item_name, item.unit_price);
+    return [
+      String(index + 1),
+      item.item_name,
+      item.unit,
+      formatQuantity(item.quantity),
+      formatMoney(price.material),
+      formatMoney(price.auxiliary),
+      formatMoney(price.labor),
+      formatMoney(item.amount),
+      price.note,
+    ];
+  });
+  const manualItemRows = MANUAL_QUOTE_DRAFT_ITEMS.map((item, index) => [String(index + 1), item.item_name, "", "", "", "", "", "", ""]);
 
   return `\uFEFF<html>
 <head>
@@ -104,21 +145,22 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string):
       <tr><td>合计</td><td></td><td></td><td>${escapeHtml(String(mapping.summary.item_count))}</td><td>${escapeHtml(formatMoney(mapping.summary.total_amount))}</td></tr>
     </tfoot>
   </table>
+  <h2>清单式报价表</h2>
   <table>
     <thead>
-      <tr><th>楼层</th><th>空间</th><th>类型</th><th>清单项</th><th>工程量</th><th>单位</th><th>单价</th><th>小计</th></tr>
+      <tr><th>编号</th><th>项目名称</th><th>单位</th><th>数量</th><th>主材单价</th><th>辅材单价</th><th>人工费</th><th>总价</th><th>材料及工艺说明</th></tr>
     </thead>
     <tbody>
       ${itemRows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("\n      ")}
     </tbody>
     <tfoot>
-      <tr><td>合计</td><td></td><td></td><td></td><td></td><td></td><td></td><td>${escapeHtml(formatMoney(mapping.summary.total_amount))}</td></tr>
+      <tr><td>合计</td><td></td><td></td><td></td><td></td><td></td><td></td><td>${escapeHtml(formatMoney(mapping.summary.total_amount))}</td><td></td></tr>
     </tfoot>
   </table>
   <h2>人工补项</h2>
   <table>
     <thead>
-      <tr><th>楼层</th><th>空间</th><th>类型</th><th>清单项</th><th>工程量</th><th>单位</th><th>单价</th><th>小计</th></tr>
+      <tr><th>编号</th><th>项目名称</th><th>单位</th><th>数量</th><th>主材单价</th><th>辅材单价</th><th>人工费</th><th>总价</th><th>材料及工艺说明</th></tr>
     </thead>
     <tbody>
       ${manualItemRows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("\n      ")}
@@ -175,6 +217,10 @@ function quoteExcelRiskRows(mapping: QuoteMapping): string[][] {
     ]);
   }
   return rows;
+}
+
+function templatePriceForItem(itemName: string, unitPrice: number): QuoteTemplatePrice {
+  return TEMPLATE_PRICES[itemName] ?? { material: unitPrice, auxiliary: 0, labor: 0, note: "" };
 }
 
 function formatQuantity(value: number): string {
