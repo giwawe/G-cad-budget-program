@@ -24,6 +24,7 @@ type QuantityRowMetric =
   | "bathroomVanityCount";
 export type QuoteMetric =
   | "building_area_m2"
+  | "tile_area_m2"
   | "latex_paint_area_m2"
   | "floor_area_m2"
   | "floor_tile_piece_count"
@@ -46,8 +47,13 @@ export type QuoteMetric =
   | "kitchen_wall_cabinet_length_m"
   | "custom_cabinet_area_m2"
   | "toilet_count"
-  | "bathroom_vanity_count";
-type ProjectQuoteMetric = "building_area_m2" | "lighting_package_count";
+  | "bathroom_vanity_count"
+  | "switch_socket_package_count";
+type ProjectQuoteMetric =
+  | "building_area_m2"
+  | "tile_area_m2"
+  | "lighting_package_count"
+  | "switch_socket_package_count";
 type SummedProjectQuoteMetric =
   | "floor_tile_piece_count"
   | "electrical_scope_area_m2"
@@ -165,8 +171,13 @@ const DEFAULT_RULES: QuoteRule[] = [
   quoteRule("地面找平", "floor_area_m2", "m2", 0, 26, 30, WET_FLOOR_SPACE_TYPES),
   quoteRule("地面砖铺贴(750X1500)", "floor_area_m2", "m2", 0, 36, 60),
   quoteRule("地面瓷砖", "floor_tile_piece_count", "片", 50, 0, 0),
+  quoteRule("瓷砖加工费", "tile_area_m2", "M2", 20, 0, 0),
+  quoteRule("美缝", "tile_area_m2", "M2", 0, 12, 0),
   quoteRule("强电布线", "building_area_m2", "M2", 40, 0, 38),
   quoteRule("水路布管", "building_area_m2", "M2", 17.5, 0, 12),
+  quoteRule("材料搬运费", "building_area_m2", "M2", 0, 0, 8),
+  quoteRule("垃圾清运费", "building_area_m2", "M2", 0, 0, 10),
+  quoteRule("地面砖现场维护费", "building_area_m2", "M2", 0, 3, 5),
   quoteRule("墙面贴瓷砖(600X1200)", "wall_tile_area_m2", "m2", 0, 40, 60),
   quoteRule("墙地面防漏处理", "waterproof_area_m2", "m2", 28, 10.5, 13, WET_FLOOR_SPACE_TYPES),
   quoteRule("窗台石铺贴", "windowsill_length_m", "M", 0, 28, 45),
@@ -180,6 +191,7 @@ const DEFAULT_RULES: QuoteRule[] = [
   quoteRule("全屋定制", "custom_cabinet_area_m2", "M2", 600, 0, 0),
   quoteRule("马桶", "toilet_count", "套", 1500, 0, 0, BATHROOM_FIXTURE_SPACE_TYPES),
   quoteRule("浴室柜", "bathroom_vanity_count", "套", 1500, 0, 0, BATHROOM_FIXTURE_SPACE_TYPES),
+  quoteRule("全屋插座开关", "switch_socket_package_count", "套", 6000, 0, 0),
   quoteRule("全屋灯饰", "lighting_package_count", "套", 15000, 0, 0),
   quoteRule("暗窗帘箱", "curtain_wall_width_m", "M", 65, 0, 45, CURTAIN_SPACE_TYPES),
 ];
@@ -378,6 +390,16 @@ function projectRuleQuantity(billableRows: QuantityRow[], rule: QuoteRule, build
   if (rule.metric === "lighting_package_count") {
     return 1;
   }
+  if (rule.metric === "switch_socket_package_count") {
+    return 1;
+  }
+  if (rule.metric === "tile_area_m2") {
+    return round2(
+      billableRows
+        .filter((row) => ruleAppliesToRow(rule, row))
+        .reduce((sum, row) => sum + row.floorAreaM2 + row.wallTileAreaM2, 0),
+    );
+  }
   if (rule.metric === "kitchen_cabinet_length_m") {
     return round2(
       billableRows
@@ -397,7 +419,12 @@ function projectRuleQuantity(billableRows: QuantityRow[], rule: QuoteRule, build
 }
 
 function isProjectMetric(metric: QuoteMetric): metric is ProjectQuoteMetric {
-  return metric === "building_area_m2" || metric === "lighting_package_count";
+  return (
+    metric === "building_area_m2" ||
+    metric === "tile_area_m2" ||
+    metric === "lighting_package_count" ||
+    metric === "switch_socket_package_count"
+  );
 }
 
 function isSummedProjectMetric(metric: QuoteMetric): metric is SummedProjectQuoteMetric {
@@ -464,6 +491,7 @@ function normalizeQuoteRule(rule: unknown, index: number): QuoteRule {
 function isQuoteMetric(metric: unknown): metric is QuoteMetric {
   return (
     metric === "building_area_m2" ||
+    metric === "tile_area_m2" ||
     metric === "latex_paint_area_m2" ||
     metric === "floor_area_m2" ||
     metric === "floor_tile_piece_count" ||
@@ -486,7 +514,8 @@ function isQuoteMetric(metric: unknown): metric is QuoteMetric {
     metric === "kitchen_wall_cabinet_length_m" ||
     metric === "custom_cabinet_area_m2" ||
     metric === "toilet_count" ||
-    metric === "bathroom_vanity_count"
+    metric === "bathroom_vanity_count" ||
+    metric === "switch_socket_package_count"
   );
 }
 

@@ -98,6 +98,24 @@
     "labor_price": 0
   },
   {
+    "item_name": "瓷砖加工费",
+    "metric": "tile_area_m2",
+    "unit": "M2",
+    "unit_price": 20,
+    "material_price": 20,
+    "auxiliary_price": 0,
+    "labor_price": 0
+  },
+  {
+    "item_name": "美缝",
+    "metric": "tile_area_m2",
+    "unit": "M2",
+    "unit_price": 12,
+    "material_price": 0,
+    "auxiliary_price": 12,
+    "labor_price": 0
+  },
+  {
     "item_name": "强电布线",
     "metric": "building_area_m2",
     "unit": "M2",
@@ -114,6 +132,33 @@
     "material_price": 17.5,
     "auxiliary_price": 0,
     "labor_price": 12
+  },
+  {
+    "item_name": "材料搬运费",
+    "metric": "building_area_m2",
+    "unit": "M2",
+    "unit_price": 8,
+    "material_price": 0,
+    "auxiliary_price": 0,
+    "labor_price": 8
+  },
+  {
+    "item_name": "垃圾清运费",
+    "metric": "building_area_m2",
+    "unit": "M2",
+    "unit_price": 10,
+    "material_price": 0,
+    "auxiliary_price": 0,
+    "labor_price": 10
+  },
+  {
+    "item_name": "地面砖现场维护费",
+    "metric": "building_area_m2",
+    "unit": "M2",
+    "unit_price": 8,
+    "material_price": 0,
+    "auxiliary_price": 3,
+    "labor_price": 5
   },
   {
     "item_name": "墙面贴瓷砖(600X1200)",
@@ -238,6 +283,15 @@
     "auxiliary_price": 0,
     "labor_price": 0,
     "space_types": ["卫生间"]
+  },
+  {
+    "item_name": "全屋插座开关",
+    "metric": "switch_socket_package_count",
+    "unit": "套",
+    "unit_price": 6000,
+    "material_price": 6000,
+    "auxiliary_price": 0,
+    "labor_price": 0
   },
   {
     "item_name": "全屋灯饰",

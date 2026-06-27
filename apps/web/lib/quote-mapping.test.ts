@@ -148,7 +148,7 @@ assert.deepEqual(mapping.quantity_health_readiness, {
   info: 0,
   label: "当前无待确认项",
 });
-assert.equal(mapping.items.length, 10);
+assert.equal(mapping.items.length, 16);
 assert.equal(mapping.items[0].space_name, "厨房");
 assert.equal(mapping.items[0].space_type, "厨房");
 assert.deepEqual(mapping.items.map((item) => item.item_name), [
@@ -158,9 +158,15 @@ assert.deepEqual(mapping.items.map((item) => item.item_name), [
   "墙面贴瓷砖(600X1200)",
   "墙地面防漏处理",
   "地面瓷砖",
+  "瓷砖加工费",
+  "美缝",
   "强电布线",
   "水路布管",
+  "材料搬运费",
+  "垃圾清运费",
+  "地面砖现场维护费",
   "橱柜",
+  "全屋插座开关",
   "全屋灯饰",
 ]);
 assert.equal(mapping.items[0].quantity, 4.48);
@@ -173,16 +179,36 @@ assert.equal(mapping.items[3].quantity, 20.7);
 assert.equal(mapping.items[3].amount, 2070);
 assert.equal(mapping.items[4].quantity, 7.22);
 assert.equal(mapping.items[4].amount, 371.83);
-assert.deepEqual(mapping.items.slice(5, 10).map((item) => item.space_name), ["全屋", "全屋", "全屋", "全屋", "全屋"]);
+assert.deepEqual(mapping.items.slice(5, 16).map((item) => item.space_name), ["全屋", "全屋", "全屋", "全屋", "全屋", "全屋", "全屋", "全屋", "全屋", "全屋", "全屋"]);
 assert.equal(mapping.items[5].quantity, 5);
 assert.equal(mapping.items[5].amount, 250);
-assert.equal(mapping.items[6].quantity, 88.66);
-assert.equal(mapping.items[6].amount, 6915.48);
-assert.equal(mapping.items[7].quantity, 88.66);
-assert.equal(mapping.items[7].amount, 2615.47);
-assert.equal(mapping.items[8].quantity, 7.3);
-assert.equal(mapping.items[8].amount, 4380);
-assert.deepEqual(mapping.items[9], {
+assert.equal(mapping.items[6].quantity, 25.18);
+assert.equal(mapping.items[6].amount, 503.6);
+assert.equal(mapping.items[7].quantity, 25.18);
+assert.equal(mapping.items[7].amount, 302.16);
+assert.equal(mapping.items[8].quantity, 88.66);
+assert.equal(mapping.items[8].amount, 6915.48);
+assert.equal(mapping.items[9].quantity, 88.66);
+assert.equal(mapping.items[9].amount, 2615.47);
+assert.equal(mapping.items[10].quantity, 88.66);
+assert.equal(mapping.items[10].amount, 709.28);
+assert.equal(mapping.items[11].quantity, 88.66);
+assert.equal(mapping.items[11].amount, 886.6);
+assert.equal(mapping.items[12].quantity, 88.66);
+assert.equal(mapping.items[12].amount, 709.28);
+assert.equal(mapping.items[13].quantity, 7.3);
+assert.equal(mapping.items[13].amount, 4380);
+assert.deepEqual(mapping.items[14], {
+  floor: "全屋",
+  space_name: "全屋",
+  space_type: "全屋",
+  item_name: "全屋插座开关",
+  quantity: 1,
+  unit: "套",
+  unit_price: 6000,
+  amount: 6000,
+});
+assert.deepEqual(mapping.items[15], {
   floor: "全屋",
   space_name: "全屋",
   space_type: "全屋",
@@ -198,10 +224,16 @@ assert.deepEqual(projectSummaryQuoteItems(mapping), [
   mapping.items[7],
   mapping.items[8],
   mapping.items[9],
+  mapping.items[10],
+  mapping.items[11],
+  mapping.items[12],
+  mapping.items[13],
+  mapping.items[14],
+  mapping.items[15],
 ]);
-assert.equal(mapping.summary.item_count, 10);
+assert.equal(mapping.summary.item_count, 16);
 assert.equal(mapping.summary.space_count, 1);
-assert.equal(mapping.summary.total_amount, 33448.54);
+assert.equal(mapping.summary.total_amount, 42559.46);
 
 const excludedOnlyMapping = buildQuoteMapping([rows[1]]);
 
@@ -210,7 +242,7 @@ assert.equal(excludedOnlyMapping.summary.total_amount, 0);
 
 const bedroomDefaultMapping = buildQuoteMapping([{ ...rows[0], spaceName: "主卧", spaceType: "卧室", latexPaintAreaM2: 25.54, wallTileAreaM2: 0, waterproofAreaM2: 0, customCabinetAreaM2: 9.8, kitchenBaseCabinetLengthM: 0, kitchenWallCabinetLengthM: 0 }], undefined, { building_area_m2: 88.66 });
 
-assert.equal(bedroomDefaultMapping.items.length, 12);
+assert.equal(bedroomDefaultMapping.items.length, 18);
 assert.deepEqual(bedroomDefaultMapping.items.map((item) => item.item_name), [
   "墙面界面剂处理",
   "墙面批嵌",
@@ -221,12 +253,18 @@ assert.deepEqual(bedroomDefaultMapping.items.map((item) => item.item_name), [
   "地面砖铺贴(750X1500)",
   "全屋定制",
   "地面瓷砖",
+  "瓷砖加工费",
+  "美缝",
   "强电布线",
   "水路布管",
+  "材料搬运费",
+  "垃圾清运费",
+  "地面砖现场维护费",
+  "全屋插座开关",
   "全屋灯饰",
 ]);
-assert.deepEqual(bedroomDefaultMapping.items.filter((item) => ["地面瓷砖", "强电布线", "水路布管"].includes(item.item_name)).map((item) => item.space_name), ["全屋", "全屋", "全屋"]);
-assert.equal(bedroomDefaultMapping.summary.total_amount, 33427.11);
+assert.deepEqual(bedroomDefaultMapping.items.filter((item) => ["地面瓷砖", "瓷砖加工费", "美缝", "强电布线", "水路布管"].includes(item.item_name)).map((item) => item.space_name), ["全屋", "全屋", "全屋", "全屋", "全屋"]);
+assert.equal(bedroomDefaultMapping.summary.total_amount, 41875.63);
 
 const livingRoomWallTileMapping = buildQuoteMapping([{ ...rows[0], spaceName: "客厅", spaceType: "客厅", wallTileAreaM2: 11.2, waterproofAreaM2: 0, customCabinetAreaM2: 0, kitchenBaseCabinetLengthM: 0, kitchenWallCabinetLengthM: 0 }]);
 assert.ok(livingRoomWallTileMapping.items.some((item) => item.space_name === "客厅" && item.item_name === "墙面贴瓷砖(600X1200)" && item.quantity === 11.2));
@@ -303,7 +341,7 @@ const exportRiskMapping = buildQuoteMapping(
 );
 assert.deepEqual(exportQuoteMappingConfirmationMessages(exportRiskMapping), [
   "仍有 1 项 warning 健康检查未处理。",
-  "按建筑面积计价项目、强电布线、水路布管 需要 QUOTE_EXT_WALL 建筑面积，当前为 0。",
+  "按建筑面积计价项目、强电布线、水路布管、材料搬运费、垃圾清运费、地面砖现场维护费 需要 QUOTE_EXT_WALL 建筑面积，当前为 0。",
 ]);
 assert.deepEqual(exportQuoteMappingConfirmationMessages(buildQuoteMapping([{ ...rows[0], ceilingFinishType: "gypsum", curtainWallWidthSource: "not_applicable" }], updateQuoteRuleUnitPrice(defaultQuoteRules(), 3, 120), { building_area_m2: 88.66 })), []);
 
@@ -321,7 +359,7 @@ assert.equal(dryAreaMapping.summary.total_amount, 600);
 
 const rules = defaultQuoteRules();
 assert.equal(DEFAULT_QUOTE_RULES_NAME, "商品房整装默认规则");
-assert.equal(rules.length, 27);
+assert.equal(rules.length, 33);
 assert.equal(rules[0].item_name, "墙面界面剂处理");
 assert.equal(rules[0].metric, "latex_paint_area_m2");
 assert.equal(rules[0].unit_price, 7);
@@ -432,6 +470,66 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "全屋灯饰"), {
   labor_price: 0,
   space_types: undefined,
 });
+assert.deepEqual(rules.find((rule) => rule.item_name === "材料搬运费"), {
+  item_name: "材料搬运费",
+  metric: "building_area_m2",
+  unit: "M2",
+  unit_price: 8,
+  material_price: 0,
+  auxiliary_price: 0,
+  labor_price: 8,
+  space_types: undefined,
+});
+assert.deepEqual(rules.find((rule) => rule.item_name === "垃圾清运费"), {
+  item_name: "垃圾清运费",
+  metric: "building_area_m2",
+  unit: "M2",
+  unit_price: 10,
+  material_price: 0,
+  auxiliary_price: 0,
+  labor_price: 10,
+  space_types: undefined,
+});
+assert.deepEqual(rules.find((rule) => rule.item_name === "地面砖现场维护费"), {
+  item_name: "地面砖现场维护费",
+  metric: "building_area_m2",
+  unit: "M2",
+  unit_price: 8,
+  material_price: 0,
+  auxiliary_price: 3,
+  labor_price: 5,
+  space_types: undefined,
+});
+assert.deepEqual(rules.find((rule) => rule.item_name === "全屋插座开关"), {
+  item_name: "全屋插座开关",
+  metric: "switch_socket_package_count",
+  unit: "套",
+  unit_price: 6000,
+  material_price: 6000,
+  auxiliary_price: 0,
+  labor_price: 0,
+  space_types: undefined,
+});
+assert.deepEqual(rules.find((rule) => rule.item_name === "美缝"), {
+  item_name: "美缝",
+  metric: "tile_area_m2",
+  unit: "M2",
+  unit_price: 12,
+  material_price: 0,
+  auxiliary_price: 12,
+  labor_price: 0,
+  space_types: undefined,
+});
+assert.deepEqual(rules.find((rule) => rule.item_name === "瓷砖加工费"), {
+  item_name: "瓷砖加工费",
+  metric: "tile_area_m2",
+  unit: "M2",
+  unit_price: 20,
+  material_price: 20,
+  auxiliary_price: 0,
+  labor_price: 0,
+  space_types: undefined,
+});
 assert.deepEqual(rules.find((rule) => rule.item_name === "全屋定制"), {
   item_name: "全屋定制",
   metric: "custom_cabinet_area_m2",
@@ -527,13 +625,44 @@ assert.equal(parsedWetRules[8].metric, "electrical_scope_area_m2");
 assert.equal(parsedWetRules[9].metric, "plumbing_scope_area_m2");
 assert.equal(parsedWetRules[10].metric, "lighting_package_count");
 assert.equal(parsedWetRules[11].metric, "custom_cabinet_area_m2");
+assert.equal(parseQuoteRules(JSON.stringify([{ item_name: "美缝", metric: "tile_area_m2", unit: "M2", unit_price: 12 }]))[0].metric, "tile_area_m2");
+assert.equal(parseQuoteRules(JSON.stringify([{ item_name: "全屋插座开关", metric: "switch_socket_package_count", unit: "套", unit_price: 6000 }]))[0].metric, "switch_socket_package_count");
 
 const balconyMapping = buildQuoteMapping([{ ...rows[0], spaceName: "阳台", spaceType: "阳台", wallTileAreaM2: 0, waterproofAreaM2: 9 }], undefined, { building_area_m2: 88.66 });
-assert.deepEqual(balconyMapping.items.map((item) => item.item_name), ["地面找平", "地面砖铺贴(750X1500)", "墙地面防漏处理", "地面瓷砖", "强电布线", "水路布管", "全屋灯饰"]);
-assert.deepEqual(balconyMapping.items.filter((item) => ["地面瓷砖", "强电布线", "水路布管"].includes(item.item_name)).map((item) => item.space_name), ["全屋", "全屋", "全屋"]);
+assert.deepEqual(balconyMapping.items.map((item) => item.item_name), [
+  "地面找平",
+  "地面砖铺贴(750X1500)",
+  "墙地面防漏处理",
+  "地面瓷砖",
+  "瓷砖加工费",
+  "美缝",
+  "强电布线",
+  "水路布管",
+  "材料搬运费",
+  "垃圾清运费",
+  "地面砖现场维护费",
+  "全屋插座开关",
+  "全屋灯饰",
+]);
+assert.deepEqual(balconyMapping.items.filter((item) => ["地面瓷砖", "瓷砖加工费", "美缝", "强电布线", "水路布管"].includes(item.item_name)).map((item) => item.space_name), ["全屋", "全屋", "全屋", "全屋", "全屋"]);
 
 const tiledBalconyMapping = buildQuoteMapping([{ ...rows[0], spaceName: "阳台", spaceType: "阳台", wallTileAreaM2: 14, waterproofAreaM2: 9 }], undefined, { building_area_m2: 88.66 });
-assert.deepEqual(tiledBalconyMapping.items.map((item) => item.item_name), ["地面找平", "地面砖铺贴(750X1500)", "墙面贴瓷砖(600X1200)", "墙地面防漏处理", "地面瓷砖", "强电布线", "水路布管", "全屋灯饰"]);
+assert.deepEqual(tiledBalconyMapping.items.map((item) => item.item_name), [
+  "地面找平",
+  "地面砖铺贴(750X1500)",
+  "墙面贴瓷砖(600X1200)",
+  "墙地面防漏处理",
+  "地面瓷砖",
+  "瓷砖加工费",
+  "美缝",
+  "强电布线",
+  "水路布管",
+  "材料搬运费",
+  "垃圾清运费",
+  "地面砖现场维护费",
+  "全屋插座开关",
+  "全屋灯饰",
+]);
 
 const newWallMapping = buildQuoteMapping([{ ...rows[0], spaceName: "客厅", spaceType: "客厅", wallTileAreaM2: 0, waterproofAreaM2: 0, newWallAreaM2: 11.2 }]);
 assert.deepEqual(newWallMapping.items.filter((item) => item.item_name === "砌120厚砖墙"), [
@@ -796,7 +925,7 @@ assert.deepEqual(curtainCandidateMapping.items.filter((item) => item.item_name =
     amount: 352,
   },
 ]);
-assert.equal(curtainCandidateMapping.summary.total_amount, 26268.95);
+assert.equal(curtainCandidateMapping.summary.total_amount, 34574.11);
 
 assert.throws(() => parseQuoteRules("{bad json"), /报价规则 JSON 格式无效/);
 assert.throws(() => parseQuoteRules(JSON.stringify({ item_name: "x" })), /报价规则必须是数组/);

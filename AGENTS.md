@@ -169,8 +169,10 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 厨房、卫生间、阳台、露台、洗衣房自动计算 `waterproof_area_m2`。
 - 防水面积公式：`地面面积 + 墙面计量长度 * 防水高度`；卫生间防水高度 `1.8m`，其它湿区 `0.3m`。
 - 地面瓷砖：`floor_tile_piece_count = ceil(地面面积 * 1.05 / (0.75 * 1.5))`，按 750X1500 规格、5% 损耗、向上取整；默认报价规则“地面瓷砖”按全屋片数汇总生成金额，不按空间拆行。
+- 瓷砖加工费和美缝：默认按项目级 `tile_area_m2` 生成“全屋”清单项；`tile_area_m2 = 可计价空间地面铺砖面积 + 墙面贴砖面积`。瓷砖加工费当前按用户确认口径挂钩贴砖面积生成候选，报价员可按实际加工米数调整。
 - 水电默认 scope：`electrical_scope_area_m2` 和 `plumbing_scope_area_m2` 当前仍保留为空间级备用字段，默认等于空间地面面积；商品房整装默认报价规则中的“强电布线”“水路布管”已改用项目级 `building_area_m2` 按建筑面积生成金额，不按空间拆行。点位、回路、特殊水路范围仍可通过校准 JSON 或后续图层细化。
 - 全屋灯饰：`lighting_package_count` 是项目级套餐 metric，只要报价映射存在至少一个可计价空间，就生成 1 套“全屋灯饰”；该项目不按空间重复计费。
+- 全屋插座开关：`switch_socket_package_count` 是项目级套餐 metric，只要报价映射存在至少一个可计价空间，就生成 1 套“全屋插座开关”；该项目不按空间重复计费。
 - 工程量表显示 `wall_tile_measure_length_m`，校准模板也会导出 `wall_tile_measure_length_m` 和 `wall_tile_area_m2`。
 - 工程量表默认不按空间显示地砖主材片数、强电备用面积、水路备用面积、新砌墙和拆墙字段；这些字段仍保留在校准模板与报价映射中，按全屋汇总生成金额。
 - 新砌墙：画在 `QUOTE_NEW_WALL` 的线段会生成 `new_wall_length_m` 和 `new_wall_area_m2`，公式为 `新砌墙长度 * 空间实际层高`；默认报价规则“砌120厚砖墙”按全屋 `new_wall_area_m2` 汇总生成金额，不按空间拆行。
@@ -212,7 +214,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 报价映射面板会提前展示导出前风险明细，复用导出确认里的 warning、零单价和建筑面积缺失提示，避免报价员等到点击导出时才看到风险原因。
 - 报价映射面板如果发现“厨房卫生间集成吊顶”已有工程量但 `unit_price <= 0`，会额外显示集成吊顶单价待补提醒，提示报价员在报价规则 JSON 中补 `unit_price`；如果实际做石膏板吊顶，则回到工程量表切换顶面类型。该提醒不阻断导出。
 - 报价映射面板会单独展示“全屋汇总项”，把地砖主材、强电布线、水路布管、砌墙、拆墙、全屋灯饰等 `space_name="全屋"` 的清单集中列出，避免这些项目从空间工程量表隐藏后不直观。
-- 报价映射面板会提示 Excel 草稿包含 27 项“人工补项”；这些项目只用于提醒报价员补填，不写入报价映射 `items`，也不影响 `summary.total_amount`。已自动接入的拆改及拆墙、卫生间门、厨房推拉门和厨房推拉门双包套不再重复放入人工补项。
+- 报价映射面板会提示 Excel 草稿包含 21 项“人工补项”；这些项目只用于提醒报价员补填，不写入报价映射 `items`，也不影响 `summary.total_amount`。已自动接入的拆改及拆墙、卫生间门、厨房推拉门、厨房推拉门双包套、材料搬运费、垃圾清运费、地面砖现场维护费、全屋插座开关、美缝和瓷砖加工费不再重复放入人工补项。
 - 窗帘墙宽候选列可在工程量表中直接编辑；编辑后会清空已生成的报价映射，避免沿用旧结果。
 - 窗帘墙宽候选列会显示候选来源，`L形窗自动` 代表已按 L 形窗两条非平行长窗边合计，`回退最长墙` 代表未匹配到窗户所在墙面时自动取空间最长墙；`旧版L形窗` 仅兼容旧快照来源，报价员仍可在表格中人工校准。
 
@@ -223,9 +225,12 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 地面找平：按 `floorAreaM2`，仅匹配厨房、卫生间、阳台、露台、洗衣房。
 - 地面砖铺贴(750X1500)：按 `floorAreaM2`，当前不限制空间类型。
 - 地面瓷砖：按 `floorTilePieceCount` 全屋汇总，当前不限制空间类型；片数由地面面积按 750X1500、5% 损耗向上取整。
+- 瓷砖加工费和美缝：按项目级 `tile_area_m2` 全屋汇总；`tile_area_m2 = 可计价空间地面铺砖面积 + 墙面贴砖面积`。瓷砖加工费当前按贴砖面积挂钩生成候选。
 - 强电布线：默认按项目级 `building_area_m2` 生成“全屋”清单项；`electrical_scope_area_m2` 仍可通过自定义规则使用。
 - 水路布管：默认按项目级 `building_area_m2` 生成“全屋”清单项；`plumbing_scope_area_m2` 仍可通过自定义规则使用。
+- 材料搬运费、垃圾清运费、地面砖现场维护费：默认按项目级 `building_area_m2` 生成“全屋”清单项。
 - 全屋灯饰：按项目级 `lightingPackageCount=1`，有可计价空间时生成 1 套，不随空间重复。
+- 全屋插座开关：按项目级 `switchSocketPackageCount=1`，有可计价空间时生成 1 套，不随空间重复。
 - 建筑面积：按项目级 `building_area_m2`，从当前 summary 取值生成“全屋”清单项；默认规则不配置具体项目，报价员可在报价规则 JSON 中添加管理费、成品保护、综合服务费等按建筑面积计价的项目。
 - 墙面贴瓷砖(600X1200)：按 `wallTileAreaM2`，厨房、卫生间默认全墙计算；其它空间只要画了 `QUOTE_WALL_TILE` 且墙砖面积大于 0 就进入报价。
 - 墙地面防漏处理：按 `waterproofAreaM2`，仅匹配厨房、卫生间、阳台、露台、洗衣房。
@@ -245,7 +250,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 报价规则 JSON 是数组格式，字段为：
 
 - `item_name`：清单项名称。
-- `metric`：取数指标，当前只允许 `building_area_m2`、`latex_paint_area_m2`、`floor_area_m2`、`floor_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`lighting_package_count`、`ceiling_area_m2`、`wall_tile_area_m2`、`waterproof_area_m2`、`windowsill_length_m`、`new_wall_area_m2`、`demolition_wall_area_m2`、`interior_door_count`、`bathroom_door_count`、`sliding_door_area_m2`、`sliding_door_casing_length_m`、`kitchen_cabinet_length_m`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`custom_cabinet_area_m2`、`toilet_count`、`bathroom_vanity_count`、`curtain_wall_width_m`。
+- `metric`：取数指标，当前只允许 `building_area_m2`、`tile_area_m2`、`latex_paint_area_m2`、`floor_area_m2`、`floor_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`lighting_package_count`、`switch_socket_package_count`、`ceiling_area_m2`、`wall_tile_area_m2`、`waterproof_area_m2`、`windowsill_length_m`、`new_wall_area_m2`、`demolition_wall_area_m2`、`interior_door_count`、`bathroom_door_count`、`sliding_door_area_m2`、`sliding_door_casing_length_m`、`kitchen_cabinet_length_m`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`custom_cabinet_area_m2`、`toilet_count`、`bathroom_vanity_count`、`curtain_wall_width_m`。
 - `unit`：单位。
 - `unit_price`：单价，必须是非负数字。
 - `material_price` / `auxiliary_price` / `labor_price`：可选三段单价，用于真实 Excel 模板展示；`unit_price` 仍是三段单价合计，并用于报价映射金额计算。
