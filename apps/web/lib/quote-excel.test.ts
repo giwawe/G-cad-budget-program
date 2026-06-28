@@ -91,7 +91,7 @@ assert.ok(html.includes("<tr><td>A</td><td>直接费合计</td><td></td><td></td
 assert.ok(html.includes("<tr><td>B</td><td>工程管理费(D=A* 5%)</td><td></td><td></td><td></td><td></td><td></td><td>416.56</td><td></td></tr>"));
 assert.ok(html.includes("<tr><td>C</td><td>税金E=(A+B)* 3%</td><td></td><td></td><td></td><td></td><td></td><td>262.43</td><td></td></tr>"));
 assert.ok(html.includes("<tr><td>D</td><td>工程总造价F=(A+B+C)</td><td></td><td></td><td></td><td></td><td></td><td>9010.15</td><td></td></tr>"));
-assert.equal(MANUAL_QUOTE_DRAFT_ITEMS.length, 19);
+assert.equal(MANUAL_QUOTE_DRAFT_ITEMS.length, 18);
 assert.ok(html.indexOf("<td>一</td><td>全屋拆改工程（可选）</td>") < html.indexOf("<td>砌240厚砖墙</td>"));
 assert.ok(!html.includes("<td>卫生间门</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>"));
 assert.ok(!html.includes("<td>厨房推拉门双包套</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>"));
@@ -101,6 +101,7 @@ assert.ok(!html.includes("<td>地面砖现场维护费</td><td></td><td></td><td
 assert.ok(!html.includes("<td>全屋插座开关</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>"));
 assert.ok(!html.includes("<td>美缝</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>"));
 assert.ok(!html.includes("<td>瓷砖加工费</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>"));
+assert.ok(!html.includes("<td>墙面瓷砖</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>"));
 assert.ok(!html.includes("<td>弱电布线</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>"));
 assert.ok(!html.includes("<td>全屋保洁</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>"));
 assert.ok(html.indexOf("<td>砌240厚砖墙</td>") < html.indexOf("<td>A</td><td>直接费合计</td>"));

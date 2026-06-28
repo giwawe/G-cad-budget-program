@@ -98,6 +98,15 @@
     "labor_price": 0
   },
   {
+    "item_name": "墙面瓷砖",
+    "metric": "wall_tile_piece_count",
+    "unit": "片",
+    "unit_price": 30,
+    "material_price": 30,
+    "auxiliary_price": 0,
+    "labor_price": 0
+  },
+  {
     "item_name": "瓷砖加工费",
     "metric": "tile_area_m2",
     "unit": "M2",

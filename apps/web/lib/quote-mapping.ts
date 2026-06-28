@@ -29,6 +29,7 @@ export type QuoteMetric =
   | "latex_paint_area_m2"
   | "floor_area_m2"
   | "floor_tile_piece_count"
+  | "wall_tile_piece_count"
   | "electrical_scope_area_m2"
   | "plumbing_scope_area_m2"
   | "lighting_package_count"
@@ -58,6 +59,7 @@ type ProjectQuoteMetric =
   | "switch_socket_package_count";
 type SummedProjectQuoteMetric =
   | "floor_tile_piece_count"
+  | "wall_tile_piece_count"
   | "electrical_scope_area_m2"
   | "plumbing_scope_area_m2"
   | "kitchen_cabinet_length_m"
@@ -155,6 +157,7 @@ const KITCHEN_CABINET_SPACE_TYPES = ["厨房"];
 const BATHROOM_FIXTURE_SPACE_TYPES = ["卫生间"];
 const SUMMED_PROJECT_METRICS = new Set<QuoteMetric>([
   "floor_tile_piece_count",
+  "wall_tile_piece_count",
   "electrical_scope_area_m2",
   "plumbing_scope_area_m2",
   "kitchen_cabinet_length_m",
@@ -173,6 +176,7 @@ const DEFAULT_RULES: QuoteRule[] = [
   quoteRule("地面找平", "floor_area_m2", "m2", 0, 26, 30, WET_FLOOR_SPACE_TYPES),
   quoteRule("地面砖铺贴(750X1500)", "floor_area_m2", "m2", 0, 36, 60),
   quoteRule("地面瓷砖", "floor_tile_piece_count", "片", 50, 0, 0),
+  quoteRule("墙面瓷砖", "wall_tile_piece_count", "片", 30, 0, 0),
   quoteRule("瓷砖加工费", "tile_area_m2", "M2", 20, 0, 0),
   quoteRule("美缝", "tile_area_m2", "M2", 0, 12, 0),
   quoteRule("强电布线", "building_area_m2", "M2", 40, 0, 38),
@@ -222,6 +226,7 @@ const METRIC_TO_ROW_FIELD: Record<RowQuoteMetric, QuantityRowMetric> = {
 };
 const SUMMED_PROJECT_METRIC_TO_ROW_FIELD: Record<SummedProjectQuoteMetric, QuantityRowMetric> = {
   floor_tile_piece_count: "floorTilePieceCount",
+  wall_tile_piece_count: "wallTileAreaM2",
   electrical_scope_area_m2: "electricalScopeAreaM2",
   plumbing_scope_area_m2: "plumbingScopeAreaM2",
   new_wall_area_m2: "newWallAreaM2",
@@ -415,6 +420,13 @@ function projectRuleQuantity(billableRows: QuantityRow[], rule: QuoteRule, build
     );
   }
   if (isSummedProjectMetric(rule.metric)) {
+    if (rule.metric === "wall_tile_piece_count") {
+      return round2(
+        billableRows
+          .filter((row) => ruleAppliesToRow(rule, row))
+          .reduce((sum, row) => sum + Math.ceil((row.wallTileAreaM2 * 1.05) / (0.6 * 1.2)), 0),
+      );
+    }
     const rowField = SUMMED_PROJECT_METRIC_TO_ROW_FIELD[rule.metric];
     return round2(
       billableRows
@@ -504,6 +516,7 @@ function isQuoteMetric(metric: unknown): metric is QuoteMetric {
     metric === "latex_paint_area_m2" ||
     metric === "floor_area_m2" ||
     metric === "floor_tile_piece_count" ||
+    metric === "wall_tile_piece_count" ||
     metric === "electrical_scope_area_m2" ||
     metric === "plumbing_scope_area_m2" ||
     metric === "lighting_package_count" ||
