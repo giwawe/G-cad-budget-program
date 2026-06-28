@@ -50,6 +50,7 @@ export type QuoteMetric =
   | "custom_cabinet_area_m2"
   | "toilet_count"
   | "bathroom_vanity_count"
+  | "bathroom_count"
   | "switch_socket_package_count";
 type ProjectQuoteMetric =
   | "building_area_m2"
@@ -66,6 +67,7 @@ type SummedProjectQuoteMetric =
   | "new_wall_area_m2"
   | "demolition_wall_area_m2";
 type RowQuoteMetric = Exclude<QuoteMetric, ProjectQuoteMetric | SummedProjectQuoteMetric>;
+type DirectRowQuoteMetric = Exclude<RowQuoteMetric, "bathroom_count">;
 
 export type QuoteRule = {
   item_name: string;
@@ -198,6 +200,8 @@ const DEFAULT_RULES: QuoteRule[] = [
   quoteRule("全屋定制", "custom_cabinet_area_m2", "M2", 600, 0, 0),
   quoteRule("马桶", "toilet_count", "套", 1500, 0, 0, BATHROOM_FIXTURE_SPACE_TYPES),
   quoteRule("浴室柜", "bathroom_vanity_count", "套", 1500, 0, 0, BATHROOM_FIXTURE_SPACE_TYPES),
+  quoteRule("花洒", "bathroom_count", "套", 800, 0, 0, BATHROOM_FIXTURE_SPACE_TYPES),
+  quoteRule("卫浴五件套", "bathroom_count", "套", 280, 0, 0, BATHROOM_FIXTURE_SPACE_TYPES),
   quoteRule("全屋插座开关", "switch_socket_package_count", "套", 6000, 0, 0),
   quoteRule("全屋灯饰", "lighting_package_count", "套", 15000, 0, 0),
   quoteRule("全屋保洁", "cleaning_package_count", "套", 4500, 0, 0),
@@ -206,7 +210,7 @@ const DEFAULT_RULES: QuoteRule[] = [
 
 const APARTMENT_PENDING_METRICS: PendingQuoteMetric[] = [];
 
-const METRIC_TO_ROW_FIELD: Record<RowQuoteMetric, QuantityRowMetric> = {
+const METRIC_TO_ROW_FIELD: Record<DirectRowQuoteMetric, QuantityRowMetric> = {
   latex_paint_area_m2: "latexPaintAreaM2",
   floor_area_m2: "floorAreaM2",
   ceiling_area_m2: "ceilingAreaM2",
@@ -333,7 +337,7 @@ export function buildQuoteMapping(
   const projectRules = rules.filter((rule) => isProjectMetric(rule.metric) || SUMMED_PROJECT_METRICS.has(rule.metric));
   const rowItems = billableRows.flatMap((row) =>
     rowRules.filter((rule) => ruleAppliesToRow(rule, row)).map((rule) => {
-      const quantity = round2(row[METRIC_TO_ROW_FIELD[rule.metric]]);
+      const quantity = rowRuleQuantity(row, rule);
       return {
         floor: row.floor,
         space_name: row.spaceName,
@@ -362,6 +366,13 @@ export function buildQuoteMapping(
     building_area_quote_readiness: buildingAreaQuoteReadiness(rules, buildingAreaM2),
     quantity_health_readiness: quantityHealthReadiness,
   };
+}
+
+function rowRuleQuantity(row: QuantityRow, rule: QuoteRule & { metric: RowQuoteMetric }): number {
+  if (rule.metric === "bathroom_count") {
+    return 1;
+  }
+  return round2(row[METRIC_TO_ROW_FIELD[rule.metric]]);
 }
 
 function buildingAreaQuoteReadiness(rules: QuoteRule[], buildingAreaM2: number): BuildingAreaQuoteReadiness {
@@ -537,6 +548,7 @@ function isQuoteMetric(metric: unknown): metric is QuoteMetric {
     metric === "custom_cabinet_area_m2" ||
     metric === "toilet_count" ||
     metric === "bathroom_vanity_count" ||
+    metric === "bathroom_count" ||
     metric === "switch_socket_package_count"
   );
 }

@@ -303,6 +303,26 @@
     "space_types": ["卫生间"]
   },
   {
+    "item_name": "花洒",
+    "metric": "bathroom_count",
+    "unit": "套",
+    "unit_price": 800,
+    "material_price": 800,
+    "auxiliary_price": 0,
+    "labor_price": 0,
+    "space_types": ["卫生间"]
+  },
+  {
+    "item_name": "卫浴五件套",
+    "metric": "bathroom_count",
+    "unit": "套",
+    "unit_price": 280,
+    "material_price": 280,
+    "auxiliary_price": 0,
+    "labor_price": 0,
+    "space_types": ["卫生间"]
+  },
+  {
     "item_name": "全屋插座开关",
     "metric": "switch_socket_package_count",
     "unit": "套",

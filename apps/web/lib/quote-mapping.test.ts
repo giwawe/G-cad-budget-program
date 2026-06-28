@@ -313,6 +313,11 @@ assert.ok(kitchenDefaultMapping.items.some((item) => item.space_name === "厨房
 assert.ok(!kitchenDefaultMapping.items.some((item) => item.space_name === "厨房" && ["墙面乳胶漆", "顶面批嵌", "顶面乳胶漆"].includes(item.item_name)));
 assert.deepEqual(integratedCeilingPriceReminderItems(kitchenDefaultMapping), []);
 
+const bathroomDefaultMapping = buildQuoteMapping([{ ...rows[0], spaceName: "卫生间", spaceType: "卫生间", toiletCount: 1, bathroomVanityCount: 1 }]);
+assert.ok(bathroomDefaultMapping.items.some((item) => item.space_name === "卫生间" && item.item_name === "花洒" && item.quantity === 1 && item.unit_price === 800));
+assert.ok(bathroomDefaultMapping.items.some((item) => item.space_name === "卫生间" && item.item_name === "卫浴五件套" && item.quantity === 1 && item.unit_price === 280));
+assert.ok(!kitchenDefaultMapping.items.some((item) => item.item_name === "花洒" || item.item_name === "卫浴五件套"));
+
 const kitchenGypsumCeilingMapping = buildQuoteMapping([{ ...rows[0], ceilingFinishType: "gypsum" }]);
 assert.ok(!kitchenGypsumCeilingMapping.items.some((item) => item.space_name === "厨房" && item.item_name === "厨房卫生间集成吊顶"));
 assert.ok(kitchenGypsumCeilingMapping.items.some((item) => item.space_name === "厨房" && item.item_name === "顶面批嵌" && item.quantity === 4.48));
@@ -396,7 +401,7 @@ assert.equal(dryAreaMapping.summary.total_amount, 600);
 
 const rules = defaultQuoteRules();
 assert.equal(DEFAULT_QUOTE_RULES_NAME, "商品房整装默认规则");
-assert.equal(rules.length, 36);
+assert.equal(rules.length, 38);
 assert.equal(rules[0].item_name, "墙面界面剂处理");
 assert.equal(rules[0].metric, "latex_paint_area_m2");
 assert.equal(rules[0].unit_price, 7);
@@ -617,6 +622,26 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "浴室柜"), {
   labor_price: 0,
   space_types: ["卫生间"],
 });
+assert.deepEqual(rules.find((rule) => rule.item_name === "花洒"), {
+  item_name: "花洒",
+  metric: "bathroom_count",
+  unit: "套",
+  unit_price: 800,
+  material_price: 800,
+  auxiliary_price: 0,
+  labor_price: 0,
+  space_types: ["卫生间"],
+});
+assert.deepEqual(rules.find((rule) => rule.item_name === "卫浴五件套"), {
+  item_name: "卫浴五件套",
+  metric: "bathroom_count",
+  unit: "套",
+  unit_price: 280,
+  material_price: 280,
+  auxiliary_price: 0,
+  labor_price: 0,
+  space_types: ["卫生间"],
+});
 assert.deepEqual(rules[0].space_types, ["客厅", "餐厅", "卧室", "书房", "过道", "门厅", "楼梯过道", "衣帽间", "储物间", "露台"]);
 rules[0].unit_price = 99;
 rules[0].space_types?.push("厨房");
@@ -674,6 +699,7 @@ const parsedWetRules = parseQuoteRules(JSON.stringify([
   { item_name: "橱柜", metric: "kitchen_cabinet_length_m", unit: "M", unit_price: 600, space_types: ["厨房"] },
   { item_name: "马桶", metric: "toilet_count", unit: "套", unit_price: 1500, space_types: ["卫生间"] },
   { item_name: "浴室柜", metric: "bathroom_vanity_count", unit: "套", unit_price: 1500, space_types: ["卫生间"] },
+  { item_name: "花洒", metric: "bathroom_count", unit: "套", unit_price: 800, space_types: ["卫生间"] },
   { item_name: "地面瓷砖", metric: "floor_tile_piece_count", unit: "片", unit_price: 50 },
   { item_name: "强电布线", metric: "electrical_scope_area_m2", unit: "M2", unit_price: 78 },
   { item_name: "水路布管", metric: "plumbing_scope_area_m2", unit: "M2", unit_price: 29.5 },
@@ -687,15 +713,17 @@ assert.equal(parsedWetRules[3].metric, "curtain_wall_width_m");
 assert.equal(parsedWetRules[4].metric, "kitchen_cabinet_length_m");
 assert.equal(parsedWetRules[5].metric, "toilet_count");
 assert.equal(parsedWetRules[6].metric, "bathroom_vanity_count");
-assert.equal(parsedWetRules[7].metric, "floor_tile_piece_count");
-assert.equal(parsedWetRules[8].metric, "electrical_scope_area_m2");
-assert.equal(parsedWetRules[9].metric, "plumbing_scope_area_m2");
-assert.equal(parsedWetRules[10].metric, "lighting_package_count");
-assert.equal(parsedWetRules[11].metric, "custom_cabinet_area_m2");
+assert.equal(parsedWetRules[7].metric, "bathroom_count");
+assert.equal(parsedWetRules[8].metric, "floor_tile_piece_count");
+assert.equal(parsedWetRules[9].metric, "electrical_scope_area_m2");
+assert.equal(parsedWetRules[10].metric, "plumbing_scope_area_m2");
+assert.equal(parsedWetRules[11].metric, "lighting_package_count");
+assert.equal(parsedWetRules[12].metric, "custom_cabinet_area_m2");
 assert.equal(parseQuoteRules(JSON.stringify([{ item_name: "美缝", metric: "tile_area_m2", unit: "M2", unit_price: 12 }]))[0].metric, "tile_area_m2");
 assert.equal(parseQuoteRules(JSON.stringify([{ item_name: "墙面瓷砖", metric: "wall_tile_piece_count", unit: "片", unit_price: 30 }]))[0].metric, "wall_tile_piece_count");
 assert.equal(parseQuoteRules(JSON.stringify([{ item_name: "全屋插座开关", metric: "switch_socket_package_count", unit: "套", unit_price: 6000 }]))[0].metric, "switch_socket_package_count");
 assert.equal(parseQuoteRules(JSON.stringify([{ item_name: "全屋保洁", metric: "cleaning_package_count", unit: "套", unit_price: 4500 }]))[0].metric, "cleaning_package_count");
+assert.equal(parseQuoteRules(JSON.stringify([{ item_name: "花洒", metric: "bathroom_count", unit: "套", unit_price: 800 }]))[0].metric, "bathroom_count");
 
 const balconyMapping = buildQuoteMapping([{ ...rows[0], spaceName: "阳台", spaceType: "阳台", wallTileAreaM2: 0, waterproofAreaM2: 9 }], undefined, { building_area_m2: 88.66 });
 assert.deepEqual(balconyMapping.items.map((item) => item.item_name), [

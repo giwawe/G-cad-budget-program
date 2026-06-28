@@ -49,8 +49,6 @@ export const MANUAL_QUOTE_DRAFT_ITEMS: ManualQuoteDraftItem[] = [
   { floor: "一层", space_name: "卫生间", space_type: "卫生间", item_name: "蹲坑" },
   { floor: "一层", space_name: "卫生间", space_type: "卫生间", item_name: "淋浴隔断" },
   { floor: "一层", space_name: "卫生间", space_type: "卫生间", item_name: "玻璃淋浴房" },
-  { floor: "一层", space_name: "卫生间", space_type: "卫生间", item_name: "花洒" },
-  { floor: "一层", space_name: "卫生间", space_type: "卫生间", item_name: "卫浴五件套" },
   { floor: "一层", space_name: "客厅", space_type: "客厅", item_name: "背景墙" },
 ];
 
@@ -94,6 +92,8 @@ const TEMPLATE_PRICES: Record<string, QuoteTemplatePrice> = {
   全屋定制: { material: 600, auxiliary: 0, labor: 0, note: "全屋定制柜体、柜门、五金、安装及辅料。" },
   马桶: { material: 1500, auxiliary: 0, labor: 0, note: "轻智能马桶。" },
   浴室柜: { material: 1500, auxiliary: 0, labor: 0, note: "岩板一体盆，含龙头及上下水。" },
+  花洒: { material: 800, auxiliary: 0, labor: 0, note: "花洒（九牧、法恩莎）。" },
+  卫浴五件套: { material: 280, auxiliary: 0, labor: 0, note: "马桶刷、毛巾架、纸巾盒等。" },
   全屋插座开关: { material: 6000, auxiliary: 0, labor: 0, note: "全屋插座开关，默认 1 套。" },
   全屋灯饰: { material: 15000, auxiliary: 0, labor: 0, note: "主灯、防眩射灯、筒灯。" },
   全屋保洁: { material: 4500, auxiliary: 0, labor: 0, note: "最后全屋开荒保洁，默认 1 套。" },
