@@ -13,24 +13,33 @@ type QuoteTemplateSection = {
   itemNames: string[];
 };
 
-const TEMPLATE_SECTIONS: QuoteTemplateSection[] = [
-  { code: "一", title: "全屋拆改工程（可选）", itemNames: ["拆改及拆墙", "砌120厚砖墙", "砌240厚砖墙", "外墙批嵌", "外墙批嵌以及修补", "材料搬运费"] },
-  { code: "二", title: "玄关工程", itemNames: ["轻钢龙骨平顶", "顶面批嵌", "顶面乳胶漆", "墙面界面剂处理", "墙面批嵌", "墙面乳胶漆", "地台石铺贴", "地面砖铺贴(750X1500)"] },
-  { code: "三", title: "卧室工程", itemNames: ["轻钢龙骨平顶", "暗窗帘箱", "顶面批嵌", "顶面乳胶漆", "墙面界面剂处理", "墙面批嵌", "墙面乳胶漆", "地面砖铺贴(750X1500)", "窗台石铺贴"] },
-  { code: "四", title: "过道工程", itemNames: ["轻钢龙骨平顶", "顶面批嵌", "顶面乳胶漆", "墙面界面剂处理", "墙面批嵌", "墙面乳胶漆", "地面砖铺贴(750X1500)"] },
-  { code: "五", title: "卫生间工程", itemNames: ["地面找平", "墙地面防漏处理", "墙面贴瓷砖(600X1200)", "地面砖铺贴(750X1500)", "厨房卫生间集成吊顶"] },
-  { code: "六", title: "厨房工程", itemNames: ["地面找平", "墙地面防漏处理", "墙面贴瓷砖(600X1200)", "地面砖铺贴(750X1500)", "厨房卫生间集成吊顶"] },
-  { code: "七", title: "餐厅工程", itemNames: ["轻钢龙骨平顶", "暗窗帘箱", "顶面批嵌", "顶面乳胶漆", "墙面界面剂处理", "墙面批嵌", "墙面乳胶漆", "地面砖铺贴(750X1500)", "窗台石铺贴"] },
-  { code: "八", title: "主卧工程", itemNames: ["轻钢龙骨平顶", "暗窗帘箱", "顶面批嵌", "顶面乳胶漆", "墙面界面剂处理", "墙面批嵌", "墙面乳胶漆", "地面砖铺贴(750X1500)", "窗台石铺贴"] },
-  { code: "九", title: "次卧工程", itemNames: ["轻钢龙骨平顶", "暗窗帘箱", "顶面批嵌", "顶面乳胶漆", "墙面界面剂处理", "墙面批嵌", "墙面乳胶漆", "地面砖铺贴(750X1500)", "窗台石铺贴"] },
-  { code: "十", title: "露台工程", itemNames: ["地面找平", "墙地面防漏处理", "顶面批嵌", "顶面乳胶漆", "墙面界面剂处理", "墙面批嵌", "墙面乳胶漆", "墙面贴瓷砖(600X1200)", "地面砖铺贴(750X1500)"] },
-  { code: "十一", title: "其他工程", itemNames: ["外墙批嵌以及修补", "砖墙门窗洞过梁", "水泥墙开槽", "打混凝土过梁孔", "厨房、卫生间排污管包隔音棉", "补线、管槽及零星修补", "包上/下水管道(单管)", "垃圾清运费", "材料搬运费", "地面砖现场维护费"] },
-  { code: "十二", title: "水电工程", itemNames: ["强电布线", "弱电布线", "水路布管"] },
-  { code: "十三", title: "主材项目", itemNames: ["地面瓷砖", "墙面瓷砖", "瓷砖加工费"] },
-  { code: "十四", title: "全屋定制、衣柜、橱柜、全屋家具", itemNames: ["全屋定制", "橱柜", "背景墙"] },
-  { code: "十五", title: "室内门", itemNames: ["入户门", "室内门", "卫生间门", "厨房推拉门", "厨房推拉门双包套", "阳台推拉门", "阳台推拉门双包套", "铝合金封门窗"] },
-  { code: "十六", title: "集成吊顶、卫浴、全屋开关灯饰", itemNames: ["厨房卫生间集成吊顶", "浴室柜", "马桶", "蹲坑", "淋浴隔断", "玻璃淋浴房", "花洒", "卫浴五件套", "全屋插座开关", "全屋灯饰"] },
-  { code: "十七", title: "其他（窗帘、美缝、窗台石等）", itemNames: ["美缝", "窗帘", "窗台石", "窗台石铺贴", "全屋保洁"] },
+type QuoteTemplateSectionDefinition = Omit<QuoteTemplateSection, "code">;
+
+const ROOM_SECTION_ITEM_NAMES = [
+  "轻钢龙骨平顶",
+  "顶面批嵌",
+  "顶面乳胶漆",
+  "墙面界面剂处理",
+  "墙面批嵌",
+  "墙面乳胶漆",
+  "地面找平",
+  "墙地面防漏处理",
+  "墙面贴瓷砖(600X1200)",
+  "地面砖铺贴(750X1500)",
+];
+
+const FIXED_TEMPLATE_SECTIONS: QuoteTemplateSectionDefinition[] = [
+  { title: "全屋拆改工程", itemNames: ["拆改及拆墙", "砌120厚砖墙", "砌240厚砖墙", "外墙批嵌", "外墙批嵌以及修补"] },
+  {
+    title: "其他工程",
+    itemNames: ["砖墙门窗洞过梁", "水泥墙开槽", "打混凝土过梁孔", "厨房、卫生间排污管包隔音棉", "补线、管槽及零星修补", "包上/下水管道(单管)", "垃圾清运费", "材料搬运费", "地面砖现场维护费"],
+  },
+  { title: "水电工程", itemNames: ["强电布线", "弱电布线", "水路布管"] },
+  { title: "主材项目", itemNames: ["地面瓷砖", "墙面瓷砖", "瓷砖加工费"] },
+  { title: "全屋定制、衣柜、橱柜、全屋家具", itemNames: ["全屋定制", "橱柜", "背景墙"] },
+  { title: "室内门", itemNames: ["入户门", "室内门", "卫生间门", "厨房推拉门", "厨房推拉门双包套", "阳台推拉门", "阳台推拉门双包套", "铝合金封门窗"] },
+  { title: "集成吊顶、卫浴、全屋开关灯饰", itemNames: ["厨房卫生间集成吊顶", "浴室柜", "马桶", "蹲坑", "淋浴隔断", "玻璃淋浴房", "花洒", "卫浴五件套", "全屋插座开关", "全屋灯饰"] },
+  { title: "其他（窗帘、美缝、窗台石等）", itemNames: ["美缝", "窗帘", "暗窗帘箱", "窗台石", "窗台石铺贴", "全屋保洁"] },
 ];
 
 export const MANUAL_QUOTE_DRAFT_ITEMS: ManualQuoteDraftItem[] = [
@@ -148,27 +157,20 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string):
 
 function quoteTemplateRows(mapping: QuoteMapping): string[][] {
   const remainingItems = new Set(mapping.items);
-  const remainingManualItems = new Set(MANUAL_QUOTE_DRAFT_ITEMS);
-  const mappedItemNames = new Set(mapping.items.map((item) => item.item_name));
-  MANUAL_QUOTE_DRAFT_ITEMS.filter((item) => mappedItemNames.has(item.item_name)).forEach((item) => remainingManualItems.delete(item));
   const rows: string[][] = [];
-  for (const section of TEMPLATE_SECTIONS) {
-    const sectionItems = mapping.items
-      .filter((item) => remainingItems.has(item) && templateSectionForItem(item.item_name, item.space_type)?.title === section.title)
-      .sort((a, b) => templateItemOrder(section, a.item_name) - templateItemOrder(section, b.item_name));
-    const manualItems = MANUAL_QUOTE_DRAFT_ITEMS
-      .filter((item) => remainingManualItems.has(item) && !mappedItemNames.has(item.item_name) && templateSectionForItem(item.item_name, item.space_type)?.title === section.title)
-      .sort((a, b) => templateItemOrder(section, a.item_name) - templateItemOrder(section, b.item_name));
-    rows.push(sectionHeaderRow(section));
-    sectionItems.forEach((item, index) => {
-      remainingItems.delete(item);
-      rows.push(quoteItemTemplateRow(item, index + 1));
-    });
-    manualItems.forEach((item, index) => {
-      remainingManualItems.delete(item);
-      rows.push(manualItemTemplateRow(item, sectionItems.length + index + 1));
-    });
-    rows.push(sectionSubtotalRow(sectionItems.reduce((sum, item) => sum + item.amount, 0)));
+  let sectionIndex = 1;
+
+  const firstFixedSection = templateSectionWithCode(FIXED_TEMPLATE_SECTIONS[0], sectionIndex++);
+  rows.push(...quoteTemplateSectionRows(firstFixedSection, fixedSectionItems(mapping.items, remainingItems, firstFixedSection), remainingItems));
+
+  for (const spaceName of dynamicSpaceNames(mapping.items)) {
+    const roomSection = templateSectionWithCode({ title: `${spaceName}工程`, itemNames: ROOM_SECTION_ITEM_NAMES }, sectionIndex++);
+    rows.push(...quoteTemplateSectionRows(roomSection, roomSectionItems(mapping.items, remainingItems, spaceName), remainingItems));
+  }
+
+  for (const sectionDefinition of FIXED_TEMPLATE_SECTIONS.slice(1)) {
+    const section = templateSectionWithCode(sectionDefinition, sectionIndex++);
+    rows.push(...quoteTemplateSectionRows(section, fixedSectionItems(mapping.items, remainingItems, section), remainingItems));
   }
 
   if (remainingItems.size > 0) {
@@ -178,14 +180,34 @@ function quoteTemplateRows(mapping: QuoteMapping): string[][] {
     rows.push(sectionSubtotalRow([...remainingItems].reduce((sum, item) => sum + item.amount, 0)));
   }
 
-  if (remainingManualItems.size > 0) {
-    const otherSection = { code: "补", title: "未归类人工补项", itemNames: [] };
-    rows.push(sectionHeaderRow(otherSection));
-    [...remainingManualItems].forEach((item, index) => rows.push(manualItemTemplateRow(item, index + 1)));
-    rows.push(sectionSubtotalRow(0));
+  rows.push(...quoteTemplateTotalRows(mapping.summary.total_amount));
+  return rows;
+}
+
+function quoteTemplateSectionRows(section: QuoteTemplateSection, sectionItems: QuoteMapping["items"], remainingItems: Set<QuoteMapping["items"][number]>): string[][] {
+  const rows: string[][] = [sectionHeaderRow(section)];
+  let rowIndex = 1;
+  let subtotal = 0;
+  for (const templateItemName of section.itemNames) {
+    const matchingItems = sectionItems.filter((item) => itemMatchesTemplate(item.item_name, templateItemName));
+    if (matchingItems.length === 0) {
+      rows.push(zeroItemTemplateRow(templateItemName, rowIndex++));
+      continue;
+    }
+    for (const item of matchingItems) {
+      remainingItems.delete(item);
+      subtotal += item.amount;
+      rows.push(quoteItemTemplateRow(item, rowIndex++));
+    }
   }
 
-  rows.push(...quoteTemplateTotalRows(mapping.summary.total_amount));
+  const extraItems = sectionItems.filter((item) => remainingItems.has(item));
+  for (const item of extraItems) {
+    remainingItems.delete(item);
+    subtotal += item.amount;
+    rows.push(quoteItemTemplateRow(item, rowIndex++));
+  }
+  rows.push(sectionSubtotalRow(subtotal));
   return rows;
 }
 
@@ -204,8 +226,8 @@ function quoteItemTemplateRow(item: QuoteMapping["items"][number], index: number
   ];
 }
 
-function manualItemTemplateRow(item: ManualQuoteDraftItem, index: number): string[] {
-  return [String(index), item.item_name, "", "", "", "", "", "", ""];
+function zeroItemTemplateRow(itemName: string, index: number): string[] {
+  return [String(index), itemName, "", "", "", "", "", "0.00", ""];
 }
 
 function sectionHeaderRow(section: Pick<QuoteTemplateSection, "code" | "title">): string[] {
@@ -247,40 +269,50 @@ function quoteTemplateRiskNoteRows(riskRows: string[][]): string[][] {
   return [["", "报价风险备注", "", "", "", "", "", "", ""], ...relevantRows.map((row) => ["", row[0], "", "", "", "", "", "", row[1]])];
 }
 
-function templateSectionForItem(itemName: string, spaceType: string): QuoteTemplateSection | undefined {
-  if (itemName === "厨房卫生间集成吊顶") {
-    const preferredTitle = spaceType === "厨房" ? "厨房工程" : spaceType === "卫生间" ? "卫生间工程" : "集成吊顶、卫浴、全屋开关灯饰";
-    return TEMPLATE_SECTIONS.find((section) => section.title === preferredTitle);
-  }
-  if ([
-    "轻钢龙骨平顶",
-    "顶面批嵌",
-    "顶面乳胶漆",
-    "墙面界面剂处理",
-    "墙面批嵌",
-    "墙面乳胶漆",
-    "地面找平",
-    "墙地面防漏处理",
-    "墙面贴瓷砖(600X1200)",
-    "地面砖铺贴(750X1500)",
-    "暗窗帘箱",
-    "窗台石铺贴",
-  ].includes(itemName)) {
-    const spaceSection = TEMPLATE_SECTIONS.find((section) => section.title === `${spaceType}工程`);
-    if (spaceSection?.itemNames.includes(itemName)) {
-      return spaceSection;
-    }
-  }
-  return TEMPLATE_SECTIONS.find((section) => section.itemNames.includes(itemName) || section.itemNames.some((templateName) => itemName.includes(templateName)));
+function templateSectionWithCode(section: QuoteTemplateSectionDefinition, index: number): QuoteTemplateSection {
+  return { ...section, code: chineseSectionCode(index) };
 }
 
-function templateItemOrder(section: QuoteTemplateSection, itemName: string): number {
-  const index = section.itemNames.indexOf(itemName);
-  if (index >= 0) {
-    return index;
+function dynamicSpaceNames(items: QuoteMapping["items"]): string[] {
+  const spaceNames: string[] = [];
+  for (const item of items) {
+    if (item.space_name === "全屋" || !isRoomSectionItem(item.item_name)) {
+      continue;
+    }
+    if (!spaceNames.includes(item.space_name)) {
+      spaceNames.push(item.space_name);
+    }
   }
-  const partialIndex = section.itemNames.findIndex((templateName) => itemName.includes(templateName));
-  return partialIndex >= 0 ? partialIndex : Number.MAX_SAFE_INTEGER;
+  return spaceNames;
+}
+
+function roomSectionItems(items: QuoteMapping["items"], remainingItems: Set<QuoteMapping["items"][number]>, spaceName: string): QuoteMapping["items"] {
+  return items.filter((item) => remainingItems.has(item) && item.space_name === spaceName && isRoomSectionItem(item.item_name));
+}
+
+function fixedSectionItems(items: QuoteMapping["items"], remainingItems: Set<QuoteMapping["items"][number]>, section: QuoteTemplateSection): QuoteMapping["items"] {
+  return items.filter((item) => remainingItems.has(item) && section.itemNames.some((templateItemName) => itemMatchesTemplate(item.item_name, templateItemName)));
+}
+
+function isRoomSectionItem(itemName: string): boolean {
+  return ROOM_SECTION_ITEM_NAMES.some((templateItemName) => itemMatchesTemplate(itemName, templateItemName));
+}
+
+function itemMatchesTemplate(itemName: string, templateItemName: string): boolean {
+  return itemName === templateItemName || itemName.includes(templateItemName);
+}
+
+function chineseSectionCode(index: number): string {
+  const numerals = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九"];
+  if (index <= 10) {
+    return index === 10 ? "十" : numerals[index];
+  }
+  if (index < 20) {
+    return `十${numerals[index - 10]}`;
+  }
+  const tens = Math.floor(index / 10);
+  const ones = index % 10;
+  return `${numerals[tens]}十${ones === 0 ? "" : numerals[ones]}`;
 }
 
 function quoteExcelRiskRows(mapping: QuoteMapping): string[][] {
