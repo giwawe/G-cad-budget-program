@@ -4,6 +4,7 @@ from server.app.dxf import parser
 from server.app.models import ProjectDefaults
 from server.tests.dxf_fixtures import (
     build_balcony_wall_tile_dxf,
+    build_background_wall_dxf,
     build_bedroom_bathroom_door_dxf,
     build_bathroom_fixture_dxf,
     build_closed_custom_cabinet_dxf,
@@ -22,6 +23,8 @@ from server.tests.dxf_fixtures import (
     build_new_wall_dxf,
     build_simple_quote_dxf,
     build_window_on_short_wall_dxf,
+    build_window_height_marker_dxf,
+    build_new_wall_height_marker_dxf,
     build_two_room_quote_dxf_with_duplicate_close_point,
 )
 
@@ -102,6 +105,13 @@ def test_curtain_wall_width_candidate_uses_window_wall_not_longest_wall():
     assert review.spaces[0].curtain_wall_width_source == "matched_window_wall"
 
 
+def test_quote_window_height_marker_overrides_default_height():
+    review = parser.parse_dxf_review(build_window_height_marker_dxf(), ProjectDefaults())
+
+    assert review.spaces[0].windows[0].height_m == 1.5
+    assert review.drawing.window_openings[0].height_m == 1.5
+
+
 def test_l_shaped_window_uses_l_shape_length_for_curtain_wall_width():
     review = parser.parse_dxf_review(build_l_shaped_window_dxf(), ProjectDefaults())
 
@@ -142,12 +152,28 @@ def test_quote_new_wall_segments_are_assigned_to_space():
     assert review.drawing.new_walls == [((2.0, 0.5), (2.0, 2.9)), ((3.2, 0.5), (4.8, 0.5))]
 
 
+def test_quote_new_wall_height_and_thickness_markers_are_assigned_to_segment():
+    review = parser.parse_dxf_review(build_new_wall_height_marker_dxf(), ProjectDefaults())
+
+    assert review.spaces[0].new_wall_lengths_m == [2.4]
+    assert review.spaces[0].new_wall_heights_m == [1.2]
+    assert review.spaces[0].new_wall_thicknesses_m == [0.24]
+
+
 def test_quote_demo_wall_segments_are_assigned_to_space():
     review = parser.parse_dxf_review(build_demolition_wall_dxf(), ProjectDefaults())
 
     assert review.spaces[0].name == "一层-客厅"
     assert review.spaces[0].demolition_wall_lengths_m == [2.4, 1.6]
     assert review.drawing.demolition_walls == [((2.0, 0.5), (2.0, 2.9)), ((3.2, 0.5), (4.8, 0.5))]
+
+
+def test_quote_background_wall_segments_are_assigned_to_space():
+    review = parser.parse_dxf_review(build_background_wall_dxf(), ProjectDefaults())
+
+    assert review.spaces[0].background_wall_lengths_m == [3.2]
+    assert review.spaces[0].background_wall_heights_m == [2.6]
+    assert review.drawing.background_walls == [((1.0, 3.5), (4.2, 3.5))]
 
 
 def test_quote_cabinet_segments_are_assigned_to_kitchen_space():

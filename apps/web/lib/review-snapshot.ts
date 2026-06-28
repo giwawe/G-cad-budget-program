@@ -105,6 +105,7 @@ function normalizeSnapshotRow(row: QuantityRow): QuantityRow {
     newWallAreaM2: typeof row.newWallAreaM2 === "number" ? row.newWallAreaM2 : 0,
     demolitionWallLengthM: typeof row.demolitionWallLengthM === "number" ? row.demolitionWallLengthM : 0,
     demolitionWallAreaM2: typeof row.demolitionWallAreaM2 === "number" ? row.demolitionWallAreaM2 : 0,
+    backgroundWallAreaM2: typeof row.backgroundWallAreaM2 === "number" ? row.backgroundWallAreaM2 : 0,
     interiorDoorCount: typeof row.interiorDoorCount === "number" ? row.interiorDoorCount : 0,
     bathroomDoorCount: typeof row.bathroomDoorCount === "number" ? row.bathroomDoorCount : 0,
     slidingDoorAreaM2: typeof row.slidingDoorAreaM2 === "number" ? row.slidingDoorAreaM2 : 0,

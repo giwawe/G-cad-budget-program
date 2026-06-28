@@ -35,7 +35,11 @@ class SpaceInput:
     wall_lengths_m: list[float] = field(default_factory=list)
     wall_tile_lengths_m: list[float] = field(default_factory=list)
     new_wall_lengths_m: list[float] = field(default_factory=list)
+    new_wall_heights_m: list[float | None] = field(default_factory=list)
+    new_wall_thicknesses_m: list[float | None] = field(default_factory=list)
     demolition_wall_lengths_m: list[float] = field(default_factory=list)
+    background_wall_lengths_m: list[float] = field(default_factory=list)
+    background_wall_heights_m: list[float | None] = field(default_factory=list)
     base_cabinet_lengths_m: list[float] = field(default_factory=list)
     wall_cabinet_lengths_m: list[float] = field(default_factory=list)
     custom_cabinet_lengths_m: list[float] = field(default_factory=list)
@@ -78,6 +82,7 @@ class QuantityRow:
     new_wall_area_m2: float
     demolition_wall_length_m: float
     demolition_wall_area_m2: float
+    background_wall_area_m2: float
     interior_door_count: int
     bathroom_door_count: int
     sliding_door_area_m2: float

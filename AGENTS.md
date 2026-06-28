@@ -103,6 +103,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - `QUOTE_WALL_TILE`：任意空间的实际贴砖墙面线，用于标记贴砖墙长；厨房、卫生间仍按默认全墙贴砖规则。
 - `QUOTE_NEW_WALL`：新砌墙中心线或墙体线，用于新砌墙长度和面积。
 - `QUOTE_DEMO_WALL`：拆除墙体中心线或墙体线，用于拆墙长度和面积。
+- `QUOTE_BACKGROUND_WALL`：可选背景墙线，用于背景墙面积；不画时背景墙默认为 0，Excel 草稿保留空行让设计师补填。
 - `QUOTE_BASE_CABINET`：厨房地柜/台面延米线，用于橱柜地柜长度。
 - `QUOTE_WALL_CABINET`：厨房吊柜延米线，用于橱柜吊柜长度。
 - `QUOTE_CUSTOM`：非厨房全屋定制柜体投影延米线，用于全屋定制面积；同图层邻近文字可标注 `H=800` 这类柜高；若画成闭合柜体轮廓，系统取最长边作为投影长度，不取周长。
@@ -121,14 +122,15 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 顶面面积 = 地面面积
 墙面计量长度 = 与空间关联的 QUOTE_WALL 长度
 墙面展开面积 = 墙面计量长度 * 层高
-窗洞面积 = 窗宽合计 * 窗高；普通窗宽取线段长度或窗框长边，L 形/转角窗宽取两条非平行有效窗边合计
+窗洞面积 = 窗宽合计 * 窗高；普通窗宽取线段长度或窗框长边，L 形/转角窗宽取两条非平行有效窗边合计；窗洞邻近文字支持 HEIGHT/H/窗高 标识，没有时默认窗高 1.8m
 门洞扣减 = 仅 deduct_from_wall=true 的门洞宽度 * 门高
 墙面乳胶漆面积 = (墙面计量长度 + 门洞宽度合计) * 层高 - 窗洞面积 - 门洞扣减 - 贴砖墙面面积；厨房、卫生间默认墙面贴砖时墙面乳胶漆为 0；`QUOTE_WALL` 墙线统计仍只按实际可施工墙面线，门洞长度只在墙面乳胶漆面积公式中临时补回
-新砌墙面积 = 与空间关联的 QUOTE_NEW_WALL 长度合计 * 层高
+新砌墙面积 = 与空间关联的 QUOTE_NEW_WALL 逐段长度 * 标注高度；邻近文字支持 HEIGHT/H 和 THICKNESS/厚度 标识，没有高度时默认空间层高，没有厚度时按 240mm 口径由设计师后续调整
 拆墙面积 = 与空间关联的 QUOTE_DEMO_WALL 长度合计 * 层高
 厨房地柜长度 = 厨房空间内 QUOTE_BASE_CABINET 延米线长度合计；若画成柜体轮廓，按轮廓面积 ÷ 柜体深度换算投影延米，不按周长累计
 厨房吊柜长度 = 厨房空间内 QUOTE_WALL_CABINET 延米线长度合计；若画成柜体轮廓，按轮廓面积 ÷ 柜体深度换算投影延米，不按周长累计
-全屋定制面积 = 非厨房空间内 QUOTE_CUSTOM 常规柜投影长度 * 2.6m + 高度低于 1m 的低柜长度；闭合柜体轮廓取最长边，不取周长
+全屋定制面积 = 非厨房空间内 QUOTE_CUSTOM 常规柜投影长度 * 2.6m + 高度低于 1m 的低柜长度；闭合柜体轮廓取最长边，不取周长；邻近文字支持 HEIGHT/H/高度 和 TYPE 标识，当前自动金额主要使用高度，类型留作后续分类扩展
+背景墙面积 = 可选 QUOTE_BACKGROUND_WALL 长度 * 标注高度；不画时为 0，Excel 草稿保留背景墙空行
 马桶数量 = 卫生间默认 1 个；画了 QUOTE_TOILET 点位时按点位数
 浴室柜数量 = 卫生间默认 1 套；画了 QUOTE_BATHROOM_VANITY 点位时按点位数
 ```
@@ -177,10 +179,11 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 花洒、卫浴五件套：默认按 `bathroom_count` 对每个可计价卫生间生成 1 套候选，不复用 `toilet_count`，避免和马桶/蹲坑选择绑定。
 - 工程量表显示 `wall_tile_measure_length_m`，校准模板也会导出 `wall_tile_measure_length_m` 和 `wall_tile_area_m2`。
 - 工程量表默认不按空间显示地砖主材片数、强电备用面积、水路备用面积、新砌墙和拆墙字段；这些字段仍保留在校准模板与报价映射中，按全屋汇总生成金额。
-- 新砌墙：画在 `QUOTE_NEW_WALL` 的线段会生成 `new_wall_length_m` 和 `new_wall_area_m2`，公式为 `新砌墙长度 * 空间实际层高`；默认报价规则“砌120厚砖墙”按全屋 `new_wall_area_m2` 汇总生成金额，不按空间拆行。
+- 新砌墙：画在 `QUOTE_NEW_WALL` 的线段会生成 `new_wall_length_m` 和 `new_wall_area_m2`，公式为 `新砌墙逐段长度 * 标注高度`；同图层邻近文字可补 `HEIGHT=1200`、`H=1.2m`、`THICKNESS=240`、`厚度240` 等标识，没有高度时按空间实际层高，没有厚度时按 240mm 口径由设计师后续调整。默认报价规则“砌120厚砖墙”仍按全屋 `new_wall_area_m2` 汇总生成金额，不按空间拆行，设计师可在 Excel 草稿中调整项目名称、数量或单价。
 - 拆墙：画在 `QUOTE_DEMO_WALL` 的线段会生成 `demolition_wall_length_m` 和 `demolition_wall_area_m2`，公式为 `拆墙长度 * 空间实际层高`；默认报价规则“拆改及拆墙”按全屋 `demolition_wall_area_m2` 汇总生成金额，不按空间拆行。
 - 橱柜：地柜画在 `QUOTE_BASE_CABINET`，吊柜画在 `QUOTE_WALL_CABINET`，分别生成 `kitchen_base_cabinet_length_m` 和 `kitchen_wall_cabinet_length_m`，仅厨房空间计入；默认报价规则“橱柜地柜”和“橱柜吊柜”分别按对应 metric 生成金额。地柜和吊柜在 CAD 中可能重叠，必须分图层，不能用单一橱柜线混算。普通延米线按线长累计；闭合或近似闭合柜体轮廓按 `轮廓面积 ÷ 柜体深度` 换算投影延米，不按周长累计；单独短深度/收口线默认不计入延米。
-- 全屋定制：非厨房柜体画在 `QUOTE_CUSTOM`，默认生成 `custom_cabinet_area_m2`，公式为 `常规柜投影长度 * 2.6m`；如果 `QUOTE_CUSTOM` 是闭合柜体轮廓，按最长边取一次投影长度，不把轮廓周长累加。同图层邻近文字可标注柜高，如 `H=800`、`高度800` 或 `H=0.8m`，高度低于 1m 的低柜按长度米取值，并入同一个 `custom_cabinet_area_m2` 数量，不单独生成低柜字段或报价项；厨房空间默认为 0，避免和橱柜地柜/吊柜重复计费。
+- 全屋定制：非厨房柜体画在 `QUOTE_CUSTOM`，默认生成 `custom_cabinet_area_m2`，公式为 `常规柜投影长度 * 2.6m`；如果 `QUOTE_CUSTOM` 是闭合柜体轮廓，按最长边取一次投影长度，不把轮廓周长累加。同图层邻近文字可标注柜高，如 `HEIGHT=800`、`H=800`、`高度800` 或 `H=0.8m`，也可保留 `TYPE=衣柜` 这类类型标识供后续分类扩展；高度低于 1m 的低柜按长度米取值，并入同一个 `custom_cabinet_area_m2` 数量，不单独生成低柜字段或报价项；厨房空间默认为 0，避免和橱柜地柜/吊柜重复计费。
+- 背景墙：可选画在 `QUOTE_BACKGROUND_WALL`，按背景墙线长 * 标注高度生成 `background_wall_area_m2`，未标注高度时按空间层高；不画时为 0。默认报价规则“背景墙”按全屋汇总生成金额；如果没有自动工程量，Excel 草稿仍保留背景墙空行供设计师补填。
 - 洁具：卫生间默认生成 `toilet_count=1` 和 `bathroom_vanity_count=1`，用于“马桶”和“浴室柜”报价；如果画了 `QUOTE_TOILET` 或 `QUOTE_BATHROOM_VANITY` 点位，则按点位数覆盖默认数量。
 - 建筑面积：`building_area_m2` 从 `QUOTE_EXT_WALL` 闭合多段线读取，closed 标记或首尾点重合都视为闭合；当前取面积最大的闭合外墙轮廓，写入 API summary、图形校对页和报价映射 summary；它不是每个 `QUOTE_ROOM` 面积的简单求和，暂不混入空间工程量行。
 - 窗台石当前自动计算 `windowsill_length_m`，v1 直接等于 `window_width_total_m`，用于窗台石铺贴报价。
@@ -216,7 +219,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 报价映射面板会提前展示导出前风险明细，复用导出确认里的 warning、零单价和建筑面积缺失提示，避免报价员等到点击导出时才看到风险原因。
 - 报价映射面板如果发现“厨房卫生间集成吊顶”已有工程量但 `unit_price <= 0`，会额外显示集成吊顶单价待补提醒，提示报价员在报价规则 JSON 中补 `unit_price`；如果实际做石膏板吊顶，则回到工程量表切换顶面类型。该提醒不阻断导出。
 - 报价映射面板会单独展示“全屋汇总项”，把地砖主材、强电布线、水路布管、砌墙、拆墙、全屋灯饰等 `space_name="全屋"` 的清单集中列出，避免这些项目从空间工程量表隐藏后不直观。
-- 报价映射面板会提示 Excel 草稿包含 16 项“人工补项”；这些项目只用于提醒报价员补填，不写入报价映射 `items`，也不影响 `summary.total_amount`。已自动接入的拆改及拆墙、卫生间门、厨房推拉门、厨房推拉门双包套、材料搬运费、垃圾清运费、地面砖现场维护费、弱电布线、全屋插座开关、全屋保洁、地面瓷砖、墙面瓷砖、美缝、瓷砖加工费、花洒和卫浴五件套不再重复放入人工补项。
+- 报价映射面板会提示 Excel 草稿包含 16 项“人工补项”；这些项目只用于提醒报价员补填，不写入报价映射 `items`，也不影响 `summary.total_amount`。已自动接入的拆改及拆墙、卫生间门、厨房推拉门、厨房推拉门双包套、材料搬运费、垃圾清运费、地面砖现场维护费、弱电布线、全屋插座开关、全屋保洁、地面瓷砖、墙面瓷砖、美缝、瓷砖加工费、花洒和卫浴五件套不再重复放入人工补项；背景墙在未画 `QUOTE_BACKGROUND_WALL` 时保留为空行，画了背景墙线时自动行会替代该空行。
 - 窗帘墙宽候选列可在工程量表中直接编辑；编辑后会清空已生成的报价映射，避免沿用旧结果。
 - 窗帘墙宽候选列会显示候选来源，`L形窗自动` 代表已按 L 形窗两条非平行长窗边合计，`回退最长墙` 代表未匹配到窗户所在墙面时自动取空间最长墙；`旧版L形窗` 仅兼容旧快照来源，报价员仍可在表格中人工校准。
 
@@ -242,6 +245,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 窗台石铺贴：按 `windowsillLengthM`，有窗洞长度时生成。
 - 砌120厚砖墙：按 `newWallAreaM2` 全屋汇总，画了 `QUOTE_NEW_WALL` 时生成。
 - 拆改及拆墙：按 `demolitionWallAreaM2` 全屋汇总，画了 `QUOTE_DEMO_WALL` 时生成。
+- 背景墙：按 `backgroundWallAreaM2` 全屋汇总，画了 `QUOTE_BACKGROUND_WALL` 时生成；未画时 Excel 草稿保留空行。
 - 室内门：按 `interiorDoorCount`，普通 `QUOTE_DOOR` 门洞生成。
 - 卫生间门、厨房推拉门面积、厨房推拉门门套长度已进入工程量表、校准模板和默认报价规则；默认规则会分别生成“卫生间门”“厨房推拉门”“厨房推拉门双包套”，单价按真实模板分别为 1200、550、300。
 - 橱柜：默认报价规则按项目级 `kitchen_cabinet_length_m = kitchenBaseCabinetLengthM + kitchenWallCabinetLengthM` 汇总为一条“橱柜”，用于匹配真实模板；工程量表和校准模板仍保留地柜、吊柜两个原始指标，方便分别校对。
@@ -256,7 +260,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 报价规则 JSON 是数组格式，字段为：
 
 - `item_name`：清单项名称。
-- `metric`：取数指标，当前只允许 `building_area_m2`、`tile_area_m2`、`cleaning_package_count`、`latex_paint_area_m2`、`floor_area_m2`、`floor_tile_piece_count`、`wall_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`lighting_package_count`、`switch_socket_package_count`、`ceiling_area_m2`、`wall_tile_area_m2`、`waterproof_area_m2`、`windowsill_length_m`、`new_wall_area_m2`、`demolition_wall_area_m2`、`interior_door_count`、`bathroom_door_count`、`sliding_door_area_m2`、`sliding_door_casing_length_m`、`kitchen_cabinet_length_m`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`custom_cabinet_area_m2`、`toilet_count`、`bathroom_vanity_count`、`bathroom_count`、`curtain_wall_width_m`。
+- `metric`：取数指标，当前只允许 `building_area_m2`、`tile_area_m2`、`cleaning_package_count`、`latex_paint_area_m2`、`floor_area_m2`、`floor_tile_piece_count`、`wall_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`lighting_package_count`、`switch_socket_package_count`、`ceiling_area_m2`、`wall_tile_area_m2`、`waterproof_area_m2`、`windowsill_length_m`、`new_wall_area_m2`、`demolition_wall_area_m2`、`background_wall_area_m2`、`interior_door_count`、`bathroom_door_count`、`sliding_door_area_m2`、`sliding_door_casing_length_m`、`kitchen_cabinet_length_m`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`custom_cabinet_area_m2`、`toilet_count`、`bathroom_vanity_count`、`bathroom_count`、`curtain_wall_width_m`。
 - `unit`：单位。
 - `unit_price`：单价，必须是非负数字。
 - `material_price` / `auxiliary_price` / `labor_price`：可选三段单价，用于真实 Excel 模板展示；`unit_price` 仍是三段单价合计，并用于报价映射金额计算。

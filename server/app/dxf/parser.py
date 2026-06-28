@@ -16,6 +16,7 @@ QUOTE_LAYERS = {
     "QUOTE_WALL_TILE",
     "QUOTE_NEW_WALL",
     "QUOTE_DEMO_WALL",
+    "QUOTE_BACKGROUND_WALL",
     "QUOTE_BASE_CABINET",
     "QUOTE_WALL_CABINET",
     "QUOTE_CUSTOM",
@@ -102,6 +103,7 @@ class DrawingGeometry:
     tile_walls: list[tuple[Point, Point]]
     new_walls: list[tuple[Point, Point]]
     demolition_walls: list[tuple[Point, Point]]
+    background_walls: list[tuple[Point, Point]]
     base_cabinets: list[tuple[Point, Point]]
     wall_cabinets: list[tuple[Point, Point]]
     base_cabinet_boundaries: list[list[Point]]
@@ -142,7 +144,11 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
     walls: list[tuple[Point, Point]] = []
     wall_tile_segments: list[tuple[Point, Point]] = []
     new_wall_segments: list[tuple[Point, Point]] = []
+    new_wall_height_markers: list[tuple[Point, float]] = []
+    new_wall_thickness_markers: list[tuple[Point, float]] = []
     demolition_wall_segments: list[tuple[Point, Point]] = []
+    background_wall_segments: list[tuple[Point, Point]] = []
+    background_wall_height_markers: list[tuple[Point, float]] = []
     base_cabinet_segments: list[tuple[Point, Point]] = []
     wall_cabinet_segments: list[tuple[Point, Point]] = []
     base_cabinet_boundaries: list[list[Point]] = []
@@ -154,6 +160,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
     toilet_points: list[Point] = []
     bathroom_vanity_points: list[Point] = []
     window_openings: list[DrawingOpening] = []
+    window_height_markers: list[tuple[Point, float]] = []
     windows: list[tuple[Point, Point]] = []
     door_opening_inputs: list[DrawingOpening] = []
     texts: list[tuple[Point, str]] = []
@@ -170,9 +177,26 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         elif layer == "QUOTE_WALL_TILE":
             wall_tile_segments.extend(_entity_segments(entity, defaults.unit_scale_to_m))
         elif layer == "QUOTE_NEW_WALL":
-            new_wall_segments.extend(_entity_segments(entity, defaults.unit_scale_to_m))
+            if entity.dxftype() in {"TEXT", "MTEXT"}:
+                text = _text_content(entity)
+                point = _text_point(entity, defaults.unit_scale_to_m)
+                height_m = _height_from_text(text)
+                thickness_m = _thickness_from_text(text)
+                if height_m is not None:
+                    new_wall_height_markers.append((point, height_m))
+                if thickness_m is not None:
+                    new_wall_thickness_markers.append((point, thickness_m))
+            else:
+                new_wall_segments.extend(_entity_segments(entity, defaults.unit_scale_to_m))
         elif layer == "QUOTE_DEMO_WALL":
             demolition_wall_segments.extend(_entity_segments(entity, defaults.unit_scale_to_m))
+        elif layer == "QUOTE_BACKGROUND_WALL":
+            if entity.dxftype() in {"TEXT", "MTEXT"}:
+                height_m = _height_from_text(_text_content(entity))
+                if height_m is not None:
+                    background_wall_height_markers.append((_text_point(entity, defaults.unit_scale_to_m), height_m))
+            else:
+                background_wall_segments.extend(_entity_segments(entity, defaults.unit_scale_to_m))
         elif layer == "QUOTE_BASE_CABINET":
             base_cabinet_segments.extend(_kitchen_cabinet_segments(entity, defaults.unit_scale_to_m))
             boundary = _kitchen_cabinet_outline_boundary(entity, defaults.unit_scale_to_m)
@@ -189,7 +213,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
             if boundary:
                 custom_cabinet_boundaries.append(boundary)
             if entity.dxftype() in {"TEXT", "MTEXT"}:
-                height_m = _custom_cabinet_height_from_text(_text_content(entity))
+                height_m = _height_from_text(_text_content(entity))
                 if height_m is not None:
                     custom_cabinet_height_markers.append((_text_point(entity, defaults.unit_scale_to_m), height_m))
         elif layer == "QUOTE_EXT_WALL":
@@ -205,10 +229,15 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
             if point:
                 bathroom_vanity_points.append(point)
         elif layer == "QUOTE_WINDOW":
-            window_segments = _entity_segments(entity, defaults.unit_scale_to_m)
-            if window_segments:
-                window_openings.append(DrawingOpening(segments=window_segments, boundary_points=_closed_polyline_boundary_points(entity, defaults.unit_scale_to_m)))
-                windows.extend(window_segments)
+            if entity.dxftype() in {"TEXT", "MTEXT"}:
+                height_m = _height_from_text(_text_content(entity))
+                if height_m is not None:
+                    window_height_markers.append((_text_point(entity, defaults.unit_scale_to_m), height_m))
+            else:
+                window_segments = _entity_segments(entity, defaults.unit_scale_to_m)
+                if window_segments:
+                    window_openings.append(DrawingOpening(segments=window_segments, boundary_points=_closed_polyline_boundary_points(entity, defaults.unit_scale_to_m)))
+                    windows.extend(window_segments)
         elif layer == "QUOTE_DOOR":
             door_opening_inputs.extend(_door_openings(entity, defaults.unit_scale_to_m))
         elif layer in {"QUOTE_TEXT", "QUOTE_FLOOR", "QUOTE_HEIGHT"} and entity.dxftype() in {"TEXT", "MTEXT"}:
@@ -228,6 +257,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
     measured_tile_walls: list[tuple[Point, Point]] = []
     measured_new_walls: list[tuple[Point, Point]] = []
     measured_demolition_walls: list[tuple[Point, Point]] = []
+    measured_background_walls: list[tuple[Point, Point]] = []
     measured_base_cabinets: list[tuple[Point, Point]] = []
     measured_wall_cabinets: list[tuple[Point, Point]] = []
     measured_base_cabinet_boundaries: list[list[Point]] = []
@@ -240,6 +270,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         room_tile_walls = [(start, end) for start, end in wall_tile_segments if _segment_in_room(room, start, end)]
         room_new_walls = [(start, end) for start, end in new_wall_segments if _segment_in_room(room, start, end)]
         room_demolition_walls = [(start, end) for start, end in demolition_wall_segments if _segment_in_room(room, start, end)]
+        room_background_walls = [(start, end) for start, end in background_wall_segments if _segment_in_room(room, start, end)]
         room_base_cabinets = [(start, end) for start, end in base_cabinet_segments if _segment_in_room(room, start, end)]
         room_wall_cabinets = [(start, end) for start, end in wall_cabinet_segments if _segment_in_room(room, start, end)]
         room_base_cabinet_boundaries = [boundary for boundary in base_cabinet_boundaries if _boundary_in_room(room, boundary)]
@@ -251,7 +282,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
             for boundary in room_custom_cabinet_boundaries
         ]
         room_custom_cabinet_display_segments = [segment for segment in room_custom_cabinet_display_segments if segment]
-        room_custom_cabinet_heights = [_height_for_custom_cabinet_segment(segment, custom_cabinet_height_markers) for segment in room_custom_cabinets]
+        room_custom_cabinet_heights = [_height_for_segment(segment, custom_cabinet_height_markers) for segment in room_custom_cabinets]
         room_toilets = [point for point in toilet_points if contains_point(room, point) or _point_on_boundary(room, point)]
         room_bathroom_vanities = [point for point in bathroom_vanity_points if contains_point(room, point) or _point_on_boundary(room, point)]
         room_windows = [opening for opening in grouped_window_opening_inputs if _opening_associated_with_room(room, *_opening_centerline(opening))]
@@ -262,6 +293,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         measured_tile_walls.extend(room_tile_walls)
         measured_new_walls.extend(room_new_walls)
         measured_demolition_walls.extend(room_demolition_walls)
+        measured_background_walls.extend(room_background_walls)
         measured_base_cabinets.extend(room_base_cabinets)
         measured_wall_cabinets.extend(room_wall_cabinets)
         measured_base_cabinet_boundaries.extend(room_base_cabinet_boundaries)
@@ -285,7 +317,11 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
                 wall_lengths_m=[round(line_length(start, end), 2) for start, end in room_walls],
                 wall_tile_lengths_m=[round(line_length(start, end), 2) for start, end in room_tile_walls],
                 new_wall_lengths_m=[round(line_length(start, end), 2) for start, end in room_new_walls],
+                new_wall_heights_m=[_height_for_segment(segment, new_wall_height_markers) for segment in room_new_walls],
+                new_wall_thicknesses_m=[_thickness_for_segment(segment, new_wall_thickness_markers) for segment in room_new_walls],
                 demolition_wall_lengths_m=[round(line_length(start, end), 2) for start, end in room_demolition_walls],
+                background_wall_lengths_m=[round(line_length(start, end), 2) for start, end in room_background_walls],
+                background_wall_heights_m=[_height_for_segment(segment, background_wall_height_markers) for segment in room_background_walls],
                 base_cabinet_lengths_m=[round(line_length(start, end), 2) for start, end in room_base_cabinets],
                 wall_cabinet_lengths_m=[round(line_length(start, end), 2) for start, end in room_wall_cabinets],
                 custom_cabinet_lengths_m=[round(line_length(start, end), 2) for start, end in room_custom_cabinets],
@@ -295,7 +331,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
                 curtain_wall_width_candidate_m=curtain_wall_width_candidate_m,
                 curtain_wall_width_source=_curtain_wall_width_source(curtain_wall_width_candidate_m, has_l_shaped_window),
                 windows=[
-                    OpeningInput(width_m=round(_opening_width(opening), 2), height_m=defaults.default_window_height_m)
+                    OpeningInput(width_m=round(_opening_width(opening), 2), height_m=_height_for_opening(opening, window_height_markers) or defaults.default_window_height_m)
                     for opening in room_windows
                 ],
                 doors=[
@@ -306,7 +342,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
                 anomalies=[],
             )
         )
-    grouped_window_openings = [_drawing_window_for_opening(opening, named_rooms, defaults) for opening in grouped_window_opening_inputs]
+    grouped_window_openings = [_drawing_window_for_opening(opening, named_rooms, defaults, window_height_markers) for opening in grouped_window_opening_inputs]
     door_openings = [_drawing_door_for_opening(opening, named_rooms, walls) for opening in door_opening_inputs]
     doors = [door.segment for door in door_openings]
     building_area_boundary = _building_area_boundary(exterior_wall_boundaries)
@@ -323,6 +359,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         tile_walls=measured_tile_walls,
         new_walls=measured_new_walls,
         demolition_walls=measured_demolition_walls,
+        background_walls=measured_background_walls,
         base_cabinets=[segment for segment in measured_base_cabinets if not _segment_inside_any_boundary(segment, measured_base_cabinet_boundaries)],
         wall_cabinets=[segment for segment in measured_wall_cabinets if not _segment_inside_any_boundary(segment, measured_wall_cabinet_boundaries)],
         base_cabinet_boundaries=measured_base_cabinet_boundaries,
@@ -844,13 +881,18 @@ def _door_input_for_opening(opening: DrawingOpening, space_names: list[str]) -> 
     )
 
 
-def _drawing_window_for_opening(opening: DrawingOpening, named_rooms: list[tuple[str, list[Point]]], defaults: ProjectDefaults) -> DrawingWindow:
+def _drawing_window_for_opening(
+    opening: DrawingOpening,
+    named_rooms: list[tuple[str, list[Point]]],
+    defaults: ProjectDefaults,
+    height_markers: list[tuple[Point, float]],
+) -> DrawingWindow:
     start, end = _opening_centerline(opening)
     return DrawingWindow(
         segments=opening.segments,
         boundary_points=opening.boundary_points,
         width_m=round(_opening_width(opening), 2),
-        height_m=defaults.default_window_height_m,
+        height_m=_height_for_opening(opening, height_markers) or defaults.default_window_height_m,
         included_in_wall_deduction=True,
         space_names=[name for name, room in named_rooms if _opening_associated_with_room(room, start, end)],
     )
@@ -1033,18 +1075,27 @@ def _text_point(entity, scale: float) -> Point:
     return _scale_point((insert.x, insert.y), scale)
 
 
-def _custom_cabinet_height_from_text(text: str) -> float | None:
-    match = re.search(r"(?:H|h|高度)\s*[=:：]?\s*(\d+(?:\.\d+)?)\s*(m|M|米)?", text)
+def _height_from_text(text: str) -> float | None:
+    match = re.search(r"(?:\bHEIGHT\b|\bheight\b|\bH\b|\bh\b|高度|窗高)\s*[=:：]?\s*(\d+(?:\.\d+)?)\s*(m|M|米)?", text)
     if not match:
         return None
-    value = float(match.group(1))
-    unit = match.group(2)
+    return _dimension_value_to_m(float(match.group(1)), match.group(2))
+
+
+def _thickness_from_text(text: str) -> float | None:
+    match = re.search(r"(?:\bTHICKNESS\b|\bthickness\b|\bT\b|\bt\b|厚度|墙厚)\s*[=:：]?\s*(\d+(?:\.\d+)?)\s*(m|M|米)?", text)
+    if not match:
+        return None
+    return _dimension_value_to_m(float(match.group(1)), match.group(2))
+
+
+def _dimension_value_to_m(value: float, unit: str | None) -> float:
     if unit in {"m", "M", "米"}:
         return round(value, 2)
     return round(value / 1000 if value > 10 else value, 2)
 
 
-def _height_for_custom_cabinet_segment(segment: tuple[Point, Point], markers: list[tuple[Point, float]]) -> float | None:
+def _height_for_segment(segment: tuple[Point, Point], markers: list[tuple[Point, float]]) -> float | None:
     nearby_markers = [
         (line_length(_segment_midpoint(segment), point), height_m)
         for point, height_m in markers
@@ -1053,6 +1104,22 @@ def _height_for_custom_cabinet_segment(segment: tuple[Point, Point], markers: li
     if not nearby_markers:
         return None
     return min(nearby_markers, key=lambda item: item[0])[1]
+
+
+def _thickness_for_segment(segment: tuple[Point, Point], markers: list[tuple[Point, float]]) -> float | None:
+    nearby_markers = [
+        (line_length(_segment_midpoint(segment), point), thickness_m)
+        for point, thickness_m in markers
+        if _distance_to_segment(point, segment[0], segment[1]) <= 0.35
+    ]
+    if not nearby_markers:
+        return None
+    return min(nearby_markers, key=lambda item: item[0])[1]
+
+
+def _height_for_opening(opening: DrawingOpening, markers: list[tuple[Point, float]]) -> float | None:
+    start, end = _opening_centerline(opening)
+    return _height_for_segment((start, end), markers)
 
 
 def _entity_reference_point(entity, scale: float) -> Point | None:

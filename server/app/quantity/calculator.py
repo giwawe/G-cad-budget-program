@@ -76,9 +76,10 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
     electrical_scope_area_m2 = floor_area_m2
     plumbing_scope_area_m2 = floor_area_m2
     new_wall_length_m = round(sum(space.new_wall_lengths_m), 2)
-    new_wall_area_m2 = calculate_new_wall_area_m2(new_wall_length_m, height_m)
+    new_wall_area_m2 = calculate_segment_area_m2(space.new_wall_lengths_m, space.new_wall_heights_m, height_m)
     demolition_wall_length_m = round(sum(space.demolition_wall_lengths_m), 2)
     demolition_wall_area_m2 = calculate_demolition_wall_area_m2(demolition_wall_length_m, height_m)
+    background_wall_area_m2 = calculate_segment_area_m2(space.background_wall_lengths_m, space.background_wall_heights_m, height_m)
     interior_door_count = calculate_interior_door_count(space_type, space.doors)
     bathroom_door_count = calculate_bathroom_door_count(space_type, space.doors)
     sliding_door_area_m2 = calculate_sliding_door_area_m2(space_type, space.doors, defaults.default_door_height_m)
@@ -143,6 +144,7 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
         new_wall_area_m2=new_wall_area_m2,
         demolition_wall_length_m=demolition_wall_length_m,
         demolition_wall_area_m2=demolition_wall_area_m2,
+        background_wall_area_m2=background_wall_area_m2,
         interior_door_count=interior_door_count,
         bathroom_door_count=bathroom_door_count,
         sliding_door_area_m2=sliding_door_area_m2,
@@ -218,6 +220,14 @@ def calculate_floor_tile_piece_count(floor_area_m2: float) -> int:
 
 def calculate_new_wall_area_m2(new_wall_length_m: float, height_m: float) -> float:
     return round(max(new_wall_length_m * height_m, 0), 2)
+
+
+def calculate_segment_area_m2(lengths_m: list[float], heights_m: list[float | None], default_height_m: float) -> float:
+    area = 0.0
+    for index, length_m in enumerate(lengths_m):
+        height_m = heights_m[index] if index < len(heights_m) and heights_m[index] is not None else default_height_m
+        area += length_m * height_m
+    return round(max(area, 0), 2)
 
 
 def calculate_demolition_wall_area_m2(demolition_wall_length_m: float, height_m: float) -> float:

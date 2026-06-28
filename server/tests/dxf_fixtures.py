@@ -65,6 +65,19 @@ def build_window_on_short_wall_dxf() -> bytes:
     return _save_doc(doc)
 
 
+def build_window_height_marker_dxf() -> bytes:
+    doc = ezdxf.new("R2010")
+    msp = doc.modelspace()
+    for layer in ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_WINDOW", "QUOTE_TEXT"]:
+        doc.layers.add(layer)
+    msp.add_lwpolyline([(0, 0), (5000, 0), (5000, 4000), (0, 4000), (0, 0)], dxfattribs={"layer": "QUOTE_ROOM"})
+    msp.add_line((0, 0), (5000, 0), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((1000, 0), (3000, 0), dxfattribs={"layer": "QUOTE_WINDOW"})
+    msp.add_text("HEIGHT=1500", dxfattribs={"layer": "QUOTE_WINDOW", "insert": (2000, 180)})
+    msp.add_text("客厅", dxfattribs={"layer": "QUOTE_TEXT", "insert": (2500, 2000)})
+    return _save_doc(doc)
+
+
 def build_l_shaped_window_dxf() -> bytes:
     doc = ezdxf.new("R2010")
     msp = doc.modelspace()
@@ -141,6 +154,19 @@ def build_new_wall_dxf() -> bytes:
     return _save_doc(doc)
 
 
+def build_new_wall_height_marker_dxf() -> bytes:
+    doc = ezdxf.new("R2010")
+    msp = doc.modelspace()
+    for layer in ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_NEW_WALL", "QUOTE_TEXT"]:
+        doc.layers.add(layer)
+    msp.add_lwpolyline([(0, 0), (6000, 0), (6000, 4000), (0, 4000), (0, 0)], dxfattribs={"layer": "QUOTE_ROOM"})
+    msp.add_line((0, 0), (6000, 0), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((2000, 500), (2000, 2900), dxfattribs={"layer": "QUOTE_NEW_WALL"})
+    msp.add_text("HEIGHT=1200 THICKNESS=240", dxfattribs={"layer": "QUOTE_NEW_WALL", "insert": (2150, 1700)})
+    msp.add_text("一层-客厅", dxfattribs={"layer": "QUOTE_TEXT", "insert": (3000, 2000)})
+    return _save_doc(doc)
+
+
 def build_demolition_wall_dxf() -> bytes:
     doc = ezdxf.new("R2010")
     msp = doc.modelspace()
@@ -155,6 +181,19 @@ def build_demolition_wall_dxf() -> bytes:
     msp.add_line((3200, 500), (4800, 500), dxfattribs={"layer": "QUOTE_DEMO_WALL"})
     msp.add_line((8000, 0), (9000, 0), dxfattribs={"layer": "QUOTE_DEMO_WALL"})
     msp.add_text("一层-客厅", dxfattribs={"layer": "QUOTE_TEXT", "insert": (3000, 2000)})
+    return _save_doc(doc)
+
+
+def build_background_wall_dxf() -> bytes:
+    doc = ezdxf.new("R2010")
+    msp = doc.modelspace()
+    for layer in ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_BACKGROUND_WALL", "QUOTE_TEXT"]:
+        doc.layers.add(layer)
+    msp.add_lwpolyline([(0, 0), (5000, 0), (5000, 4000), (0, 4000), (0, 0)], dxfattribs={"layer": "QUOTE_ROOM"})
+    msp.add_line((0, 0), (5000, 0), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((1000, 3500), (4200, 3500), dxfattribs={"layer": "QUOTE_BACKGROUND_WALL"})
+    msp.add_text("H=2600", dxfattribs={"layer": "QUOTE_BACKGROUND_WALL", "insert": (2600, 3350)})
+    msp.add_text("一层-客厅", dxfattribs={"layer": "QUOTE_TEXT", "insert": (2500, 2000)})
     return _save_doc(doc)
 
 

@@ -90,6 +90,7 @@ const TEMPLATE_PRICES: Record<string, QuoteTemplatePrice> = {
   厨房推拉门双包套: { material: 300, auxiliary: 0, labor: 0, note: "极窄铝合金双包套。" },
   橱柜: { material: 600, auxiliary: 0, labor: 0, note: "橱柜柜体、柜门、五金、安装及辅料。" },
   全屋定制: { material: 600, auxiliary: 0, labor: 0, note: "全屋定制柜体、柜门、五金、安装及辅料。" },
+  背景墙: { material: 280, auxiliary: 0, labor: 0, note: "木饰面外石材或玻璃部分需按实际补差。" },
   马桶: { material: 1500, auxiliary: 0, labor: 0, note: "轻智能马桶。" },
   浴室柜: { material: 1500, auxiliary: 0, labor: 0, note: "岩板一体盆，含龙头及上下水。" },
   花洒: { material: 800, auxiliary: 0, labor: 0, note: "花洒（九牧、法恩莎）。" },
@@ -148,13 +149,15 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string):
 function quoteTemplateRows(mapping: QuoteMapping): string[][] {
   const remainingItems = new Set(mapping.items);
   const remainingManualItems = new Set(MANUAL_QUOTE_DRAFT_ITEMS);
+  const mappedItemNames = new Set(mapping.items.map((item) => item.item_name));
+  MANUAL_QUOTE_DRAFT_ITEMS.filter((item) => mappedItemNames.has(item.item_name)).forEach((item) => remainingManualItems.delete(item));
   const rows: string[][] = [];
   for (const section of TEMPLATE_SECTIONS) {
     const sectionItems = mapping.items
       .filter((item) => remainingItems.has(item) && templateSectionForItem(item.item_name, item.space_type)?.title === section.title)
       .sort((a, b) => templateItemOrder(section, a.item_name) - templateItemOrder(section, b.item_name));
     const manualItems = MANUAL_QUOTE_DRAFT_ITEMS
-      .filter((item) => remainingManualItems.has(item) && templateSectionForItem(item.item_name, item.space_type)?.title === section.title)
+      .filter((item) => remainingManualItems.has(item) && !mappedItemNames.has(item.item_name) && templateSectionForItem(item.item_name, item.space_type)?.title === section.title)
       .sort((a, b) => templateItemOrder(section, a.item_name) - templateItemOrder(section, b.item_name));
     rows.push(sectionHeaderRow(section));
     sectionItems.forEach((item, index) => {

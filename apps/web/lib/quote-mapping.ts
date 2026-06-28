@@ -13,6 +13,7 @@ type QuantityRowMetric =
   | "curtainWallWidthM"
   | "newWallAreaM2"
   | "demolitionWallAreaM2"
+  | "backgroundWallAreaM2"
   | "interiorDoorCount"
   | "bathroomDoorCount"
   | "slidingDoorAreaM2"
@@ -40,6 +41,7 @@ export type QuoteMetric =
   | "curtain_wall_width_m"
   | "new_wall_area_m2"
   | "demolition_wall_area_m2"
+  | "background_wall_area_m2"
   | "interior_door_count"
   | "bathroom_door_count"
   | "sliding_door_area_m2"
@@ -65,7 +67,8 @@ type SummedProjectQuoteMetric =
   | "plumbing_scope_area_m2"
   | "kitchen_cabinet_length_m"
   | "new_wall_area_m2"
-  | "demolition_wall_area_m2";
+  | "demolition_wall_area_m2"
+  | "background_wall_area_m2";
 type RowQuoteMetric = Exclude<QuoteMetric, ProjectQuoteMetric | SummedProjectQuoteMetric>;
 type DirectRowQuoteMetric = Exclude<RowQuoteMetric, "bathroom_count">;
 
@@ -165,6 +168,7 @@ const SUMMED_PROJECT_METRICS = new Set<QuoteMetric>([
   "kitchen_cabinet_length_m",
   "new_wall_area_m2",
   "demolition_wall_area_m2",
+  "background_wall_area_m2",
 ]);
 
 const DEFAULT_RULES: QuoteRule[] = [
@@ -192,6 +196,7 @@ const DEFAULT_RULES: QuoteRule[] = [
   quoteRule("窗台石铺贴", "windowsill_length_m", "M", 0, 28, 45),
   quoteRule("砌120厚砖墙", "new_wall_area_m2", "M2", 80, 0, 90),
   quoteRule("拆改及拆墙", "demolition_wall_area_m2", "M2", 0, 0, 60),
+  quoteRule("背景墙", "background_wall_area_m2", "M2", 280, 0, 0),
   quoteRule("室内门", "interior_door_count", "樘", 1200, 0, 0),
   quoteRule("卫生间门", "bathroom_door_count", "樘", 1200, 0, 0, BATHROOM_FIXTURE_SPACE_TYPES),
   quoteRule("厨房推拉门", "sliding_door_area_m2", "m2", 550, 0, 0, KITCHEN_CABINET_SPACE_TYPES),
@@ -235,6 +240,7 @@ const SUMMED_PROJECT_METRIC_TO_ROW_FIELD: Record<SummedProjectQuoteMetric, Quant
   plumbing_scope_area_m2: "plumbingScopeAreaM2",
   new_wall_area_m2: "newWallAreaM2",
   demolition_wall_area_m2: "demolitionWallAreaM2",
+  background_wall_area_m2: "backgroundWallAreaM2",
   kitchen_cabinet_length_m: "kitchenBaseCabinetLengthM",
 };
 
@@ -372,7 +378,7 @@ function rowRuleQuantity(row: QuantityRow, rule: QuoteRule & { metric: RowQuoteM
   if (rule.metric === "bathroom_count") {
     return 1;
   }
-  return round2(row[METRIC_TO_ROW_FIELD[rule.metric]]);
+  return round2(row[METRIC_TO_ROW_FIELD[rule.metric]] ?? 0);
 }
 
 function buildingAreaQuoteReadiness(rules: QuoteRule[], buildingAreaM2: number): BuildingAreaQuoteReadiness {
@@ -442,7 +448,7 @@ function projectRuleQuantity(billableRows: QuantityRow[], rule: QuoteRule, build
     return round2(
       billableRows
         .filter((row) => ruleAppliesToRow(rule, row))
-        .reduce((sum, row) => sum + row[rowField], 0),
+        .reduce((sum, row) => sum + (row[rowField] ?? 0), 0),
     );
   }
   return 0;
@@ -538,6 +544,7 @@ function isQuoteMetric(metric: unknown): metric is QuoteMetric {
     metric === "curtain_wall_width_m" ||
     metric === "new_wall_area_m2" ||
     metric === "demolition_wall_area_m2" ||
+    metric === "background_wall_area_m2" ||
     metric === "interior_door_count" ||
     metric === "bathroom_door_count" ||
     metric === "sliding_door_area_m2" ||

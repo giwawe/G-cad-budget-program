@@ -225,6 +225,15 @@
     "labor_price": 60
   },
   {
+    "item_name": "背景墙",
+    "metric": "background_wall_area_m2",
+    "unit": "M2",
+    "unit_price": 280,
+    "material_price": 280,
+    "auxiliary_price": 0,
+    "labor_price": 0
+  },
+  {
     "item_name": "室内门",
     "metric": "interior_door_count",
     "unit": "樘",

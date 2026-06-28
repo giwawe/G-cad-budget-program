@@ -28,14 +28,15 @@
 
 | 图层名 | 设计师需要画什么 | 当前系统用途 |
 |---|---|---|
-| `QUOTE_WINDOW` | 窗洞宽度线或闭合窗框 | 计算窗宽、窗洞扣减、图形校对 |
+| `QUOTE_WINDOW` | 窗洞宽度线或闭合窗框，可配邻近 `HEIGHT`/`H`/`窗高` 标识 | 计算窗宽、窗洞扣减、图形校对；未标注窗高时默认 1.8m |
 | `QUOTE_DOOR` | 门洞宽度线、闭合门洞或部分门块 | 计算门宽，判断是否需要扣减墙面 |
 | `QUOTE_WALL_TILE` | 任意空间的实际贴砖墙面线 | 计算标记贴砖墙长和墙砖面积；厨房、卫生间仍按默认全墙贴砖规则 |
-| `QUOTE_NEW_WALL` | 新砌墙中心线或墙体线 | 计算新砌墙长度和面积 |
+| `QUOTE_NEW_WALL` | 新砌墙中心线或墙体线，可配邻近 `HEIGHT`/`H` 和 `THICKNESS`/`厚度` 标识 | 计算新砌墙长度和面积；未标注高度时按空间层高，未标注厚度时按 240mm 口径由设计师后续调整 |
 | `QUOTE_DEMO_WALL` | 拆除墙体中心线或墙体线 | 计算拆墙长度和面积 |
+| `QUOTE_BACKGROUND_WALL` | 可选背景墙线，可配邻近 `HEIGHT`/`H` 标识 | 计算背景墙面积；不画时为 0，Excel 草稿保留空行 |
 | `QUOTE_BASE_CABINET` | 厨房地柜/台面延米线 | 计算橱柜地柜长度 |
 | `QUOTE_WALL_CABINET` | 厨房吊柜延米线 | 计算橱柜吊柜长度 |
-| `QUOTE_CUSTOM` | 非厨房全屋定制柜体投影延米线，可配邻近高度文字 | 计算全屋定制数量；闭合柜体轮廓取最长边，不取周长 |
+| `QUOTE_CUSTOM` | 非厨房全屋定制柜体投影延米线，可配邻近 `HEIGHT`/`H`/`高度` 和 `TYPE` 标识 | 计算全屋定制数量；闭合柜体轮廓取最长边，不取周长，当前自动金额主要使用高度 |
 | `QUOTE_TOILET` | 可选马桶点位 | 覆盖卫生间默认马桶数量 |
 | `QUOTE_BATHROOM_VANITY` | 可选浴室柜点位 | 覆盖卫生间默认浴室柜数量 |
 | `QUOTE_EXT_WALL` | 建筑外墙外轮廓闭合多段线 | 计算方案建筑面积；closed 标记或首尾点重合都视为闭合 |
@@ -129,7 +130,7 @@
 
 ### 4.3 新砌墙线
 
-`QUOTE_NEW_WALL` 表示需要新砌的墙体中心线或墙体线，当前按空间实际层高计算“砌120厚砖墙”面积。
+`QUOTE_NEW_WALL` 表示需要新砌的墙体中心线或墙体线，当前按墙段标注高度或空间实际层高计算“砌120厚砖墙”面积；同图层邻近文字可补 `HEIGHT=1200`、`H=1.2m`、`THICKNESS=240`、`厚度240` 等标识，厚度默认按 240mm 口径由设计师后续调整。
 
 要求：
 
@@ -339,12 +340,12 @@
 顶面面积 = 地面面积
 墙面计量长度 = 与空间关联的 QUOTE_WALL 长度合计
 墙面展开面积 = 墙面计量长度 * 层高
-窗洞面积 = 窗宽合计 * 窗高
+窗洞面积 = 窗宽合计 * 窗高；QUOTE_WINDOW 邻近文字支持 HEIGHT/H/窗高 标识，未标注时默认窗高 1.8m
 门洞扣减面积 = 需要扣减的门洞宽度 * 门高
 墙面乳胶漆面积 = (墙面计量长度 + 门洞宽度合计) * 层高 - 窗洞面积 - 门洞扣减面积 - 贴砖墙面面积；厨房、卫生间默认墙面贴砖时为 0
 厨房/卫生间墙砖面积 = max(墙面计量长度 * 2.5m - 窗洞面积 - 所有门洞宽度 * 门高, 0)
 标记贴砖墙砖面积 = 贴砖墙长 * 空间实际层高；除厨房/卫生间外，没有 QUOTE_WALL_TILE 时为 0
-新砌墙面积 = 新砌墙长度 * 空间实际层高；没有 QUOTE_NEW_WALL 时为 0
+新砌墙面积 = 新砌墙逐段长度 * 标注高度；QUOTE_NEW_WALL 邻近文字支持 HEIGHT/H 和 THICKNESS/厚度 标识，未标注高度时按空间层高，未标注厚度时按 240mm 口径由设计师后续调整；没有 QUOTE_NEW_WALL 时为 0
 拆墙面积 = 拆墙长度 * 空间实际层高；没有 QUOTE_DEMO_WALL 时为 0
 室内门数 = 房间侧自动判为室内门且 opening_type=normal_door 的 QUOTE_DOOR 门洞数量；客厅/餐厅/过道/门厅侧、卫生间门、入户门、推拉门、疑似大洞口和大洞口为 0
 卫生间门数 = 卫生间侧自动判为 bathroom_door 的 QUOTE_DOOR 门洞数量
@@ -352,7 +353,8 @@
 厨房推拉门门套长度 = 厨房空间内推拉门宽度 + 2 * 门高
 厨房地柜长度 = 厨房空间内 QUOTE_BASE_CABINET 延米线长度合计；柜体轮廓按轮廓面积 ÷ 柜体深度换算投影延米；其它空间或没有 QUOTE_BASE_CABINET 时为 0
 厨房吊柜长度 = 厨房空间内 QUOTE_WALL_CABINET 延米线长度合计；柜体轮廓按轮廓面积 ÷ 柜体深度换算投影延米；其它空间或没有 QUOTE_WALL_CABINET 时为 0
-全屋定制面积 = 非厨房空间内常规 QUOTE_CUSTOM 投影长度 * 柜高（未标注时默认 2.6m）+ 高度低于 1m 的低柜长度；闭合柜体轮廓取最长边，不取周长；厨房空间或没有 QUOTE_CUSTOM 时为 0
+全屋定制面积 = 非厨房空间内常规 QUOTE_CUSTOM 投影长度 * 柜高（未标注时默认 2.6m）+ 高度低于 1m 的低柜长度；闭合柜体轮廓取最长边，不取周长；QUOTE_CUSTOM 邻近文字支持 HEIGHT/H/高度 和 TYPE 标识，当前自动金额主要使用高度；厨房空间或没有 QUOTE_CUSTOM 时为 0
+背景墙面积 = 可选 QUOTE_BACKGROUND_WALL 长度 * 标注高度；未标注高度时按空间层高；不画时为 0，Excel 草稿保留背景墙空行
 马桶数量 = 卫生间默认 1 个；有 QUOTE_TOILET 点位时按点位数；非卫生间为 0
 浴室柜数量 = 卫生间默认 1 套；有 QUOTE_BATHROOM_VANITY 点位时按点位数；非卫生间为 0
 地面瓷砖片数 = ceil(地面面积 * 1.05 / (0.75m * 1.5m))
@@ -383,6 +385,8 @@
 
 地砖主材片数、贴砖面积候选、强电备用面积、水路备用面积、砌120厚砖墙和拆改及拆墙不在工程量表中按空间展示，避免设计师在每个空间行重复校对；这些字段仍保留在校准模板中，也会在报价映射中按全屋汇总生成金额。
 
+新砌墙可在 `QUOTE_NEW_WALL` 同图层靠近墙段补 `HEIGHT=1200`、`H=1.2m`、`THICKNESS=240`、`厚度240` 等标识；系统当前用高度修正 `new_wall_area_m2`，厚度作为设计师调整报价口径的标识，不额外拆分为 120/240 两套默认规则。
+
 厨房推拉门面积和门套长度在工程量表中展示，并导出到校准模板：`sliding_door_area_m2` 按门宽乘门高，`sliding_door_casing_length_m` 按门宽加两侧门高；当前默认门高为 `2.1m`。卫生间门导出为 `bathroom_door_count`，不混入室内门数量。默认报价规则会分别生成“卫生间门”“厨房推拉门”“厨房推拉门双包套”，单价按真实模板分别为 1200、550、300。
 
 厨房橱柜仍在工程量表和校准模板中分别保留 `kitchen_base_cabinet_length_m` 与 `kitchen_wall_cabinet_length_m`，便于校对地柜和吊柜；默认报价规则按项目级 `kitchen_cabinet_length_m = kitchen_base_cabinet_length_m + kitchen_wall_cabinet_length_m` 汇总为一条“橱柜”，用于匹配真实模板。
@@ -393,13 +397,15 @@
 
 建筑面积当前作为项目级报价口径处理：报价规则 JSON 可以使用 `building_area_m2` 作为 metric，系统从当前 `QUOTE_EXT_WALL` 计算出的 summary 建筑面积生成“全屋”清单项。默认商品房整装规则暂不内置具体按建筑面积收费项目，管理费、成品保护、综合服务费等可通过导入报价规则接入。
 
-全屋定制当前按非厨房空间的 `QUOTE_CUSTOM` 投影延米线计算：未标注高度时按默认 `2.6m` 换算投影面积；闭合柜体轮廓按最长边取一次投影长度，不按周长累加；同图层邻近文字标注高度低于 `1m` 时，按低柜长度米取值，并入同一个 `custom_cabinet_area_m2` 数量；厨房空间已经由 `QUOTE_BASE_CABINET` 和 `QUOTE_WALL_CABINET` 单独承接，避免重复计价。
+全屋定制当前按非厨房空间的 `QUOTE_CUSTOM` 投影延米线计算：未标注高度时按默认 `2.6m` 换算投影面积；闭合柜体轮廓按最长边取一次投影长度，不按周长累加；同图层邻近文字标注高度低于 `1m` 时，按低柜长度米取值，并入同一个 `custom_cabinet_area_m2` 数量；`TYPE=衣柜` 这类类型标识允许保留在图上，当前不拆分金额，留作后续分类扩展；厨房空间已经由 `QUOTE_BASE_CABINET` 和 `QUOTE_WALL_CABINET` 单独承接，避免重复计价。
+
+背景墙当前按可选 `QUOTE_BACKGROUND_WALL` 计算 `background_wall_area_m2` 并按真实模板“背景墙”汇总报价；如果没有画背景墙线，自动数量为 0，但 Excel 草稿仍保留“背景墙”空行，方便设计师手工填写。
 
 防水高度当前按空间类型取默认值：卫生间 `1.8m`，厨房、阳台、露台、洗衣房 `0.3m`。除厨房/卫生间外，只有画了 `QUOTE_WALL_TILE` 的贴砖墙面线才自动计算墙砖面积；当前按空间实际层高计算，暂不单独扣除未匹配贴砖墙的门窗洞。
 
 窗帘和窗帘箱不按窗洞宽度计量，应按窗户所在墙面的整面墙宽度计量。厨房、卫生间、过道等空间默认不做窗帘和窗帘箱；一般不做窗帘箱的位置也不生成窗帘。当前系统生成 `curtain_wall_width_m` 候选值：若识别到 L 形、转角窗或异形窗，按同一个窗组内两条非平行长窗边合计或现有窗户长度口径直接计算窗帘候选；若普通窗洞中心线能匹配到邻近且平行的 `QUOTE_WALL`，取该墙段整宽；若匹配不到，回退到空间最长一段 `QUOTE_WALL`。系统同时输出 `curtain_wall_width_source`：`matched_l_shape_window` 表示已按 L 形窗自动取数，`matched_window_wall` 表示已匹配窗户所在墙，`fallback_longest_wall` 表示回退最长墙，`manual_required_l_shape_window` 仅兼容旧快照中的 L 形窗状态，`not_applicable` 表示不适用，前端人工编辑后为 `manual`。该候选值允许在工程量表中人工校准、随校对快照保存/恢复；来源为 `manual`、`matched_window_wall`、`matched_l_shape_window` 或 `fallback_longest_wall` 且长度大于 `0` 时，暗窗帘箱直接进入导出的 `curtain_quote_candidates` 候选清单、`items` 和金额汇总。
 
-校准模板当前导出为 `{ summary, rows }` 对象格式：`summary.building_area_m2` 用于校准项目级建筑面积，`rows` 中会导出 `windowsill_length_m`、`curtain_wall_width_m`、`curtain_wall_width_source`、`wall_tile_measure_length_m`、`wall_tile_area_m2`、`floor_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`new_wall_length_m`、`new_wall_area_m2`、`demolition_wall_length_m`、`demolition_wall_area_m2`、`interior_door_count`、`bathroom_door_count`、`sliding_door_area_m2`、`sliding_door_casing_length_m`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`custom_cabinet_area_m2`、`toilet_count` 和 `bathroom_vanity_count`。报价员可以把建筑面积、窗帘墙宽实际延米、贴砖墙、地砖主材片数、水电备用施工面积、新砌墙、拆墙、室内门数、卫生间门数、厨房推拉门、厨房橱柜长度、全屋定制面积或洁具数量校准值填回模板，再作为 golden JSON 固定校准结果。旧版纯数组行格式仍可上传，只是不包含项目级建筑面积校准。
+校准模板当前导出为 `{ summary, rows }` 对象格式：`summary.building_area_m2` 用于校准项目级建筑面积，`rows` 中会导出 `windowsill_length_m`、`curtain_wall_width_m`、`curtain_wall_width_source`、`wall_tile_measure_length_m`、`wall_tile_area_m2`、`floor_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`new_wall_length_m`、`new_wall_area_m2`、`demolition_wall_length_m`、`demolition_wall_area_m2`、`background_wall_area_m2`、`interior_door_count`、`bathroom_door_count`、`sliding_door_area_m2`、`sliding_door_casing_length_m`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`custom_cabinet_area_m2`、`toilet_count` 和 `bathroom_vanity_count`。报价员可以把建筑面积、窗帘墙宽实际延米、贴砖墙、地砖主材片数、水电备用施工面积、新砌墙、拆墙、背景墙、室内门数、卫生间门数、厨房推拉门、厨房橱柜长度、全屋定制面积或洁具数量校准值填回模板，再作为 golden JSON 固定校准结果。旧版纯数组行格式仍可上传，只是不包含项目级建筑面积校准。
 
 上传包含 `curtain_wall_width_m` 的校准 JSON 后，若当前行来源是 `manual_required_l_shape_window` 或 `fallback_longest_wall`，工程量表会提供“应用校准”按钮，把校准值写回当前行、将来源标记为 `manual`，并清除该单元格的当前差异。
 
@@ -415,7 +421,7 @@
 
 报价映射区域如果发现“厨房卫生间集成吊顶”已有工程量但 `unit_price <= 0`，会额外显示集成吊顶单价待补提醒，提示报价员在报价规则 JSON 中补 `unit_price`；如果实际做石膏板吊顶，则回到工程量表切换顶面类型。该提醒不阻断导出。
 
-报价映射区域会单独展示“全屋汇总项”，集中列出 `space_name="全屋"` 的清单项，例如地面瓷砖、强电布线、水路布管、砌120厚砖墙、拆改及拆墙、橱柜、全屋灯饰等。这些项目不在工程量表中按空间展示，但仍会进入导出的报价映射 JSON 和金额汇总。
+报价映射区域会单独展示“全屋汇总项”，集中列出 `space_name="全屋"` 的清单项，例如地面瓷砖、强电布线、水路布管、砌120厚砖墙、拆改及拆墙、背景墙、橱柜、全屋灯饰等。这些项目不在工程量表中按空间展示，但仍会进入导出的报价映射 JSON 和金额汇总。
 
 报价映射区域会提示 Excel 草稿包含 16 项“人工补项”；这些项目只用于提醒报价员补填，不写入报价映射 `items`，也不影响 `summary.total_amount`。已自动接入的拆改及拆墙、卫生间门、厨房推拉门、厨房推拉门双包套、材料搬运费、垃圾清运费、地面砖现场维护费、弱电布线、全屋插座开关、全屋保洁、地面瓷砖、墙面瓷砖、美缝、瓷砖加工费、花洒和卫浴五件套不再重复放入人工补项。
 

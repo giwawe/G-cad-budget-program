@@ -175,6 +175,23 @@ def test_new_wall_area_uses_marked_new_wall_lengths_and_actual_height():
     assert row.new_wall_area_m2 == 11.2
 
 
+def test_new_wall_area_uses_segment_height_marker_before_space_height():
+    space = SpaceInput(
+        floor="一层",
+        name="一层-客厅",
+        boundary_points_m=[(0, 0), (6, 0), (6, 4), (0, 4)],
+        wall_lengths_m=[6, 4, 6, 4],
+        new_wall_lengths_m=[2.4, 1.6],
+        new_wall_heights_m=[1.2, None],
+        height_m=2.8,
+    )
+
+    row = calculate_quantity_row(space, ProjectDefaults())
+
+    assert row.new_wall_length_m == 4
+    assert row.new_wall_area_m2 == 7.36
+
+
 def test_demolition_wall_area_uses_marked_demolition_wall_lengths_and_actual_height():
     space = SpaceInput(
         floor="一层",
@@ -189,6 +206,33 @@ def test_demolition_wall_area_uses_marked_demolition_wall_lengths_and_actual_hei
 
     assert row.demolition_wall_length_m == 4
     assert row.demolition_wall_area_m2 == 11.2
+
+
+def test_background_wall_area_defaults_to_zero_and_uses_marked_height_when_present():
+    defaults = ProjectDefaults()
+    no_background = calculate_quantity_row(
+        SpaceInput(
+            floor="一层",
+            name="一层-客厅",
+            boundary_points_m=[(0, 0), (6, 0), (6, 4), (0, 4)],
+            wall_lengths_m=[6, 4, 6, 4],
+        ),
+        defaults,
+    )
+    with_background = calculate_quantity_row(
+        SpaceInput(
+            floor="一层",
+            name="一层-客厅",
+            boundary_points_m=[(0, 0), (6, 0), (6, 4), (0, 4)],
+            wall_lengths_m=[6, 4, 6, 4],
+            background_wall_lengths_m=[3.2],
+            background_wall_heights_m=[2.6],
+        ),
+        defaults,
+    )
+
+    assert no_background.background_wall_area_m2 == 0
+    assert with_background.background_wall_area_m2 == 8.32
 
 
 def test_kitchen_cabinet_lengths_separate_base_and_wall_cabinets_only_for_kitchen():

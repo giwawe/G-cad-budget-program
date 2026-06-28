@@ -30,6 +30,7 @@ const rows: QuantityRow[] = [
     newWallAreaM2: 0,
     demolitionWallLengthM: 0,
     demolitionWallAreaM2: 0,
+    backgroundWallAreaM2: 8.32,
     interiorDoorCount: 0,
     bathroomDoorCount: 1,
     slidingDoorAreaM2: 3.36,
@@ -94,6 +95,7 @@ const legacySnapshot = {
     newWallAreaM2: _newWallAreaM2,
     demolitionWallLengthM: _demolitionWallLengthM,
     demolitionWallAreaM2: _demolitionWallAreaM2,
+    backgroundWallAreaM2: _backgroundWallAreaM2,
     interiorDoorCount: _interiorDoorCount,
     bathroomDoorCount: _bathroomDoorCount,
     slidingDoorAreaM2: _slidingDoorAreaM2,
@@ -118,6 +120,7 @@ assert.equal(parsedLegacySnapshot.rows[0].newWallLengthM, 0);
 assert.equal(parsedLegacySnapshot.rows[0].newWallAreaM2, 0);
 assert.equal(parsedLegacySnapshot.rows[0].demolitionWallLengthM, 0);
 assert.equal(parsedLegacySnapshot.rows[0].demolitionWallAreaM2, 0);
+assert.equal(parsedLegacySnapshot.rows[0].backgroundWallAreaM2, 0);
 assert.equal(parsedLegacySnapshot.rows[0].interiorDoorCount, 0);
 assert.equal(parsedLegacySnapshot.rows[0].bathroomDoorCount, 0);
 assert.equal(parsedLegacySnapshot.rows[0].slidingDoorAreaM2, 0);

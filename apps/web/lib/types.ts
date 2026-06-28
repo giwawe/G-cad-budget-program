@@ -29,6 +29,7 @@ export type QuantityRow = {
   newWallAreaM2: number;
   demolitionWallLengthM: number;
   demolitionWallAreaM2: number;
+  backgroundWallAreaM2?: number;
   interiorDoorCount: number;
   bathroomDoorCount: number;
   slidingDoorAreaM2: number;
@@ -95,6 +96,7 @@ export type DrawingGeometry = {
   tile_walls: DrawingSegment[];
   new_walls: DrawingSegment[];
   demolition_walls: DrawingSegment[];
+  background_walls?: DrawingSegment[];
   base_cabinets: DrawingSegment[];
   wall_cabinets: DrawingSegment[];
   base_cabinet_boundaries?: DrawingPoint[][];
