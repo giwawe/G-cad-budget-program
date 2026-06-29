@@ -218,6 +218,46 @@ assert.equal(mapping.items[13].quantity, 88.66);
 assert.equal(mapping.items[13].amount, 886.6);
 assert.equal(mapping.items[14].quantity, 88.66);
 assert.equal(mapping.items[14].amount, 709.28);
+
+const duplicateSpaceNameMapping = buildQuoteMapping(
+  [
+    {
+      ...rows[0],
+      spaceName: "卧室",
+      spaceType: "卧室",
+      ceilingFinishType: undefined,
+      floorAreaM2: 12,
+      ceilingAreaM2: 12,
+      latexPaintAreaM2: 20,
+      wallTileAreaM2: 0,
+      waterproofAreaM2: 0,
+      curtainWallWidthSource: "not_applicable",
+      customCabinetAreaM2: 0,
+      kitchenBaseCabinetLengthM: 0,
+      kitchenWallCabinetLengthM: 0,
+    },
+    {
+      ...rows[0],
+      spaceName: "卧室",
+      spaceType: "卧室",
+      ceilingFinishType: undefined,
+      floorAreaM2: 10,
+      ceilingAreaM2: 10,
+      latexPaintAreaM2: 18,
+      wallTileAreaM2: 0,
+      waterproofAreaM2: 0,
+      curtainWallWidthSource: "not_applicable",
+      customCabinetAreaM2: 0,
+      kitchenBaseCabinetLengthM: 0,
+      kitchenWallCabinetLengthM: 0,
+    },
+  ],
+  undefined,
+  { building_area_m2: 88.66 },
+);
+assert.ok(duplicateSpaceNameMapping.items.some((item) => item.space_name === "卧室一" && item.item_name === "墙面乳胶漆" && item.quantity === 20));
+assert.ok(duplicateSpaceNameMapping.items.some((item) => item.space_name === "卧室二" && item.item_name === "墙面乳胶漆" && item.quantity === 18));
+assert.ok(!duplicateSpaceNameMapping.items.some((item) => item.space_name === "卧室" && item.item_name === "墙面乳胶漆"));
 assert.equal(mapping.items[15].quantity, 7.3);
 assert.equal(mapping.items[15].amount, 4380);
 assert.deepEqual(mapping.items[16], {

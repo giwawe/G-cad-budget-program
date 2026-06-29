@@ -341,12 +341,13 @@ export function buildQuoteMapping(
   const buildingAreaM2 = round2(summary?.building_area_m2 ?? 0);
   const rowRules = rules.filter((rule): rule is QuoteRule & { metric: RowQuoteMetric } => !isProjectMetric(rule.metric) && !SUMMED_PROJECT_METRICS.has(rule.metric));
   const projectRules = rules.filter((rule) => isProjectMetric(rule.metric) || SUMMED_PROJECT_METRICS.has(rule.metric));
+  const rowSpaceNames = displaySpaceNamesByRow(billableRows);
   const rowItems = billableRows.flatMap((row) =>
     rowRules.filter((rule) => ruleAppliesToRow(rule, row)).map((rule) => {
       const quantity = rowRuleQuantity(row, rule);
       return {
         floor: row.floor,
-        space_name: row.spaceName,
+        space_name: rowSpaceNames.get(row) ?? row.spaceName,
         space_type: row.spaceType,
         item_name: rule.item_name,
         quantity,
@@ -372,6 +373,36 @@ export function buildQuoteMapping(
     building_area_quote_readiness: buildingAreaQuoteReadiness(rules, buildingAreaM2),
     quantity_health_readiness: quantityHealthReadiness,
   };
+}
+
+function displaySpaceNamesByRow(rows: QuantityRow[]): Map<QuantityRow, string> {
+  const totalByName = new Map<string, number>();
+  rows.forEach((row) => totalByName.set(row.spaceName, (totalByName.get(row.spaceName) ?? 0) + 1));
+  const seenByName = new Map<string, number>();
+  return new Map(
+    rows.map((row) => {
+      const total = totalByName.get(row.spaceName) ?? 0;
+      if (total <= 1) {
+        return [row, row.spaceName] as const;
+      }
+      const nextIndex = (seenByName.get(row.spaceName) ?? 0) + 1;
+      seenByName.set(row.spaceName, nextIndex);
+      return [row, `${row.spaceName}${chineseOrdinal(nextIndex)}`] as const;
+    }),
+  );
+}
+
+function chineseOrdinal(index: number): string {
+  const numerals = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九"];
+  if (index <= 10) {
+    return index === 10 ? "十" : numerals[index];
+  }
+  if (index < 20) {
+    return `十${numerals[index - 10]}`;
+  }
+  const tens = Math.floor(index / 10);
+  const ones = index % 10;
+  return `${numerals[tens]}十${ones === 0 ? "" : numerals[ones]}`;
 }
 
 function rowRuleQuantity(row: QuantityRow, rule: QuoteRule & { metric: RowQuoteMetric }): number {
