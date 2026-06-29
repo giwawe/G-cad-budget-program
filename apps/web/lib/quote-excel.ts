@@ -16,7 +16,9 @@ type QuoteTemplateSection = {
 type QuoteTemplateSectionDefinition = Omit<QuoteTemplateSection, "code">;
 
 const ROOM_SECTION_ITEM_NAMES = [
+  "厨房卫生间集成吊顶",
   "轻钢龙骨平顶",
+  "暗窗帘箱",
   "顶面批嵌",
   "顶面乳胶漆",
   "墙面界面剂处理",
@@ -26,7 +28,10 @@ const ROOM_SECTION_ITEM_NAMES = [
   "墙地面防漏处理",
   "墙面贴瓷砖(600X1200)",
   "地面砖铺贴(750X1500)",
+  "窗台石铺贴",
 ];
+
+const ONE_ITEM_PLACEHOLDER_NAMES = new Set(["窗帘", "窗台石"]);
 
 const FIXED_TEMPLATE_SECTIONS: QuoteTemplateSectionDefinition[] = [
   { title: "全屋拆改工程", itemNames: ["拆改及拆墙", "砌120厚砖墙", "砌240厚砖墙", "外墙批嵌", "外墙批嵌以及修补"] },
@@ -38,8 +43,8 @@ const FIXED_TEMPLATE_SECTIONS: QuoteTemplateSectionDefinition[] = [
   { title: "主材项目", itemNames: ["地面瓷砖", "墙面瓷砖", "瓷砖加工费"] },
   { title: "全屋定制、衣柜、橱柜、全屋家具", itemNames: ["全屋定制", "橱柜", "背景墙"] },
   { title: "室内门", itemNames: ["入户门", "室内门", "卫生间门", "厨房推拉门", "厨房推拉门双包套", "阳台推拉门", "阳台推拉门双包套", "铝合金封门窗"] },
-  { title: "集成吊顶、卫浴、全屋开关灯饰", itemNames: ["厨房卫生间集成吊顶", "浴室柜", "马桶", "蹲坑", "淋浴隔断", "玻璃淋浴房", "花洒", "卫浴五件套", "全屋插座开关", "全屋灯饰"] },
-  { title: "其他（窗帘、美缝、窗台石等）", itemNames: ["美缝", "窗帘", "暗窗帘箱", "窗台石", "窗台石铺贴", "全屋保洁"] },
+  { title: "集成吊顶、卫浴、全屋开关灯饰", itemNames: ["浴室柜", "马桶", "蹲坑", "淋浴隔断", "玻璃淋浴房", "花洒", "卫浴五件套", "全屋插座开关", "全屋灯饰"] },
+  { title: "其他（窗帘、美缝、窗台石等）", itemNames: ["美缝", "窗帘", "窗台石", "全屋保洁"] },
 ];
 
 export const MANUAL_QUOTE_DRAFT_ITEMS: ManualQuoteDraftItem[] = [
@@ -161,16 +166,16 @@ function quoteTemplateRows(mapping: QuoteMapping): string[][] {
   let sectionIndex = 1;
 
   const firstFixedSection = templateSectionWithCode(FIXED_TEMPLATE_SECTIONS[0], sectionIndex++);
-  rows.push(...quoteTemplateSectionRows(firstFixedSection, fixedSectionItems(mapping.items, remainingItems, firstFixedSection), remainingItems));
+  rows.push(...quoteTemplateSectionRows(firstFixedSection, fixedSectionItems(mapping.items, remainingItems, firstFixedSection), remainingItems, true));
 
   for (const spaceName of dynamicSpaceNames(mapping.items)) {
     const roomSection = templateSectionWithCode({ title: `${spaceName}工程`, itemNames: ROOM_SECTION_ITEM_NAMES }, sectionIndex++);
-    rows.push(...quoteTemplateSectionRows(roomSection, roomSectionItems(mapping.items, remainingItems, spaceName), remainingItems));
+    rows.push(...quoteTemplateSectionRows(roomSection, roomSectionItems(mapping.items, remainingItems, spaceName), remainingItems, false));
   }
 
   for (const sectionDefinition of FIXED_TEMPLATE_SECTIONS.slice(1)) {
     const section = templateSectionWithCode(sectionDefinition, sectionIndex++);
-    rows.push(...quoteTemplateSectionRows(section, fixedSectionItems(mapping.items, remainingItems, section), remainingItems));
+    rows.push(...quoteTemplateSectionRows(section, fixedSectionItems(mapping.items, remainingItems, section), remainingItems, true));
   }
 
   if (remainingItems.size > 0) {
@@ -184,26 +189,34 @@ function quoteTemplateRows(mapping: QuoteMapping): string[][] {
   return rows;
 }
 
-function quoteTemplateSectionRows(section: QuoteTemplateSection, sectionItems: QuoteMapping["items"], remainingItems: Set<QuoteMapping["items"][number]>): string[][] {
+function quoteTemplateSectionRows(
+  section: QuoteTemplateSection,
+  sectionItems: QuoteMapping["items"],
+  remainingItems: Set<QuoteMapping["items"][number]>,
+  includeZeroRows: boolean,
+): string[][] {
   const rows: string[][] = [sectionHeaderRow(section)];
   let rowIndex = 1;
   let subtotal = 0;
   for (const templateItemName of section.itemNames) {
     const matchingItems = sectionItems.filter((item) => itemMatchesTemplate(item.item_name, templateItemName));
     if (matchingItems.length === 0) {
-      rows.push(zeroItemTemplateRow(templateItemName, rowIndex++));
+      if (includeZeroRows) {
+        rows.push(zeroItemTemplateRow(templateItemName, rowIndex++));
+      }
       continue;
     }
-    for (const item of matchingItems) {
-      remainingItems.delete(item);
-      subtotal += item.amount;
-      rows.push(quoteItemTemplateRow(item, rowIndex++));
+    const item = aggregateQuoteItems(matchingItems, templateItemName);
+    for (const matchedItem of matchingItems) {
+      remainingItems.delete(matchedItem);
     }
+    subtotal += item.amount;
+    rows.push(quoteItemTemplateRow(item, rowIndex++));
   }
 
-  const extraItems = sectionItems.filter((item) => remainingItems.has(item));
+  const extraItems = aggregateQuoteItemsByName(sectionItems.filter((item) => remainingItems.has(item)));
   for (const item of extraItems) {
-    remainingItems.delete(item);
+    sectionItems.filter((sectionItem) => sectionItem.item_name === item.item_name).forEach((sectionItem) => remainingItems.delete(sectionItem));
     subtotal += item.amount;
     rows.push(quoteItemTemplateRow(item, rowIndex++));
   }
@@ -226,7 +239,31 @@ function quoteItemTemplateRow(item: QuoteMapping["items"][number], index: number
   ];
 }
 
+function aggregateQuoteItems(items: QuoteMapping["items"], itemName: string): QuoteMapping["items"][number] {
+  const firstItem = items[0];
+  const quantity = round2(items.reduce((sum, item) => sum + item.quantity, 0));
+  const amount = round2(items.reduce((sum, item) => sum + item.amount, 0));
+  const mergedItemName = items.every((item) => item.item_name === firstItem.item_name) ? firstItem.item_name : itemName;
+  return {
+    ...firstItem,
+    item_name: mergedItemName,
+    quantity,
+    amount,
+  };
+}
+
+function aggregateQuoteItemsByName(items: QuoteMapping["items"]): QuoteMapping["items"] {
+  const groups = new Map<string, QuoteMapping["items"]>();
+  for (const item of items) {
+    groups.set(item.item_name, [...(groups.get(item.item_name) ?? []), item]);
+  }
+  return [...groups.entries()].map(([itemName, groupItems]) => aggregateQuoteItems(groupItems, itemName));
+}
+
 function zeroItemTemplateRow(itemName: string, index: number): string[] {
+  if (ONE_ITEM_PLACEHOLDER_NAMES.has(itemName)) {
+    return [String(index), itemName, "项", "1", "", "", "", "0.00", ""];
+  }
   return [String(index), itemName, "", "", "", "", "", "0.00", ""];
 }
 
