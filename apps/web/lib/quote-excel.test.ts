@@ -173,6 +173,34 @@ assert.ok(duplicateHtml.includes("<td>厨房卫生间集成吊顶</td><td>m2</td
 assert.equal(countOccurrences(duplicateHtml, "<td>室内门</td><td>樘"), 1);
 assert.ok(duplicateHtml.includes("<td>室内门</td><td>樘</td><td>3</td><td>1200.00</td><td>0.00</td><td>0.00</td><td>3600.00</td>"));
 
+const editedPricePartHtml = buildQuoteExcelHtml(
+  {
+    ...mapping,
+    items: [
+      {
+        floor: "一层",
+        space_name: "厨房",
+        space_type: "厨房",
+        item_name: "地面找平",
+        quantity: 2,
+        unit: "m2",
+        unit_price: 50,
+        material_price: 12,
+        auxiliary_price: 8,
+        labor_price: 30,
+        amount: 100,
+      },
+    ],
+    summary: {
+      ...mapping.summary,
+      item_count: 1,
+      total_amount: 100,
+    },
+  },
+  "编辑三段价格项目",
+);
+assert.ok(editedPricePartHtml.includes("<td>地面找平</td><td>m2</td><td>2</td><td>12.00</td><td>8.00</td><td>30.00</td><td>100.00</td>"));
+
 const riskyHtml = buildQuoteExcelHtml(
   {
     ...mapping,

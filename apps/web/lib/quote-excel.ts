@@ -224,7 +224,7 @@ function quoteTemplateSectionRows(
 }
 
 function quoteItemTemplateRow(item: QuoteMapping["items"][number], index: number): string[] {
-  const price = templatePriceForItem(item.item_name, item.unit_price);
+  const price = templatePriceForItem(item);
   return [
     String(index),
     item.item_name,
@@ -243,10 +243,17 @@ function aggregateQuoteItems(items: QuoteMapping["items"], itemName: string): Qu
   const quantity = round2(items.reduce((sum, item) => sum + item.quantity, 0));
   const amount = round2(items.reduce((sum, item) => sum + item.amount, 0));
   const mergedItemName = items.every((item) => item.item_name === firstItem.item_name) ? firstItem.item_name : itemName;
+  const material_price = round2(items.reduce((sum, item) => sum + (item.material_price ?? templatePriceForItem(item).material) * item.quantity, 0) / Math.max(quantity, 1));
+  const auxiliary_price = round2(items.reduce((sum, item) => sum + (item.auxiliary_price ?? templatePriceForItem(item).auxiliary) * item.quantity, 0) / Math.max(quantity, 1));
+  const labor_price = round2(items.reduce((sum, item) => sum + (item.labor_price ?? templatePriceForItem(item).labor) * item.quantity, 0) / Math.max(quantity, 1));
   return {
     ...firstItem,
     item_name: mergedItemName,
     quantity,
+    unit_price: round2(material_price + auxiliary_price + labor_price),
+    material_price,
+    auxiliary_price,
+    labor_price,
     amount,
   };
 }
@@ -372,8 +379,16 @@ function quoteExcelRiskRows(mapping: QuoteMapping): string[][] {
   return rows;
 }
 
-function templatePriceForItem(itemName: string, unitPrice: number): QuoteTemplatePrice {
-  return TEMPLATE_PRICES[itemName] ?? { material: unitPrice, auxiliary: 0, labor: 0, note: "" };
+function templatePriceForItem(item: QuoteMapping["items"][number]): QuoteTemplatePrice {
+  if (item.material_price !== undefined || item.auxiliary_price !== undefined || item.labor_price !== undefined) {
+    return {
+      material: item.material_price ?? 0,
+      auxiliary: item.auxiliary_price ?? 0,
+      labor: item.labor_price ?? 0,
+      note: TEMPLATE_PRICES[item.item_name]?.note ?? "",
+    };
+  }
+  return TEMPLATE_PRICES[item.item_name] ?? { material: item.unit_price, auxiliary: 0, labor: 0, note: "" };
 }
 
 function formatQuantity(value: number): string {

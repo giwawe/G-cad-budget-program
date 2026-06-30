@@ -100,6 +100,9 @@ export type QuoteMappingItem = {
   quantity: number;
   unit: string;
   unit_price: number;
+  material_price?: number;
+  auxiliary_price?: number;
+  labor_price?: number;
   amount: number;
 };
 
@@ -248,6 +251,30 @@ export function defaultQuoteRules(): QuoteRule[] {
   return DEFAULT_RULES.map((rule) => ({ ...rule, space_types: rule.space_types ? [...rule.space_types] : undefined }));
 }
 
+export function updateQuoteRulePricePart(rules: QuoteRule[], index: number, part: "material_price" | "auxiliary_price" | "labor_price", price: number): QuoteRule[] {
+  if (!Number.isInteger(index) || index < 0 || index >= rules.length) {
+    throw new Error("报价规则不存在");
+  }
+  if (!Number.isFinite(price) || price < 0) {
+    throw new Error(`报价规则 ${part} 无效：${String(price)}`);
+  }
+  return rules.map((rule, ruleIndex) => {
+    if (ruleIndex !== index) {
+      return rule;
+    }
+    const material_price = round2(part === "material_price" ? price : rule.material_price ?? rule.unit_price);
+    const auxiliary_price = round2(part === "auxiliary_price" ? price : rule.auxiliary_price ?? 0);
+    const labor_price = round2(part === "labor_price" ? price : rule.labor_price ?? 0);
+    return {
+      ...rule,
+      unit_price: round2(material_price + auxiliary_price + labor_price),
+      material_price,
+      auxiliary_price,
+      labor_price,
+    };
+  });
+}
+
 export function updateQuoteRuleUnitPrice(rules: QuoteRule[], index: number, unitPrice: number): QuoteRule[] {
   if (!Number.isInteger(index) || index < 0 || index >= rules.length) {
     throw new Error("报价规则不存在");
@@ -255,10 +282,8 @@ export function updateQuoteRuleUnitPrice(rules: QuoteRule[], index: number, unit
   if (!Number.isFinite(unitPrice) || unitPrice < 0) {
     throw new Error(`报价规则 unit_price 无效：${String(unitPrice)}`);
   }
-  return rules.map((rule, ruleIndex) =>
-    ruleIndex === index
-      ? { ...rule, unit_price: round2(unitPrice), material_price: round2(unitPrice), auxiliary_price: 0, labor_price: 0 }
-      : rule,
+  return updateQuoteRulePricePart(rules, index, "material_price", unitPrice).map((rule, ruleIndex) =>
+    ruleIndex === index ? { ...rule, auxiliary_price: 0, labor_price: 0, unit_price: round2(unitPrice) } : rule,
   );
 }
 
@@ -353,6 +378,7 @@ export function buildQuoteMapping(
         quantity,
         unit: rule.unit,
         unit_price: rule.unit_price,
+        ...quoteRulePriceParts(rule),
         amount: round2(quantity * rule.unit_price),
       };
     }).filter((item) => item.quantity > 0),
@@ -435,9 +461,21 @@ function buildProjectQuoteItems(billableRows: QuantityRow[], rules: QuoteRule[],
       quantity,
       unit: rule.unit,
       unit_price: rule.unit_price,
+      ...quoteRulePriceParts(rule),
       amount: round2(quantity * rule.unit_price),
     };
   }).filter((item) => item.quantity > 0);
+}
+
+function quoteRulePriceParts(rule: QuoteRule): Pick<QuoteMappingItem, "material_price" | "auxiliary_price" | "labor_price"> {
+  if (rule.material_price === undefined && rule.auxiliary_price === undefined && rule.labor_price === undefined) {
+    return {};
+  }
+  return {
+    material_price: rule.material_price ?? 0,
+    auxiliary_price: rule.auxiliary_price ?? 0,
+    labor_price: rule.labor_price ?? 0,
+  };
 }
 
 function projectRuleQuantity(billableRows: QuantityRow[], rule: QuoteRule, buildingAreaM2: number): number {

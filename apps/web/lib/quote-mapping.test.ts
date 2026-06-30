@@ -13,6 +13,7 @@ import {
   parseQuoteRules,
   quoteMappingFileName,
   quoteRulesTemplateFileName,
+  updateQuoteRulePricePart,
   updateQuoteRuleUnitPrice,
 } from "./quote-mapping.ts";
 import type { QuantityRow } from "./types.ts";
@@ -268,6 +269,9 @@ assert.deepEqual(mapping.items[16], {
   quantity: 1,
   unit: "套",
   unit_price: 6000,
+  material_price: 6000,
+  auxiliary_price: 0,
+  labor_price: 0,
   amount: 6000,
 });
 assert.deepEqual(mapping.items[17], {
@@ -278,6 +282,9 @@ assert.deepEqual(mapping.items[17], {
   quantity: 1,
   unit: "套",
   unit_price: 15000,
+  material_price: 15000,
+  auxiliary_price: 0,
+  labor_price: 0,
   amount: 15000,
 });
 assert.deepEqual(mapping.items[18], {
@@ -288,6 +295,9 @@ assert.deepEqual(mapping.items[18], {
   quantity: 1,
   unit: "套",
   unit_price: 4500,
+  material_price: 4500,
+  auxiliary_price: 0,
+  labor_price: 0,
   amount: 4500,
 });
 assert.deepEqual(projectSummaryQuoteItems(mapping), [
@@ -707,6 +717,14 @@ assert.equal(editedRules[2].unit_price, defaultQuoteRules()[2].unit_price);
 assert.throws(() => updateQuoteRuleUnitPrice(defaultQuoteRules(), 3, -1), /报价规则 unit_price 无效/);
 assert.throws(() => updateQuoteRuleUnitPrice(defaultQuoteRules(), 999, 1), /报价规则不存在/);
 
+const editedPricePartRules = updateQuoteRulePricePart(updateQuoteRulePricePart(updateQuoteRulePricePart(defaultQuoteRules(), 7, "material_price", 12), 7, "auxiliary_price", 8.345), 7, "labor_price", 30);
+assert.deepEqual(
+  (({ unit_price, material_price, auxiliary_price, labor_price }) => ({ unit_price, material_price, auxiliary_price, labor_price }))(editedPricePartRules[7]),
+  { unit_price: 50.35, material_price: 12, auxiliary_price: 8.35, labor_price: 30 },
+);
+assert.equal(defaultQuoteRules()[7].unit_price, 56);
+assert.throws(() => updateQuoteRulePricePart(defaultQuoteRules(), 7, "labor_price", -1), /报价规则 labor_price 无效/);
+
 const apartmentRules = parseQuoteRules(readFileSync(new URL("../../../quote-rules-apartment-current.json", import.meta.url), "utf8"));
 assert.deepEqual(apartmentRules, defaultQuoteRules());
 
@@ -820,7 +838,7 @@ assert.deepEqual(tiledBalconyMapping.items.map((item) => item.item_name), [
 ]);
 
 const newWallMapping = buildQuoteMapping([{ ...rows[0], spaceName: "客厅", spaceType: "客厅", wallTileAreaM2: 0, waterproofAreaM2: 0, newWallAreaM2: 11.2 }]);
-assert.deepEqual(newWallMapping.items.filter((item) => item.item_name === "砌120厚砖墙"), [
+assert.deepEqual(newWallMapping.items.filter((item) => item.item_name === "砌120厚砖墙").map(stripQuoteItemPriceParts), [
   {
     floor: "全屋",
     space_name: "全屋",
@@ -834,7 +852,7 @@ assert.deepEqual(newWallMapping.items.filter((item) => item.item_name === "砌12
 ]);
 
 const demolitionWallMapping = buildQuoteMapping([{ ...rows[0], spaceName: "客厅", spaceType: "客厅", wallTileAreaM2: 0, waterproofAreaM2: 0, demolitionWallAreaM2: 11.2 }]);
-assert.deepEqual(demolitionWallMapping.items.filter((item) => item.item_name === "拆改及拆墙"), [
+assert.deepEqual(demolitionWallMapping.items.filter((item) => item.item_name === "拆改及拆墙").map(stripQuoteItemPriceParts), [
   {
     floor: "全屋",
     space_name: "全屋",
@@ -848,7 +866,7 @@ assert.deepEqual(demolitionWallMapping.items.filter((item) => item.item_name ===
 ]);
 
 const interiorDoorMapping = buildQuoteMapping([{ ...rows[0], spaceName: "客厅", spaceType: "客厅", wallTileAreaM2: 0, waterproofAreaM2: 0, interiorDoorCount: 2 }]);
-assert.deepEqual(interiorDoorMapping.items.filter((item) => item.item_name === "室内门"), [
+assert.deepEqual(interiorDoorMapping.items.filter((item) => item.item_name === "室内门").map(stripQuoteItemPriceParts), [
   {
     floor: "一层",
     space_name: "客厅",
@@ -864,7 +882,7 @@ assert.deepEqual(interiorDoorMapping.items.filter((item) => item.item_name === "
 const bathroomDoorMapping = buildQuoteMapping([
   { ...rows[0], spaceName: "公卫", spaceType: "卫生间", wallTileAreaM2: 20.7, waterproofAreaM2: 21.84, bathroomDoorCount: 1 },
 ]);
-assert.deepEqual(bathroomDoorMapping.items.filter((item) => item.item_name === "卫生间门"), [
+assert.deepEqual(bathroomDoorMapping.items.filter((item) => item.item_name === "卫生间门").map(stripQuoteItemPriceParts), [
   {
     floor: "一层",
     space_name: "公卫",
@@ -880,7 +898,7 @@ assert.deepEqual(bathroomDoorMapping.items.filter((item) => item.item_name === "
 const kitchenSlidingDoorMapping = buildQuoteMapping([
   { ...rows[0], spaceName: "厨房", spaceType: "厨房", slidingDoorAreaM2: 3.68, slidingDoorCasingLengthM: 5.95 },
 ]);
-assert.deepEqual(kitchenSlidingDoorMapping.items.filter((item) => item.item_name === "厨房推拉门" || item.item_name === "厨房推拉门双包套"), [
+assert.deepEqual(kitchenSlidingDoorMapping.items.filter((item) => item.item_name === "厨房推拉门" || item.item_name === "厨房推拉门双包套").map(stripQuoteItemPriceParts), [
   {
     floor: "一层",
     space_name: "厨房",
@@ -904,7 +922,7 @@ assert.deepEqual(kitchenSlidingDoorMapping.items.filter((item) => item.item_name
 ]);
 
 const kitchenCabinetMapping = buildQuoteMapping([{ ...rows[0], spaceName: "厨房", spaceType: "厨房", kitchenBaseCabinetLengthM: 4.3, kitchenWallCabinetLengthM: 3.0 }]);
-assert.deepEqual(kitchenCabinetMapping.items.filter((item) => item.item_name === "橱柜"), [
+assert.deepEqual(kitchenCabinetMapping.items.filter((item) => item.item_name === "橱柜").map(stripQuoteItemPriceParts), [
   {
     floor: "全屋",
     space_name: "全屋",
@@ -918,7 +936,7 @@ assert.deepEqual(kitchenCabinetMapping.items.filter((item) => item.item_name ===
 ]);
 
 const customCabinetMapping = buildQuoteMapping([{ ...rows[0], spaceName: "主卧", spaceType: "卧室", wallTileAreaM2: 0, waterproofAreaM2: 0, customCabinetAreaM2: 9.8 }]);
-assert.deepEqual(customCabinetMapping.items.filter((item) => item.item_name === "全屋定制"), [
+assert.deepEqual(customCabinetMapping.items.filter((item) => item.item_name === "全屋定制").map(stripQuoteItemPriceParts), [
   {
     floor: "一层",
     space_name: "主卧",
@@ -932,7 +950,7 @@ assert.deepEqual(customCabinetMapping.items.filter((item) => item.item_name === 
 ]);
 
 const backgroundWallMapping = buildQuoteMapping([{ ...rows[0], spaceName: "客厅", spaceType: "客厅", wallTileAreaM2: 0, waterproofAreaM2: 0, backgroundWallAreaM2: 8.32 }]);
-assert.deepEqual(backgroundWallMapping.items.filter((item) => item.item_name === "背景墙"), [
+assert.deepEqual(backgroundWallMapping.items.filter((item) => item.item_name === "背景墙").map(stripQuoteItemPriceParts), [
   {
     floor: "全屋",
     space_name: "全屋",
@@ -946,7 +964,7 @@ assert.deepEqual(backgroundWallMapping.items.filter((item) => item.item_name ===
 ]);
 
 const bathroomFixtureMapping = buildQuoteMapping([{ ...rows[0], spaceName: "卫生间", spaceType: "卫生间", wallTileAreaM2: 20.7, waterproofAreaM2: 21.84, toiletCount: 1, bathroomVanityCount: 1 }]);
-assert.deepEqual(bathroomFixtureMapping.items.filter((item) => item.item_name === "马桶" || item.item_name === "浴室柜"), [
+assert.deepEqual(bathroomFixtureMapping.items.filter((item) => item.item_name === "马桶" || item.item_name === "浴室柜").map(stripQuoteItemPriceParts), [
   {
     floor: "一层",
     space_name: "卫生间",
@@ -1052,7 +1070,7 @@ assert.deepEqual(curtainCandidateMapping.curtain_quote_candidates, [
     note: "已进入金额汇总",
   },
 ]);
-assert.deepEqual(curtainCandidateMapping.items.filter((item) => item.item_name === "暗窗帘箱"), [
+assert.deepEqual(curtainCandidateMapping.items.filter((item) => item.item_name === "暗窗帘箱").map(stripQuoteItemPriceParts), [
   {
     floor: "一层",
     space_name: "主卧",
@@ -1106,3 +1124,8 @@ assert.equal(quoteMappingFileName("test-case.dxf"), "test-case.quote-mapping.jso
 assert.equal(quoteMappingFileName("样例数据"), "quote-mapping.json");
 assert.equal(quoteRulesTemplateFileName("test-case.dxf"), "test-case.quote-rules.json");
 assert.equal(quoteRulesTemplateFileName("样例数据"), "quote-rules.json");
+
+function stripQuoteItemPriceParts<T extends { material_price?: number; auxiliary_price?: number; labor_price?: number }>(item: T): Omit<T, "material_price" | "auxiliary_price" | "labor_price"> {
+  const { material_price, auxiliary_price, labor_price, ...rest } = item;
+  return rest;
+}

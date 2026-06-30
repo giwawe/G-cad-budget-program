@@ -35,7 +35,7 @@ import {
   quoteRulesTemplateFileName,
   type QuoteMapping,
   type QuoteRule,
-  updateQuoteRuleUnitPrice,
+  updateQuoteRulePricePart,
 } from "@/lib/quote-mapping";
 import { buildReviewSnapshot, parseReviewSnapshot, reviewSnapshotFileName } from "@/lib/review-snapshot";
 import type { CalibrationComparison, CeilingFinishType, CurtainWallWidthSource, DrawingGeometry, QuantityRow, QuantitySummary, ReviewStatus } from "@/lib/types";
@@ -582,13 +582,13 @@ export function UploadWorkbench({
     }
   }
 
-  function handleChangeQuoteRuleUnitPrice(index: number, value: string) {
+  function handleChangeQuoteRulePricePart(index: number, part: "material_price" | "auxiliary_price" | "labor_price", value: string) {
     if (!value.trim()) {
       return;
     }
-    const unitPrice = Number(value);
+    const price = Number(value);
     try {
-      setQuoteRules((current) => updateQuoteRuleUnitPrice(current, index, unitPrice));
+      setQuoteRules((current) => updateQuoteRulePricePart(current, index, part, price));
       setQuoteRulesFileName((current) => (current.endsWith("（已编辑）") ? current : `${current}（已编辑）`));
       setGeneratedQuoteMapping(null);
       setGeneratedHealthFixList(null);
@@ -898,7 +898,10 @@ export function UploadWorkbench({
                 <th>取数指标</th>
                 <th>适用空间</th>
                 <th>单位</th>
-                <th>单价</th>
+                <th>主材</th>
+                <th>辅材</th>
+                <th>人工</th>
+                <th>汇总单价</th>
               </tr>
             </thead>
             <tbody>
@@ -910,14 +913,35 @@ export function UploadWorkbench({
                   <td>{rule.unit}</td>
                   <td>
                     <input
-                      aria-label={`${rule.item_name} 单价`}
+                      aria-label={`${rule.item_name} 主材单价`}
                       min="0"
                       step="0.01"
                       type="number"
-                      value={rule.unit_price}
-                      onChange={(event) => handleChangeQuoteRuleUnitPrice(index, event.target.value)}
+                      value={rule.material_price ?? rule.unit_price}
+                      onChange={(event) => handleChangeQuoteRulePricePart(index, "material_price", event.target.value)}
                     />
                   </td>
+                  <td>
+                    <input
+                      aria-label={`${rule.item_name} 辅材单价`}
+                      min="0"
+                      step="0.01"
+                      type="number"
+                      value={rule.auxiliary_price ?? 0}
+                      onChange={(event) => handleChangeQuoteRulePricePart(index, "auxiliary_price", event.target.value)}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      aria-label={`${rule.item_name} 人工单价`}
+                      min="0"
+                      step="0.01"
+                      type="number"
+                      value={rule.labor_price ?? 0}
+                      onChange={(event) => handleChangeQuoteRulePricePart(index, "labor_price", event.target.value)}
+                    />
+                  </td>
+                  <td>{rule.unit_price.toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>

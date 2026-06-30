@@ -278,7 +278,7 @@ code {
 
 .quoteRulesTable table {
   width: 100%;
-  min-width: 780px;
+  min-width: 980px;
   border-collapse: collapse;
   font-size: 12px;
 }
@@ -301,8 +301,13 @@ code {
   color: var(--muted);
 }
 
+.quoteRulesTable td:nth-child(8) {
+  color: var(--ink);
+  font-weight: 700;
+}
+
 .quoteRulesTable input {
-  width: 96px;
+  width: 84px;
   border: 1px solid var(--line);
   border-radius: 6px;
   background: #ffffff;

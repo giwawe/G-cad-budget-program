@@ -210,7 +210,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 导出报价映射 JSON；默认使用商品房报价表 `整装` 工作表中当前可自动取数的 27 条规则，跳过不计价空间；如果导出时仍有 `warning` 健康检查项、自定义报价规则导致的零单价或建筑面积缺失，页面会弹出草稿报价确认，确认后仍可继续导出。
 - 顶部工具栏可直接导出 Excel 报价草稿 `.xls`，也可在报价映射生成后从报价面板再次下载；当前用 Excel 兼容 HTML 表格输出接近真实模板的单张“清单式报价表”，包含“工程(预)算表”标题行、项目名称/装修面积/日期行、真实模板两层表头，以及“编号 / 项目名称 / 单位 / 数量 / 主材单价 / 辅材单价 / 人工费 / 总价 / 材料及工艺说明”列。Excel 草稿固定保留公共大项：全屋拆改工程、其他工程、水电工程、主材项目、全屋定制/橱柜/衣柜/全屋家具、室内门、集成吊顶/卫浴/全屋开关灯饰、其他（窗帘、美缝、窗台石等）；厨房卫生间集成吊顶属于“集成吊顶、卫浴、全屋开关灯饰”公共大项，并在该大项内合并数量和金额。空间类章节按当前方案空间动态生成，命名为“空间名称 + 工程”；如果多个空间同名，会按出现顺序显示为“卧室一工程”“卧室二工程”等，不合并成一个章节。固定公共大项中的同名自动项会合并数量和金额，缺少自动数据来源的模板项按 0.00 占位；空间类章节只显示该空间实际产生的自动项，同名项在本空间内合并，缺失项不显示。暗窗帘箱和窗台石铺贴属于空间类项目；公共大项里的窗帘和窗台石按 1 项占位，供设计师填价。每个章节都会输出“小计”，末尾输出“直接费合计”、工程管理费、税金和工程总造价。风险摘要仅作为表尾备注，方便报价员直接打开、补价和流转。
 - 下载/导入报价规则 JSON；导入后报价映射会使用当前规则重新计算金额。
-- 工作台会展示当前报价规则单价表，报价员可直接编辑 `unit_price`；编辑后会清空已生成的报价映射和规则 JSON 预览，重新导出报价映射后使用新单价。
+- 工作台会展示当前报价规则单价表，报价员可按真实模板分别编辑主材单价、辅材单价和人工单价；页面会自动汇总为 `unit_price`。编辑后会清空已生成的报价映射和规则 JSON 预览，重新导出报价映射或 Excel 草稿后使用新的三段价格和汇总单价。
 - 首页默认打开 `10.dxf` 方案，包含 8 个空间和 `summary.building_area_m2 = 136.24`，用于替代旧的三空间硬编码样例；默认数据维护在 `apps/web/lib/default-project.ts`，源 DXF 保存在 `server/tests/fixtures/10.dxf`。
 - 页面会提示商品房整装待补取数口径清单，这些项目暂不参与金额汇总。
 - 导出报价映射后会显示窗帘/窗帘箱可报价候选空间数；导出的报价映射 JSON 会附带 `curtain_quote_readiness` 摘要，并把自动候选或人工校准后的暗窗帘箱写入 `curtain_quote_candidates` 候选清单和 `items` 金额汇总。
@@ -262,8 +262,8 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - `item_name`：清单项名称。
 - `metric`：取数指标，当前只允许 `building_area_m2`、`tile_area_m2`、`cleaning_package_count`、`latex_paint_area_m2`、`floor_area_m2`、`floor_tile_piece_count`、`wall_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`lighting_package_count`、`switch_socket_package_count`、`ceiling_area_m2`、`wall_tile_area_m2`、`waterproof_area_m2`、`windowsill_length_m`、`new_wall_area_m2`、`demolition_wall_area_m2`、`background_wall_area_m2`、`interior_door_count`、`bathroom_door_count`、`sliding_door_area_m2`、`sliding_door_casing_length_m`、`kitchen_cabinet_length_m`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`custom_cabinet_area_m2`、`toilet_count`、`bathroom_vanity_count`、`bathroom_count`、`curtain_wall_width_m`。
 - `unit`：单位。
-- `unit_price`：单价，必须是非负数字。
-- `material_price` / `auxiliary_price` / `labor_price`：可选三段单价，用于真实 Excel 模板展示；`unit_price` 仍是三段单价合计，并用于报价映射金额计算。
+- `unit_price`：汇总单价，必须是非负数字；默认规则中等于主材、辅材、人工三段单价合计。
+- `material_price` / `auxiliary_price` / `labor_price`：可选三段单价，用于报价规则面板编辑和真实 Excel 模板展示；`unit_price` 仍作为三段单价合计，并用于报价映射金额计算。
 - `space_types`：可选，空间类型白名单；填写后只对这些空间类型生成清单项。
 
 当前商品房报价表已整理出一份可导入规则：`quote-rules-apartment-current.json`。它基于商品房报价表的 `整装` 工作表，只包含当前系统能准确承接的面积类项目；`半包` 工作表不读取、不展示、不保留为规则来源。
