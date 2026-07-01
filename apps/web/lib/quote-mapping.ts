@@ -532,7 +532,7 @@ function projectRuleQuantity(billableRows: QuantityRow[], rule: QuoteRule, build
     return round2(
       billableRows
         .filter((row) => ruleAppliesToRow({ ...rule, space_types: CURTAIN_SPACE_TYPES }, row))
-        .reduce((sum, row) => sum + (curtainWallWidthIsQuoteReady(row.curtainWallWidthSource) ? row.curtainWallWidthM : 0), 0),
+        .reduce((sum, row) => sum + (curtainWallWidthIsQuoteReady(row.curtainWallWidthSource) ? row.curtainWallWidthM * 2 : 0), 0),
     );
   }
   if (rule.metric === "kitchen_bathroom_pipe_insulation_length_m") {

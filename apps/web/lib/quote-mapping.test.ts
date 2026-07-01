@@ -1170,7 +1170,19 @@ assert.deepEqual(curtainCandidateMapping.items.filter((item) => item.item_name =
     amount: 352,
   },
 ]);
-assert.equal(curtainCandidateMapping.summary.total_amount, 43967.68);
+assert.deepEqual(curtainCandidateMapping.items.filter((item) => item.item_name === "窗帘").map(stripQuoteItemPriceParts), [
+  {
+    floor: "全屋",
+    space_name: "全屋",
+    space_type: "全屋",
+    item_name: "窗帘",
+    quantity: 31.6,
+    unit: "M",
+    unit_price: 60,
+    amount: 1896,
+  },
+]);
+assert.equal(curtainCandidateMapping.summary.total_amount, 44915.68);
 
 assert.throws(() => parseQuoteRules("{bad json"), /报价规则 JSON 格式无效/);
 assert.throws(() => parseQuoteRules(JSON.stringify({ item_name: "x" })), /报价规则必须是数组/);

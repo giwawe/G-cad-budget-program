@@ -119,7 +119,7 @@ const TEMPLATE_PRICES: Record<string, QuoteTemplatePrice> = {
   卫浴五件套: { material: 280, auxiliary: 0, labor: 0, note: "马桶刷、毛巾架、纸巾盒等。" },
   全屋插座开关: { material: 6000, auxiliary: 0, labor: 0, note: "全屋插座开关，默认 1 套。" },
   全屋灯饰: { material: 15000, auxiliary: 0, labor: 0, note: "主灯、防眩射灯、筒灯。" },
-  窗帘: { material: 60, auxiliary: 0, labor: 0, note: "按窗帘箱长度汇总，主材单价 60。" },
+  窗帘: { material: 60, auxiliary: 0, labor: 0, note: "按窗帘箱长度 * 2 计算展开长度，主材单价 60。" },
   窗台石: { material: 3600, auxiliary: 0, labor: 0, note: "按套预留，设计师确认价格。" },
   全屋保洁: { material: 4500, auxiliary: 0, labor: 0, note: "最后全屋开荒保洁，默认 1 套。" },
   暗窗帘箱: { material: 65, auxiliary: 0, labor: 45, note: "木工板立架，石膏板饰面。" },
