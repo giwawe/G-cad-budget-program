@@ -16,6 +16,7 @@
 }
 
 body {
+  overflow-x: hidden;
   margin: 0;
   background: var(--bg);
   color: var(--text);
@@ -115,6 +116,7 @@ button:disabled {
 }
 
 .summaryGrid {
+  min-width: 0;
   display: grid;
   grid-template-columns: 1.5fr 1.2fr 0.8fr;
   gap: 14px;
@@ -123,6 +125,7 @@ button:disabled {
 
 .panel,
 .reviewSection {
+  min-width: 0;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--panel);
@@ -170,12 +173,14 @@ input {
 }
 
 code {
+  max-width: 100%;
   border: 1px solid #cfd7df;
   border-radius: 6px;
   padding: 5px 7px;
   background: #f7f9fb;
   color: #26323f;
   font-size: 12px;
+  overflow-wrap: anywhere;
 }
 
 .metricPanel strong {
@@ -263,6 +268,7 @@ code {
 }
 
 .quoteRulesPanel {
+  min-width: 0;
   display: grid;
   gap: 12px;
   border: 1px solid var(--line);
@@ -288,7 +294,9 @@ code {
 }
 
 .quoteRulesTable {
+  max-width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .quoteRulesTable table {
@@ -1001,7 +1009,9 @@ code {
 }
 
 .tableWrap {
+  max-width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 table {
@@ -1204,9 +1214,96 @@ td .curtainWallHelp {
     justify-content: flex-start;
   }
 
+  .topbarActions button {
+    flex: 1 1 150px;
+    justify-content: center;
+    min-width: 0;
+  }
+
   .templateHeader {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .quoteRulesPanel,
+  .healthPanel,
+  .quotePanel,
+  .templatePanel,
+  .calibrationPanel {
+    padding: 12px;
+  }
+
+  .quoteRulesActions {
+    justify-content: flex-start;
+  }
+
+  .quoteRulesActions button {
+    width: fit-content;
+    min-height: 34px;
+  }
+
+  .quoteRulesTable table {
+    min-width: 820px;
+  }
+
+  .quoteRulesTable th,
+  .quoteRulesTable td {
+    padding: 8px 7px;
+  }
+
+  .quoteRulesTable input {
+    width: 72px;
+    padding: 6px;
+  }
+}
+
+@media (max-width: 520px) {
+  main {
+    width: 100%;
+    padding: 18px 8px 36px;
+  }
+
+  h1 {
+    font-size: 26px;
+    line-height: 1.15;
+  }
+
+  .topbarActions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .topbarActions button {
+    width: 100%;
+    min-height: 36px;
+    padding: 0 8px;
+    gap: 5px;
+    font-size: 13px;
+  }
+
+  .fieldGrid {
+    gap: 8px;
+  }
+
+  .layerList {
+    gap: 6px;
+  }
+
+  code {
+    font-size: 11px;
+    padding: 4px 6px;
+  }
+
+  .quoteRulesTable table {
+    min-width: 760px;
+    font-size: 11px;
+  }
+
+  .quoteRulesTable input {
+    width: 62px;
+    min-height: 32px;
+    font-size: 12px;
   }
 }
 
