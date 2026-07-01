@@ -57,7 +57,7 @@ def test_floor_tile_piece_count_uses_750x1500_tile_with_5_percent_loss_and_ceili
     assert row.floor_tile_piece_count == 5
 
 
-def test_kitchen_wall_tile_uses_default_tile_height_and_deducts_all_openings():
+def test_kitchen_wall_tile_uses_default_tile_height_ignores_small_window_and_deducts_sliding_door():
     defaults = ProjectDefaults(project_height_m=2.8, default_window_height_m=1.5, default_door_height_m=2.1)
     space = SpaceInput(
         floor="一层",
@@ -65,15 +65,32 @@ def test_kitchen_wall_tile_uses_default_tile_height_and_deducts_all_openings():
         boundary_points_m=[(0, 0), (2.8, 0), (2.8, 1.6), (0, 1.6)],
         wall_lengths_m=[2.8, 1.6, 2.8, 1.92],
         windows=[OpeningInput(width_m=0.8, height_m=1.0)],
-        doors=[OpeningInput(width_m=1.0)],
+        doors=[OpeningInput(width_m=1.0, quote_category="sliding_door")],
     )
 
     row = calculate_quantity_row(space, defaults)
 
     assert row.wall_measure_length_m == 9.12
-    assert row.wall_tile_area_m2 == 19.9
+    assert row.wall_tile_area_m2 == 20.6
     assert row.latex_paint_area_m2 == 0
     assert row.waterproof_area_m2 == 7.22
+
+
+def test_kitchen_wall_tile_deducts_window_area_when_larger_than_three_square_meters():
+    defaults = ProjectDefaults(project_height_m=2.8, default_window_height_m=1.5, default_door_height_m=2.1)
+    space = SpaceInput(
+        floor="一层",
+        name="一层-厨房",
+        boundary_points_m=[(0, 0), (2.8, 0), (2.8, 1.6), (0, 1.6)],
+        wall_lengths_m=[2.8, 1.6, 2.8, 1.92],
+        windows=[OpeningInput(width_m=2.1, height_m=1.5)],
+        doors=[OpeningInput(width_m=1.0, quote_category="sliding_door")],
+    )
+
+    row = calculate_quantity_row(space, defaults)
+
+    assert row.window_area_m2 == 3.15
+    assert row.wall_tile_area_m2 == 17.45
 
 
 def test_bathroom_wall_tile_uses_default_tile_height_and_waterproof_uses_1_8m():
@@ -89,7 +106,7 @@ def test_bathroom_wall_tile_uses_default_tile_height_and_waterproof_uses_1_8m():
 
     row = calculate_quantity_row(space, defaults)
 
-    assert row.wall_tile_area_m2 == 20.68
+    assert row.wall_tile_area_m2 == 22.36
     assert row.latex_paint_area_m2 == 0
     assert row.waterproof_area_m2 == 21.84
 
@@ -479,7 +496,7 @@ def test_interior_door_count_only_counts_normal_doors():
     assert bathroom_row.bathroom_door_count == 1
 
 
-def test_kitchen_sliding_door_area_and_casing_length_use_default_door_height():
+def test_kitchen_sliding_door_area_and_casing_length_use_2_2m_default_height():
     kitchen = SpaceInput(
         name="厨房",
         boundary_points_m=[(0, 0), (3, 0), (3, 3), (0, 3)],
@@ -489,8 +506,8 @@ def test_kitchen_sliding_door_area_and_casing_length_use_default_door_height():
 
     row = calculate_quantity_row(kitchen, ProjectDefaults())
 
-    assert row.sliding_door_area_m2 == 3.36
-    assert row.sliding_door_casing_length_m == 5.8
+    assert row.sliding_door_area_m2 == 3.52
+    assert row.sliding_door_casing_length_m == 6.0
 
 
 def test_height_priority_space_then_floor_then_project():
