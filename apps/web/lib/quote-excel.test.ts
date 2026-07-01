@@ -168,6 +168,45 @@ assert.ok(duplicateHtml.includes("<td>厨房卫生间集成吊顶</td><td>m2</td
 assert.equal(countOccurrences(duplicateHtml, "<td>室内门</td><td>樘"), 1);
 assert.ok(duplicateHtml.includes("<td>室内门</td><td>樘</td><td>3</td><td>1200.00</td><td>0.00</td><td>0.00</td><td>3600.00</td>"));
 
+const slidingDoorHtml = buildQuoteExcelHtml(
+  {
+    ...mapping,
+    items: [
+      {
+        floor: "一层",
+        space_name: "厨房",
+        space_type: "厨房",
+        item_name: "厨房推拉门",
+        quantity: 3.85,
+        unit: "m2",
+        unit_price: 550,
+        amount: 2117.5,
+      },
+      {
+        floor: "一层",
+        space_name: "厨房",
+        space_type: "厨房",
+        item_name: "厨房推拉门双包套",
+        quantity: 6.15,
+        unit: "M",
+        unit_price: 300,
+        amount: 1845,
+      },
+    ],
+    summary: {
+      ...mapping.summary,
+      item_count: 2,
+      total_amount: 3962.5,
+    },
+  },
+  "厨房推拉门项目",
+);
+assert.equal(countOccurrences(slidingDoorHtml, "<td>厨房推拉门</td><td>m2"), 1);
+assert.equal(countOccurrences(slidingDoorHtml, "<td>厨房推拉门双包套</td><td>M"), 1);
+assert.ok(slidingDoorHtml.includes("<td>厨房推拉门</td><td>m2</td><td>3.85</td><td>550.00</td><td>0.00</td><td>0.00</td><td>2117.50</td>"));
+assert.ok(slidingDoorHtml.includes("<td>厨房推拉门双包套</td><td>M</td><td>6.15</td><td>300.00</td><td>0.00</td><td>0.00</td><td>1845.00</td>"));
+assert.ok(!slidingDoorHtml.includes("<td>厨房推拉门</td><td>m2</td><td>10</td>"));
+
 const editedPricePartHtml = buildQuoteExcelHtml(
   {
     ...mapping,

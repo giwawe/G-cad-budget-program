@@ -45,6 +45,7 @@ const FIXED_TEMPLATE_SECTIONS: QuoteTemplateSectionDefinition[] = [
   { title: "集成吊顶、卫浴、全屋开关灯饰", itemNames: ["厨房卫生间集成吊顶", "浴室柜", "马桶", "蹲坑", "淋浴隔断", "玻璃淋浴房", "花洒", "卫浴五件套", "全屋插座开关", "全屋灯饰"] },
   { title: "其他（窗帘、美缝、窗台石等）", itemNames: ["美缝", "窗帘", "窗台石", "全屋保洁"] },
 ];
+const TEMPLATE_ITEM_NAME_SET = new Set([...ROOM_SECTION_ITEM_NAMES, ...FIXED_TEMPLATE_SECTIONS.flatMap((section) => section.itemNames)]);
 
 export const MANUAL_QUOTE_DRAFT_ITEMS: ManualQuoteDraftItem[] = [
   { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "砖墙门窗洞过梁" },
@@ -380,7 +381,13 @@ function isRoomSectionItem(itemName: string): boolean {
 }
 
 function itemMatchesTemplate(itemName: string, templateItemName: string): boolean {
-  return itemName === templateItemName || itemName.includes(templateItemName);
+  if (itemName === templateItemName) {
+    return true;
+  }
+  if (TEMPLATE_ITEM_NAME_SET.has(itemName)) {
+    return false;
+  }
+  return itemName.includes(templateItemName);
 }
 
 function chineseSectionCode(index: number): string {
