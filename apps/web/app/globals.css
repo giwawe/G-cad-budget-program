@@ -272,6 +272,21 @@ code {
   padding: 14px 16px;
 }
 
+.quoteRulesActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.quoteRulesActions button {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 7px 11px;
+}
+
 .quoteRulesTable {
   overflow-x: auto;
 }

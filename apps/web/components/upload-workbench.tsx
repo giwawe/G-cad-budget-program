@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useMemo, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Download, FileUp, Layers3, Loader2, ReceiptText, Settings2 } from "lucide-react";
 import { DrawingReview } from "@/components/drawing-review";
 import { QuantityTable } from "@/components/quantity-table";
@@ -43,6 +43,7 @@ import type { CalibrationComparison, CeilingFinishType, CurtainWallWidthSource, 
 const DEFAULT_DOOR_HEIGHT_M = 2.1;
 const FULL_WALL_TILE_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 const DEFAULT_INTEGRATED_CEILING_SPACE_TYPES = new Set(["厨房", "卫生间"]);
+const QUOTE_RULES_STORAGE_KEY = "cad-budget-program.quote-rules.v1";
 
 type ApiQuantityRow = {
   floor: string;
@@ -249,6 +250,7 @@ export function UploadWorkbench({
   const [generatedQuoteMapping, setGeneratedQuoteMapping] = useState<{ fileName: string; content: string; mapping: QuoteMapping } | null>(null);
   const [quoteRules, setQuoteRules] = useState<QuoteRule[]>(() => defaultQuoteRules());
   const [quoteRulesFileName, setQuoteRulesFileName] = useState(DEFAULT_QUOTE_RULES_NAME);
+  const [quoteRulesStorageReady, setQuoteRulesStorageReady] = useState(false);
   const [generatedQuoteRules, setGeneratedQuoteRules] = useState<{ fileName: string; content: string } | null>(null);
   const [healthFilter, setHealthFilter] = useState<QuantityHealthFilter>("all");
   const [acceptedHealthCheckKeys, setAcceptedHealthCheckKeys] = useState<string[]>([]);
@@ -266,6 +268,33 @@ export function UploadWorkbench({
   const healthChecks = useMemo(() => filterAcceptedHealthChecks(rawHealthChecks, acceptedHealthCheckKeys), [rawHealthChecks, acceptedHealthCheckKeys]);
   const healthSummary = useMemo(() => summarizeQuantityHealthChecks(healthChecks), [healthChecks]);
   const filteredHealthChecks = useMemo(() => filterQuantityHealthChecks(healthChecks, healthFilter), [healthChecks, healthFilter]);
+
+  useEffect(() => {
+    try {
+      const savedRules = window.localStorage.getItem(QUOTE_RULES_STORAGE_KEY);
+      if (!savedRules) {
+        return;
+      }
+      const parsed = JSON.parse(savedRules) as { fileName?: unknown; rules?: unknown };
+      if (!Array.isArray(parsed.rules)) {
+        throw new Error("saved quote rules are invalid");
+      }
+      const restoredRules = parseQuoteRules(JSON.stringify(parsed.rules));
+      setQuoteRules(restoredRules);
+      setQuoteRulesFileName(typeof parsed.fileName === "string" && parsed.fileName.trim() ? parsed.fileName : `${DEFAULT_QUOTE_RULES_NAME}（已编辑）`);
+    } catch {
+      window.localStorage.removeItem(QUOTE_RULES_STORAGE_KEY);
+    } finally {
+      setQuoteRulesStorageReady(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!quoteRulesStorageReady) {
+      return;
+    }
+    window.localStorage.setItem(QUOTE_RULES_STORAGE_KEY, JSON.stringify({ fileName: quoteRulesFileName, rules: quoteRules }));
+  }, [quoteRulesStorageReady, quoteRules, quoteRulesFileName]);
 
   async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -594,11 +623,22 @@ export function UploadWorkbench({
       setGeneratedHealthFixList(null);
       setGeneratedQuoteRules(null);
       setError("");
-      setMessage("报价规则单价已更新，重新导出报价映射后生效");
+      setMessage("报价规则单价已更新，并已自动保存到本机；重新导出报价映射后生效");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "报价规则单价更新失败");
       setMessage("");
     }
+  }
+
+  function handleResetQuoteRules() {
+    const nextRules = defaultQuoteRules();
+    setQuoteRules(nextRules);
+    setQuoteRulesFileName(DEFAULT_QUOTE_RULES_NAME);
+    setGeneratedQuoteMapping(null);
+    setGeneratedHealthFixList(null);
+    setGeneratedQuoteRules(null);
+    setError("");
+    setMessage("已恢复默认报价规则，并已自动保存到本机");
   }
 
   function handleChangeStatus(spaceName: string, status: ReviewStatus) {
@@ -887,7 +927,10 @@ export function UploadWorkbench({
         <div className="templateHeader">
           <div>
             <strong>报价规则单价</strong>
-            <span>{quoteRulesFileName}</span>
+            <span>{quoteRulesFileName} · 本机自动保存</span>
+          </div>
+          <div className="quoteRulesActions">
+            <button type="button" onClick={handleResetQuoteRules}>恢复默认规则</button>
           </div>
         </div>
         <div className="quoteRulesTable">
