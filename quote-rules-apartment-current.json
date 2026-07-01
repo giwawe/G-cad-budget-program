@@ -198,22 +198,31 @@
     "space_types": ["厨房", "卫生间", "阳台", "露台", "洗衣房"]
   },
   {
-    "item_name": "窗台石铺贴",
-    "metric": "windowsill_length_m",
-    "unit": "M",
-    "unit_price": 73,
-    "material_price": 0,
-    "auxiliary_price": 28,
-    "labor_price": 45
+    "item_name": "砌砖墙",
+    "metric": "new_wall_area_m2",
+    "unit": "M2",
+    "unit_price": 220,
+    "material_price": 100,
+    "auxiliary_price": 0,
+    "labor_price": 120
   },
   {
     "item_name": "砌120厚砖墙",
-    "metric": "new_wall_area_m2",
+    "metric": "manual_count",
     "unit": "M2",
     "unit_price": 170,
     "material_price": 80,
     "auxiliary_price": 0,
     "labor_price": 90
+  },
+  {
+    "item_name": "砌240厚砖墙",
+    "metric": "manual_count",
+    "unit": "M2",
+    "unit_price": 220,
+    "material_price": 100,
+    "auxiliary_price": 0,
+    "labor_price": 120
   },
   {
     "item_name": "拆改及拆墙",
@@ -225,11 +234,74 @@
     "labor_price": 60
   },
   {
+    "item_name": "外墙批嵌以及修补",
+    "metric": "manual_count",
+    "unit": "M2",
+    "unit_price": 80,
+    "material_price": 0,
+    "auxiliary_price": 30,
+    "labor_price": 50
+  },
+  {
+    "item_name": "砖墙门窗洞过梁",
+    "metric": "manual_count",
+    "unit": "支",
+    "unit_price": 200,
+    "material_price": 160,
+    "auxiliary_price": 0,
+    "labor_price": 40
+  },
+  {
+    "item_name": "水泥墙开槽",
+    "metric": "building_area_m2",
+    "unit": "M2",
+    "unit_price": 9,
+    "material_price": 0,
+    "auxiliary_price": 3,
+    "labor_price": 6
+  },
+  {
+    "item_name": "打混凝土过梁孔",
+    "metric": "building_area_tenth_count",
+    "unit": "个",
+    "unit_price": 50,
+    "material_price": 0,
+    "auxiliary_price": 0,
+    "labor_price": 50
+  },
+  {
+    "item_name": "厨房、卫生间排污管包隔音棉",
+    "metric": "kitchen_bathroom_pipe_insulation_length_m",
+    "unit": "M",
+    "unit_price": 35,
+    "material_price": 0,
+    "auxiliary_price": 20,
+    "labor_price": 15
+  },
+  {
+    "item_name": "补线、管槽及零星修补",
+    "metric": "building_area_m2",
+    "unit": "M2",
+    "unit_price": 5.5,
+    "material_price": 0,
+    "auxiliary_price": 2.5,
+    "labor_price": 3
+  },
+  {
     "item_name": "背景墙",
     "metric": "background_wall_area_m2",
     "unit": "M2",
     "unit_price": 280,
     "material_price": 280,
+    "auxiliary_price": 0,
+    "labor_price": 0
+  },
+  {
+    "item_name": "入户门",
+    "metric": "manual_count",
+    "unit": "樘",
+    "unit_price": 5000,
+    "material_price": 5000,
     "auxiliary_price": 0,
     "labor_price": 0
   },
@@ -273,6 +345,33 @@
     "space_types": ["厨房"]
   },
   {
+    "item_name": "阳台推拉门",
+    "metric": "manual_count",
+    "unit": "M2",
+    "unit_price": 550,
+    "material_price": 550,
+    "auxiliary_price": 0,
+    "labor_price": 0
+  },
+  {
+    "item_name": "阳台推拉门双包套",
+    "metric": "manual_count",
+    "unit": "M",
+    "unit_price": 300,
+    "material_price": 300,
+    "auxiliary_price": 0,
+    "labor_price": 0
+  },
+  {
+    "item_name": "铝合金封门窗",
+    "metric": "manual_count",
+    "unit": "M2",
+    "unit_price": 0,
+    "material_price": 0,
+    "auxiliary_price": 0,
+    "labor_price": 0
+  },
+  {
     "item_name": "橱柜",
     "metric": "kitchen_cabinet_length_m",
     "unit": "M",
@@ -302,6 +401,15 @@
     "space_types": ["卫生间"]
   },
   {
+    "item_name": "蹲坑",
+    "metric": "manual_count",
+    "unit": "套",
+    "unit_price": 500,
+    "material_price": 500,
+    "auxiliary_price": 0,
+    "labor_price": 0
+  },
+  {
     "item_name": "浴室柜",
     "metric": "bathroom_vanity_count",
     "unit": "套",
@@ -310,6 +418,24 @@
     "auxiliary_price": 0,
     "labor_price": 0,
     "space_types": ["卫生间"]
+  },
+  {
+    "item_name": "淋浴隔断",
+    "metric": "manual_count",
+    "unit": "套",
+    "unit_price": 400,
+    "material_price": 400,
+    "auxiliary_price": 0,
+    "labor_price": 0
+  },
+  {
+    "item_name": "玻璃淋浴房",
+    "metric": "manual_count",
+    "unit": "套",
+    "unit_price": 3500,
+    "material_price": 3500,
+    "auxiliary_price": 0,
+    "labor_price": 0
   },
   {
     "item_name": "花洒",
@@ -346,6 +472,24 @@
     "unit": "套",
     "unit_price": 15000,
     "material_price": 15000,
+    "auxiliary_price": 0,
+    "labor_price": 0
+  },
+  {
+    "item_name": "窗帘",
+    "metric": "curtain_box_length_m",
+    "unit": "M",
+    "unit_price": 60,
+    "material_price": 60,
+    "auxiliary_price": 0,
+    "labor_price": 0
+  },
+  {
+    "item_name": "窗台石",
+    "metric": "manual_count",
+    "unit": "套",
+    "unit_price": 3600,
+    "material_price": 3600,
     "auxiliary_price": 0,
     "labor_price": 0
   },

@@ -27,16 +27,16 @@ const ROOM_SECTION_ITEM_NAMES = [
   "墙地面防漏处理",
   "墙面贴瓷砖(600X1200)",
   "地面砖铺贴(750X1500)",
-  "窗台石铺贴",
 ];
 
-const ONE_ITEM_PLACEHOLDER_NAMES = new Set(["窗帘", "窗台石"]);
+const ONE_ITEM_PLACEHOLDER_NAMES = new Set(["窗台石"]);
+const EXCEL_PLACEHOLDER_ITEM_NAMES = new Set<string>();
 
 const FIXED_TEMPLATE_SECTIONS: QuoteTemplateSectionDefinition[] = [
-  { title: "全屋拆改工程", itemNames: ["拆改及拆墙", "砌120厚砖墙", "砌240厚砖墙", "外墙批嵌", "外墙批嵌以及修补"] },
+  { title: "全屋拆改工程", itemNames: ["拆改及拆墙", "砌砖墙", "砌120厚砖墙", "砌240厚砖墙", "外墙批嵌以及修补"] },
   {
     title: "其他工程",
-    itemNames: ["砖墙门窗洞过梁", "水泥墙开槽", "打混凝土过梁孔", "厨房、卫生间排污管包隔音棉", "补线、管槽及零星修补", "包上/下水管道(单管)", "垃圾清运费", "材料搬运费", "地面砖现场维护费"],
+    itemNames: ["砖墙门窗洞过梁", "水泥墙开槽", "打混凝土过梁孔", "厨房、卫生间排污管包隔音棉", "补线、管槽及零星修补", "垃圾清运费", "材料搬运费", "地面砖现场维护费"],
   },
   { title: "水电工程", itemNames: ["强电布线", "弱电布线", "水路布管"] },
   { title: "主材项目", itemNames: ["地面瓷砖", "墙面瓷砖", "瓷砖加工费"] },
@@ -47,14 +47,7 @@ const FIXED_TEMPLATE_SECTIONS: QuoteTemplateSectionDefinition[] = [
 ];
 
 export const MANUAL_QUOTE_DRAFT_ITEMS: ManualQuoteDraftItem[] = [
-  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "砌240厚砖墙" },
-  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "外墙批嵌以及修补" },
   { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "砖墙门窗洞过梁" },
-  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "水泥墙开槽" },
-  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "打混凝土过梁孔" },
-  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "厨房、卫生间排污管包隔音棉" },
-  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "补线、管槽及零星修补" },
-  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "包上/下水管道(单管)" },
   { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "入户门" },
   { floor: "一层", space_name: "阳台", space_type: "阳台", item_name: "阳台推拉门" },
   { floor: "一层", space_name: "阳台", space_type: "阳台", item_name: "阳台推拉门双包套" },
@@ -62,8 +55,9 @@ export const MANUAL_QUOTE_DRAFT_ITEMS: ManualQuoteDraftItem[] = [
   { floor: "一层", space_name: "卫生间", space_type: "卫生间", item_name: "蹲坑" },
   { floor: "一层", space_name: "卫生间", space_type: "卫生间", item_name: "淋浴隔断" },
   { floor: "一层", space_name: "卫生间", space_type: "卫生间", item_name: "玻璃淋浴房" },
-  { floor: "一层", space_name: "客厅", space_type: "客厅", item_name: "背景墙" },
+  { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "窗台石" },
 ];
+MANUAL_QUOTE_DRAFT_ITEMS.forEach((item) => EXCEL_PLACEHOLDER_ITEM_NAMES.add(item.item_name));
 
 type QuoteTemplatePrice = {
   material: number;
@@ -95,21 +89,38 @@ const TEMPLATE_PRICES: Record<string, QuoteTemplatePrice> = {
   "墙面贴瓷砖(600X1200)": { material: 0, auxiliary: 40, labor: 60, note: "辅料为水泥、黄沙、瓷砖背胶、胶泥。" },
   墙地面防漏处理: { material: 28, auxiliary: 10.5, labor: 13, note: "墙地面清理，涂刷防水涂料。" },
   窗台石铺贴: { material: 0, auxiliary: 28, labor: 45, note: "主材及磨边业主甲供，辅料为水泥、黄沙。" },
+  砌砖墙: { material: 100, auxiliary: 0, labor: 120, note: "未标注墙厚时按 240 厚砌墙口径输出，设计师可调整。" },
   砌120厚砖墙: { material: 80, auxiliary: 0, labor: 90, note: "水泥、沙、砖、人工辅料。" },
+  砌240厚砖墙: { material: 100, auxiliary: 0, labor: 120, note: "水泥、沙、砖、人工辅料。" },
   拆改及拆墙: { material: 0, auxiliary: 0, labor: 60, note: "人工拆除。" },
+  外墙批嵌以及修补: { material: 0, auxiliary: 30, labor: 50, note: "有对应图层时按规则输出；无图层不显示。" },
+  砖墙门窗洞过梁: { material: 160, auxiliary: 0, labor: 40, note: "设计师按现场数量填写。" },
+  水泥墙开槽: { material: 0, auxiliary: 3, labor: 6, note: "按建筑面积生成候选。" },
+  打混凝土过梁孔: { material: 0, auxiliary: 0, labor: 50, note: "按建筑面积 10% 生成候选。" },
+  "厨房、卫生间排污管包隔音棉": { material: 0, auxiliary: 20, labor: 15, note: "厨房和卫生间数量合计 * 1.5 * 层高。" },
+  "补线、管槽及零星修补": { material: 0, auxiliary: 2.5, labor: 3, note: "按建筑面积生成候选。" },
+  入户门: { material: 5000, auxiliary: 0, labor: 0, note: "设计师确认是否计入。" },
   室内门: { material: 1200, auxiliary: 0, labor: 0, note: "室内静音门。" },
   卫生间门: { material: 1200, auxiliary: 0, labor: 0, note: "铝合金玻璃门。" },
   厨房推拉门: { material: 550, auxiliary: 0, labor: 0, note: "铝合金推拉门。" },
   厨房推拉门双包套: { material: 300, auxiliary: 0, labor: 0, note: "极窄铝合金双包套。" },
+  阳台推拉门: { material: 550, auxiliary: 0, labor: 0, note: "设计师确认是否计入。" },
+  阳台推拉门双包套: { material: 300, auxiliary: 0, labor: 0, note: "设计师确认是否计入。" },
+  铝合金封门窗: { material: 0, auxiliary: 0, labor: 0, note: "按窗户实际面积预留，设计师选择是否报价。" },
   橱柜: { material: 600, auxiliary: 0, labor: 0, note: "橱柜柜体、柜门、五金、安装及辅料。" },
   全屋定制: { material: 600, auxiliary: 0, labor: 0, note: "全屋定制柜体、柜门、五金、安装及辅料。" },
   背景墙: { material: 280, auxiliary: 0, labor: 0, note: "木饰面外石材或玻璃部分需按实际补差。" },
   马桶: { material: 1500, auxiliary: 0, labor: 0, note: "轻智能马桶。" },
+  蹲坑: { material: 500, auxiliary: 0, labor: 0, note: "与马桶二选一，设计师确认。" },
   浴室柜: { material: 1500, auxiliary: 0, labor: 0, note: "岩板一体盆，含龙头及上下水。" },
+  淋浴隔断: { material: 400, auxiliary: 0, labor: 0, note: "与玻璃淋浴房二选一，设计师确认。" },
+  玻璃淋浴房: { material: 3500, auxiliary: 0, labor: 0, note: "与淋浴隔断二选一，设计师确认。" },
   花洒: { material: 800, auxiliary: 0, labor: 0, note: "花洒（九牧、法恩莎）。" },
   卫浴五件套: { material: 280, auxiliary: 0, labor: 0, note: "马桶刷、毛巾架、纸巾盒等。" },
   全屋插座开关: { material: 6000, auxiliary: 0, labor: 0, note: "全屋插座开关，默认 1 套。" },
   全屋灯饰: { material: 15000, auxiliary: 0, labor: 0, note: "主灯、防眩射灯、筒灯。" },
+  窗帘: { material: 60, auxiliary: 0, labor: 0, note: "按窗帘箱长度汇总，主材单价 60。" },
+  窗台石: { material: 3600, auxiliary: 0, labor: 0, note: "按套预留，设计师确认价格。" },
   全屋保洁: { material: 4500, auxiliary: 0, labor: 0, note: "最后全屋开荒保洁，默认 1 套。" },
   暗窗帘箱: { material: 65, auxiliary: 0, labor: 45, note: "木工板立架，石膏板饰面。" },
 };
@@ -200,7 +211,7 @@ function quoteTemplateSectionRows(
   for (const templateItemName of section.itemNames) {
     const matchingItems = sectionItems.filter((item) => itemMatchesTemplate(item.item_name, templateItemName));
     if (matchingItems.length === 0) {
-      if (includeZeroRows) {
+      if (includeZeroRows && shouldRenderZeroPlaceholder(templateItemName)) {
         rows.push(zeroItemTemplateRow(templateItemName, rowIndex++));
       }
       continue;
@@ -267,10 +278,37 @@ function aggregateQuoteItemsByName(items: QuoteMapping["items"]): QuoteMapping["
 }
 
 function zeroItemTemplateRow(itemName: string, index: number): string[] {
+  const price = TEMPLATE_PRICES[itemName] ?? { material: 0, auxiliary: 0, labor: 0, note: "" };
   if (ONE_ITEM_PLACEHOLDER_NAMES.has(itemName)) {
-    return [String(index), itemName, "项", "1", "", "", "", "0.00", ""];
+    return [String(index), itemName, templateUnitForItem(itemName), "1", formatMoney(price.material), formatMoney(price.auxiliary), formatMoney(price.labor), "0.00", price.note];
   }
-  return [String(index), itemName, "", "", "", "", "", "0.00", ""];
+  return [String(index), itemName, templateUnitForItem(itemName), "0", formatMoney(price.material), formatMoney(price.auxiliary), formatMoney(price.labor), "0.00", price.note];
+}
+
+function shouldRenderZeroPlaceholder(itemName: string): boolean {
+  return EXCEL_PLACEHOLDER_ITEM_NAMES.has(itemName);
+}
+
+function templateUnitForItem(itemName: string): string {
+  if (["蹲坑", "马桶", "淋浴隔断", "玻璃淋浴房", "窗台石"].includes(itemName)) {
+    return "套";
+  }
+  if (["砖墙门窗洞过梁"].includes(itemName)) {
+    return "支";
+  }
+  if (itemName.includes("门") && !itemName.includes("推拉门") && !itemName.includes("封门窗")) {
+    return "樘";
+  }
+  if (["砌砖墙", "砌120厚砖墙", "砌240厚砖墙", "外墙批嵌以及修补", "水泥墙开槽", "补线、管槽及零星修补", "铝合金封门窗"].includes(itemName)) {
+    return "M2";
+  }
+  if (["阳台推拉门双包套", "窗帘"].includes(itemName)) {
+    return "M";
+  }
+  if (["阳台推拉门"].includes(itemName)) {
+    return "M2";
+  }
+  return "";
 }
 
 function sectionHeaderRow(section: Pick<QuoteTemplateSection, "code" | "title">): string[] {
