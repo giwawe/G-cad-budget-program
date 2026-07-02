@@ -331,15 +331,15 @@ code {
   min-height: 34px;
 }
 
-.manualQuoteChoiceGroups {
+.manualBathroomChoices {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
-.manualQuoteChoiceGroup {
+.manualBathroomChoice {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 0.7fr) repeat(2, minmax(0, 1fr));
   align-items: center;
   gap: 10px;
   border: 1px solid #d8e1eb;
@@ -348,22 +348,24 @@ code {
   padding: 10px 12px;
 }
 
-.manualQuoteChoiceGroup strong {
+.manualBathroomChoice strong {
   color: #26323f;
   font-size: 13px;
 }
 
-.manualQuoteChoiceGroup span {
+.manualBathroomChoice span {
   color: var(--muted);
   font-size: 12px;
 }
 
-.manualQuoteChoiceGroup div {
+.manualBathroomChoice div {
   display: flex;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
-.manualQuoteChoiceGroup button {
+.manualBathroomChoice button {
   min-height: 32px;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -373,11 +375,17 @@ code {
   padding: 0 10px;
 }
 
-.manualQuoteChoiceGroup button.active {
+.manualBathroomChoice button.active {
   border-color: var(--accent);
   background: #e9f7f3;
   color: var(--accent);
   font-weight: 700;
+}
+
+.manualBathroomChoices p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .quoteRulesActions {
@@ -1363,7 +1371,7 @@ td .curtainWallHelp {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .manualQuoteChoiceGroups {
+  .manualBathroomChoices {
     grid-template-columns: 1fr;
   }
 }
@@ -1421,7 +1429,7 @@ td .curtainWallHelp {
     grid-template-columns: 1fr;
   }
 
-  .manualQuoteChoiceGroup {
+  .manualBathroomChoice {
     grid-template-columns: 1fr;
     align-items: stretch;
   }

@@ -1,5 +1,12 @@
 import assert from "node:assert/strict";
-import { applyExclusiveManualQuoteChoice, bathroomCountFromRows, manualQuoteInputsFromQuantities, manualQuoteQuantitiesFromInputs } from "./manual-quote-options.ts";
+import {
+  bathroomChoiceKey,
+  bathroomManualChoicesFromQuantities,
+  bathroomRowsFromRows,
+  manualQuoteInputsFromBathroomChoices,
+  manualQuoteInputsFromQuantities,
+  manualQuoteQuantitiesFromInputs,
+} from "./manual-quote-options.ts";
 import type { QuantityRow } from "./types.ts";
 
 const baseRow: QuantityRow = {
@@ -44,14 +51,12 @@ const baseRow: QuantityRow = {
   status: "pending_review",
 };
 
-assert.equal(
-  bathroomCountFromRows([
-    { ...baseRow, spaceName: "卫生间", spaceType: "卫生间" },
-    { ...baseRow, spaceName: "主卫", spaceType: "卫生间", status: "confirmed" },
-    { ...baseRow, spaceName: "设备间", spaceType: "卫生间", status: "excluded" },
-  ]),
-  2,
-);
+const bathroomRows = bathroomRowsFromRows([
+  { ...baseRow, spaceName: "卫生间", spaceType: "卫生间" },
+  { ...baseRow, spaceName: "主卫", spaceType: "卫生间", status: "confirmed" },
+  { ...baseRow, spaceName: "设备间", spaceType: "卫生间", status: "excluded" },
+]);
+assert.deepEqual(bathroomRows.map((row) => row.spaceName), ["卫生间", "主卫"]);
 
 assert.deepEqual(manualQuoteQuantitiesFromInputs({ 入户门: "1", 马桶: "2.345", 蹲坑: "-1", 窗台石: "", 铝合金封门窗: "bad" }), {
   入户门: 1,
@@ -60,13 +65,28 @@ assert.deepEqual(manualQuoteQuantitiesFromInputs({ 入户门: "1", 马桶: "2.34
 
 assert.deepEqual(manualQuoteInputsFromQuantities({ 入户门: 1, 马桶: 2 }), { 入户门: "1", 马桶: "2" });
 
-assert.deepEqual(applyExclusiveManualQuoteChoice({ 入户门: "1" }, ["马桶", "蹲坑"], "蹲坑", 2), {
+assert.deepEqual(
+  manualQuoteInputsFromBathroomChoices(
+    { 入户门: "1", 马桶: "5", 蹲坑: "0", 淋浴隔断: "3" },
+    {
+      [bathroomChoiceKey(bathroomRows[0])]: { fixture: "蹲坑", shower: "淋浴隔断" },
+      [bathroomChoiceKey(bathroomRows[1])]: { fixture: "马桶", shower: "玻璃淋浴房" },
+    },
+    bathroomRows,
+  ),
+  {
   入户门: "1",
-  马桶: "0",
-  蹲坑: "2",
-});
+    马桶: "1",
+    蹲坑: "1",
+    淋浴隔断: "1",
+    玻璃淋浴房: "1",
+  },
+);
 
-assert.deepEqual(applyExclusiveManualQuoteChoice({ 淋浴隔断: "1", 玻璃淋浴房: "0" }, ["淋浴隔断", "玻璃淋浴房"], "玻璃淋浴房", 0), {
-  淋浴隔断: "0",
-  玻璃淋浴房: "0",
-});
+assert.deepEqual(
+  bathroomManualChoicesFromQuantities({ 马桶: 1, 蹲坑: 1, 淋浴隔断: 1, 玻璃淋浴房: 1 }, bathroomRows),
+  {
+    [bathroomChoiceKey(bathroomRows[0])]: { fixture: "马桶", shower: "淋浴隔断" },
+    [bathroomChoiceKey(bathroomRows[1])]: { fixture: "蹲坑", shower: "玻璃淋浴房" },
+  },
+);

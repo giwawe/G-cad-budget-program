@@ -21,9 +21,12 @@ import {
 import { confirmQuantityRowsBySpaceNames, updateQuantityRowCurtainWallWidth, updateQuantityRowStatus, updateQuantityRowsStatusBySpaceNames } from "@/lib/quantity-row-status";
 import { buildQuoteExcelHtml, quoteExcelFileName, type QuoteExcelManualItemQuantities } from "@/lib/quote-excel";
 import {
-  applyExclusiveManualQuoteChoice,
-  bathroomCountFromRows,
+  bathroomChoiceKey,
+  bathroomManualChoicesFromQuantities,
+  bathroomRowsFromRows,
+  type BathroomManualChoice,
   manualQuoteInputsFromQuantities,
+  manualQuoteInputsFromBathroomChoices,
   manualQuoteQuantitiesFromInputs,
 } from "@/lib/manual-quote-options";
 import {
@@ -51,20 +54,8 @@ const FULL_WALL_TILE_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 const DEFAULT_INTEGRATED_CEILING_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 const QUOTE_RULES_STORAGE_KEY = "cad-budget-program.quote-rules.v1";
 const MANUAL_QUOTE_OPTION_ITEMS = [
-  { itemName: "砖墙门窗洞过梁", unit: "支", hint: "现场确认数量" },
   { itemName: "入户门", unit: "樘", hint: "需要时填 1" },
-  { itemName: "阳台推拉门", unit: "M2", hint: "按门洞面积" },
-  { itemName: "阳台推拉门双包套", unit: "M", hint: "按包套长度" },
   { itemName: "铝合金封门窗", unit: "M2", hint: "按窗户实际面积" },
-  { itemName: "马桶", unit: "套", hint: "与蹲坑二选一" },
-  { itemName: "蹲坑", unit: "套", hint: "与马桶二选一" },
-  { itemName: "淋浴隔断", unit: "套", hint: "与玻璃淋浴房二选一" },
-  { itemName: "玻璃淋浴房", unit: "套", hint: "与淋浴隔断二选一" },
-  { itemName: "窗台石", unit: "套", hint: "按套确认" },
-];
-const MANUAL_QUOTE_EXCLUSIVE_GROUPS = [
-  { title: "洁具二选一", itemNames: ["马桶", "蹲坑"] },
-  { title: "淋浴配置二选一", itemNames: ["淋浴隔断", "玻璃淋浴房"] },
 ];
 
 type ApiQuantityRow = {
@@ -277,11 +268,12 @@ export function UploadWorkbench({
   const [healthFilter, setHealthFilter] = useState<QuantityHealthFilter>("all");
   const [acceptedHealthCheckKeys, setAcceptedHealthCheckKeys] = useState<string[]>([]);
   const [manualQuoteItemInputs, setManualQuoteItemInputs] = useState<Record<string, string>>({});
+  const [bathroomManualChoices, setBathroomManualChoices] = useState<Record<string, BathroomManualChoice>>({});
 
   const excludedCount = useMemo(() => rows.filter((row) => row.status === "excluded").length, [rows]);
   const pendingQuoteMetrics = useMemo(() => apartmentPendingQuoteMetrics(), []);
   const curtainReadiness = useMemo(() => curtainQuoteReadiness(rows), [rows]);
-  const bathroomSuggestedQuantity = useMemo(() => bathroomCountFromRows(rows), [rows]);
+  const bathroomRows = useMemo(() => bathroomRowsFromRows(rows), [rows]);
   const manualQuoteItemQuantities = useMemo(() => manualQuoteQuantitiesFromInputs(manualQuoteItemInputs), [manualQuoteItemInputs]);
   const manualQuoteEditedCount = Object.keys(manualQuoteItemQuantities).length;
   const projectSummaryItems = generatedQuoteMapping ? projectSummaryQuoteItems(generatedQuoteMapping.mapping) : [];
@@ -430,6 +422,7 @@ export function UploadWorkbench({
       setGeneratedQuoteRules(null);
       setAcceptedHealthCheckKeys(snapshot.accepted_health_check_keys);
       setManualQuoteItemInputs(manualQuoteInputsFromQuantities(snapshot.excel_manual_item_quantities));
+      setBathroomManualChoices(bathroomManualChoicesFromQuantities(snapshot.excel_manual_item_quantities, snapshot.rows));
       setGeneratedSnapshot({ fileName: snapshotFile.name, content: `${JSON.stringify(snapshot, null, 2)}\n` });
       setError("");
       setMessage(`已恢复校对快照：${snapshotFile.name}`);
@@ -675,12 +668,18 @@ export function UploadWorkbench({
 
   function handleResetManualQuoteItems() {
     setManualQuoteItemInputs({});
+    setBathroomManualChoices({});
     setMessage("Excel 可选补项已恢复默认");
   }
 
-  function handleApplyExclusiveManualQuoteChoice(groupItemNames: string[], selectedItemName: string) {
-    setManualQuoteItemInputs((current) => applyExclusiveManualQuoteChoice(current, groupItemNames, selectedItemName, bathroomSuggestedQuantity));
-    setMessage(`${selectedItemName} 已按 ${bathroomSuggestedQuantity} 个卫生间填入，二选一同组项目已置 0`);
+  function handleChangeBathroomManualChoice(row: QuantityRow, part: keyof BathroomManualChoice, itemName: NonNullable<BathroomManualChoice[keyof BathroomManualChoice]>) {
+    setBathroomManualChoices((current) => {
+      const key = bathroomChoiceKey(row);
+      const nextChoices = { ...current, [key]: { ...current[key], [part]: itemName } };
+      setManualQuoteItemInputs((inputs) => manualQuoteInputsFromBathroomChoices(inputs, nextChoices, bathroomRows));
+      return nextChoices;
+    });
+    setMessage(`${row.spaceName} 已选择 ${itemName}`);
   }
 
   function handleChangeStatus(spaceName: string, status: ReviewStatus) {
@@ -1063,25 +1062,43 @@ export function UploadWorkbench({
             </label>
           ))}
         </div>
-        <div className="manualQuoteChoiceGroups">
-          {MANUAL_QUOTE_EXCLUSIVE_GROUPS.map((group) => (
-            <div className="manualQuoteChoiceGroup" key={group.title}>
-              <strong>{group.title}</strong>
-              <span>建议数量 {bathroomSuggestedQuantity}</span>
-              <div>
-                {group.itemNames.map((itemName) => (
-                  <button
-                    type="button"
-                    className={(manualQuoteItemQuantities[itemName] ?? 0) > 0 && group.itemNames.every((otherItemName) => otherItemName === itemName || manualQuoteItemQuantities[otherItemName] === 0) ? "active" : ""}
-                    onClick={() => handleApplyExclusiveManualQuoteChoice(group.itemNames, itemName)}
-                    key={itemName}
-                  >
-                    {itemName}
-                  </button>
-                ))}
+        <div className="manualBathroomChoices">
+          {bathroomRows.map((row) => {
+            const choice = bathroomManualChoices[bathroomChoiceKey(row)] ?? {};
+            const selectedFixture = choice.fixture ?? "马桶";
+            return (
+              <div className="manualBathroomChoice" key={bathroomChoiceKey(row)}>
+                <strong>{row.spaceName}</strong>
+                <div>
+                  <span>洁具</span>
+                  {(["马桶", "蹲坑"] as const).map((itemName) => (
+                    <button
+                      type="button"
+                      className={selectedFixture === itemName ? "active" : ""}
+                      onClick={() => handleChangeBathroomManualChoice(row, "fixture", itemName)}
+                      key={itemName}
+                    >
+                      {itemName}
+                    </button>
+                  ))}
+                </div>
+                <div>
+                  <span>淋浴</span>
+                  {(["淋浴隔断", "玻璃淋浴房"] as const).map((itemName) => (
+                    <button
+                      type="button"
+                      className={choice.shower === itemName ? "active" : ""}
+                      onClick={() => handleChangeBathroomManualChoice(row, "shower", itemName)}
+                      key={itemName}
+                    >
+                      {itemName}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
+          {bathroomRows.length === 0 && <p>当前没有可计价卫生间。</p>}
         </div>
       </section>
 
