@@ -179,9 +179,9 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string, 
       <col style="width: 360px" />
     </colgroup>
     <thead>
-      <tr class="quoteTitleRow">${summaryRows[0].map((cell) => `<th>${escapeHtml(cell)}</th>`).join("")}</tr>
+      <tr class="quoteTitleRow"><th colspan="9">${escapeHtml(summaryRows[0][0])}</th></tr>
       <tr class="quoteMetaRow">${summaryRows[1].map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>
-      <tr>${summaryRows[2].map((cell) => `<th>${escapeHtml(cell)}</th>`).join("")}</tr>
+      <tr><th>${escapeHtml(summaryRows[2][0])}</th><th>${escapeHtml(summaryRows[2][1])}</th><th>${escapeHtml(summaryRows[2][2])}</th><th>${escapeHtml(summaryRows[2][3])}</th><th colspan="2">${escapeHtml(summaryRows[2][4])}</th><th>${escapeHtml(summaryRows[2][6])}</th><th>${escapeHtml(summaryRows[2][7])}</th><th>${escapeHtml(summaryRows[2][8])}</th></tr>
       <tr>${summaryRows[3].map((cell) => `<th>${escapeHtml(cell)}</th>`).join("")}</tr>
     </thead>
     <tbody>

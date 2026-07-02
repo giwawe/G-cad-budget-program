@@ -70,9 +70,10 @@ const html = buildQuoteExcelHtml(mapping, "A&B 项目");
 
 assert.ok(html.startsWith("\uFEFF<html"), "Excel HTML should include UTF-8 BOM for Chinese compatibility");
 assert.ok(html.includes("<title>A&amp;B 项目清单式报价表</title>"));
-assert.ok(html.includes("<th>工程(预) 算表</th>"));
+assert.ok(html.includes("<tr class=\"quoteTitleRow\"><th colspan=\"9\">工程(预) 算表</th></tr>"), "Excel title row should merge across all quote columns");
 assert.ok(html.includes("<td>名称：A&amp;B 项目</td><td></td><td>装修面积：88.66</td>"));
-assert.ok(html.includes("<th>编号</th><th>项目名称</th><th>单位</th><th>数量</th><th>材料费(元)</th><th></th><th>人工费\n(元)</th><th>总价(元)</th><th>材  料  及  工  艺  说  明</th>"));
+assert.ok(html.includes("<th>编号</th><th>项目名称</th><th>单位</th><th>数量</th><th colspan=\"2\">材料费(元)</th><th>人工费\n(元)</th><th>总价(元)</th><th>材  料  及  工  艺  说  明</th>"));
+assert.ok(html.includes("<th colspan=\"2\">材料费(元)</th>"), "Excel material fee header should span main and auxiliary material columns");
 assert.ok(html.includes("<th></th><th></th><th></th><th></th><th>主材\n单价</th><th>辅材\n单价</th><th></th><th></th><th></th>"));
 assert.ok(html.includes("<col style=\"width: 52px\" />"), "Excel draft should include fixed column widths");
 assert.ok(html.includes("<col style=\"width: 260px\" />"), "Excel draft should give item names enough width");
