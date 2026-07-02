@@ -132,6 +132,38 @@ def test_parse_real_dxf_review_payload_includes_drawing_summary_and_measured_wal
     assert measured_length == payload["summary"]["wall_measure_length_total_m"]
 
 
+def test_parse_default_10_dxf_review_keeps_key_quote_metrics_stable():
+    client = TestClient(app)
+    fixture = Path(__file__).parent / "fixtures" / "10.dxf"
+
+    response = client.post("/api/parse-dxf-review", files={"file": ("10.dxf", fixture.read_bytes(), "application/dxf")})
+
+    assert response.status_code == 200
+    payload = response.json()
+    rows = payload["rows"]
+    rows_by_name = {row["space_name"]: row for row in rows}
+    bathroom_rows = [row for row in rows if row["space_type"] == "卫生间"]
+
+    assert payload["summary"] == {
+        "space_count": 8,
+        "building_area_m2": 136.24,
+        "floor_area_total_m2": 116.62,
+        "wall_measure_length_total_m": 102.93,
+        "window_area_total_m2": 38.26,
+        "latex_paint_area_total_m2": 207.04,
+    }
+    assert len(payload["drawing"]["spaces"]) == 8
+    assert len(payload["drawing"]["window_openings"]) == 8
+    assert len(payload["drawing"]["door_openings"]) == 7
+
+    assert rows_by_name["厨房"]["sliding_door_area_m2"] == 3.85
+    assert rows_by_name["厨房"]["sliding_door_casing_length_m"] == 6.15
+    assert rows_by_name["厨房"]["wall_tile_area_m2"] == 14.97
+    assert [row["bathroom_door_count"] for row in bathroom_rows] == [1, 1]
+    assert rows_by_name["客厅"]["curtain_wall_width_m"] == 6.63
+    assert rows_by_name["餐厅"]["curtain_wall_width_source"] == "matched_l_shape_window"
+
+
 def test_parse_dxf_review_summary_includes_building_area_from_quote_ext_wall():
     client = TestClient(app)
 
