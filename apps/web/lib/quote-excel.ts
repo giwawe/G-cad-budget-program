@@ -153,28 +153,66 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string, 
   <title>${escapeHtml(title)}</title>
   <style>
     body { font-family: "Microsoft YaHei", Arial, sans-serif; }
-    table { border-collapse: collapse; margin-bottom: 16px; }
-    th, td { border: 1px solid #999; padding: 6px 8px; }
-    th { background: #e8eef8; font-weight: 700; }
-    tfoot td { font-weight: 700; }
+    table { border-collapse: collapse; margin-bottom: 16px; table-layout: fixed; }
+    th, td { border: 1px solid #999; padding: 6px 8px; vertical-align: middle; white-space: normal; }
+    th { background: #e8eef8; font-weight: 700; text-align: center; }
+    td:nth-child(1), td:nth-child(3), td:nth-child(4), td:nth-child(5), td:nth-child(6), td:nth-child(7), td:nth-child(8) { text-align: center; }
+    td:nth-child(9) { text-align: left; }
+    .quoteTitleRow th { font-size: 20px; background: #d9e6f7; }
+    .quoteMetaRow td { background: #f7f9fc; }
+    .quoteSectionRow td { background: #e8eef8; font-weight: 700; }
+    .quoteSubtotalRow td, .quoteTotalRow td { font-weight: 700; background: #f3f6fb; }
+    .quoteRiskRow td { color: #8a4b00; }
   </style>
 </head>
 <body>
   <table>
+    <colgroup>
+      <col style="width: 52px" />
+      <col style="width: 260px" />
+      <col style="width: 64px" />
+      <col style="width: 82px" />
+      <col style="width: 92px" />
+      <col style="width: 92px" />
+      <col style="width: 92px" />
+      <col style="width: 110px" />
+      <col style="width: 360px" />
+    </colgroup>
     <thead>
-      <tr>${summaryRows[0].map((cell) => `<th>${escapeHtml(cell)}</th>`).join("")}</tr>
-      <tr>${summaryRows[1].map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>
+      <tr class="quoteTitleRow">${summaryRows[0].map((cell) => `<th>${escapeHtml(cell)}</th>`).join("")}</tr>
+      <tr class="quoteMetaRow">${summaryRows[1].map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>
       <tr>${summaryRows[2].map((cell) => `<th>${escapeHtml(cell)}</th>`).join("")}</tr>
       <tr>${summaryRows[3].map((cell) => `<th>${escapeHtml(cell)}</th>`).join("")}</tr>
     </thead>
     <tbody>
-      ${groupedQuoteRows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("\n      ")}
-      ${riskNoteRows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("\n      ")}
+      ${groupedQuoteRows.map((row) => quoteTemplateHtmlRow(row)).join("\n      ")}
+      ${riskNoteRows.map((row) => quoteTemplateHtmlRow(row)).join("\n      ")}
     </tbody>
   </table>
 </body>
 </html>
 `;
+}
+
+function quoteTemplateHtmlRow(row: string[]): string {
+  const className = quoteTemplateRowClass(row);
+  return `<tr${className ? ` class="${className}"` : ""}>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`;
+}
+
+function quoteTemplateRowClass(row: string[]): string {
+  if (row[1] === "小 计") {
+    return "quoteSubtotalRow";
+  }
+  if (["A", "B", "C", "D"].includes(row[0])) {
+    return "quoteTotalRow";
+  }
+  if (row[1] === "报价风险备注" || ["健康检查", "建筑面积", "零单价"].includes(row[1])) {
+    return "quoteRiskRow";
+  }
+  if (row[0] && row.slice(2).every((cell) => cell === "")) {
+    return "quoteSectionRow";
+  }
+  return "";
 }
 
 function quoteTemplateRows(mapping: QuoteMapping, options: QuoteExcelOptions): string[][] {
@@ -306,10 +344,11 @@ function aggregateQuoteItemsByName(items: QuoteMapping["items"]): QuoteMapping["
 
 function zeroItemTemplateRow(itemName: string, index: number): string[] {
   const price = TEMPLATE_PRICES[itemName] ?? { material: 0, auxiliary: 0, labor: 0, note: "" };
+  const note = price.note ? `${price.note}；占位行不计入小计。` : "占位行不计入小计。";
   if (ONE_ITEM_PLACEHOLDER_NAMES.has(itemName)) {
-    return [String(index), itemName, templateUnitForItem(itemName), "1", formatMoney(price.material), formatMoney(price.auxiliary), formatMoney(price.labor), "0.00", price.note];
+    return [String(index), itemName, templateUnitForItem(itemName), "1", formatMoney(price.material), formatMoney(price.auxiliary), formatMoney(price.labor), "0.00", note];
   }
-  return [String(index), itemName, templateUnitForItem(itemName), "0", formatMoney(price.material), formatMoney(price.auxiliary), formatMoney(price.labor), "0.00", price.note];
+  return [String(index), itemName, templateUnitForItem(itemName), "0", formatMoney(price.material), formatMoney(price.auxiliary), formatMoney(price.labor), "0.00", note];
 }
 
 function manualQuoteItem(itemName: string, quantity: number): QuoteMapping["items"][number] {

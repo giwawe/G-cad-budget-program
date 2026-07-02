@@ -74,17 +74,23 @@ assert.ok(html.includes("<th>工程(预) 算表</th>"));
 assert.ok(html.includes("<td>名称：A&amp;B 项目</td><td></td><td>装修面积：88.66</td>"));
 assert.ok(html.includes("<th>编号</th><th>项目名称</th><th>单位</th><th>数量</th><th>材料费(元)</th><th></th><th>人工费\n(元)</th><th>总价(元)</th><th>材  料  及  工  艺  说  明</th>"));
 assert.ok(html.includes("<th></th><th></th><th></th><th></th><th>主材\n单价</th><th>辅材\n单价</th><th></th><th></th><th></th>"));
+assert.ok(html.includes("<col style=\"width: 52px\" />"), "Excel draft should include fixed column widths");
+assert.ok(html.includes("<col style=\"width: 260px\" />"), "Excel draft should give item names enough width");
+assert.ok(html.includes("<tr class=\"quoteTitleRow\">"), "Excel draft should style the title row");
+assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>一</td><td>全屋拆改工程</td>"), "Excel draft should style section rows");
+assert.ok(html.includes("<tr class=\"quoteSubtotalRow\"><td></td><td>小 计</td>"), "Excel draft should style subtotal rows");
+assert.ok(html.includes("<tr class=\"quoteTotalRow\"><td>A</td><td>直接费合计</td>"), "Excel draft should style total rows");
 assert.ok(!html.includes("<h2>空间小计</h2>"));
 assert.ok(!html.includes("<h2>人工补项</h2>"));
-assert.ok(html.includes("<tr><td>一</td><td>全屋拆改工程</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
-assert.ok(html.includes("<tr><td>二</td><td>厨房工程</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
-assert.ok(html.includes("<tr><td>三</td><td>其他工程</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
-assert.ok(html.includes("<tr><td>四</td><td>水电工程</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
-assert.ok(html.includes("<tr><td>五</td><td>主材项目</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
-assert.ok(html.includes("<tr><td>六</td><td>全屋定制、衣柜、橱柜、全屋家具</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
-assert.ok(html.includes("<tr><td>七</td><td>室内门</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
-assert.ok(html.includes("<tr><td>八</td><td>集成吊顶、卫浴、全屋开关灯饰</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
-assert.ok(html.includes("<tr><td>九</td><td>其他（窗帘、美缝、窗台石等）</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>一</td><td>全屋拆改工程</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>二</td><td>厨房工程</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>三</td><td>其他工程</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>四</td><td>水电工程</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>五</td><td>主材项目</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>六</td><td>全屋定制、衣柜、橱柜、全屋家具</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>七</td><td>室内门</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>八</td><td>集成吊顶、卫浴、全屋开关灯饰</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>九</td><td>其他（窗帘、美缝、窗台石等）</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
 assert.ok(!html.includes("<td>过道工程</td>"));
 assert.ok(!html.includes("<td>主卧工程</td>"));
 assert.ok(!html.includes("<td>次卧工程</td>"));
@@ -100,10 +106,10 @@ assert.ok(html.includes("<td></td><td>小 计</td><td></td><td></td><td></td><td
 assert.ok(html.includes("<td></td><td>小 计</td><td></td><td></td><td></td><td></td><td></td><td>6915.48</td><td></td>"));
 assert.ok(!html.includes("<td>轻钢龙骨平顶</td>"), "space sections should not show missing fixed room items");
 assert.ok(!html.includes("<td>暗窗帘箱</td><td></td>"), "public curtain section should not contain space-only curtain box placeholders");
-assert.ok(html.includes("<tr><td>A</td><td>直接费合计</td><td></td><td></td><td></td><td></td><td></td><td>8331.16</td><td></td></tr>"));
-assert.ok(html.includes("<tr><td>B</td><td>工程管理费(D=A* 5%)</td><td></td><td></td><td></td><td></td><td></td><td>416.56</td><td></td></tr>"));
-assert.ok(html.includes("<tr><td>C</td><td>税金E=(A+B)* 3%</td><td></td><td></td><td></td><td></td><td></td><td>262.43</td><td></td></tr>"));
-assert.ok(html.includes("<tr><td>D</td><td>工程总造价F=(A+B+C)</td><td></td><td></td><td></td><td></td><td></td><td>9010.15</td><td></td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteTotalRow\"><td>A</td><td>直接费合计</td><td></td><td></td><td></td><td></td><td></td><td>8331.16</td><td></td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteTotalRow\"><td>B</td><td>工程管理费(D=A* 5%)</td><td></td><td></td><td></td><td></td><td></td><td>416.56</td><td></td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteTotalRow\"><td>C</td><td>税金E=(A+B)* 3%</td><td></td><td></td><td></td><td></td><td></td><td>262.43</td><td></td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteTotalRow\"><td>D</td><td>工程总造价F=(A+B+C)</td><td></td><td></td><td></td><td></td><td></td><td>9010.15</td><td></td></tr>"));
 assert.equal(EXCEL_FIXED_PLACEHOLDER_ITEMS.length, 9);
 assert.deepEqual(EXCEL_FIXED_PLACEHOLDER_ITEMS.map((item) => item.item_name), [
   "砖墙门窗洞过梁",
@@ -117,6 +123,7 @@ assert.deepEqual(EXCEL_FIXED_PLACEHOLDER_ITEMS.map((item) => item.item_name), [
   "窗台石",
 ]);
 assert.ok(html.includes("<td>砖墙门窗洞过梁</td><td>支</td><td>0</td><td>160.00</td><td>0.00</td><td>40.00</td><td>0.00</td>"));
+assert.ok(html.includes("占位行不计入小计"), "fixed zero placeholders should explain that they do not affect totals");
 assert.ok(html.includes("<td>入户门</td><td>樘</td><td>0</td><td>5000.00</td><td>0.00</td><td>0.00</td><td>0.00</td>"));
 assert.ok(html.includes("<td>阳台推拉门</td><td>M2</td><td>0</td><td>550.00</td><td>0.00</td><td>0.00</td><td>0.00</td>"));
 assert.ok(html.includes("<td>阳台推拉门双包套</td><td>M</td><td>0</td><td>300.00</td><td>0.00</td><td>0.00</td><td>0.00</td>"));
