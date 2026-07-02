@@ -174,9 +174,9 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string, 
   <style>
     @page { margin: 0.63in 0.20in 0.24in 0.28in; mso-header-margin: 0.50in; mso-footer-margin: 0.50in; }
     body { font-family: "宋体", "Microsoft YaHei", Arial, sans-serif; }
-    table { border-collapse: collapse; margin-bottom: 16px; table-layout: fixed; width: 553.35pt; }
+    table { border-collapse: collapse; margin-bottom: 16px; table-layout: fixed; width: 520pt; }
     col { mso-width-source: userset; }
-    th, td { border: 1px solid #999; padding: 4px 6px; vertical-align: middle; white-space: normal; font-size: 8pt; }
+    th, td { border: 1px solid #999; padding: 3px 4px; vertical-align: middle; white-space: normal; font-size: 9pt; }
     th { font-weight: 700; text-align: center; }
     td:nth-child(1), td:nth-child(3), td:nth-child(4), td:nth-child(5), td:nth-child(6), td:nth-child(7), td:nth-child(8) { text-align: center; }
     td:nth-child(9) { text-align: left; }
@@ -188,21 +188,21 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string, 
     .quoteItemRow td, .quoteSubtotalRow td, .quoteTotalRow td { height: 14.75pt; }
     .quoteSubtotalRow td, .quoteTotalRow td { font-weight: 700; }
     .quoteRiskRow td { color: #8a4b00; }
-    .quoteFooterNoteRow td, .quoteSignatureRow td { border: .5pt solid #000000; font-size: 8pt; text-align: left; height: 15pt; }
+    .quoteFooterNoteRow td, .quoteSignatureRow td { border: .5pt solid #000000; font-size: 9pt; text-align: left; height: 15pt; }
   </style>
 </head>
 <body>
-  <table width="1106.70" border="0" cellpadding="0" cellspacing="0" style="width:553.35pt;border-collapse:collapse;table-layout:fixed;">
+  <table width="1040" border="0" cellpadding="0" cellspacing="0" style="width:520pt;border-collapse:collapse;table-layout:fixed;">
     <colgroup>
-      <col width="64.90" style="mso-width-source:userset;mso-width-alt:1582;" />
-      <col width="260.80" style="mso-width-source:userset;mso-width-alt:6358;" />
-      <col width="76.40" style="mso-width-source:userset;mso-width-alt:1862;" />
-      <col width="76.40" style="mso-width-source:userset;mso-width-alt:1862;" />
-      <col width="76.40" style="mso-width-source:userset;mso-width-alt:1862;" />
-      <col width="76.40" style="mso-width-source:userset;mso-width-alt:1862;" />
-      <col width="76.40" style="mso-width-source:userset;mso-width-alt:1862;" />
-      <col width="106" style="mso-width-source:userset;mso-width-alt:2584;" />
-      <col width="293" style="mso-width-source:userset;mso-width-alt:7143;" />
+      <col width="54" style="mso-width-source:userset;mso-width-alt:1316;" />
+      <col width="236" style="mso-width-source:userset;mso-width-alt:5755;" />
+      <col width="62" style="mso-width-source:userset;mso-width-alt:1511;" />
+      <col width="70" style="mso-width-source:userset;mso-width-alt:1706;" />
+      <col width="70" style="mso-width-source:userset;mso-width-alt:1706;" />
+      <col width="70" style="mso-width-source:userset;mso-width-alt:1706;" />
+      <col width="70" style="mso-width-source:userset;mso-width-alt:1706;" />
+      <col width="94" style="mso-width-source:userset;mso-width-alt:2291;" />
+      <col width="270" style="mso-width-source:userset;mso-width-alt:6584;" />
     </colgroup>
     <thead>
       <tr class="quoteTitleRow"><th colspan="9">${escapeHtml(summaryRows[0][0])}</th></tr>
