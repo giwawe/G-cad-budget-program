@@ -22,6 +22,9 @@ export type CalibrationTemplateRow = {
   plumbing_scope_area_m2: number;
   new_wall_length_m: number;
   new_wall_area_m2: number;
+  new_wall_unclassified_area_m2: number;
+  new_wall_120_area_m2: number;
+  new_wall_240_area_m2: number;
   demolition_wall_length_m: number;
   demolition_wall_area_m2: number;
   background_wall_area_m2: number;
@@ -69,6 +72,9 @@ export function quantityRowsToCalibrationTemplate(rows: QuantityRow[], summary?:
     plumbing_scope_area_m2: row.plumbingScopeAreaM2,
     new_wall_length_m: row.newWallLengthM,
     new_wall_area_m2: row.newWallAreaM2,
+    new_wall_unclassified_area_m2: row.newWallUnclassifiedAreaM2 ?? row.newWallAreaM2,
+    new_wall_120_area_m2: row.newWall120AreaM2 ?? 0,
+    new_wall_240_area_m2: row.newWall240AreaM2 ?? 0,
     demolition_wall_length_m: row.demolitionWallLengthM,
     demolition_wall_area_m2: row.demolitionWallAreaM2,
     background_wall_area_m2: row.backgroundWallAreaM2 ?? 0,

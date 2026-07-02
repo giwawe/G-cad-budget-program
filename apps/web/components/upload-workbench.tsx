@@ -82,6 +82,9 @@ type ApiQuantityRow = {
   plumbing_scope_area_m2: number;
   new_wall_length_m: number;
   new_wall_area_m2: number;
+  new_wall_unclassified_area_m2?: number;
+  new_wall_120_area_m2?: number;
+  new_wall_240_area_m2?: number;
   demolition_wall_length_m: number;
   demolition_wall_area_m2: number;
   background_wall_area_m2?: number;
@@ -153,6 +156,9 @@ function toQuantityRow(row: ApiQuantityRow): QuantityRow {
     plumbingScopeAreaM2: row.plumbing_scope_area_m2 ?? 0,
     newWallLengthM: row.new_wall_length_m ?? 0,
     newWallAreaM2: row.new_wall_area_m2 ?? 0,
+    newWallUnclassifiedAreaM2: row.new_wall_unclassified_area_m2 ?? row.new_wall_area_m2 ?? 0,
+    newWall120AreaM2: row.new_wall_120_area_m2 ?? 0,
+    newWall240AreaM2: row.new_wall_240_area_m2 ?? 0,
     demolitionWallLengthM: row.demolition_wall_length_m ?? 0,
     demolitionWallAreaM2: row.demolition_wall_area_m2 ?? 0,
     backgroundWallAreaM2: row.background_wall_area_m2 ?? 0,

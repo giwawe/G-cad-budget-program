@@ -80,6 +80,9 @@ class QuantityRow:
     plumbing_scope_area_m2: float
     new_wall_length_m: float
     new_wall_area_m2: float
+    new_wall_unclassified_area_m2: float
+    new_wall_120_area_m2: float
+    new_wall_240_area_m2: float
     demolition_wall_length_m: float
     demolition_wall_area_m2: float
     background_wall_area_m2: float

@@ -199,7 +199,7 @@
   },
   {
     "item_name": "砌砖墙",
-    "metric": "new_wall_area_m2",
+    "metric": "new_wall_unclassified_area_m2",
     "unit": "M2",
     "unit_price": 220,
     "material_price": 100,
@@ -208,7 +208,7 @@
   },
   {
     "item_name": "砌120厚砖墙",
-    "metric": "manual_count",
+    "metric": "new_wall_120_area_m2",
     "unit": "M2",
     "unit_price": 170,
     "material_price": 80,
@@ -217,7 +217,7 @@
   },
   {
     "item_name": "砌240厚砖墙",
-    "metric": "manual_count",
+    "metric": "new_wall_240_area_m2",
     "unit": "M2",
     "unit_price": 220,
     "material_price": 100,

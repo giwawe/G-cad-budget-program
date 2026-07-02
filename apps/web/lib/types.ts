@@ -27,6 +27,9 @@ export type QuantityRow = {
   plumbingScopeAreaM2: number;
   newWallLengthM: number;
   newWallAreaM2: number;
+  newWallUnclassifiedAreaM2?: number;
+  newWall120AreaM2?: number;
+  newWall240AreaM2?: number;
   demolitionWallLengthM: number;
   demolitionWallAreaM2: number;
   backgroundWallAreaM2?: number;

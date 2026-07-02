@@ -209,6 +209,25 @@ def test_new_wall_area_uses_segment_height_marker_before_space_height():
     assert row.new_wall_area_m2 == 7.36
 
 
+def test_new_wall_quote_areas_split_by_thickness_markers():
+    space = SpaceInput(
+        name="客厅",
+        boundary_points_m=[(0, 0), (5, 0), (5, 4), (0, 4)],
+        wall_lengths_m=[5, 5, 4, 4],
+        height_m=2.8,
+        new_wall_lengths_m=[2.0, 3.0, 4.0],
+        new_wall_heights_m=[None, 1.2, None],
+        new_wall_thicknesses_m=[0.12, 0.24, None],
+    )
+
+    row = calculate_quantity_row(space, ProjectDefaults())
+
+    assert row.new_wall_area_m2 == 20.4
+    assert row.new_wall_120_area_m2 == 5.6
+    assert row.new_wall_240_area_m2 == 3.6
+    assert row.new_wall_unclassified_area_m2 == 11.2
+
+
 def test_demolition_wall_area_uses_marked_demolition_wall_lengths_and_actual_height():
     space = SpaceInput(
         floor="一层",

@@ -31,7 +31,7 @@
 | `QUOTE_WINDOW` | 窗洞宽度线或闭合窗框，可配邻近 `HEIGHT`/`H`/`窗高` 标识 | 计算窗宽、窗洞扣减、图形校对；未标注窗高时默认 1.8m |
 | `QUOTE_DOOR` | 门洞宽度线、闭合门洞或部分门块 | 计算门宽，判断是否需要扣减墙面 |
 | `QUOTE_WALL_TILE` | 任意空间的实际贴砖墙面线 | 计算标记贴砖墙长和墙砖面积；厨房、卫生间仍按默认全墙贴砖规则 |
-| `QUOTE_NEW_WALL` | 新砌墙中心线或墙体线，可配邻近 `HEIGHT`/`H` 和 `THICKNESS`/`厚度` 标识 | 计算新砌墙长度和面积；未标注高度时按空间层高，未标注厚度时按 240mm 口径由设计师后续调整 |
+| `QUOTE_NEW_WALL` | 新砌墙中心线或墙体线，可配邻近 `HEIGHT`/`H` 和 `THICKNESS`/`厚度` 标识 | 计算新砌墙长度和面积；未标注高度时按空间层高；未标注厚度进入通用砌砖墙，120mm/240mm 标识进入对应厚度砌墙项 |
 | `QUOTE_DEMO_WALL` | 拆除墙体中心线或墙体线 | 计算拆墙长度和面积 |
 | `QUOTE_BACKGROUND_WALL` | 可选背景墙线，可配邻近 `HEIGHT`/`H` 标识 | 计算背景墙面积；不画时为 0，Excel 草稿保留空行 |
 | `QUOTE_BASE_CABINET` | 厨房地柜/台面延米线 | 计算橱柜地柜长度 |
@@ -130,7 +130,7 @@
 
 ### 4.3 新砌墙线
 
-`QUOTE_NEW_WALL` 表示需要新砌的墙体中心线或墙体线，当前按墙段标注高度或空间实际层高计算新砌墙面积；同图层邻近文字可补 `HEIGHT=1200`、`H=1.2m`、`THICKNESS=240`、`厚度240` 等标识。没有明确厚度拆分时，报价默认输出通用“砌砖墙”，单价采用 240 厚砌墙模板价；“砌120厚砖墙”“砌240厚砖墙”先作为 Excel 可选口径和报价规则单价项保留。
+`QUOTE_NEW_WALL` 表示需要新砌的墙体中心线或墙体线，当前按墙段标注高度或空间实际层高计算新砌墙面积；同图层邻近文字可补 `HEIGHT=1200`、`H=1.2m`、`THICKNESS=240`、`厚度240` 等标识。报价会按厚度拆分：未标厚进入通用“砌砖墙”，120mm 进入“砌120厚砖墙”，240mm 或其它非 120 厚度进入“砌240厚砖墙”。
 
 要求：
 
@@ -346,7 +346,7 @@
 厨房墙砖面积 = max(墙面计量长度 * 2.5m - 大窗洞扣减 - 推拉门洞扣减, 0)；厨房窗洞面积不超过 3m2 默认不扣减，超过 3m2 时扣减窗洞面积；推拉门洞按门宽 * 推拉门高扣减
 卫生间墙砖面积 = max(墙面计量长度 * 2.5m - 窗洞面积, 0)；卫生间默认不扣减门洞
 标记贴砖墙砖面积 = 贴砖墙长 * 空间实际层高；除厨房/卫生间外，没有 QUOTE_WALL_TILE 时为 0
-新砌墙面积 = 新砌墙逐段长度 * 标注高度；QUOTE_NEW_WALL 邻近文字支持 HEIGHT/H 和 THICKNESS/厚度 标识，未标注高度时按空间层高，未标注厚度时按 240mm 口径由设计师后续调整；没有 QUOTE_NEW_WALL 时为 0
+新砌墙面积 = 新砌墙逐段长度 * 标注高度；QUOTE_NEW_WALL 邻近文字支持 HEIGHT/H 和 THICKNESS/厚度 标识，未标注高度时按空间层高；未标厚面积进入通用砌砖墙，120mm 厚进入砌120厚砖墙，240mm 或其它非 120 厚度进入砌240厚砖墙；没有 QUOTE_NEW_WALL 时为 0
 拆墙面积 = 拆墙长度 * 空间实际层高；没有 QUOTE_DEMO_WALL 时为 0
 入户门数 = 自动判为入户门且 opening_type=normal_door 的 QUOTE_DOOR 门洞数量
 室内门数 = 房间侧自动判为室内门且 opening_type=normal_door 的 QUOTE_DOOR 门洞数量；客厅/餐厅/过道/门厅侧、卫生间门、入户门、推拉门、疑似大洞口和大洞口为 0
@@ -387,7 +387,7 @@
 
 地砖主材片数、贴砖面积候选、强电备用面积、水路备用面积、新砌墙和拆改及拆墙不在工程量表中按空间展示，避免设计师在每个空间行重复校对；这些字段仍保留在校准模板中，也会在报价映射中按全屋汇总生成金额。
 
-新砌墙可在 `QUOTE_NEW_WALL` 同图层靠近墙段补 `HEIGHT=1200`、`H=1.2m`、`THICKNESS=240`、`厚度240` 等标识；系统当前用高度修正 `new_wall_area_m2`，默认按“砌砖墙”全屋汇总报价，`砌120厚砖墙` 和 `砌240厚砖墙` 先作为报价规则可调项和 Excel 可选口径。
+新砌墙可在 `QUOTE_NEW_WALL` 同图层靠近墙段补 `HEIGHT=1200`、`H=1.2m`、`THICKNESS=240`、`厚度240` 等标识；系统用高度修正 `new_wall_area_m2`，并用厚度拆出 `new_wall_unclassified_area_m2`、`new_wall_120_area_m2`、`new_wall_240_area_m2`，分别汇总到“砌砖墙”“砌120厚砖墙”“砌240厚砖墙”。
 
 入户门、推拉门面积和门套长度在工程量表中展示，并导出到校准模板：`entry_door_count` 按入户门洞数量，`sliding_door_area_m2` 按门宽乘推拉门高，`sliding_door_casing_length_m` 按门宽加两侧推拉门高；没有高度标识时推拉门默认高为 `2.2m`。卫生间门导出为 `bathroom_door_count`，不混入室内门数量。默认报价规则会按空间类型分别生成“入户门”“卫生间门”“厨房推拉门”“厨房推拉门双包套”“阳台推拉门”“阳台推拉门双包套”，其中阳台和露台空间的推拉门归入阳台推拉门口径，不需要专门新增图层。
 
@@ -407,7 +407,7 @@
 
 窗帘和窗帘箱不按窗洞宽度计量，应按窗户所在墙面的整面墙宽度计量。厨房、卫生间、过道等空间默认不做窗帘和窗帘箱；一般不做窗帘箱的位置也不生成窗帘。当前系统生成 `curtain_wall_width_m` 候选值：若识别到 L 形、转角窗或异形窗，按同一个窗组内两条非平行长窗边合计或现有窗户长度口径直接计算窗帘候选；若普通窗洞中心线能匹配到邻近且平行的 `QUOTE_WALL`，取该墙段整宽；若匹配不到，回退到空间最长一段 `QUOTE_WALL`。系统同时输出 `curtain_wall_width_source`：`matched_l_shape_window` 表示已按 L 形窗自动取数，`matched_window_wall` 表示已匹配窗户所在墙，`fallback_longest_wall` 表示回退最长墙，`manual_required_l_shape_window` 仅兼容旧快照中的 L 形窗状态，`not_applicable` 表示不适用，前端人工编辑后为 `manual`。该候选值允许在工程量表中人工校准、随校对快照保存/恢复；来源为 `manual`、`matched_window_wall`、`matched_l_shape_window` 或 `fallback_longest_wall` 且长度大于 `0` 时，暗窗帘箱进入空间项金额汇总，公共大项“窗帘”按可报价窗帘箱长度合计 * 2 的展开长度生成，默认主材单价 60。
 
-校准模板当前导出为 `{ summary, rows }` 对象格式：`summary.building_area_m2` 用于校准项目级建筑面积，`rows` 中会导出 `windowsill_length_m`、`curtain_wall_width_m`、`curtain_wall_width_source`、`wall_tile_measure_length_m`、`wall_tile_area_m2`、`floor_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`new_wall_length_m`、`new_wall_area_m2`、`demolition_wall_length_m`、`demolition_wall_area_m2`、`background_wall_area_m2`、`entry_door_count`、`interior_door_count`、`bathroom_door_count`、`sliding_door_area_m2`、`sliding_door_casing_length_m`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`custom_cabinet_area_m2`、`toilet_count` 和 `bathroom_vanity_count`。报价员可以把建筑面积、窗帘墙宽实际延米、贴砖墙、地砖主材片数、水电备用施工面积、新砌墙、拆墙、背景墙、入户门数、室内门数、卫生间门数、推拉门、厨房橱柜长度、全屋定制面积或洁具数量校准值填回模板，再作为 golden JSON 固定校准结果。旧版纯数组行格式仍可上传，只是不包含项目级建筑面积校准。
+校准模板当前导出为 `{ summary, rows }` 对象格式：`summary.building_area_m2` 用于校准项目级建筑面积，`rows` 中会导出 `windowsill_length_m`、`curtain_wall_width_m`、`curtain_wall_width_source`、`wall_tile_measure_length_m`、`wall_tile_area_m2`、`floor_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`new_wall_length_m`、`new_wall_area_m2`、`new_wall_unclassified_area_m2`、`new_wall_120_area_m2`、`new_wall_240_area_m2`、`demolition_wall_length_m`、`demolition_wall_area_m2`、`background_wall_area_m2`、`entry_door_count`、`interior_door_count`、`bathroom_door_count`、`sliding_door_area_m2`、`sliding_door_casing_length_m`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`custom_cabinet_area_m2`、`toilet_count` 和 `bathroom_vanity_count`。报价员可以把建筑面积、窗帘墙宽实际延米、贴砖墙、地砖主材片数、水电备用施工面积、新砌墙、拆墙、背景墙、入户门数、室内门数、卫生间门数、推拉门、厨房橱柜长度、全屋定制面积或洁具数量校准值填回模板，再作为 golden JSON 固定校准结果。旧版纯数组行格式仍可上传，只是不包含项目级建筑面积校准。
 
 上传包含 `curtain_wall_width_m` 的校准 JSON 后，若当前行来源是 `manual_required_l_shape_window` 或 `fallback_longest_wall`，工程量表会提供“应用校准”按钮，把校准值写回当前行、将来源标记为 `manual`，并清除该单元格的当前差异。
 

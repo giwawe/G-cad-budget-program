@@ -80,6 +80,12 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
     plumbing_scope_area_m2 = floor_area_m2
     new_wall_length_m = round(sum(space.new_wall_lengths_m), 2)
     new_wall_area_m2 = calculate_segment_area_m2(space.new_wall_lengths_m, space.new_wall_heights_m, height_m)
+    new_wall_unclassified_area_m2, new_wall_120_area_m2, new_wall_240_area_m2 = calculate_new_wall_quote_areas_m2(
+        space.new_wall_lengths_m,
+        space.new_wall_heights_m,
+        space.new_wall_thicknesses_m,
+        height_m,
+    )
     demolition_wall_length_m = round(sum(space.demolition_wall_lengths_m), 2)
     demolition_wall_area_m2 = calculate_demolition_wall_area_m2(demolition_wall_length_m, height_m)
     background_wall_area_m2 = calculate_segment_area_m2(space.background_wall_lengths_m, space.background_wall_heights_m, height_m)
@@ -146,6 +152,9 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
         plumbing_scope_area_m2=plumbing_scope_area_m2,
         new_wall_length_m=new_wall_length_m,
         new_wall_area_m2=new_wall_area_m2,
+        new_wall_unclassified_area_m2=new_wall_unclassified_area_m2,
+        new_wall_120_area_m2=new_wall_120_area_m2,
+        new_wall_240_area_m2=new_wall_240_area_m2,
         demolition_wall_length_m=demolition_wall_length_m,
         demolition_wall_area_m2=demolition_wall_area_m2,
         background_wall_area_m2=background_wall_area_m2,
@@ -242,6 +251,23 @@ def calculate_segment_area_m2(lengths_m: list[float], heights_m: list[float | No
         height_m = heights_m[index] if index < len(heights_m) and heights_m[index] is not None else default_height_m
         area += length_m * height_m
     return round(max(area, 0), 2)
+
+
+def calculate_new_wall_quote_areas_m2(lengths_m: list[float], heights_m: list[float | None], thicknesses_m: list[float | None], default_height_m: float) -> tuple[float, float, float]:
+    unclassified_area = 0.0
+    area_120 = 0.0
+    area_240 = 0.0
+    for index, length_m in enumerate(lengths_m):
+        height_m = heights_m[index] if index < len(heights_m) and heights_m[index] is not None else default_height_m
+        thickness_m = thicknesses_m[index] if index < len(thicknesses_m) else None
+        area = length_m * height_m
+        if thickness_m is None:
+            unclassified_area += area
+        elif thickness_m <= 0.13:
+            area_120 += area
+        else:
+            area_240 += area
+    return round(max(unclassified_area, 0), 2), round(max(area_120, 0), 2), round(max(area_240, 0), 2)
 
 
 def calculate_demolition_wall_area_m2(demolition_wall_length_m: float, height_m: float) -> float:

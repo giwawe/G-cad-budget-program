@@ -12,6 +12,9 @@ type QuantityRowMetric =
   | "windowsillLengthM"
   | "curtainWallWidthM"
   | "newWallAreaM2"
+  | "newWallUnclassifiedAreaM2"
+  | "newWall120AreaM2"
+  | "newWall240AreaM2"
   | "demolitionWallAreaM2"
   | "backgroundWallAreaM2"
   | "entryDoorCount"
@@ -45,6 +48,9 @@ export type QuoteMetric =
   | "windowsill_length_m"
   | "curtain_wall_width_m"
   | "new_wall_area_m2"
+  | "new_wall_unclassified_area_m2"
+  | "new_wall_120_area_m2"
+  | "new_wall_240_area_m2"
   | "demolition_wall_area_m2"
   | "background_wall_area_m2"
   | "entry_door_count"
@@ -76,7 +82,9 @@ type SummedProjectQuoteMetric =
   | "electrical_scope_area_m2"
   | "plumbing_scope_area_m2"
   | "kitchen_cabinet_length_m"
-  | "new_wall_area_m2"
+  | "new_wall_unclassified_area_m2"
+  | "new_wall_120_area_m2"
+  | "new_wall_240_area_m2"
   | "demolition_wall_area_m2"
   | "background_wall_area_m2";
 type RowQuoteMetric = Exclude<QuoteMetric, ProjectQuoteMetric | SummedProjectQuoteMetric>;
@@ -180,7 +188,9 @@ const SUMMED_PROJECT_METRICS = new Set<QuoteMetric>([
   "electrical_scope_area_m2",
   "plumbing_scope_area_m2",
   "kitchen_cabinet_length_m",
-  "new_wall_area_m2",
+  "new_wall_unclassified_area_m2",
+  "new_wall_120_area_m2",
+  "new_wall_240_area_m2",
   "demolition_wall_area_m2",
   "background_wall_area_m2",
 ]);
@@ -207,9 +217,9 @@ const DEFAULT_RULES: QuoteRule[] = [
   quoteRule("地面砖现场维护费", "building_area_m2", "M2", 0, 3, 5),
   quoteRule("墙面贴瓷砖(600X1200)", "wall_tile_area_m2", "m2", 0, 40, 60),
   quoteRule("墙地面防漏处理", "waterproof_area_m2", "m2", 28, 10.5, 13, WET_FLOOR_SPACE_TYPES),
-  quoteRule("砌砖墙", "new_wall_area_m2", "M2", 100, 0, 120),
-  quoteRule("砌120厚砖墙", "manual_count", "M2", 80, 0, 90),
-  quoteRule("砌240厚砖墙", "manual_count", "M2", 100, 0, 120),
+  quoteRule("砌砖墙", "new_wall_unclassified_area_m2", "M2", 100, 0, 120),
+  quoteRule("砌120厚砖墙", "new_wall_120_area_m2", "M2", 80, 0, 90),
+  quoteRule("砌240厚砖墙", "new_wall_240_area_m2", "M2", 100, 0, 120),
   quoteRule("拆改及拆墙", "demolition_wall_area_m2", "M2", 0, 0, 60),
   quoteRule("外墙批嵌以及修补", "manual_count", "M2", 0, 30, 50),
   quoteRule("砖墙门窗洞过梁", "manual_count", "支", 160, 0, 40),
@@ -253,6 +263,7 @@ const METRIC_TO_ROW_FIELD: Record<DirectRowQuoteMetric, QuantityRowMetric> = {
   waterproof_area_m2: "waterproofAreaM2",
   windowsill_length_m: "windowsillLengthM",
   curtain_wall_width_m: "curtainWallWidthM",
+  new_wall_area_m2: "newWallAreaM2",
   entry_door_count: "entryDoorCount",
   interior_door_count: "interiorDoorCount",
   bathroom_door_count: "bathroomDoorCount",
@@ -269,7 +280,9 @@ const SUMMED_PROJECT_METRIC_TO_ROW_FIELD: Record<SummedProjectQuoteMetric, Quant
   wall_tile_piece_count: "wallTileAreaM2",
   electrical_scope_area_m2: "electricalScopeAreaM2",
   plumbing_scope_area_m2: "plumbingScopeAreaM2",
-  new_wall_area_m2: "newWallAreaM2",
+  new_wall_unclassified_area_m2: "newWallUnclassifiedAreaM2",
+  new_wall_120_area_m2: "newWall120AreaM2",
+  new_wall_240_area_m2: "newWall240AreaM2",
   demolition_wall_area_m2: "demolitionWallAreaM2",
   background_wall_area_m2: "backgroundWallAreaM2",
   kitchen_cabinet_length_m: "kitchenBaseCabinetLengthM",
@@ -554,21 +567,29 @@ function projectRuleQuantity(billableRows: QuantityRow[], rule: QuoteRule, build
     );
   }
   if (isSummedProjectMetric(rule.metric)) {
-    if (rule.metric === "wall_tile_piece_count") {
+    const summedMetric = rule.metric;
+    if (summedMetric === "wall_tile_piece_count") {
       return round2(
         billableRows
           .filter((row) => ruleAppliesToRow(rule, row))
           .reduce((sum, row) => sum + Math.ceil((row.wallTileAreaM2 * 1.05) / (0.6 * 1.2)), 0),
       );
     }
-    const rowField = SUMMED_PROJECT_METRIC_TO_ROW_FIELD[rule.metric];
+    const rowField = SUMMED_PROJECT_METRIC_TO_ROW_FIELD[summedMetric];
     return round2(
       billableRows
         .filter((row) => ruleAppliesToRow(rule, row))
-        .reduce((sum, row) => sum + (row[rowField] ?? 0), 0),
+        .reduce((sum, row) => sum + summedProjectMetricValue(row, summedMetric, rowField), 0),
     );
   }
   return 0;
+}
+
+function summedProjectMetricValue(row: QuantityRow, metric: SummedProjectQuoteMetric, rowField: QuantityRowMetric): number {
+  if (metric === "new_wall_unclassified_area_m2" && row.newWallUnclassifiedAreaM2 === undefined) {
+    return row.newWallAreaM2;
+  }
+  return row[rowField] ?? 0;
 }
 
 function isProjectMetric(metric: QuoteMetric): metric is ProjectQuoteMetric {
@@ -668,6 +689,9 @@ function isQuoteMetric(metric: unknown): metric is QuoteMetric {
     metric === "windowsill_length_m" ||
     metric === "curtain_wall_width_m" ||
     metric === "new_wall_area_m2" ||
+    metric === "new_wall_unclassified_area_m2" ||
+    metric === "new_wall_120_area_m2" ||
+    metric === "new_wall_240_area_m2" ||
     metric === "demolition_wall_area_m2" ||
     metric === "background_wall_area_m2" ||
     metric === "entry_door_count" ||
