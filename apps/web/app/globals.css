@@ -477,6 +477,15 @@ code {
   font-weight: 700;
 }
 
+.quoteRulesTable .quoteRuleGroupTitle td {
+  background: #f8fafc;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+  padding-top: 11px;
+  padding-bottom: 11px;
+}
+
 .quoteRulesTable input {
   width: 84px;
   border: 1px solid var(--line);

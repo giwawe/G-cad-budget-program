@@ -12,7 +12,11 @@ assert.ok(uploadWorkbenchSource.includes("Excel 可选补项"), "quote mapping p
 assert.ok(uploadWorkbenchSource.includes("quoteRuleSearch"), "quote rule panel should keep a search state for fast price edits");
 assert.ok(uploadWorkbenchSource.includes("筛选报价规则"), "quote rule panel should expose a visible search control");
 assert.ok(uploadWorkbenchSource.includes("显示 {filteredQuoteRules.length}/{quoteRules.length} 项"), "quote rule panel should show filtered rule counts");
-assert.ok(uploadWorkbenchSource.includes("filteredQuoteRules.map"), "quote rule table should render the filtered rule list");
+assert.ok(uploadWorkbenchSource.includes("groupedQuoteRules.map"), "quote rule table should render grouped filtered rules");
+assert.ok(uploadWorkbenchSource.includes("quoteRuleGroups"), "quote rule panel should group rules for faster price editing");
+assert.ok(uploadWorkbenchSource.includes("全屋拆改/其他工程"), "quote rule panel should include a construction group");
+assert.ok(uploadWorkbenchSource.includes("门窗/定制"), "quote rule panel should include a door and customization group");
+assert.ok(uploadWorkbenchSource.includes("quoteRuleGroupTitle"), "quote rule table should render visible group headers");
 assert.ok(uploadWorkbenchSource.includes("manualItems: manualQuoteItemQuantities"), "Excel draft export should apply manual quote item quantities");
 assert.ok(uploadWorkbenchSource.includes("excelManualItemQuantities: manualQuoteItemQuantities"), "review snapshots should persist manual quote item quantities");
 assert.ok(uploadWorkbenchSource.includes("manualQuoteInputsFromQuantities(snapshot.excel_manual_item_quantities)"), "review snapshot import should restore manual quote item inputs");

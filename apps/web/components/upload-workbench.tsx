@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { Download, FileUp, Layers3, Loader2, ReceiptText, Settings2 } from "lucide-react";
 import { DrawingReview } from "@/components/drawing-review";
 import { QuantityTable } from "@/components/quantity-table";
@@ -56,6 +56,71 @@ const DEFAULT_INTEGRATED_CEILING_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 const QUOTE_RULES_STORAGE_KEY = "cad-budget-program.quote-rules.v1";
 const ALUMINUM_WINDOW_ITEM_NAME = "铝合金封门窗";
 const MANUAL_QUOTE_OPTION_ITEMS = [{ itemName: ALUMINUM_WINDOW_ITEM_NAME, unit: "M2", hint: "按窗户实际面积，默认不计价" }];
+const quoteRuleGroups = [
+  {
+    title: "墙顶地/湿区",
+    itemNames: new Set([
+      "墙面界面剂处理",
+      "墙面批嵌",
+      "墙面乳胶漆",
+      "轻钢龙骨平顶",
+      "顶面批嵌",
+      "顶面乳胶漆",
+      "厨房卫生间集成吊顶",
+      "地面找平",
+      "地面砖铺贴(750X1500)",
+      "地面瓷砖",
+      "墙面瓷砖",
+      "瓷砖加工费",
+      "美缝",
+      "墙面贴瓷砖(600X1200)",
+      "墙地面防漏处理",
+    ]),
+  },
+  {
+    title: "全屋拆改/其他工程",
+    itemNames: new Set([
+      "砌砖墙",
+      "砌120厚砖墙",
+      "砌240厚砖墙",
+      "拆改及拆墙",
+      "外墙批嵌以及修补",
+      "砖墙门窗洞过梁",
+      "水泥墙开槽",
+      "打混凝土过梁孔",
+      "厨房、卫生间排污管包隔音棉",
+      "补线、管槽及零星修补",
+    ]),
+  },
+  {
+    title: "水电/项目服务",
+    itemNames: new Set(["强电布线", "弱电布线", "水路布管", "材料搬运费", "垃圾清运费", "地面砖现场维护费", "全屋保洁"]),
+  },
+  {
+    title: "门窗/定制",
+    itemNames: new Set([
+      "背景墙",
+      "入户门",
+      "室内门",
+      "卫生间门",
+      "厨房推拉门",
+      "厨房推拉门双包套",
+      "阳台推拉门",
+      "阳台推拉门双包套",
+      "铝合金封门窗",
+      "橱柜",
+      "全屋定制",
+    ]),
+  },
+  {
+    title: "洁具/灯饰",
+    itemNames: new Set(["马桶", "蹲坑", "浴室柜", "淋浴隔断", "玻璃淋浴房", "花洒", "卫浴五件套", "全屋插座开关", "全屋灯饰"]),
+  },
+  {
+    title: "窗帘/收口",
+    itemNames: new Set(["窗帘", "窗台石", "暗窗帘箱"]),
+  },
+];
 
 type ApiQuantityRow = {
   floor: string;
@@ -302,6 +367,20 @@ export function UploadWorkbench({
         return searchable.includes(keyword);
       });
   }, [quoteRules, quoteRuleSearch]);
+  const groupedQuoteRules = useMemo(() => {
+    const remainingRules = new Set(filteredQuoteRules);
+    const grouped = quoteRuleGroups
+      .map((group) => {
+        const rules = filteredQuoteRules.filter((item) => group.itemNames.has(item.rule.item_name));
+        rules.forEach((item) => remainingRules.delete(item));
+        return { title: group.title, rules };
+      })
+      .filter((group) => group.rules.length > 0);
+    if (remainingRules.size > 0) {
+      grouped.push({ title: "其他规则", rules: [...remainingRules] });
+    }
+    return grouped;
+  }, [filteredQuoteRules]);
   const projectSummaryItems = generatedQuoteMapping ? projectSummaryQuoteItems(generatedQuoteMapping.mapping) : [];
   const integratedCeilingPriceReminderItemsForMapping = generatedQuoteMapping ? integratedCeilingPriceReminderItems(generatedQuoteMapping.mapping) : [];
   const quoteExportRisks = generatedQuoteMapping ? exportQuoteMappingConfirmationMessages(generatedQuoteMapping.mapping) : [];
@@ -1030,44 +1109,51 @@ export function UploadWorkbench({
               </tr>
             </thead>
             <tbody>
-              {filteredQuoteRules.map(({ rule, index }) => (
-                <tr key={`${rule.item_name}-${rule.metric}-${index}`}>
-                  <td>{rule.item_name}</td>
-                  <td><code>{rule.metric}</code></td>
-                  <td>{rule.space_types?.join("、") ?? "全部"}</td>
-                  <td>{rule.unit}</td>
-                  <td>
-                    <input
-                      aria-label={`${rule.item_name} 主材单价`}
-                      min="0"
-                      step="0.01"
-                      type="number"
-                      value={rule.material_price ?? rule.unit_price}
-                      onChange={(event) => handleChangeQuoteRulePricePart(index, "material_price", event.target.value)}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      aria-label={`${rule.item_name} 辅材单价`}
-                      min="0"
-                      step="0.01"
-                      type="number"
-                      value={rule.auxiliary_price ?? 0}
-                      onChange={(event) => handleChangeQuoteRulePricePart(index, "auxiliary_price", event.target.value)}
-                    />
-                  </td>
-                  <td>
-                    <input
-                      aria-label={`${rule.item_name} 人工单价`}
-                      min="0"
-                      step="0.01"
-                      type="number"
-                      value={rule.labor_price ?? 0}
-                      onChange={(event) => handleChangeQuoteRulePricePart(index, "labor_price", event.target.value)}
-                    />
-                  </td>
-                  <td>{rule.unit_price.toFixed(2)}</td>
-                </tr>
+              {groupedQuoteRules.map((group) => (
+                <Fragment key={group.title}>
+                  <tr className="quoteRuleGroupTitle">
+                    <td colSpan={8}>{group.title}</td>
+                  </tr>
+                  {group.rules.map(({ rule, index }) => (
+                    <tr key={`${rule.item_name}-${rule.metric}-${index}`}>
+                      <td>{rule.item_name}</td>
+                      <td><code>{rule.metric}</code></td>
+                      <td>{rule.space_types?.join("、") ?? "全部"}</td>
+                      <td>{rule.unit}</td>
+                      <td>
+                        <input
+                          aria-label={`${rule.item_name} 主材单价`}
+                          min="0"
+                          step="0.01"
+                          type="number"
+                          value={rule.material_price ?? rule.unit_price}
+                          onChange={(event) => handleChangeQuoteRulePricePart(index, "material_price", event.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          aria-label={`${rule.item_name} 辅材单价`}
+                          min="0"
+                          step="0.01"
+                          type="number"
+                          value={rule.auxiliary_price ?? 0}
+                          onChange={(event) => handleChangeQuoteRulePricePart(index, "auxiliary_price", event.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          aria-label={`${rule.item_name} 人工单价`}
+                          min="0"
+                          step="0.01"
+                          type="number"
+                          value={rule.labor_price ?? 0}
+                          onChange={(event) => handleChangeQuoteRulePricePart(index, "labor_price", event.target.value)}
+                        />
+                      </td>
+                      <td>{rule.unit_price.toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </Fragment>
               ))}
             </tbody>
           </table>
