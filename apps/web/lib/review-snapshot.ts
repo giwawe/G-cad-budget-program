@@ -5,6 +5,7 @@ export type ReviewSnapshot = {
   source_file: string;
   calibration_file: string | null;
   accepted_health_check_keys: string[];
+  excel_manual_item_quantities: Record<string, number>;
   summary: QuantitySummary | null;
   comparison: CalibrationComparison | null;
   rows: QuantityRow[];
@@ -15,6 +16,7 @@ export function buildReviewSnapshot({
   calibrationFileName,
   rows,
   acceptedHealthCheckKeys = [],
+  excelManualItemQuantities = {},
   summary,
   comparison,
 }: {
@@ -22,6 +24,7 @@ export function buildReviewSnapshot({
   calibrationFileName: string;
   rows: QuantityRow[];
   acceptedHealthCheckKeys?: string[];
+  excelManualItemQuantities?: Partial<Record<string, number>>;
   summary: QuantitySummary | null;
   comparison: CalibrationComparison | null;
 }): ReviewSnapshot {
@@ -30,6 +33,7 @@ export function buildReviewSnapshot({
     source_file: fileName,
     calibration_file: calibrationFileName || null,
     accepted_health_check_keys: acceptedHealthCheckKeys,
+    excel_manual_item_quantities: normalizeExcelManualItemQuantities(excelManualItemQuantities),
     summary,
     comparison,
     rows,
@@ -66,6 +70,7 @@ export function parseReviewSnapshot(content: string): ReviewSnapshot {
     source_file: snapshot.source_file,
     calibration_file: typeof snapshot.calibration_file === "string" ? snapshot.calibration_file : null,
     accepted_health_check_keys: normalizeAcceptedHealthCheckKeys(snapshot.accepted_health_check_keys),
+    excel_manual_item_quantities: normalizeExcelManualItemQuantities(snapshot.excel_manual_item_quantities),
     summary: normalizeSnapshotSummary(snapshot.summary ?? null),
     comparison: snapshot.comparison ?? null,
     rows: snapshot.rows.map(normalizeSnapshotRow),
@@ -77,6 +82,17 @@ function normalizeAcceptedHealthCheckKeys(keys: unknown): string[] {
     return [];
   }
   return keys.filter((key): key is string => typeof key === "string" && key.trim().length > 0);
+}
+
+function normalizeExcelManualItemQuantities(quantities: unknown): Record<string, number> {
+  if (!quantities || typeof quantities !== "object" || Array.isArray(quantities)) {
+    return {};
+  }
+  return Object.fromEntries(
+    Object.entries(quantities)
+      .filter((entry): entry is [string, number] => typeof entry[0] === "string" && entry[0].trim().length > 0 && typeof entry[1] === "number" && Number.isFinite(entry[1]) && entry[1] >= 0)
+      .map(([itemName, quantity]) => [itemName, Math.round(quantity * 100) / 100]),
+  );
 }
 
 function normalizeSnapshotSummary(summary: QuantitySummary | null): QuantitySummary | null {

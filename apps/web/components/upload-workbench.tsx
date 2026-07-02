@@ -199,6 +199,10 @@ function manualQuoteQuantitiesFromInputs(inputs: Record<string, string>): QuoteE
   );
 }
 
+function manualQuoteInputsFromQuantities(quantities: Record<string, number>): Record<string, string> {
+  return Object.fromEntries(Object.entries(quantities).map(([itemName, quantity]) => [itemName, String(quantity)]));
+}
+
 function calculateWallTileArea(row: QuantityRow, windowAreaM2 = row.windowAreaM2, doorWidthTotalM = row.doorWidthTotalM) {
   if (row.spaceType === "厨房" || row.spaceType === "卫生间") {
     return round2(Math.max(row.wallMeasureLengthM * 2.5 - windowAreaM2 - doorWidthTotalM * DEFAULT_DOOR_HEIGHT_M, 0));
@@ -427,6 +431,7 @@ export function UploadWorkbench({
       setGeneratedQuoteMapping(null);
       setGeneratedQuoteRules(null);
       setAcceptedHealthCheckKeys(snapshot.accepted_health_check_keys);
+      setManualQuoteItemInputs(manualQuoteInputsFromQuantities(snapshot.excel_manual_item_quantities));
       setGeneratedSnapshot({ fileName: snapshotFile.name, content: `${JSON.stringify(snapshot, null, 2)}\n` });
       setError("");
       setMessage(`已恢复校对快照：${snapshotFile.name}`);
@@ -464,7 +469,7 @@ export function UploadWorkbench({
 
   function handleDownloadReviewSnapshot() {
     const downloadName = reviewSnapshotFileName(fileName);
-    const content = `${JSON.stringify(buildReviewSnapshot({ fileName, calibrationFileName, rows, acceptedHealthCheckKeys, summary, comparison }), null, 2)}\n`;
+    const content = `${JSON.stringify(buildReviewSnapshot({ fileName, calibrationFileName, rows, acceptedHealthCheckKeys, excelManualItemQuantities: manualQuoteItemQuantities, summary, comparison }), null, 2)}\n`;
     const blob = new Blob([content], { type: "application/json;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");

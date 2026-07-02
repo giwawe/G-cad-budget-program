@@ -51,6 +51,11 @@ const snapshot = buildReviewSnapshot({
   calibrationFileName: "test-case.calibration.json",
   rows,
   acceptedHealthCheckKeys: ["space-type-other:客卧"],
+  excelManualItemQuantities: {
+    入户门: 1,
+    马桶: 2,
+    淋浴隔断: 2,
+  },
   summary: {
     space_count: 1,
     building_area_m2: 20,
@@ -66,6 +71,7 @@ assert.equal(snapshot.source_file, "test-case.dxf");
 assert.equal(snapshot.calibration_file, "test-case.calibration.json");
 assert.equal(snapshot.rows[0].status, "confirmed");
 assert.deepEqual(snapshot.accepted_health_check_keys, ["space-type-other:客卧"]);
+assert.deepEqual(snapshot.excel_manual_item_quantities, { 入户门: 1, 马桶: 2, 淋浴隔断: 2 });
 assert.equal(snapshot.summary.space_count, 1);
 assert.equal(snapshot.summary.building_area_m2, 20);
 assert.equal(reviewSnapshotFileName("test-case.dxf"), "test-case.review-snapshot.json");
@@ -76,6 +82,7 @@ const parsed = parseReviewSnapshot(JSON.stringify(snapshot));
 assert.equal(parsed.source_file, "test-case.dxf");
 assert.equal(parsed.rows[0].spaceName, "厨房");
 assert.deepEqual(parsed.accepted_health_check_keys, ["space-type-other:客卧"]);
+assert.deepEqual(parsed.excel_manual_item_quantities, { 入户门: 1, 马桶: 2, 淋浴隔断: 2 });
 
 const legacySnapshot = {
   ...snapshot,
@@ -131,12 +138,26 @@ assert.equal(parsedLegacySnapshot.rows[0].toiletCount, 0);
 assert.equal(parsedLegacySnapshot.rows[0].bathroomVanityCount, 0);
 assert.equal(parsedLegacySnapshot.summary?.building_area_m2, 0);
 assert.deepEqual(parsedLegacySnapshot.accepted_health_check_keys, ["space-type-other:客卧"]);
+assert.deepEqual(parsedLegacySnapshot.excel_manual_item_quantities, { 入户门: 1, 马桶: 2, 淋浴隔断: 2 });
 
 const olderSnapshot = {
   ...snapshot,
   accepted_health_check_keys: undefined,
+  excel_manual_item_quantities: undefined,
 };
 assert.deepEqual(parseReviewSnapshot(JSON.stringify(olderSnapshot)).accepted_health_check_keys, []);
+assert.deepEqual(parseReviewSnapshot(JSON.stringify(olderSnapshot)).excel_manual_item_quantities, {});
+
+const snapshotWithInvalidManualQuantities = {
+  ...snapshot,
+  excel_manual_item_quantities: {
+    入户门: 1,
+    蹲坑: -1,
+    马桶: Number.NaN,
+    窗台石: "bad",
+  },
+};
+assert.deepEqual(parseReviewSnapshot(JSON.stringify(snapshotWithInvalidManualQuantities)).excel_manual_item_quantities, { 入户门: 1 });
 
 assert.throws(() => parseReviewSnapshot("{bad json"), /快照 JSON 格式无效/);
 assert.throws(() => parseReviewSnapshot(JSON.stringify({ rows: [] })), /快照缺少 source_file/);

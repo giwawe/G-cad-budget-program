@@ -200,8 +200,8 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 导出校准模板 JSON，并在页面显示可复制内容；新模板为 `{ summary, rows }` 对象格式，`summary.building_area_m2` 用于校准项目级建筑面积，旧版纯数组行格式仍兼容上传。
 - 校准模板包含窗台石长度、窗帘墙宽候选、窗帘墙宽来源、贴砖墙、地砖主材片数、水电施工面积、新砌墙、拆墙、室内门数、橱柜地柜长度、橱柜吊柜长度、全屋定制面积、马桶数和浴室柜数指标，便于把人工确认值沉淀进 golden JSON。
 - 上传校准 JSON 后，空间行差异和项目级 summary 差异都会显示；如果窗帘墙宽候选存在差异，且当前来源为 `manual_required_l_shape_window` 或 `fallback_longest_wall`，工程量表会提供“应用校准”按钮，把校准值写回当前行、标记为 `manual`，并清除该单元格的当前差异。
-- 导出校对快照 JSON；快照包含来源文件、校准文件、summary、comparison 和 rows。
-- 导入校对快照 JSON，恢复表格、状态、summary、comparison 和来源文件名。
+- 导出校对快照 JSON；快照包含来源文件、校准文件、summary、comparison、rows、已接受健康检查和 Excel 可选补项数量。
+- 导入校对快照 JSON，恢复表格、状态、summary、comparison、来源文件名、已接受健康检查和 Excel 可选补项数量。
 - 每行可改 review 状态：待确认、已确认、需修图、不计价。
 - SVG 图形 review 可缩放/平移，支持空间改名、门洞扣减切换、窗洞扣减切换、窗高调整。
 - 图形 review 和汇总卡会显示 `QUOTE_EXT_WALL` 外墙轮廓与 `building_area_m2` 建筑面积，便于核对项目级建筑面积。
