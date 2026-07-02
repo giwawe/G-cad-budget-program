@@ -11,6 +11,9 @@ export type QuantityHealthCheck = {
     | "bathroom-door-classification"
     | "bedroom-interior-door-duplicate"
     | "kitchen-sliding-door-missing"
+    | "balcony-sliding-door-missing"
+    | "entry-door-duplicate"
+    | "wet-room-window-attribution"
     | "kitchen-cabinet-missing"
     | "kitchen-custom-cabinet-overlap"
     | "bathroom-fixture-missing"
@@ -156,6 +159,53 @@ export function buildQuantityHealthChecks({
       title: "厨房推拉门待确认",
       detail: `${formatNames(kitchenMissingSlidingDoorNames)} 有 1.20m 以上门洞但推拉门面积或门套为 0，请确认是否应生成厨房推拉门报价。`,
       spaceNames: kitchenMissingSlidingDoorNames,
+    });
+  }
+
+  const balconyMissingSlidingDoorNames = uniqueNames(
+    billableRows
+      .filter(
+        (row) =>
+          (row.spaceType === "阳台" || row.spaceType === "露台") &&
+          row.doorWidthTotalM >= 1.2 &&
+          (row.slidingDoorAreaM2 <= 0 || row.slidingDoorCasingLengthM <= 0),
+      )
+      .map((row) => row.spaceName),
+  );
+  if (balconyMissingSlidingDoorNames.length > 0) {
+    checks.push({
+      id: "balcony-sliding-door-missing",
+      severity: "info",
+      title: "阳台/露台推拉门待确认",
+      detail: `${formatNames(balconyMissingSlidingDoorNames)} 有 1.20m 以上门洞但推拉门面积或双包套为 0，请确认门洞是否应归为阳台推拉门。`,
+      spaceNames: balconyMissingSlidingDoorNames,
+    });
+  }
+
+  const entryDoorTotal = billableRows.reduce((sum, row) => sum + (row.entryDoorCount ?? 0), 0);
+  if (entryDoorTotal > 1) {
+    const entryDoorNames = uniqueNames(billableRows.filter((row) => (row.entryDoorCount ?? 0) > 0).map((row) => row.spaceName));
+    checks.push({
+      id: "entry-door-duplicate",
+      severity: "warning",
+      title: "入户门数量待确认",
+      detail: `当前识别到 ${entryDoorTotal} 樘入户门，常规商品房通常为 1 樘，请确认是否存在跨空间重复归属。`,
+      spaceNames: entryDoorNames,
+    });
+  }
+
+  const wetRoomWindowNames = uniqueNames(
+    billableRows
+      .filter((row) => (row.spaceType === "厨房" || row.spaceType === "卫生间") && row.windowWidthTotalM > 0 && row.windowAreaM2 <= 0)
+      .map((row) => row.spaceName),
+  );
+  if (wetRoomWindowNames.length > 0) {
+    checks.push({
+      id: "wet-room-window-attribution",
+      severity: "warning",
+      title: "厨卫窗洞归属待确认",
+      detail: `${formatNames(wetRoomWindowNames)} 有窗宽但窗洞面积为 0，可能影响墙砖扣减和墙面工程量。`,
+      spaceNames: wetRoomWindowNames,
     });
   }
 
@@ -328,6 +378,12 @@ function healthFixSuggestion(id: QuantityHealthCheck["id"]): string {
       return "核对卧室门洞归属，套内卫生间门应归为卫生间门，不应重复算室内门。";
     case "kitchen-sliding-door-missing":
       return "确认该门洞是开放洞口还是厨房推拉门；如为推拉门，检查门洞宽度或标记。";
+    case "balcony-sliding-door-missing":
+      return "确认该门洞是否通往阳台/露台；如为推拉门，检查门洞归属和推拉门识别。";
+    case "entry-door-duplicate":
+      return "核对入户门图层、块名或空间归属，避免同一入户门在多个空间重复报价。";
+    case "wet-room-window-attribution":
+      return "检查厨卫窗洞是否正确归属到空间，并确认窗高标识或默认窗高是否生效。";
     case "kitchen-cabinet-missing":
       return "如需要橱柜报价，在实际地柜/吊柜位置补画对应柜体延米线。";
     case "kitchen-custom-cabinet-overlap":
