@@ -510,6 +510,29 @@ def test_kitchen_sliding_door_area_and_casing_length_use_2_2m_default_height():
     assert row.sliding_door_casing_length_m == 6.0
 
 
+def test_balcony_and_terrace_sliding_doors_use_existing_sliding_door_classification():
+    balcony = SpaceInput(
+        name="一层-阳台",
+        boundary_points_m=[(0, 0), (3, 0), (3, 2), (0, 2)],
+        wall_lengths_m=[3, 3, 2, 2],
+        doors=[OpeningInput(width_m=1.8, opening_type="normal_door", quote_category="sliding_door")],
+    )
+    terrace = SpaceInput(
+        name="一层-露台",
+        boundary_points_m=[(0, 0), (4, 0), (4, 2), (0, 2)],
+        wall_lengths_m=[4, 4, 2, 2],
+        doors=[OpeningInput(width_m=2.0, height_m=2.4, opening_type="normal_door", quote_category="sliding_door")],
+    )
+
+    balcony_row = calculate_quantity_row(balcony, ProjectDefaults())
+    terrace_row = calculate_quantity_row(terrace, ProjectDefaults())
+
+    assert balcony_row.sliding_door_area_m2 == 3.96
+    assert balcony_row.sliding_door_casing_length_m == 6.2
+    assert terrace_row.sliding_door_area_m2 == 4.8
+    assert terrace_row.sliding_door_casing_length_m == 6.8
+
+
 def test_height_priority_space_then_floor_then_project():
     defaults = ProjectDefaults(project_height_m=2.8)
 

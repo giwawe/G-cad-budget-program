@@ -980,6 +980,54 @@ assert.deepEqual(kitchenSlidingDoorMapping.items.filter((item) => item.item_name
   },
 ]);
 
+const balconySlidingDoorMapping = buildQuoteMapping([
+  { ...rows[0], spaceName: "阳台", spaceType: "阳台", slidingDoorAreaM2: 3.96, slidingDoorCasingLengthM: 6.2 },
+  { ...rows[0], spaceName: "露台", spaceType: "露台", slidingDoorAreaM2: 4.8, slidingDoorCasingLengthM: 6.8 },
+]);
+assert.deepEqual(balconySlidingDoorMapping.items.filter((item) => item.item_name === "阳台推拉门" || item.item_name === "阳台推拉门双包套").map(stripQuoteItemPriceParts), [
+  {
+    floor: "一层",
+    space_name: "阳台",
+    space_type: "阳台",
+    item_name: "阳台推拉门",
+    quantity: 3.96,
+    unit: "M2",
+    unit_price: 550,
+    amount: 2178,
+  },
+  {
+    floor: "一层",
+    space_name: "阳台",
+    space_type: "阳台",
+    item_name: "阳台推拉门双包套",
+    quantity: 6.2,
+    unit: "M",
+    unit_price: 300,
+    amount: 1860,
+  },
+  {
+    floor: "一层",
+    space_name: "露台",
+    space_type: "露台",
+    item_name: "阳台推拉门",
+    quantity: 4.8,
+    unit: "M2",
+    unit_price: 550,
+    amount: 2640,
+  },
+  {
+    floor: "一层",
+    space_name: "露台",
+    space_type: "露台",
+    item_name: "阳台推拉门双包套",
+    quantity: 6.8,
+    unit: "M",
+    unit_price: 300,
+    amount: 2040,
+  },
+]);
+assert.equal(balconySlidingDoorMapping.items.filter((item) => item.item_name === "厨房推拉门" || item.item_name === "厨房推拉门双包套").length, 0);
+
 const kitchenCabinetMapping = buildQuoteMapping([{ ...rows[0], spaceName: "厨房", spaceType: "厨房", kitchenBaseCabinetLengthM: 4.3, kitchenWallCabinetLengthM: 3.0 }]);
 assert.deepEqual(kitchenCabinetMapping.items.filter((item) => item.item_name === "橱柜").map(stripQuoteItemPriceParts), [
   {

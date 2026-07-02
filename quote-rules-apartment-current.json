@@ -346,21 +346,29 @@
   },
   {
     "item_name": "阳台推拉门",
-    "metric": "manual_count",
+    "metric": "sliding_door_area_m2",
     "unit": "M2",
     "unit_price": 550,
     "material_price": 550,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "space_types": [
+      "阳台",
+      "露台"
+    ]
   },
   {
     "item_name": "阳台推拉门双包套",
-    "metric": "manual_count",
+    "metric": "sliding_door_casing_length_m",
     "unit": "M",
     "unit_price": 300,
     "material_price": 300,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "space_types": [
+      "阳台",
+      "露台"
+    ]
   },
   {
     "item_name": "铝合金封门窗",

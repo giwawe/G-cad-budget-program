@@ -6,6 +6,7 @@ from server.app.quantity.geometry import polygon_area
 
 FULL_WALL_TILE_SPACE_TYPES = {"厨房", "卫生间"}
 WATERPROOF_SPACE_TYPES = {"厨房", "卫生间", "阳台", "露台", "洗衣房"}
+SLIDING_DOOR_QUOTE_SPACE_TYPES = {"厨房", "阳台", "露台"}
 CURTAIN_CANDIDATE_SPACE_TYPES = {"客厅", "餐厅", "卧室", "书房"}
 KITCHEN_CABINET_SPACE_TYPES = {"厨房"}
 BATHROOM_FIXTURE_SPACE_TYPES = {"卫生间"}
@@ -258,13 +259,13 @@ def calculate_bathroom_door_count(space_type: str, doors: list) -> int:
 
 
 def calculate_sliding_door_area_m2(space_type: str, doors: list, default_door_height_m: float) -> float:
-    if space_type != "厨房":
+    if space_type not in SLIDING_DOOR_QUOTE_SPACE_TYPES:
         return 0
     return round(sum(door.width_m * (door.height_m or SLIDING_DOOR_DEFAULT_HEIGHT_M) for door in doors if door.quote_category == "sliding_door"), 2)
 
 
 def calculate_sliding_door_casing_length_m(space_type: str, doors: list, default_door_height_m: float) -> float:
-    if space_type != "厨房":
+    if space_type not in SLIDING_DOOR_QUOTE_SPACE_TYPES:
         return 0
     return round(sum(door.width_m + 2 * (door.height_m or SLIDING_DOOR_DEFAULT_HEIGHT_M) for door in doors if door.quote_category == "sliding_door"), 2)
 

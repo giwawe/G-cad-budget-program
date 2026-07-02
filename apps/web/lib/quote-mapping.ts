@@ -170,6 +170,7 @@ const CEILING_PAINT_SPACE_TYPES = [...DRY_SPACE_TYPES, ...KITCHEN_BATHROOM_SPACE
 const WET_FLOOR_SPACE_TYPES = ["厨房", "卫生间", "阳台", "露台", "洗衣房"];
 const CURTAIN_SPACE_TYPES = ["客厅", "餐厅", "卧室", "书房"];
 const KITCHEN_CABINET_SPACE_TYPES = ["厨房"];
+const BALCONY_SLIDING_DOOR_SPACE_TYPES = ["阳台", "露台"];
 const BATHROOM_FIXTURE_SPACE_TYPES = ["卫生间"];
 const SUMMED_PROJECT_METRICS = new Set<QuoteMetric>([
   "floor_tile_piece_count",
@@ -220,8 +221,8 @@ const DEFAULT_RULES: QuoteRule[] = [
   quoteRule("卫生间门", "bathroom_door_count", "樘", 1200, 0, 0, BATHROOM_FIXTURE_SPACE_TYPES),
   quoteRule("厨房推拉门", "sliding_door_area_m2", "m2", 550, 0, 0, KITCHEN_CABINET_SPACE_TYPES),
   quoteRule("厨房推拉门双包套", "sliding_door_casing_length_m", "M", 300, 0, 0, KITCHEN_CABINET_SPACE_TYPES),
-  quoteRule("阳台推拉门", "manual_count", "M2", 550, 0, 0),
-  quoteRule("阳台推拉门双包套", "manual_count", "M", 300, 0, 0),
+  quoteRule("阳台推拉门", "sliding_door_area_m2", "M2", 550, 0, 0, BALCONY_SLIDING_DOOR_SPACE_TYPES),
+  quoteRule("阳台推拉门双包套", "sliding_door_casing_length_m", "M", 300, 0, 0, BALCONY_SLIDING_DOOR_SPACE_TYPES),
   quoteRule("铝合金封门窗", "manual_count", "M2", 0, 0, 0),
   quoteRule("橱柜", "kitchen_cabinet_length_m", "M", 600, 0, 0, KITCHEN_CABINET_SPACE_TYPES),
   quoteRule("全屋定制", "custom_cabinet_area_m2", "M2", 600, 0, 0),

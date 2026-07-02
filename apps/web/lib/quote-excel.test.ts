@@ -207,6 +207,45 @@ assert.ok(slidingDoorHtml.includes("<td>厨房推拉门</td><td>m2</td><td>3.85<
 assert.ok(slidingDoorHtml.includes("<td>厨房推拉门双包套</td><td>M</td><td>6.15</td><td>300.00</td><td>0.00</td><td>0.00</td><td>1845.00</td>"));
 assert.ok(!slidingDoorHtml.includes("<td>厨房推拉门</td><td>m2</td><td>10</td>"));
 
+const balconySlidingDoorHtml = buildQuoteExcelHtml(
+  {
+    ...mapping,
+    items: [
+      {
+        floor: "一层",
+        space_name: "阳台",
+        space_type: "阳台",
+        item_name: "阳台推拉门",
+        quantity: 3.96,
+        unit: "M2",
+        unit_price: 550,
+        amount: 2178,
+      },
+      {
+        floor: "一层",
+        space_name: "阳台",
+        space_type: "阳台",
+        item_name: "阳台推拉门双包套",
+        quantity: 6.2,
+        unit: "M",
+        unit_price: 300,
+        amount: 1860,
+      },
+    ],
+    summary: {
+      ...mapping.summary,
+      item_count: 2,
+      total_amount: 4038,
+    },
+  },
+  "阳台推拉门项目",
+);
+assert.equal(countOccurrences(balconySlidingDoorHtml, "<td>阳台推拉门</td><td>M2"), 1);
+assert.equal(countOccurrences(balconySlidingDoorHtml, "<td>阳台推拉门双包套</td><td>M"), 1);
+assert.ok(balconySlidingDoorHtml.includes("<td>阳台推拉门</td><td>M2</td><td>3.96</td><td>550.00</td><td>0.00</td><td>0.00</td><td>2178.00</td>"));
+assert.ok(balconySlidingDoorHtml.includes("<td>阳台推拉门双包套</td><td>M</td><td>6.20</td><td>300.00</td><td>0.00</td><td>0.00</td><td>1860.00</td>"));
+assert.ok(!balconySlidingDoorHtml.includes("<td>阳台推拉门</td><td>M2</td><td>0</td>"));
+
 const manualDraftHtml = buildQuoteExcelHtml(mapping, "人工补项项目", {
   manualItems: {
     入户门: 1,
