@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { buildQuoteExcelHtml, MANUAL_QUOTE_DRAFT_ITEMS, quoteExcelFileName } from "./quote-excel.ts";
+import { buildQuoteExcelHtml, EXCEL_FIXED_PLACEHOLDER_ITEMS, quoteExcelFileName } from "./quote-excel.ts";
 import { defaultProjectRows, defaultProjectSummary } from "./default-project.ts";
 import { buildQuoteMapping, defaultQuoteRules } from "./quote-mapping.ts";
 import type { QuoteMapping } from "./quote-mapping.ts";
@@ -104,7 +104,18 @@ assert.ok(html.includes("<tr><td>A</td><td>直接费合计</td><td></td><td></td
 assert.ok(html.includes("<tr><td>B</td><td>工程管理费(D=A* 5%)</td><td></td><td></td><td></td><td></td><td></td><td>416.56</td><td></td></tr>"));
 assert.ok(html.includes("<tr><td>C</td><td>税金E=(A+B)* 3%</td><td></td><td></td><td></td><td></td><td></td><td>262.43</td><td></td></tr>"));
 assert.ok(html.includes("<tr><td>D</td><td>工程总造价F=(A+B+C)</td><td></td><td></td><td></td><td></td><td></td><td>9010.15</td><td></td></tr>"));
-assert.equal(MANUAL_QUOTE_DRAFT_ITEMS.length, 9);
+assert.equal(EXCEL_FIXED_PLACEHOLDER_ITEMS.length, 9);
+assert.deepEqual(EXCEL_FIXED_PLACEHOLDER_ITEMS.map((item) => item.item_name), [
+  "砖墙门窗洞过梁",
+  "入户门",
+  "阳台推拉门",
+  "阳台推拉门双包套",
+  "铝合金封门窗",
+  "蹲坑",
+  "淋浴隔断",
+  "玻璃淋浴房",
+  "窗台石",
+]);
 assert.ok(html.includes("<td>砖墙门窗洞过梁</td><td>支</td><td>0</td><td>160.00</td><td>0.00</td><td>40.00</td><td>0.00</td>"));
 assert.ok(html.includes("<td>入户门</td><td>樘</td><td>0</td><td>5000.00</td><td>0.00</td><td>0.00</td><td>0.00</td>"));
 assert.ok(html.includes("<td>阳台推拉门</td><td>M2</td><td>0</td><td>550.00</td><td>0.00</td><td>0.00</td><td>0.00</td>"));

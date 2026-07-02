@@ -53,7 +53,7 @@ const FIXED_TEMPLATE_SECTIONS: QuoteTemplateSectionDefinition[] = [
 ];
 const TEMPLATE_ITEM_NAME_SET = new Set([...ROOM_SECTION_ITEM_NAMES, ...FIXED_TEMPLATE_SECTIONS.flatMap((section) => section.itemNames)]);
 
-export const MANUAL_QUOTE_DRAFT_ITEMS: ManualQuoteDraftItem[] = [
+export const EXCEL_FIXED_PLACEHOLDER_ITEMS: ManualQuoteDraftItem[] = [
   { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "砖墙门窗洞过梁" },
   { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "入户门" },
   { floor: "一层", space_name: "阳台", space_type: "阳台", item_name: "阳台推拉门" },
@@ -64,7 +64,7 @@ export const MANUAL_QUOTE_DRAFT_ITEMS: ManualQuoteDraftItem[] = [
   { floor: "一层", space_name: "卫生间", space_type: "卫生间", item_name: "玻璃淋浴房" },
   { floor: "全屋", space_name: "全屋", space_type: "全屋", item_name: "窗台石" },
 ];
-MANUAL_QUOTE_DRAFT_ITEMS.forEach((item) => EXCEL_PLACEHOLDER_ITEM_NAMES.add(item.item_name));
+EXCEL_FIXED_PLACEHOLDER_ITEMS.forEach((item) => EXCEL_PLACEHOLDER_ITEM_NAMES.add(item.item_name));
 
 type QuoteTemplatePrice = {
   material: number;

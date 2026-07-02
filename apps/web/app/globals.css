@@ -482,8 +482,31 @@ code {
   color: var(--ink);
   font-size: 12px;
   font-weight: 700;
-  padding-top: 11px;
-  padding-bottom: 11px;
+  padding: 0;
+}
+
+.quoteRulesTable .quoteRuleGroupTitle button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  padding: 11px 10px;
+  text-align: left;
+}
+
+.quoteRuleGroupCount {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.quoteRuleEmptyState {
+  color: var(--muted);
+  text-align: center;
 }
 
 .quoteRulesTable input {

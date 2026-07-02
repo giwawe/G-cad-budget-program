@@ -17,6 +17,10 @@ assert.ok(uploadWorkbenchSource.includes("quoteRuleGroups"), "quote rule panel s
 assert.ok(uploadWorkbenchSource.includes("全屋拆改/其他工程"), "quote rule panel should include a construction group");
 assert.ok(uploadWorkbenchSource.includes("门窗/定制"), "quote rule panel should include a door and customization group");
 assert.ok(uploadWorkbenchSource.includes("quoteRuleGroupTitle"), "quote rule table should render visible group headers");
+assert.ok(uploadWorkbenchSource.includes("collapsedQuoteRuleGroups"), "quote rule groups should be collapsible");
+assert.ok(uploadWorkbenchSource.includes("handleToggleQuoteRuleGroup"), "quote rule groups should expose a toggle handler");
+assert.ok(uploadWorkbenchSource.includes("quoteRuleGroupCount"), "quote rule group headers should show matched rule counts");
+assert.ok(uploadWorkbenchSource.includes("没有匹配的报价规则"), "quote rule search should show an empty state");
 assert.ok(uploadWorkbenchSource.includes("manualItems: manualQuoteItemQuantities"), "Excel draft export should apply manual quote item quantities");
 assert.ok(uploadWorkbenchSource.includes("excelManualItemQuantities: manualQuoteItemQuantities"), "review snapshots should persist manual quote item quantities");
 assert.ok(uploadWorkbenchSource.includes("manualQuoteInputsFromQuantities(snapshot.excel_manual_item_quantities)"), "review snapshot import should restore manual quote item inputs");

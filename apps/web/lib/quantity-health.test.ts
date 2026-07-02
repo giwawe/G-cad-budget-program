@@ -8,6 +8,7 @@ import {
   healthFixListFileName,
   summarizeQuantityHealthChecks,
 } from "./quantity-health.ts";
+import { defaultProjectRows, defaultProjectSummary } from "./default-project.ts";
 import type { QuantityRow, QuantitySummary } from "./types.ts";
 import type { QuoteMapping } from "./quote-mapping.ts";
 
@@ -128,6 +129,23 @@ assert.deepEqual(summarizeQuantityHealthChecks([]), {
   label: "当前无待确认项",
 });
 assert.deepEqual(buildQuantityHealthChecks({ rows: [baseRow], summary: { ...summary, building_area_m2: 88.66 } }), []);
+assert.deepEqual(buildQuantityHealthChecks({ rows: defaultProjectRows, summary: defaultProjectSummary }), []);
+
+const legacyFixtureHealthChecks = buildQuantityHealthChecks({
+  rows: [
+    { ...baseRow, spaceName: "厨房", spaceType: "厨房", interiorDoorCount: 0, kitchenBaseCabinetLengthM: 0, kitchenWallCabinetLengthM: 0 },
+    { ...baseRow, spaceName: "主卧", spaceType: "卧室", kitchenBaseCabinetLengthM: 0, kitchenWallCabinetLengthM: 0 },
+  ],
+  summary: { ...summary, building_area_m2: 0 },
+});
+
+assert.deepEqual(legacyFixtureHealthChecks.map((check) => check.id), ["kitchen-cabinet-missing", "building-area-missing"]);
+assert.deepEqual(summarizeQuantityHealthChecks(legacyFixtureHealthChecks), {
+  total: 2,
+  warning: 1,
+  info: 1,
+  label: "1 项需优先处理，1 项提醒",
+});
 
 const doorChecks = buildQuantityHealthChecks({
   rows: [

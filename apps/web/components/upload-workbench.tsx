@@ -338,6 +338,7 @@ export function UploadWorkbench({
   const [quoteRulesStorageReady, setQuoteRulesStorageReady] = useState(false);
   const [quoteRuleSearch, setQuoteRuleSearch] = useState("");
   const [generatedQuoteRules, setGeneratedQuoteRules] = useState<{ fileName: string; content: string } | null>(null);
+  const [collapsedQuoteRuleGroups, setCollapsedQuoteRuleGroups] = useState<string[]>([]);
   const [healthFilter, setHealthFilter] = useState<QuantityHealthFilter>("all");
   const [acceptedHealthCheckKeys, setAcceptedHealthCheckKeys] = useState<string[]>([]);
   const [manualQuoteItemInputs, setManualQuoteItemInputs] = useState<Record<string, string>>({});
@@ -766,6 +767,12 @@ export function UploadWorkbench({
     setMessage("已恢复默认报价规则，并已自动保存到本机");
   }
 
+  function handleToggleQuoteRuleGroup(title: string) {
+    setCollapsedQuoteRuleGroups((current) =>
+      current.includes(title) ? current.filter((item) => item !== title) : [...current, title],
+    );
+  }
+
   function handleChangeManualQuoteItem(itemName: string, value: string) {
     setManualQuoteItemInputs((current) => ({ ...current, [itemName]: value }));
     setMessage(value.trim() ? `${itemName} Excel 补项数量已更新` : `${itemName} Excel 补项已恢复默认`);
@@ -1109,12 +1116,23 @@ export function UploadWorkbench({
               </tr>
             </thead>
             <tbody>
+              {groupedQuoteRules.length === 0 && (
+                <tr>
+                  <td className="quoteRuleEmptyState" colSpan={8}>没有匹配的报价规则</td>
+                </tr>
+              )}
               {groupedQuoteRules.map((group) => (
                 <Fragment key={group.title}>
                   <tr className="quoteRuleGroupTitle">
-                    <td colSpan={8}>{group.title}</td>
+                    <td colSpan={8}>
+                      <button type="button" onClick={() => handleToggleQuoteRuleGroup(group.title)}>
+                        <span>{collapsedQuoteRuleGroups.includes(group.title) ? "展开" : "收起"}</span>
+                        <strong>{group.title}</strong>
+                        <span className="quoteRuleGroupCount">{group.rules.length} 项</span>
+                      </button>
+                    </td>
                   </tr>
-                  {group.rules.map(({ rule, index }) => (
+                  {!collapsedQuoteRuleGroups.includes(group.title) && group.rules.map(({ rule, index }) => (
                     <tr key={`${rule.item_name}-${rule.metric}-${index}`}>
                       <td>{rule.item_name}</td>
                       <td><code>{rule.metric}</code></td>
