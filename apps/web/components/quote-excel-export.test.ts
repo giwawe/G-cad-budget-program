@@ -9,6 +9,10 @@ assert.ok(uploadWorkbenchSource.includes("下载 Excel 草稿"), "quote mapping 
 assert.ok(uploadWorkbenchSource.includes("导出 Excel 草稿"), "top toolbar should expose a visible Excel draft export button");
 assert.ok(uploadWorkbenchSource.includes("handleDownloadQuoteExcelDraft"), "Excel draft export should be available before the quote mapping panel is shown");
 assert.ok(uploadWorkbenchSource.includes("Excel 可选补项"), "quote mapping panel should explain that manual quote items are included in Excel drafts");
+assert.ok(uploadWorkbenchSource.includes("quoteRuleSearch"), "quote rule panel should keep a search state for fast price edits");
+assert.ok(uploadWorkbenchSource.includes("筛选报价规则"), "quote rule panel should expose a visible search control");
+assert.ok(uploadWorkbenchSource.includes("显示 {filteredQuoteRules.length}/{quoteRules.length} 项"), "quote rule panel should show filtered rule counts");
+assert.ok(uploadWorkbenchSource.includes("filteredQuoteRules.map"), "quote rule table should render the filtered rule list");
 assert.ok(uploadWorkbenchSource.includes("manualItems: manualQuoteItemQuantities"), "Excel draft export should apply manual quote item quantities");
 assert.ok(uploadWorkbenchSource.includes("excelManualItemQuantities: manualQuoteItemQuantities"), "review snapshots should persist manual quote item quantities");
 assert.ok(uploadWorkbenchSource.includes("manualQuoteInputsFromQuantities(snapshot.excel_manual_item_quantities)"), "review snapshot import should restore manual quote item inputs");

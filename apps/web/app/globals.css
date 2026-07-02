@@ -421,6 +421,26 @@ code {
   padding: 7px 11px;
 }
 
+.quoteRuleSearch {
+  display: grid;
+  grid-template-columns: auto minmax(220px, 420px);
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0 14px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.quoteRuleSearch input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--ink);
+  font: inherit;
+  padding: 8px 10px;
+}
+
 .quoteRulesTable {
   max-width: 100%;
   overflow-x: auto;
@@ -1369,6 +1389,10 @@ td .curtainWallHelp {
   .quoteRulesActions button {
     width: fit-content;
     min-height: 34px;
+  }
+
+  .quoteRuleSearch {
+    grid-template-columns: 1fr;
   }
 
   .quoteRulesTable table {

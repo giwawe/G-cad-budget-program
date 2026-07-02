@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import { buildQuoteExcelHtml, MANUAL_QUOTE_DRAFT_ITEMS, quoteExcelFileName } from "./quote-excel.ts";
+import { defaultProjectRows, defaultProjectSummary } from "./default-project.ts";
+import { buildQuoteMapping, defaultQuoteRules } from "./quote-mapping.ts";
 import type { QuoteMapping } from "./quote-mapping.ts";
 
 const mapping: QuoteMapping = {
@@ -325,6 +327,21 @@ assert.ok(riskyHtml.includes("<td></td><td>报价风险备注</td><td></td><td><
 assert.ok(riskyHtml.includes("<td></td><td>健康检查</td><td></td><td></td><td></td><td></td><td></td><td></td><td>1 项需优先处理，2 项提醒</td>"));
 assert.ok(riskyHtml.includes("<td></td><td>建筑面积</td><td></td><td></td><td></td><td></td><td></td><td></td><td>强电布线、水路布管 需要 QUOTE_EXT_WALL 建筑面积，当前为 0。</td>"));
 assert.ok(riskyHtml.includes("<td></td><td>零单价</td><td></td><td></td><td></td><td></td><td></td><td></td><td>厨房卫生间集成吊顶：卫生间 3.20 m2</td>"));
+
+const defaultProjectMapping = buildQuoteMapping(defaultProjectRows, defaultQuoteRules(), defaultProjectSummary);
+const defaultProjectHtml = buildQuoteExcelHtml(defaultProjectMapping, "默认10号图纸");
+
+assert.ok(defaultProjectHtml.includes("<td>四</td><td>卫生间一工程</td>"));
+assert.ok(defaultProjectHtml.includes("<td>五</td><td>卫生间二工程</td>"));
+assert.ok(defaultProjectHtml.includes("<td>六</td><td>卧室一工程</td>"));
+assert.ok(defaultProjectHtml.includes("<td>八</td><td>卧室二工程</td>"));
+assert.ok(!defaultProjectHtml.includes("<td>卧室工程</td>"));
+assert.ok(defaultProjectHtml.includes("<td>厨房推拉门</td><td>m2</td><td>3.85</td><td>550.00</td><td>0.00</td><td>0.00</td><td>2117.50</td>"));
+assert.ok(defaultProjectHtml.includes("<td>厨房推拉门双包套</td><td>M</td><td>6.15</td><td>300.00</td><td>0.00</td><td>0.00</td><td>1845.00</td>"));
+assert.ok(defaultProjectHtml.includes("<td>厨房卫生间集成吊顶</td><td>m2</td><td>11.26</td><td>260.00</td><td>0.00</td><td>0.00</td><td>2927.60</td>"));
+assert.ok(defaultProjectHtml.includes("<td>窗帘</td><td>M</td><td>36.06</td><td>60.00</td><td>0.00</td><td>0.00</td><td>2163.60</td>"));
+assert.ok(defaultProjectHtml.includes("<td>暗窗帘箱</td><td>M</td><td>6.63</td><td>65.00</td><td>0.00</td><td>45.00</td><td>729.30</td>"));
+assert.ok(defaultProjectHtml.includes("<td>窗台石</td><td>套</td><td>1</td><td>3600.00</td><td>0.00</td><td>0.00</td><td>0.00</td>"));
 
 function countOccurrences(value: string, pattern: string): number {
   return value.split(pattern).length - 1;

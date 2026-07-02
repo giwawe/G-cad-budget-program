@@ -271,6 +271,7 @@ export function UploadWorkbench({
   const [quoteRules, setQuoteRules] = useState<QuoteRule[]>(() => defaultQuoteRules());
   const [quoteRulesFileName, setQuoteRulesFileName] = useState(DEFAULT_QUOTE_RULES_NAME);
   const [quoteRulesStorageReady, setQuoteRulesStorageReady] = useState(false);
+  const [quoteRuleSearch, setQuoteRuleSearch] = useState("");
   const [generatedQuoteRules, setGeneratedQuoteRules] = useState<{ fileName: string; content: string } | null>(null);
   const [healthFilter, setHealthFilter] = useState<QuantityHealthFilter>("all");
   const [acceptedHealthCheckKeys, setAcceptedHealthCheckKeys] = useState<string[]>([]);
@@ -284,6 +285,23 @@ export function UploadWorkbench({
   const aluminumWindowSuggestedArea = useMemo(() => aluminumWindowSuggestedAreaFromRows(rows), [rows]);
   const manualQuoteItemQuantities = useMemo(() => manualQuoteQuantitiesFromInputs(manualQuoteItemInputs), [manualQuoteItemInputs]);
   const manualQuoteEditedCount = Object.keys(manualQuoteItemQuantities).length;
+  const filteredQuoteRules = useMemo(() => {
+    const keyword = quoteRuleSearch.trim().toLowerCase();
+    return quoteRules
+      .map((rule, index) => ({ rule, index }))
+      .filter(({ rule }) => {
+        if (!keyword) {
+          return true;
+        }
+        const searchable = [
+          rule.item_name,
+          rule.metric,
+          rule.unit,
+          rule.space_types?.join("、") ?? "全部",
+        ].join(" ").toLowerCase();
+        return searchable.includes(keyword);
+      });
+  }, [quoteRules, quoteRuleSearch]);
   const projectSummaryItems = generatedQuoteMapping ? projectSummaryQuoteItems(generatedQuoteMapping.mapping) : [];
   const integratedCeilingPriceReminderItemsForMapping = generatedQuoteMapping ? integratedCeilingPriceReminderItems(generatedQuoteMapping.mapping) : [];
   const quoteExportRisks = generatedQuoteMapping ? exportQuoteMappingConfirmationMessages(generatedQuoteMapping.mapping) : [];
@@ -981,12 +999,22 @@ export function UploadWorkbench({
         <div className="templateHeader">
           <div>
             <strong>报价规则单价</strong>
-            <span>{quoteRulesFileName} · 本机自动保存</span>
+            <span>{quoteRulesFileName} · 本机自动保存 · 显示 {filteredQuoteRules.length}/{quoteRules.length} 项</span>
           </div>
           <div className="quoteRulesActions">
             <button type="button" onClick={handleResetQuoteRules}>恢复默认规则</button>
           </div>
         </div>
+        <label className="quoteRuleSearch">
+          <span>筛选规则</span>
+          <input
+            aria-label="筛选报价规则"
+            type="search"
+            placeholder="按清单项、取数指标、适用空间搜索"
+            value={quoteRuleSearch}
+            onChange={(event) => setQuoteRuleSearch(event.target.value)}
+          />
+        </label>
         <div className="quoteRulesTable">
           <table>
             <thead>
@@ -1002,7 +1030,7 @@ export function UploadWorkbench({
               </tr>
             </thead>
             <tbody>
-              {quoteRules.map((rule, index) => (
+              {filteredQuoteRules.map(({ rule, index }) => (
                 <tr key={`${rule.item_name}-${rule.metric}-${index}`}>
                   <td>{rule.item_name}</td>
                   <td><code>{rule.metric}</code></td>
