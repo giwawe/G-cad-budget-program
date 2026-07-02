@@ -21,6 +21,12 @@ import {
 import { confirmQuantityRowsBySpaceNames, updateQuantityRowCurtainWallWidth, updateQuantityRowStatus, updateQuantityRowsStatusBySpaceNames } from "@/lib/quantity-row-status";
 import { buildQuoteExcelHtml, quoteExcelFileName, type QuoteExcelManualItemQuantities } from "@/lib/quote-excel";
 import {
+  applyExclusiveManualQuoteChoice,
+  bathroomCountFromRows,
+  manualQuoteInputsFromQuantities,
+  manualQuoteQuantitiesFromInputs,
+} from "@/lib/manual-quote-options";
+import {
   apartmentPendingQuoteMetrics,
   buildQuoteMapping,
   curtainQuoteReadiness,
@@ -55,6 +61,10 @@ const MANUAL_QUOTE_OPTION_ITEMS = [
   { itemName: "淋浴隔断", unit: "套", hint: "与玻璃淋浴房二选一" },
   { itemName: "玻璃淋浴房", unit: "套", hint: "与淋浴隔断二选一" },
   { itemName: "窗台石", unit: "套", hint: "按套确认" },
+];
+const MANUAL_QUOTE_EXCLUSIVE_GROUPS = [
+  { title: "洁具二选一", itemNames: ["马桶", "蹲坑"] },
+  { title: "淋浴配置二选一", itemNames: ["淋浴隔断", "玻璃淋浴房"] },
 ];
 
 type ApiQuantityRow = {
@@ -190,19 +200,6 @@ function round2(value: number) {
   return Math.round(value * 100) / 100;
 }
 
-function manualQuoteQuantitiesFromInputs(inputs: Record<string, string>): QuoteExcelManualItemQuantities {
-  return Object.fromEntries(
-    Object.entries(inputs)
-      .map(([itemName, value]) => [itemName, value.trim() === "" ? undefined : Number(value)] as const)
-      .filter((entry): entry is [string, number] => entry[1] !== undefined && Number.isFinite(entry[1]) && entry[1] >= 0)
-      .map(([itemName, value]) => [itemName, round2(value)]),
-  );
-}
-
-function manualQuoteInputsFromQuantities(quantities: Record<string, number>): Record<string, string> {
-  return Object.fromEntries(Object.entries(quantities).map(([itemName, quantity]) => [itemName, String(quantity)]));
-}
-
 function calculateWallTileArea(row: QuantityRow, windowAreaM2 = row.windowAreaM2, doorWidthTotalM = row.doorWidthTotalM) {
   if (row.spaceType === "厨房" || row.spaceType === "卫生间") {
     return round2(Math.max(row.wallMeasureLengthM * 2.5 - windowAreaM2 - doorWidthTotalM * DEFAULT_DOOR_HEIGHT_M, 0));
@@ -284,6 +281,7 @@ export function UploadWorkbench({
   const excludedCount = useMemo(() => rows.filter((row) => row.status === "excluded").length, [rows]);
   const pendingQuoteMetrics = useMemo(() => apartmentPendingQuoteMetrics(), []);
   const curtainReadiness = useMemo(() => curtainQuoteReadiness(rows), [rows]);
+  const bathroomSuggestedQuantity = useMemo(() => bathroomCountFromRows(rows), [rows]);
   const manualQuoteItemQuantities = useMemo(() => manualQuoteQuantitiesFromInputs(manualQuoteItemInputs), [manualQuoteItemInputs]);
   const manualQuoteEditedCount = Object.keys(manualQuoteItemQuantities).length;
   const projectSummaryItems = generatedQuoteMapping ? projectSummaryQuoteItems(generatedQuoteMapping.mapping) : [];
@@ -680,6 +678,11 @@ export function UploadWorkbench({
     setMessage("Excel 可选补项已恢复默认");
   }
 
+  function handleApplyExclusiveManualQuoteChoice(groupItemNames: string[], selectedItemName: string) {
+    setManualQuoteItemInputs((current) => applyExclusiveManualQuoteChoice(current, groupItemNames, selectedItemName, bathroomSuggestedQuantity));
+    setMessage(`${selectedItemName} 已按 ${bathroomSuggestedQuantity} 个卫生间填入，二选一同组项目已置 0`);
+  }
+
   function handleChangeStatus(spaceName: string, status: ReviewStatus) {
     setRows((current) => updateQuantityRowStatus(current, spaceName, status));
     setGeneratedQuoteMapping(null);
@@ -1058,6 +1061,26 @@ export function UploadWorkbench({
                 onChange={(event) => handleChangeManualQuoteItem(item.itemName, event.target.value)}
               />
             </label>
+          ))}
+        </div>
+        <div className="manualQuoteChoiceGroups">
+          {MANUAL_QUOTE_EXCLUSIVE_GROUPS.map((group) => (
+            <div className="manualQuoteChoiceGroup" key={group.title}>
+              <strong>{group.title}</strong>
+              <span>建议数量 {bathroomSuggestedQuantity}</span>
+              <div>
+                {group.itemNames.map((itemName) => (
+                  <button
+                    type="button"
+                    className={(manualQuoteItemQuantities[itemName] ?? 0) > 0 && group.itemNames.every((otherItemName) => otherItemName === itemName || manualQuoteItemQuantities[otherItemName] === 0) ? "active" : ""}
+                    onClick={() => handleApplyExclusiveManualQuoteChoice(group.itemNames, itemName)}
+                    key={itemName}
+                  >
+                    {itemName}
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </section>

@@ -12,4 +12,7 @@ assert.ok(uploadWorkbenchSource.includes("Excel 可选补项"), "quote mapping p
 assert.ok(uploadWorkbenchSource.includes("manualItems: manualQuoteItemQuantities"), "Excel draft export should apply manual quote item quantities");
 assert.ok(uploadWorkbenchSource.includes("excelManualItemQuantities: manualQuoteItemQuantities"), "review snapshots should persist manual quote item quantities");
 assert.ok(uploadWorkbenchSource.includes("manualQuoteInputsFromQuantities(snapshot.excel_manual_item_quantities)"), "review snapshot import should restore manual quote item inputs");
+assert.ok(uploadWorkbenchSource.includes("bathroomCountFromRows(rows)"), "manual quote options should suggest quantities from billable bathroom count");
+assert.ok(uploadWorkbenchSource.includes("applyExclusiveManualQuoteChoice"), "manual quote options should wire exclusive choice helpers");
+assert.ok(uploadWorkbenchSource.includes("洁具二选一"), "manual quote options should expose toilet/squat exclusive choice controls");
 assert.ok(uploadWorkbenchSource.includes("application/vnd.ms-excel;charset=utf-8"), "Excel draft download should use an Excel-compatible content type");

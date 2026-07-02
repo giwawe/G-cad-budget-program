@@ -331,6 +331,55 @@ code {
   min-height: 34px;
 }
 
+.manualQuoteChoiceGroups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.manualQuoteChoiceGroup {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #d8e1eb;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 10px 12px;
+}
+
+.manualQuoteChoiceGroup strong {
+  color: #26323f;
+  font-size: 13px;
+}
+
+.manualQuoteChoiceGroup span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.manualQuoteChoiceGroup div {
+  display: flex;
+  gap: 8px;
+}
+
+.manualQuoteChoiceGroup button {
+  min-height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 12px;
+  padding: 0 10px;
+}
+
+.manualQuoteChoiceGroup button.active {
+  border-color: var(--accent);
+  background: #e9f7f3;
+  color: var(--accent);
+  font-weight: 700;
+}
+
 .quoteRulesActions {
   display: flex;
   justify-content: flex-end;
@@ -1313,6 +1362,10 @@ td .curtainWallHelp {
   .manualQuoteGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .manualQuoteChoiceGroups {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 520px) {
@@ -1366,6 +1419,11 @@ td .curtainWallHelp {
 
   .manualQuoteGrid {
     grid-template-columns: 1fr;
+  }
+
+  .manualQuoteChoiceGroup {
+    grid-template-columns: 1fr;
+    align-items: stretch;
   }
 }
 
