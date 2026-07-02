@@ -132,6 +132,25 @@ const TEMPLATE_PRICES: Record<string, QuoteTemplatePrice> = {
   暗窗帘箱: { material: 65, auxiliary: 0, labor: 45, note: "木工板立架，石膏板饰面。" },
 };
 
+const QUOTE_EXCEL_FOOTER_NOTES = [
+  "编制说明：",
+  "1、本报价不含其他管理处所增加任何费用，如果管理处所增此费用业主承担；",
+  "2、施工中如有项目需增补或有设计变更，工作量及价格由甲乙双方协商认定，签字为准并进入工程总造价。",
+  "3、甲方变更认可后即须交齐增补款项，不缴款者乙方有权停工，由此引起的工期延误不属乙方责任。",
+  "4、所有款项甲方应缴给乙方财务（开据公司盖章票据），如因款项不是支付乙方财务产生的损失不属乙方责任。",
+  "5、甲方自购材料运费自理。",
+  "6、物业押金及物业管理费由甲方承担。",
+  "7、本报价单不含装修期间所产生的水电费。",
+  "8、施工以合同与预算为准，口头承诺无效。",
+  "9、上述材料若因市场缺货,按同等档次产品品牌，若选择超过材料名单价值的材料应按市场价格补差额。",
+  "10、工程竣工验收合格后，乙方向甲方办理移交及发放保修卡。不按约缴款者视甲方自动放弃保修权益，乙方并将依法追缴。",
+  "11、如未办理竣工验收即入住（或更换装修钥匙）视为验收合格。",
+  "12、本预算未经签字确认前，请勿带走， 否则，必须交付本报价总额3％的预算费，合同签订后计入工程款；",
+  "13、本报介未含： 室内所有广告画面及字体、活动家具、音响及功放、空调、电器、室内所有监控线路铺设及设备安装；",
+  "14、施工监理员按本预算进行施工，预算没有的项目不在施工范围内；",
+  "15、本报价一式两份，双方各执一份， 同具法律效力。",
+];
+
 export function quoteExcelFileName(fileName: string): string {
   const trimmed = fileName.trim();
   if (!trimmed || trimmed === "样例数据") {
@@ -147,46 +166,54 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string, 
   const summaryRows = quoteTemplateSummaryRows(mapping, projectName);
   const riskNoteRows = quoteTemplateRiskNoteRows(riskRows);
 
-  return `\uFEFF<html>
+  return `\uFEFF<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
 <head>
-  <meta charset="utf-8" />
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="ProgId" content="Excel.Sheet" />
   <title>${escapeHtml(title)}</title>
   <style>
-    body { font-family: "Microsoft YaHei", Arial, sans-serif; }
-    table { border-collapse: collapse; margin-bottom: 16px; table-layout: fixed; }
-    th, td { border: 1px solid #999; padding: 6px 8px; vertical-align: middle; white-space: normal; }
-    th { background: #e8eef8; font-weight: 700; text-align: center; }
+    @page { margin: 0.63in 0.20in 0.24in 0.28in; mso-header-margin: 0.50in; mso-footer-margin: 0.50in; }
+    body { font-family: "宋体", "Microsoft YaHei", Arial, sans-serif; }
+    table { border-collapse: collapse; margin-bottom: 16px; table-layout: fixed; width: 553.35pt; }
+    col { mso-width-source: userset; }
+    th, td { border: 1px solid #999; padding: 4px 6px; vertical-align: middle; white-space: normal; font-size: 8pt; }
+    th { font-weight: 700; text-align: center; }
     td:nth-child(1), td:nth-child(3), td:nth-child(4), td:nth-child(5), td:nth-child(6), td:nth-child(7), td:nth-child(8) { text-align: center; }
     td:nth-child(9) { text-align: left; }
-    .quoteTitleRow th { font-size: 20px; background: #d9e6f7; }
-    .quoteMetaRow td { background: #f7f9fc; }
-    .quoteSectionRow td { background: #e8eef8; font-weight: 700; }
-    .quoteSubtotalRow td, .quoteTotalRow td { font-weight: 700; background: #f3f6fb; }
+    .quoteTitleRow th { font-size: 14pt; font-weight: 700; height: 23pt; }
+    .quoteMetaRow td { height: 14pt; }
+    .quoteHeaderRow th { height: 28.75pt; }
+    .quoteSubHeaderRow th { height: 20.75pt; }
+    .quoteSectionRow td { font-weight: 700; height: 14.75pt; }
+    .quoteItemRow td, .quoteSubtotalRow td, .quoteTotalRow td { height: 14.75pt; }
+    .quoteSubtotalRow td, .quoteTotalRow td { font-weight: 700; }
     .quoteRiskRow td { color: #8a4b00; }
+    .quoteFooterNoteRow td, .quoteSignatureRow td { border: .5pt solid #000000; font-size: 8pt; text-align: left; height: 15pt; }
   </style>
 </head>
 <body>
-  <table>
+  <table width="1106.70" border="0" cellpadding="0" cellspacing="0" style="width:553.35pt;border-collapse:collapse;table-layout:fixed;">
     <colgroup>
-      <col style="width: 52px" />
-      <col style="width: 260px" />
-      <col style="width: 64px" />
-      <col style="width: 82px" />
-      <col style="width: 92px" />
-      <col style="width: 92px" />
-      <col style="width: 92px" />
-      <col style="width: 110px" />
-      <col style="width: 360px" />
+      <col width="64.90" style="mso-width-source:userset;mso-width-alt:1582;" />
+      <col width="260.80" style="mso-width-source:userset;mso-width-alt:6358;" />
+      <col width="76.40" style="mso-width-source:userset;mso-width-alt:1862;" />
+      <col width="76.40" style="mso-width-source:userset;mso-width-alt:1862;" />
+      <col width="76.40" style="mso-width-source:userset;mso-width-alt:1862;" />
+      <col width="76.40" style="mso-width-source:userset;mso-width-alt:1862;" />
+      <col width="76.40" style="mso-width-source:userset;mso-width-alt:1862;" />
+      <col width="106" style="mso-width-source:userset;mso-width-alt:2584;" />
+      <col width="293" style="mso-width-source:userset;mso-width-alt:7143;" />
     </colgroup>
     <thead>
       <tr class="quoteTitleRow"><th colspan="9">${escapeHtml(summaryRows[0][0])}</th></tr>
-      <tr class="quoteMetaRow">${summaryRows[1].map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>
-      <tr><th>${escapeHtml(summaryRows[2][0])}</th><th>${escapeHtml(summaryRows[2][1])}</th><th>${escapeHtml(summaryRows[2][2])}</th><th>${escapeHtml(summaryRows[2][3])}</th><th colspan="2">${escapeHtml(summaryRows[2][4])}</th><th>${escapeHtml(summaryRows[2][6])}</th><th>${escapeHtml(summaryRows[2][7])}</th><th>${escapeHtml(summaryRows[2][8])}</th></tr>
-      <tr>${summaryRows[3].map((cell) => `<th>${escapeHtml(cell)}</th>`).join("")}</tr>
+      ${quoteTemplateMetaHtmlRow(mapping, projectName)}
+      <tr class="quoteHeaderRow"><th>${escapeHtml(summaryRows[2][0])}</th><th>${escapeHtml(summaryRows[2][1])}</th><th>${escapeHtml(summaryRows[2][2])}</th><th>${escapeHtml(summaryRows[2][3])}</th><th colspan="2">${escapeHtml(summaryRows[2][4])}</th><th>${escapeHtml(summaryRows[2][6])}</th><th>${escapeHtml(summaryRows[2][7])}</th><th>${escapeHtml(summaryRows[2][8])}</th></tr>
+      <tr class="quoteSubHeaderRow">${summaryRows[3].map((cell) => `<th>${escapeHtml(cell)}</th>`).join("")}</tr>
     </thead>
     <tbody>
       ${groupedQuoteRows.map((row) => quoteTemplateHtmlRow(row)).join("\n      ")}
       ${riskNoteRows.map((row) => quoteTemplateHtmlRow(row)).join("\n      ")}
+      ${quoteTemplateFooterHtmlRows()}
     </tbody>
   </table>
 </body>
@@ -194,9 +221,23 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string, 
 `;
 }
 
+function quoteTemplateMetaHtmlRow(mapping: QuoteMapping, projectName: string): string {
+  const now = new Date();
+  const dateLabel = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  return `<tr class="quoteMetaRow"><td colspan="2">地址名称：${escapeHtml(projectName.trim() || "报价映射")}</td><td colspan="4">客户：</td><td colspan="2">装修面积：${escapeHtml(formatQuantity(mapping.summary.building_area_m2))}</td><td>日期：${escapeHtml(dateLabel)}</td></tr>`;
+}
+
 function quoteTemplateHtmlRow(row: string[]): string {
   const className = quoteTemplateRowClass(row);
   return `<tr${className ? ` class="${className}"` : ""}>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`;
+}
+
+function quoteTemplateFooterHtmlRows(): string {
+  const noteRows = QUOTE_EXCEL_FOOTER_NOTES.map((note) => `<tr class="quoteFooterNoteRow"><td colspan="9">${escapeHtml(note)}</td></tr>`);
+  return [
+    ...noteRows,
+    `<tr class="quoteSignatureRow"><td colspan="2">客户签名：</td><td colspan="5">设计师：</td><td colspan="2">报价员：</td></tr>`,
+  ].join("\n      ");
 }
 
 function quoteTemplateRowClass(row: string[]): string {
