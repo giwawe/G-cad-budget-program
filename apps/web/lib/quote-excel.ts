@@ -7,6 +7,12 @@ export type ManualQuoteDraftItem = {
   item_name: string;
 };
 
+export type QuoteExcelManualItemQuantities = Partial<Record<string, number>>;
+
+export type QuoteExcelOptions = {
+  manualItems?: QuoteExcelManualItemQuantities;
+};
+
 type QuoteTemplateSection = {
   code: string;
   title: string;
@@ -134,10 +140,10 @@ export function quoteExcelFileName(fileName: string): string {
   return `${trimmed.replace(/\.[^.]+$/, "")}.quote-draft.xls`;
 }
 
-export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string): string {
+export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string, options: QuoteExcelOptions = {}): string {
   const title = `${projectName.trim() || "报价映射"}清单式报价表`;
   const riskRows = quoteExcelRiskRows(mapping);
-  const groupedQuoteRows = quoteTemplateRows(mapping);
+  const groupedQuoteRows = quoteTemplateRows(mapping, options);
   const summaryRows = quoteTemplateSummaryRows(mapping, projectName);
   const riskNoteRows = quoteTemplateRiskNoteRows(riskRows);
 
@@ -171,32 +177,41 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string):
 `;
 }
 
-function quoteTemplateRows(mapping: QuoteMapping): string[][] {
+function quoteTemplateRows(mapping: QuoteMapping, options: QuoteExcelOptions): string[][] {
   const remainingItems = new Set(mapping.items);
   const rows: string[][] = [];
   let sectionIndex = 1;
+  let directTotal = 0;
 
   const firstFixedSection = templateSectionWithCode(FIXED_TEMPLATE_SECTIONS[0], sectionIndex++);
-  rows.push(...quoteTemplateSectionRows(firstFixedSection, fixedSectionItems(mapping.items, remainingItems, firstFixedSection), remainingItems, true));
+  const firstFixedSectionRows = quoteTemplateSectionRows(firstFixedSection, fixedSectionItems(mapping.items, remainingItems, firstFixedSection), remainingItems, true, options);
+  rows.push(...firstFixedSectionRows.rows);
+  directTotal += firstFixedSectionRows.subtotal;
 
   for (const spaceName of dynamicSpaceNames(mapping.items)) {
     const roomSection = templateSectionWithCode({ title: `${spaceName}工程`, itemNames: ROOM_SECTION_ITEM_NAMES }, sectionIndex++);
-    rows.push(...quoteTemplateSectionRows(roomSection, roomSectionItems(mapping.items, remainingItems, spaceName), remainingItems, false));
+    const roomRows = quoteTemplateSectionRows(roomSection, roomSectionItems(mapping.items, remainingItems, spaceName), remainingItems, false, options);
+    rows.push(...roomRows.rows);
+    directTotal += roomRows.subtotal;
   }
 
   for (const sectionDefinition of FIXED_TEMPLATE_SECTIONS.slice(1)) {
     const section = templateSectionWithCode(sectionDefinition, sectionIndex++);
-    rows.push(...quoteTemplateSectionRows(section, fixedSectionItems(mapping.items, remainingItems, section), remainingItems, true));
+    const sectionRows = quoteTemplateSectionRows(section, fixedSectionItems(mapping.items, remainingItems, section), remainingItems, true, options);
+    rows.push(...sectionRows.rows);
+    directTotal += sectionRows.subtotal;
   }
 
   if (remainingItems.size > 0) {
     const otherSection = { code: "补", title: "未归类自动清单", itemNames: [] };
     rows.push(sectionHeaderRow(otherSection));
     [...remainingItems].forEach((item, index) => rows.push(quoteItemTemplateRow(item, index + 1)));
-    rows.push(sectionSubtotalRow([...remainingItems].reduce((sum, item) => sum + item.amount, 0)));
+    const remainingSubtotal = [...remainingItems].reduce((sum, item) => sum + item.amount, 0);
+    rows.push(sectionSubtotalRow(remainingSubtotal));
+    directTotal += remainingSubtotal;
   }
 
-  rows.push(...quoteTemplateTotalRows(mapping.summary.total_amount));
+  rows.push(...quoteTemplateTotalRows(directTotal));
   return rows;
 }
 
@@ -205,12 +220,23 @@ function quoteTemplateSectionRows(
   sectionItems: QuoteMapping["items"],
   remainingItems: Set<QuoteMapping["items"][number]>,
   includeZeroRows: boolean,
-): string[][] {
+  options: QuoteExcelOptions,
+): { rows: string[][]; subtotal: number } {
   const rows: string[][] = [sectionHeaderRow(section)];
   let rowIndex = 1;
   let subtotal = 0;
   for (const templateItemName of section.itemNames) {
     const matchingItems = sectionItems.filter((item) => itemMatchesTemplate(item.item_name, templateItemName));
+    const manualQuantity = manualQuantityForItem(templateItemName, options);
+    if (manualQuantity !== undefined) {
+      for (const matchedItem of matchingItems) {
+        remainingItems.delete(matchedItem);
+      }
+      const item = manualQuoteItem(templateItemName, manualQuantity);
+      subtotal += item.amount;
+      rows.push(quoteItemTemplateRow(item, rowIndex++));
+      continue;
+    }
     if (matchingItems.length === 0) {
       if (includeZeroRows && shouldRenderZeroPlaceholder(templateItemName)) {
         rows.push(zeroItemTemplateRow(templateItemName, rowIndex++));
@@ -232,7 +258,7 @@ function quoteTemplateSectionRows(
     rows.push(quoteItemTemplateRow(item, rowIndex++));
   }
   rows.push(sectionSubtotalRow(subtotal));
-  return rows;
+  return { rows, subtotal };
 }
 
 function quoteItemTemplateRow(item: QuoteMapping["items"][number], index: number): string[] {
@@ -284,6 +310,32 @@ function zeroItemTemplateRow(itemName: string, index: number): string[] {
     return [String(index), itemName, templateUnitForItem(itemName), "1", formatMoney(price.material), formatMoney(price.auxiliary), formatMoney(price.labor), "0.00", price.note];
   }
   return [String(index), itemName, templateUnitForItem(itemName), "0", formatMoney(price.material), formatMoney(price.auxiliary), formatMoney(price.labor), "0.00", price.note];
+}
+
+function manualQuoteItem(itemName: string, quantity: number): QuoteMapping["items"][number] {
+  const price = TEMPLATE_PRICES[itemName] ?? { material: 0, auxiliary: 0, labor: 0, note: "" };
+  const unitPrice = round2(price.material + price.auxiliary + price.labor);
+  return {
+    floor: "全屋",
+    space_name: "全屋",
+    space_type: "全屋",
+    item_name: itemName,
+    quantity,
+    unit: templateUnitForItem(itemName),
+    unit_price: unitPrice,
+    material_price: price.material,
+    auxiliary_price: price.auxiliary,
+    labor_price: price.labor,
+    amount: round2(quantity * unitPrice),
+  };
+}
+
+function manualQuantityForItem(itemName: string, options: QuoteExcelOptions): number | undefined {
+  const value = options.manualItems?.[itemName];
+  if (value === undefined) {
+    return undefined;
+  }
+  return round2(Math.max(Number.isFinite(value) ? value : 0, 0));
 }
 
 function shouldRenderZeroPlaceholder(itemName: string): boolean {

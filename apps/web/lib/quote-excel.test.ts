@@ -207,6 +207,22 @@ assert.ok(slidingDoorHtml.includes("<td>厨房推拉门</td><td>m2</td><td>3.85<
 assert.ok(slidingDoorHtml.includes("<td>厨房推拉门双包套</td><td>M</td><td>6.15</td><td>300.00</td><td>0.00</td><td>0.00</td><td>1845.00</td>"));
 assert.ok(!slidingDoorHtml.includes("<td>厨房推拉门</td><td>m2</td><td>10</td>"));
 
+const manualDraftHtml = buildQuoteExcelHtml(mapping, "人工补项项目", {
+  manualItems: {
+    入户门: 1,
+    蹲坑: 0,
+    马桶: 2,
+    淋浴隔断: 2,
+    玻璃淋浴房: 0,
+    窗台石: 1,
+  },
+});
+assert.ok(manualDraftHtml.includes("<td>入户门</td><td>樘</td><td>1</td><td>5000.00</td><td>0.00</td><td>0.00</td><td>5000.00</td>"));
+assert.ok(manualDraftHtml.includes("<td>马桶</td><td>套</td><td>2</td><td>1500.00</td><td>0.00</td><td>0.00</td><td>3000.00</td>"));
+assert.ok(manualDraftHtml.includes("<td>蹲坑</td><td>套</td><td>0</td><td>500.00</td><td>0.00</td><td>0.00</td><td>0.00</td>"));
+assert.ok(manualDraftHtml.includes("<td>淋浴隔断</td><td>套</td><td>2</td><td>400.00</td><td>0.00</td><td>0.00</td><td>800.00</td>"));
+assert.ok(manualDraftHtml.includes("<td>玻璃淋浴房</td><td>套</td><td>0</td><td>3500.00</td><td>0.00</td><td>0.00</td><td>0.00</td>"));
+
 const editedPricePartHtml = buildQuoteExcelHtml(
   {
     ...mapping,

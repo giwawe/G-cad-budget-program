@@ -19,7 +19,7 @@ import {
   type QuantityHealthFilter,
 } from "@/lib/quantity-health";
 import { confirmQuantityRowsBySpaceNames, updateQuantityRowCurtainWallWidth, updateQuantityRowStatus, updateQuantityRowsStatusBySpaceNames } from "@/lib/quantity-row-status";
-import { buildQuoteExcelHtml, MANUAL_QUOTE_DRAFT_ITEMS, quoteExcelFileName } from "@/lib/quote-excel";
+import { buildQuoteExcelHtml, quoteExcelFileName, type QuoteExcelManualItemQuantities } from "@/lib/quote-excel";
 import {
   apartmentPendingQuoteMetrics,
   buildQuoteMapping,
@@ -44,6 +44,18 @@ const DEFAULT_DOOR_HEIGHT_M = 2.1;
 const FULL_WALL_TILE_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 const DEFAULT_INTEGRATED_CEILING_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 const QUOTE_RULES_STORAGE_KEY = "cad-budget-program.quote-rules.v1";
+const MANUAL_QUOTE_OPTION_ITEMS = [
+  { itemName: "砖墙门窗洞过梁", unit: "支", hint: "现场确认数量" },
+  { itemName: "入户门", unit: "樘", hint: "需要时填 1" },
+  { itemName: "阳台推拉门", unit: "M2", hint: "按门洞面积" },
+  { itemName: "阳台推拉门双包套", unit: "M", hint: "按包套长度" },
+  { itemName: "铝合金封门窗", unit: "M2", hint: "按窗户实际面积" },
+  { itemName: "马桶", unit: "套", hint: "与蹲坑二选一" },
+  { itemName: "蹲坑", unit: "套", hint: "与马桶二选一" },
+  { itemName: "淋浴隔断", unit: "套", hint: "与玻璃淋浴房二选一" },
+  { itemName: "玻璃淋浴房", unit: "套", hint: "与淋浴隔断二选一" },
+  { itemName: "窗台石", unit: "套", hint: "按套确认" },
+];
 
 type ApiQuantityRow = {
   floor: string;
@@ -178,6 +190,15 @@ function round2(value: number) {
   return Math.round(value * 100) / 100;
 }
 
+function manualQuoteQuantitiesFromInputs(inputs: Record<string, string>): QuoteExcelManualItemQuantities {
+  return Object.fromEntries(
+    Object.entries(inputs)
+      .map(([itemName, value]) => [itemName, value.trim() === "" ? undefined : Number(value)] as const)
+      .filter((entry): entry is [string, number] => entry[1] !== undefined && Number.isFinite(entry[1]) && entry[1] >= 0)
+      .map(([itemName, value]) => [itemName, round2(value)]),
+  );
+}
+
 function calculateWallTileArea(row: QuantityRow, windowAreaM2 = row.windowAreaM2, doorWidthTotalM = row.doorWidthTotalM) {
   if (row.spaceType === "厨房" || row.spaceType === "卫生间") {
     return round2(Math.max(row.wallMeasureLengthM * 2.5 - windowAreaM2 - doorWidthTotalM * DEFAULT_DOOR_HEIGHT_M, 0));
@@ -254,10 +275,13 @@ export function UploadWorkbench({
   const [generatedQuoteRules, setGeneratedQuoteRules] = useState<{ fileName: string; content: string } | null>(null);
   const [healthFilter, setHealthFilter] = useState<QuantityHealthFilter>("all");
   const [acceptedHealthCheckKeys, setAcceptedHealthCheckKeys] = useState<string[]>([]);
+  const [manualQuoteItemInputs, setManualQuoteItemInputs] = useState<Record<string, string>>({});
 
   const excludedCount = useMemo(() => rows.filter((row) => row.status === "excluded").length, [rows]);
   const pendingQuoteMetrics = useMemo(() => apartmentPendingQuoteMetrics(), []);
   const curtainReadiness = useMemo(() => curtainQuoteReadiness(rows), [rows]);
+  const manualQuoteItemQuantities = useMemo(() => manualQuoteQuantitiesFromInputs(manualQuoteItemInputs), [manualQuoteItemInputs]);
+  const manualQuoteEditedCount = Object.keys(manualQuoteItemQuantities).length;
   const projectSummaryItems = generatedQuoteMapping ? projectSummaryQuoteItems(generatedQuoteMapping.mapping) : [];
   const integratedCeilingPriceReminderItemsForMapping = generatedQuoteMapping ? integratedCeilingPriceReminderItems(generatedQuoteMapping.mapping) : [];
   const quoteExportRisks = generatedQuoteMapping ? exportQuoteMappingConfirmationMessages(generatedQuoteMapping.mapping) : [];
@@ -541,7 +565,7 @@ export function UploadWorkbench({
 
   function handleDownloadQuoteExcel(mapping: QuoteMapping) {
     const downloadName = quoteExcelFileName(fileName);
-    const content = buildQuoteExcelHtml(mapping, fileName);
+    const content = buildQuoteExcelHtml(mapping, fileName, { manualItems: manualQuoteItemQuantities });
     const blob = new Blob([content], { type: "application/vnd.ms-excel;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -639,6 +663,16 @@ export function UploadWorkbench({
     setGeneratedQuoteRules(null);
     setError("");
     setMessage("已恢复默认报价规则，并已自动保存到本机");
+  }
+
+  function handleChangeManualQuoteItem(itemName: string, value: string) {
+    setManualQuoteItemInputs((current) => ({ ...current, [itemName]: value }));
+    setMessage(value.trim() ? `${itemName} Excel 补项数量已更新` : `${itemName} Excel 补项已恢复默认`);
+  }
+
+  function handleResetManualQuoteItems() {
+    setManualQuoteItemInputs({});
+    setMessage("Excel 可选补项已恢复默认");
   }
 
   function handleChangeStatus(spaceName: string, status: ReviewStatus) {
@@ -992,6 +1026,37 @@ export function UploadWorkbench({
         </div>
       </section>
 
+      <section className="manualQuotePanel">
+        <div className="templateHeader">
+          <div>
+            <strong>Excel 可选补项</strong>
+            <span>数量留空时沿用自动识别或默认占位；填写后只影响 Excel 草稿。</span>
+          </div>
+          <div className="quoteRulesActions">
+            <button type="button" disabled={manualQuoteEditedCount === 0} onClick={handleResetManualQuoteItems}>恢复默认</button>
+          </div>
+        </div>
+        <div className="manualQuoteGrid">
+          {MANUAL_QUOTE_OPTION_ITEMS.map((item) => (
+            <label className="manualQuoteItem" key={item.itemName}>
+              <span>
+                <strong>{item.itemName}</strong>
+                <small>{item.hint} · {item.unit}</small>
+              </span>
+              <input
+                aria-label={`${item.itemName} Excel 补项数量`}
+                min="0"
+                step="0.01"
+                type="number"
+                placeholder="默认"
+                value={manualQuoteItemInputs[item.itemName] ?? ""}
+                onChange={(event) => handleChangeManualQuoteItem(item.itemName, event.target.value)}
+              />
+            </label>
+          ))}
+        </div>
+      </section>
+
       <section className="healthPanel">
         <div className="templateHeader">
           <div>
@@ -1189,8 +1254,10 @@ export function UploadWorkbench({
               <span>{pendingQuoteMetrics.length > 0 ? `${pendingQuoteMetrics.length} 项暂不参与金额汇总，后续补齐 metric 后再接入。` : "当前默认规则已无待补取数口径。"}</span>
             </div>
             <div className="curtainReadiness">
-              <strong>人工补项 {MANUAL_QUOTE_DRAFT_ITEMS.length} 项</strong>
-              <span>Excel 草稿会单独带出这些漏项，数量、单位、单价留空给报价员补填，不参与当前自动合计。</span>
+              <strong>Excel 可选补项 {MANUAL_QUOTE_OPTION_ITEMS.length} 项</strong>
+              <span>
+                当前已填写 {manualQuoteEditedCount} 项；这些数量只写入 Excel 草稿，不改变报价映射 JSON 的自动合计。
+              </span>
             </div>
             <div className="curtainReadiness">
               <strong>窗帘/窗帘箱可报价候选 {curtainReadiness.ready_count} 个空间</strong>

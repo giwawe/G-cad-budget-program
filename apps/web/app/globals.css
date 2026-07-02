@@ -278,6 +278,59 @@ code {
   padding: 14px 16px;
 }
 
+.manualQuotePanel {
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  margin-bottom: 18px;
+  padding: 14px 16px;
+}
+
+.manualQuoteGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.manualQuoteItem {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 92px;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #e0e6ee;
+  border-radius: 8px;
+  background: #f9fbfd;
+  padding: 10px;
+}
+
+.manualQuoteItem span,
+.manualQuoteItem strong,
+.manualQuoteItem small {
+  min-width: 0;
+}
+
+.manualQuoteItem strong {
+  display: block;
+  color: #26323f;
+  font-size: 13px;
+}
+
+.manualQuoteItem small {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.manualQuoteItem input {
+  min-height: 34px;
+}
+
 .quoteRulesActions {
   display: flex;
   justify-content: flex-end;
@@ -1226,6 +1279,7 @@ td .curtainWallHelp {
   }
 
   .quoteRulesPanel,
+  .manualQuotePanel,
   .healthPanel,
   .quotePanel,
   .templatePanel,
@@ -1254,6 +1308,10 @@ td .curtainWallHelp {
   .quoteRulesTable input {
     width: 72px;
     padding: 6px;
+  }
+
+  .manualQuoteGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1304,6 +1362,10 @@ td .curtainWallHelp {
     width: 62px;
     min-height: 32px;
     font-size: 12px;
+  }
+
+  .manualQuoteGrid {
+    grid-template-columns: 1fr;
   }
 }
 
