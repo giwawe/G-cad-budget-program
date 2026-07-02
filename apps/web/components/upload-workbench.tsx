@@ -21,6 +21,7 @@ import {
 import { confirmQuantityRowsBySpaceNames, updateQuantityRowCurtainWallWidth, updateQuantityRowStatus, updateQuantityRowsStatusBySpaceNames } from "@/lib/quantity-row-status";
 import { buildQuoteExcelHtml, quoteExcelFileName, type QuoteExcelManualItemQuantities } from "@/lib/quote-excel";
 import {
+  aluminumWindowSuggestedAreaFromRows,
   bathroomChoiceKey,
   bathroomManualChoicesFromQuantities,
   bathroomRowsFromRows,
@@ -53,7 +54,8 @@ const DEFAULT_DOOR_HEIGHT_M = 2.1;
 const FULL_WALL_TILE_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 const DEFAULT_INTEGRATED_CEILING_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 const QUOTE_RULES_STORAGE_KEY = "cad-budget-program.quote-rules.v1";
-const MANUAL_QUOTE_OPTION_ITEMS = [{ itemName: "铝合金封门窗", unit: "M2", hint: "按窗户实际面积" }];
+const ALUMINUM_WINDOW_ITEM_NAME = "铝合金封门窗";
+const MANUAL_QUOTE_OPTION_ITEMS = [{ itemName: ALUMINUM_WINDOW_ITEM_NAME, unit: "M2", hint: "按窗户实际面积，默认不计价" }];
 
 type ApiQuantityRow = {
   floor: string;
@@ -273,6 +275,7 @@ export function UploadWorkbench({
   const pendingQuoteMetrics = useMemo(() => apartmentPendingQuoteMetrics(), []);
   const curtainReadiness = useMemo(() => curtainQuoteReadiness(rows), [rows]);
   const bathroomRows = useMemo(() => bathroomRowsFromRows(rows), [rows]);
+  const aluminumWindowSuggestedArea = useMemo(() => aluminumWindowSuggestedAreaFromRows(rows), [rows]);
   const manualQuoteItemQuantities = useMemo(() => manualQuoteQuantitiesFromInputs(manualQuoteItemInputs), [manualQuoteItemInputs]);
   const manualQuoteEditedCount = Object.keys(manualQuoteItemQuantities).length;
   const projectSummaryItems = generatedQuoteMapping ? projectSummaryQuoteItems(generatedQuoteMapping.mapping) : [];
@@ -665,6 +668,11 @@ export function UploadWorkbench({
     setMessage(value.trim() ? `${itemName} Excel 补项数量已更新` : `${itemName} Excel 补项已恢复默认`);
   }
 
+  function handleUseManualQuoteSuggestion(itemName: string, quantity: number) {
+    handleChangeManualQuoteItem(itemName, String(quantity));
+    setMessage(`${itemName} 已填入建议数量 ${quantity}`);
+  }
+
   function handleResetManualQuoteItems() {
     setManualQuoteItemInputs({});
     setBathroomManualChoices({});
@@ -1048,6 +1056,7 @@ export function UploadWorkbench({
               <span>
                 <strong>{item.itemName}</strong>
                 <small>{item.hint} · {item.unit}</small>
+                {item.itemName === ALUMINUM_WINDOW_ITEM_NAME && <small>建议 {aluminumWindowSuggestedArea.toFixed(2)} {item.unit}</small>}
               </span>
               <input
                 aria-label={`${item.itemName} Excel 补项数量`}
@@ -1058,6 +1067,11 @@ export function UploadWorkbench({
                 value={manualQuoteItemInputs[item.itemName] ?? ""}
                 onChange={(event) => handleChangeManualQuoteItem(item.itemName, event.target.value)}
               />
+              {item.itemName === ALUMINUM_WINDOW_ITEM_NAME && (
+                <button type="button" disabled={aluminumWindowSuggestedArea <= 0} onClick={() => handleUseManualQuoteSuggestion(item.itemName, aluminumWindowSuggestedArea)}>
+                  使用建议
+                </button>
+              )}
             </label>
           ))}
         </div>

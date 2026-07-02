@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import {
+  aluminumWindowSuggestedAreaFromRows,
   bathroomChoiceKey,
   bathroomManualChoicesFromQuantities,
   bathroomRowsFromRows,
@@ -57,6 +58,15 @@ const bathroomRows = bathroomRowsFromRows([
   { ...baseRow, spaceName: "设备间", spaceType: "卫生间", status: "excluded" },
 ]);
 assert.deepEqual(bathroomRows.map((row) => row.spaceName), ["卫生间", "主卫"]);
+
+assert.equal(
+  aluminumWindowSuggestedAreaFromRows([
+    { ...baseRow, spaceName: "客厅", windowAreaM2: 3.335 },
+    { ...baseRow, spaceName: "卧室", windowAreaM2: 2.2, status: "confirmed" },
+    { ...baseRow, spaceName: "管井", windowAreaM2: 99, status: "excluded" },
+  ]),
+  5.54,
+);
 
 assert.deepEqual(manualQuoteQuantitiesFromInputs({ 入户门: "1", 马桶: "2.345", 蹲坑: "-1", 窗台石: "", 铝合金封门窗: "bad" }), {
   入户门: 1,

@@ -16,6 +16,10 @@ export function bathroomRowsFromRows(rows: QuantityRow[]): QuantityRow[] {
   return rows.filter((row) => row.spaceType === "卫生间" && row.status !== "excluded");
 }
 
+export function aluminumWindowSuggestedAreaFromRows(rows: QuantityRow[]): number {
+  return round2(rows.filter((row) => row.status !== "excluded").reduce((sum, row) => sum + Math.max(row.windowAreaM2, 0), 0));
+}
+
 export function manualQuoteQuantitiesFromInputs(inputs: Record<string, string>): QuoteExcelManualItemQuantities {
   return Object.fromEntries(
     Object.entries(inputs)
