@@ -123,6 +123,30 @@ const quoteRuleGroups = [
   },
 ];
 
+const QUOTE_INTEGRATION_STATUS_GROUPS = [
+  {
+    title: "已自动取数",
+    items: [
+      "墙顶地面、墙砖/地砖、防水",
+      "强弱电、水路、搬运、清运、成品保护",
+      "砌墙/拆墙/开槽/过梁孔/管槽修补",
+      "门类、推拉门、橱柜、全屋定制、洁具、灯饰、窗帘",
+    ],
+  },
+  {
+    title: "自动取数，需复核",
+    items: ["建筑面积、窗洞/推拉门扣减、窗帘墙宽、厨卫集成吊顶、入户门和卫生间门归属"],
+  },
+  {
+    title: "固定占位/设计师手填",
+    items: ["铝合金封门窗、窗台石、蹲坑/马桶二选一、淋浴隔断/玻璃淋浴房二选一、砖墙门窗洞过梁"],
+  },
+  {
+    title: "暂不接入",
+    items: ["当前默认规则已无待补取数口径；后续新增模板项先进入手填或待补清单。"],
+  },
+];
+
 type ApiQuantityRow = {
   floor: string;
   space_name: string;
@@ -1477,6 +1501,21 @@ export function UploadWorkbench({
                 </div>
               </div>
             )}
+            <div className="quoteIntegrationStatus">
+              <strong>报价接入状态清单</strong>
+              <div>
+                {QUOTE_INTEGRATION_STATUS_GROUPS.map((group) => (
+                  <section key={group.title}>
+                    <span>{group.title}</span>
+                    <ul>
+                      {group.items.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  </section>
+                ))}
+              </div>
+            </div>
             <div>
               <strong>待补取数口径</strong>
               <span>{pendingQuoteMetrics.length > 0 ? `${pendingQuoteMetrics.length} 项暂不参与金额汇总，后续补齐 metric 后再接入。` : "当前默认规则已无待补取数口径。"}</span>

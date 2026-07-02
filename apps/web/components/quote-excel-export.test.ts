@@ -27,6 +27,12 @@ assert.ok(uploadWorkbenchSource.includes("handleExpandAllQuoteRuleGroups"), "quo
 assert.ok(uploadWorkbenchSource.includes("全部收起"), "quote rule panel should expose collapse all action");
 assert.ok(uploadWorkbenchSource.includes("全部展开"), "quote rule panel should expose expand all action");
 assert.ok(uploadWorkbenchSource.includes("Excel 固定占位"), "manual Excel options should explain fixed placeholders");
+assert.ok(uploadWorkbenchSource.includes("QUOTE_INTEGRATION_STATUS_GROUPS"), "quote panel should define quote integration status groups");
+assert.ok(uploadWorkbenchSource.includes("报价接入状态清单"), "quote panel should show the quote integration status summary");
+assert.ok(uploadWorkbenchSource.includes("已自动取数"), "quote integration status should include auto-quoted items");
+assert.ok(uploadWorkbenchSource.includes("自动取数，需复核"), "quote integration status should include review-needed items");
+assert.ok(uploadWorkbenchSource.includes("固定占位/设计师手填"), "quote integration status should include manual placeholder items");
+assert.ok(uploadWorkbenchSource.includes("暂不接入"), "quote integration status should include currently excluded items");
 assert.ok(uploadWorkbenchSource.includes("manualItems: manualQuoteItemQuantities"), "Excel draft export should apply manual quote item quantities");
 assert.ok(uploadWorkbenchSource.includes("excelManualItemQuantities: manualQuoteItemQuantities"), "review snapshots should persist manual quote item quantities");
 assert.ok(uploadWorkbenchSource.includes("manualQuoteInputsFromQuantities(snapshot.excel_manual_item_quantities)"), "review snapshot import should restore manual quote item inputs");

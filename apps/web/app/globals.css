@@ -743,6 +743,51 @@ code {
   padding: 5px 8px;
 }
 
+.quoteGaps .quoteIntegrationStatus {
+  display: grid;
+  align-items: stretch;
+  border-bottom: 1px solid #f0dcae;
+  padding-bottom: 8px;
+}
+
+.quoteGaps .quoteIntegrationStatus > div {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.quoteGaps .quoteIntegrationStatus section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid #f0dcae;
+  border-radius: 6px;
+  background: #fffdf7;
+  padding: 8px;
+}
+
+.quoteGaps .quoteIntegrationStatus section span {
+  color: #5f4410;
+  font-weight: 700;
+}
+
+.quoteGaps .quoteIntegrationStatus ul {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  list-style: disc;
+  margin: 0;
+  padding-left: 16px;
+}
+
+.quoteGaps .quoteIntegrationStatus li {
+  display: list-item;
+  grid-template-columns: none;
+  border-top: 0;
+  color: #80611d;
+  padding: 0;
+}
+
 .quoteGaps .curtainReadinessDetails {
   display: grid;
   align-items: stretch;
@@ -1388,6 +1433,10 @@ td .curtainWallHelp {
   .quoteGaps > div {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .quoteGaps .quoteIntegrationStatus > div {
+    grid-template-columns: 1fr;
   }
 
   .topbarActions {
