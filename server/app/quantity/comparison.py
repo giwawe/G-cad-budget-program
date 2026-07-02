@@ -19,6 +19,7 @@ DEFAULT_NUMERIC_FIELDS = [
     "demolition_wall_length_m",
     "demolition_wall_area_m2",
     "background_wall_area_m2",
+    "entry_door_count",
     "interior_door_count",
     "bathroom_door_count",
     "sliding_door_area_m2",

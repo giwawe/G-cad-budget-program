@@ -954,6 +954,20 @@ assert.deepEqual(bathroomDoorMapping.items.filter((item) => item.item_name === "
   },
 ]);
 
+const entryDoorMapping = buildQuoteMapping([{ ...rows[0], spaceName: "门厅", spaceType: "门厅", entryDoorCount: 1 }]);
+assert.deepEqual(entryDoorMapping.items.filter((item) => item.item_name === "入户门").map(stripQuoteItemPriceParts), [
+  {
+    floor: "一层",
+    space_name: "门厅",
+    space_type: "门厅",
+    item_name: "入户门",
+    quantity: 1,
+    unit: "樘",
+    unit_price: 5000,
+    amount: 5000,
+  },
+]);
+
 const kitchenSlidingDoorMapping = buildQuoteMapping([
   { ...rows[0], spaceName: "厨房", spaceType: "厨房", slidingDoorAreaM2: 3.68, slidingDoorCasingLengthM: 5.95 },
 ]);

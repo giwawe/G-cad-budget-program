@@ -82,6 +82,7 @@ assert.deepEqual(quantityRowsToCalibrationTemplate(rows), [
     demolition_wall_length_m: 0,
     demolition_wall_area_m2: 0,
     background_wall_area_m2: 8.32,
+    entry_door_count: 0,
     interior_door_count: 0,
     bathroom_door_count: 1,
     sliding_door_area_m2: 3.36,

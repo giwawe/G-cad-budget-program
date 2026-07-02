@@ -83,6 +83,7 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
     demolition_wall_length_m = round(sum(space.demolition_wall_lengths_m), 2)
     demolition_wall_area_m2 = calculate_demolition_wall_area_m2(demolition_wall_length_m, height_m)
     background_wall_area_m2 = calculate_segment_area_m2(space.background_wall_lengths_m, space.background_wall_heights_m, height_m)
+    entry_door_count = calculate_entry_door_count(space.doors)
     interior_door_count = calculate_interior_door_count(space_type, space.doors)
     bathroom_door_count = calculate_bathroom_door_count(space_type, space.doors)
     sliding_door_area_m2 = calculate_sliding_door_area_m2(space_type, space.doors, defaults.default_door_height_m)
@@ -148,6 +149,7 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
         demolition_wall_length_m=demolition_wall_length_m,
         demolition_wall_area_m2=demolition_wall_area_m2,
         background_wall_area_m2=background_wall_area_m2,
+        entry_door_count=entry_door_count,
         interior_door_count=interior_door_count,
         bathroom_door_count=bathroom_door_count,
         sliding_door_area_m2=sliding_door_area_m2,
@@ -256,6 +258,10 @@ def calculate_bathroom_door_count(space_type: str, doors: list) -> int:
     if space_type != "卫生间":
         return 0
     return sum(1 for door in doors if door.opening_type == "normal_door" and door.quote_category == "bathroom_door")
+
+
+def calculate_entry_door_count(doors: list) -> int:
+    return sum(1 for door in doors if door.opening_type == "normal_door" and door.quote_category == "entry_door")
 
 
 def calculate_sliding_door_area_m2(space_type: str, doors: list, default_door_height_m: float) -> float:

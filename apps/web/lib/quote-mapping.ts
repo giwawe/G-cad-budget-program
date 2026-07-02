@@ -14,6 +14,7 @@ type QuantityRowMetric =
   | "newWallAreaM2"
   | "demolitionWallAreaM2"
   | "backgroundWallAreaM2"
+  | "entryDoorCount"
   | "interiorDoorCount"
   | "bathroomDoorCount"
   | "slidingDoorAreaM2"
@@ -46,6 +47,7 @@ export type QuoteMetric =
   | "new_wall_area_m2"
   | "demolition_wall_area_m2"
   | "background_wall_area_m2"
+  | "entry_door_count"
   | "interior_door_count"
   | "bathroom_door_count"
   | "sliding_door_area_m2"
@@ -216,7 +218,7 @@ const DEFAULT_RULES: QuoteRule[] = [
   quoteRule("厨房、卫生间排污管包隔音棉", "kitchen_bathroom_pipe_insulation_length_m", "M", 0, 20, 15),
   quoteRule("补线、管槽及零星修补", "building_area_m2", "M2", 0, 2.5, 3),
   quoteRule("背景墙", "background_wall_area_m2", "M2", 280, 0, 0),
-  quoteRule("入户门", "manual_count", "樘", 5000, 0, 0),
+  quoteRule("入户门", "entry_door_count", "樘", 5000, 0, 0),
   quoteRule("室内门", "interior_door_count", "樘", 1200, 0, 0),
   quoteRule("卫生间门", "bathroom_door_count", "樘", 1200, 0, 0, BATHROOM_FIXTURE_SPACE_TYPES),
   quoteRule("厨房推拉门", "sliding_door_area_m2", "m2", 550, 0, 0, KITCHEN_CABINET_SPACE_TYPES),
@@ -251,6 +253,7 @@ const METRIC_TO_ROW_FIELD: Record<DirectRowQuoteMetric, QuantityRowMetric> = {
   waterproof_area_m2: "waterproofAreaM2",
   windowsill_length_m: "windowsillLengthM",
   curtain_wall_width_m: "curtainWallWidthM",
+  entry_door_count: "entryDoorCount",
   interior_door_count: "interiorDoorCount",
   bathroom_door_count: "bathroomDoorCount",
   sliding_door_area_m2: "slidingDoorAreaM2",
@@ -667,6 +670,7 @@ function isQuoteMetric(metric: unknown): metric is QuoteMetric {
     metric === "new_wall_area_m2" ||
     metric === "demolition_wall_area_m2" ||
     metric === "background_wall_area_m2" ||
+    metric === "entry_door_count" ||
     metric === "interior_door_count" ||
     metric === "bathroom_door_count" ||
     metric === "sliding_door_area_m2" ||

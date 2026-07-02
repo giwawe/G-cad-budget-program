@@ -496,6 +496,23 @@ def test_interior_door_count_only_counts_normal_doors():
     assert bathroom_row.bathroom_door_count == 1
 
 
+def test_entry_door_count_uses_existing_entry_door_classification():
+    foyer = SpaceInput(
+        name="一层-门厅",
+        boundary_points_m=[(0, 0), (3, 0), (3, 2), (0, 2)],
+        wall_lengths_m=[3, 3, 2, 2],
+        doors=[
+            OpeningInput(width_m=1.0, opening_type="normal_door", quote_category="entry_door"),
+            OpeningInput(width_m=0.9, opening_type="normal_door", quote_category="interior_door"),
+        ],
+    )
+
+    row = calculate_quantity_row(foyer, ProjectDefaults())
+
+    assert row.entry_door_count == 1
+    assert row.interior_door_count == 0
+
+
 def test_kitchen_sliding_door_area_and_casing_length_use_2_2m_default_height():
     kitchen = SpaceInput(
         name="厨房",

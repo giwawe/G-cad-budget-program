@@ -53,10 +53,7 @@ const DEFAULT_DOOR_HEIGHT_M = 2.1;
 const FULL_WALL_TILE_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 const DEFAULT_INTEGRATED_CEILING_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 const QUOTE_RULES_STORAGE_KEY = "cad-budget-program.quote-rules.v1";
-const MANUAL_QUOTE_OPTION_ITEMS = [
-  { itemName: "入户门", unit: "樘", hint: "需要时填 1" },
-  { itemName: "铝合金封门窗", unit: "M2", hint: "按窗户实际面积" },
-];
+const MANUAL_QUOTE_OPTION_ITEMS = [{ itemName: "铝合金封门窗", unit: "M2", hint: "按窗户实际面积" }];
 
 type ApiQuantityRow = {
   floor: string;
@@ -86,6 +83,7 @@ type ApiQuantityRow = {
   demolition_wall_length_m: number;
   demolition_wall_area_m2: number;
   background_wall_area_m2?: number;
+  entry_door_count?: number;
   interior_door_count: number;
   bathroom_door_count: number;
   sliding_door_area_m2: number;
@@ -156,6 +154,7 @@ function toQuantityRow(row: ApiQuantityRow): QuantityRow {
     demolitionWallLengthM: row.demolition_wall_length_m ?? 0,
     demolitionWallAreaM2: row.demolition_wall_area_m2 ?? 0,
     backgroundWallAreaM2: row.background_wall_area_m2 ?? 0,
+    entryDoorCount: row.entry_door_count ?? 0,
     interiorDoorCount: row.interior_door_count ?? 0,
     bathroomDoorCount: row.bathroom_door_count ?? 0,
     slidingDoorAreaM2: row.sliding_door_area_m2 ?? 0,

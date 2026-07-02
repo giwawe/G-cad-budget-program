@@ -298,7 +298,7 @@
   },
   {
     "item_name": "入户门",
-    "metric": "manual_count",
+    "metric": "entry_door_count",
     "unit": "樘",
     "unit_price": 5000,
     "material_price": 5000,

@@ -83,6 +83,7 @@ class QuantityRow:
     demolition_wall_length_m: float
     demolition_wall_area_m2: float
     background_wall_area_m2: float
+    entry_door_count: int
     interior_door_count: int
     bathroom_door_count: int
     sliding_door_area_m2: float

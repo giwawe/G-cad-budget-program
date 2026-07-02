@@ -30,6 +30,7 @@ export type QuantityRow = {
   demolitionWallLengthM: number;
   demolitionWallAreaM2: number;
   backgroundWallAreaM2?: number;
+  entryDoorCount?: number;
   interiorDoorCount: number;
   bathroomDoorCount: number;
   slidingDoorAreaM2: number;
