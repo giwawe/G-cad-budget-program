@@ -54,6 +54,7 @@ const DEFAULT_DOOR_HEIGHT_M = 2.1;
 const FULL_WALL_TILE_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 const DEFAULT_INTEGRATED_CEILING_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 const QUOTE_RULES_STORAGE_KEY = "cad-budget-program.quote-rules.v1";
+const QUOTE_RULE_GROUPS_STORAGE_KEY = "cad-budget-program.quote-rule-groups.v1";
 const ALUMINUM_WINDOW_ITEM_NAME = "铝合金封门窗";
 const MANUAL_QUOTE_OPTION_ITEMS = [{ itemName: ALUMINUM_WINDOW_ITEM_NAME, unit: "M2", hint: "按窗户实际面积，默认不计价" }];
 const quoteRuleGroups = [
@@ -420,6 +421,27 @@ export function UploadWorkbench({
     window.localStorage.setItem(QUOTE_RULES_STORAGE_KEY, JSON.stringify({ fileName: quoteRulesFileName, rules: quoteRules }));
   }, [quoteRulesStorageReady, quoteRules, quoteRulesFileName]);
 
+  useEffect(() => {
+    try {
+      const savedGroups = window.localStorage.getItem(QUOTE_RULE_GROUPS_STORAGE_KEY);
+      if (!savedGroups) {
+        return;
+      }
+      const parsed = JSON.parse(savedGroups);
+      if (!Array.isArray(parsed)) {
+        throw new Error("saved quote rule groups are invalid");
+      }
+      const validTitles = new Set(quoteRuleGroups.map((group) => group.title));
+      setCollapsedQuoteRuleGroups(parsed.filter((item): item is string => typeof item === "string" && validTitles.has(item)));
+    } catch {
+      window.localStorage.removeItem(QUOTE_RULE_GROUPS_STORAGE_KEY);
+    }
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem(QUOTE_RULE_GROUPS_STORAGE_KEY, JSON.stringify(collapsedQuoteRuleGroups));
+  }, [collapsedQuoteRuleGroups]);
+
   async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) {
@@ -773,6 +795,14 @@ export function UploadWorkbench({
     );
   }
 
+  function handleCollapseAllQuoteRuleGroups() {
+    setCollapsedQuoteRuleGroups(groupedQuoteRules.map((group) => group.title));
+  }
+
+  function handleExpandAllQuoteRuleGroups() {
+    setCollapsedQuoteRuleGroups([]);
+  }
+
   function handleChangeManualQuoteItem(itemName: string, value: string) {
     setManualQuoteItemInputs((current) => ({ ...current, [itemName]: value }));
     setMessage(value.trim() ? `${itemName} Excel 补项数量已更新` : `${itemName} Excel 补项已恢复默认`);
@@ -1088,6 +1118,8 @@ export function UploadWorkbench({
             <span>{quoteRulesFileName} · 本机自动保存 · 显示 {filteredQuoteRules.length}/{quoteRules.length} 项</span>
           </div>
           <div className="quoteRulesActions">
+            <button type="button" onClick={handleExpandAllQuoteRuleGroups}>全部展开</button>
+            <button type="button" onClick={handleCollapseAllQuoteRuleGroups}>全部收起</button>
             <button type="button" onClick={handleResetQuoteRules}>恢复默认规则</button>
           </div>
         </div>
@@ -1182,7 +1214,7 @@ export function UploadWorkbench({
         <div className="templateHeader">
           <div>
             <strong>Excel 可选补项</strong>
-            <span>数量留空时沿用自动识别或默认占位；填写后只影响 Excel 草稿。</span>
+            <span>数量留空时沿用自动识别或默认占位；填写后只影响 Excel 草稿。入户门、阳台推拉门、窗台石等 Excel 固定占位由自动识别或草稿模板处理。</span>
           </div>
           <div className="quoteRulesActions">
             <button type="button" disabled={manualQuoteEditedCount === 0} onClick={handleResetManualQuoteItems}>恢复默认</button>

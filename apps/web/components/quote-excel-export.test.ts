@@ -21,6 +21,12 @@ assert.ok(uploadWorkbenchSource.includes("collapsedQuoteRuleGroups"), "quote rul
 assert.ok(uploadWorkbenchSource.includes("handleToggleQuoteRuleGroup"), "quote rule groups should expose a toggle handler");
 assert.ok(uploadWorkbenchSource.includes("quoteRuleGroupCount"), "quote rule group headers should show matched rule counts");
 assert.ok(uploadWorkbenchSource.includes("没有匹配的报价规则"), "quote rule search should show an empty state");
+assert.ok(uploadWorkbenchSource.includes("QUOTE_RULE_GROUPS_STORAGE_KEY"), "quote rule group collapsed state should be stored locally");
+assert.ok(uploadWorkbenchSource.includes("handleCollapseAllQuoteRuleGroups"), "quote rule panel should collapse all groups at once");
+assert.ok(uploadWorkbenchSource.includes("handleExpandAllQuoteRuleGroups"), "quote rule panel should expand all groups at once");
+assert.ok(uploadWorkbenchSource.includes("全部收起"), "quote rule panel should expose collapse all action");
+assert.ok(uploadWorkbenchSource.includes("全部展开"), "quote rule panel should expose expand all action");
+assert.ok(uploadWorkbenchSource.includes("Excel 固定占位"), "manual Excel options should explain fixed placeholders");
 assert.ok(uploadWorkbenchSource.includes("manualItems: manualQuoteItemQuantities"), "Excel draft export should apply manual quote item quantities");
 assert.ok(uploadWorkbenchSource.includes("excelManualItemQuantities: manualQuoteItemQuantities"), "review snapshots should persist manual quote item quantities");
 assert.ok(uploadWorkbenchSource.includes("manualQuoteInputsFromQuantities(snapshot.excel_manual_item_quantities)"), "review snapshot import should restore manual quote item inputs");
