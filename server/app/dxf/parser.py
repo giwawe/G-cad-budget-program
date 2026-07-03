@@ -23,6 +23,8 @@ QUOTE_LAYERS = {
     "QUOTE_TOILET",
     "QUOTE_BATHROOM_VANITY",
     "QUOTE_OPENING",
+    "QUOTE_VOID",
+    "QUOTE_RAILING",
     "QUOTE_WINDOW",
     "QUOTE_DOOR",
     "QUOTE_FLOOR",
@@ -105,6 +107,9 @@ class DrawingGeometry:
     spaces: list[DrawingSpace]
     walls: list[tuple[Point, Point]]
     measured_walls: list[tuple[Point, Point]]
+    opening_edges: list[tuple[Point, Point]]
+    void_boundaries: list[list[Point]]
+    railings: list[tuple[Point, Point]]
     tile_walls: list[tuple[Point, Point]]
     new_walls: list[tuple[Point, Point]]
     demolition_walls: list[tuple[Point, Point]]
@@ -172,6 +177,9 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
     window_height_markers: list[tuple[Point, float]] = []
     windows: list[tuple[Point, Point]] = []
     door_opening_inputs: list[DrawingOpening] = []
+    opening_edge_segments: list[tuple[Point, Point]] = []
+    void_boundaries: list[list[Point]] = []
+    railing_segments: list[tuple[Point, Point]] = []
     texts: list[tuple[Point, str]] = []
     measured_walls: list[tuple[Point, Point]] = []
 
@@ -249,6 +257,14 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
                     windows.extend(window_segments)
         elif layer == "QUOTE_DOOR":
             door_opening_inputs.extend(_door_openings(entity, defaults.unit_scale_to_m))
+        elif layer == "QUOTE_OPENING":
+            opening_edge_segments.extend(_entity_segments(entity, defaults.unit_scale_to_m))
+        elif layer == "QUOTE_VOID":
+            boundary_points = _void_boundary_points(entity, defaults.unit_scale_to_m)
+            if boundary_points:
+                void_boundaries.append(boundary_points)
+        elif layer == "QUOTE_RAILING":
+            railing_segments.extend(_entity_segments(entity, defaults.unit_scale_to_m))
         elif layer in {"QUOTE_TEXT", "QUOTE_FLOOR", "QUOTE_HEIGHT"} and entity.dxftype() in {"TEXT", "MTEXT"}:
             text = _text_content(entity)
             point = _text_point(entity, defaults.unit_scale_to_m)
@@ -267,6 +283,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         for room in rooms
         if (name := _name_for_room(room, texts))
     ]
+    void_assignments = _void_assignments(named_rooms, void_boundaries)
     measured_tile_walls: list[tuple[Point, Point]] = []
     measured_new_walls: list[tuple[Point, Point]] = []
     measured_demolition_walls: list[tuple[Point, Point]] = []
@@ -278,8 +295,12 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
     measured_custom_cabinets: list[tuple[Point, Point]] = []
     measured_toilets: list[Point] = []
     measured_bathroom_vanities: list[Point] = []
+    measured_opening_edges: list[tuple[Point, Point]] = []
+    measured_void_boundaries: list[list[Point]] = []
+    measured_railings: list[tuple[Point, Point]] = []
     for name, room in named_rooms:
-        room_walls = [(start, end) for start, end in walls if _segment_in_room(room, start, end)]
+        room_opening_edges = [(start, end) for start, end in opening_edge_segments if _segment_in_room(room, start, end)]
+        room_walls = [(start, end) for start, end in walls if _segment_in_room(room, start, end) and not _segment_overlaps_any(start, end, room_opening_edges)]
         room_tile_walls = [(start, end) for start, end in wall_tile_segments if _segment_in_room(room, start, end)]
         room_new_walls = [(start, end) for start, end in new_wall_segments if _segment_in_room(room, start, end)]
         room_demolition_walls = [(start, end) for start, end in demolition_wall_segments if _segment_in_room(room, start, end)]
@@ -298,11 +319,26 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         room_custom_cabinet_heights = [_height_for_segment(segment, custom_cabinet_height_markers) for segment in room_custom_cabinets]
         room_toilets = [point for point in toilet_points if contains_point(room, point) or _point_on_boundary(room, point)]
         room_bathroom_vanities = [point for point in bathroom_vanity_points if contains_point(room, point) or _point_on_boundary(room, point)]
+        room_void_boundaries = [boundary for boundary in void_boundaries if _boundary_in_room(room, boundary)]
+        room_void_area_m2 = round(sum(polygon_area(boundary) for boundary in room_void_boundaries), 2)
+        room_floor_void_area_m2, room_ceiling_void_area_m2 = _void_deduction_areas_for_room(name, room_void_boundaries, void_assignments)
+        room_railings = [(start, end) for start, end in railing_segments if _segment_in_room(room, start, end)]
+        room_space_type = classify_space_type(name)
+        room_stair_railings = room_railings if room_space_type in {"楼梯", "楼梯过道"} else []
+        room_guardrails = [] if room_space_type in {"楼梯", "楼梯过道"} else room_railings
         room_windows = [opening for opening in grouped_window_opening_inputs if _opening_associated_with_room(room, *_opening_centerline(opening))]
         l_shaped_window_length_m = _l_shaped_window_length(room_windows)
         has_l_shaped_window = l_shaped_window_length_m > 0
         curtain_wall_width_candidate_m = l_shaped_window_length_m or _curtain_wall_width_candidate(room_walls, room_windows)
+        atrium_curtain_height_m = (
+            _atrium_curtain_height_for_room(name, room_void_boundaries, void_assignments, defaults.project_height_m)
+            if room_space_type == "挑空" and curtain_wall_width_candidate_m > 0
+            else 0
+        )
         measured_walls.extend(room_walls)
+        measured_opening_edges.extend(room_opening_edges)
+        measured_void_boundaries.extend(room_void_boundaries)
+        measured_railings.extend(room_railings)
         measured_tile_walls.extend(room_tile_walls)
         measured_new_walls.extend(room_new_walls)
         measured_demolition_walls.extend(room_demolition_walls)
@@ -329,6 +365,9 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
                 boundary_points_m=room,
                 wall_lengths_m=[round(line_length(start, end), 2) for start, end in room_walls],
                 wall_tile_lengths_m=[round(line_length(start, end), 2) for start, end in room_tile_walls],
+                floor_void_area_m2=room_floor_void_area_m2,
+                ceiling_void_area_m2=room_ceiling_void_area_m2,
+                void_area_m2=room_void_area_m2,
                 new_wall_lengths_m=[round(line_length(start, end), 2) for start, end in room_new_walls],
                 new_wall_heights_m=[_height_for_segment(segment, new_wall_height_markers) for segment in room_new_walls],
                 new_wall_thicknesses_m=[_thickness_for_segment(segment, new_wall_thickness_markers) for segment in room_new_walls],
@@ -343,6 +382,10 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
                 bathroom_vanity_count=len(room_bathroom_vanities),
                 curtain_wall_width_candidate_m=curtain_wall_width_candidate_m,
                 curtain_wall_width_source=_curtain_wall_width_source(curtain_wall_width_candidate_m, has_l_shaped_window),
+                atrium_curtain_width_m=curtain_wall_width_candidate_m if room_space_type == "挑空" else 0,
+                atrium_curtain_height_m=atrium_curtain_height_m,
+                stair_railing_lengths_m=[round(line_length(start, end), 2) for start, end in room_stair_railings],
+                guardrail_lengths_m=[round(line_length(start, end), 2) for start, end in room_guardrails],
                 windows=[
                     OpeningInput(width_m=round(_opening_width(opening), 2), height_m=_height_for_opening(opening, window_height_markers) or defaults.default_window_height_m)
                     for opening in room_windows
@@ -369,6 +412,9 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         spaces=drawing_spaces,
         walls=walls,
         measured_walls=measured_walls,
+        opening_edges=measured_opening_edges,
+        void_boundaries=measured_void_boundaries,
+        railings=measured_railings,
         tile_walls=measured_tile_walls,
         new_walls=measured_new_walls,
         demolition_walls=measured_demolition_walls,
@@ -425,6 +471,25 @@ def _closed_polyline_boundary_points(entity, scale: float) -> list[Point]:
     if len(points) > 1 and points[0] == points[-1]:
         points = points[:-1]
     return points if len(points) >= 4 else []
+
+
+def _void_boundary_points(entity, scale: float) -> list[Point]:
+    if entity.dxftype() == "HATCH":
+        return _hatch_boundary_points(entity, scale)
+    return _closed_polyline_boundary_points(entity, scale)
+
+
+def _hatch_boundary_points(entity, scale: float) -> list[Point]:
+    boundaries: list[list[Point]] = []
+    for path in getattr(entity, "paths", []):
+        vertices = getattr(path, "vertices", None)
+        if vertices:
+            points = [_scale_point((float(vertex[0]), float(vertex[1])), scale) for vertex in vertices]
+            if len(points) > 1 and points[0] == points[-1]:
+                points = points[:-1]
+            if len(points) >= 4:
+                boundaries.append(points)
+    return _largest_boundary(boundaries)
 
 
 def _entity_segments(entity, scale: float) -> list[tuple[Point, Point]]:
@@ -1173,9 +1238,104 @@ def _floor_from_name(name: str) -> str:
     return "一层"
 
 
+def _floor_rank(floor: str) -> int | None:
+    chinese_digits = {
+        "一": 1,
+        "二": 2,
+        "三": 3,
+        "四": 4,
+        "五": 5,
+        "六": 6,
+        "七": 7,
+        "八": 8,
+        "九": 9,
+        "十": 10,
+    }
+    match = re.fullmatch(r"负?([一二三四五六七八九十]|\d+)层", floor.strip())
+    if not match:
+        return None
+    raw = match.group(1)
+    number = int(raw) if raw.isdigit() else chinese_digits[raw]
+    return -number if floor.startswith("负") else number
+
+
+def _void_assignments(named_rooms: list[tuple[str, list[Point]]], void_boundaries: list[list[Point]]) -> list[tuple[str, int | None, list[Point]]]:
+    assignments: list[tuple[str, int | None, list[Point]]] = []
+    for name, room in named_rooms:
+        rank = _floor_rank(_floor_from_name(name))
+        for boundary in void_boundaries:
+            if _boundary_in_room(room, boundary):
+                assignments.append((name, rank, boundary))
+    return assignments
+
+
+def _void_deduction_areas_for_room(name: str, boundaries: list[list[Point]], assignments: list[tuple[str, int | None, list[Point]]]) -> tuple[float, float]:
+    floor_rank = _floor_rank(_floor_from_name(name))
+    floor_area = 0.0
+    ceiling_area = 0.0
+    for boundary in boundaries:
+        area = polygon_area(boundary)
+        unique_ranks = _void_group_ranks_for_boundary(name, boundary, assignments)
+        if floor_rank is None or len(unique_ranks) <= 1:
+            floor_area += area
+            ceiling_area += area
+            continue
+        if floor_rank != unique_ranks[0]:
+            floor_area += area
+        if floor_rank != unique_ranks[-1]:
+            ceiling_area += area
+    return round(floor_area, 2), round(ceiling_area, 2)
+
+
+def _atrium_curtain_height_for_room(name: str, boundaries: list[list[Point]], assignments: list[tuple[str, int | None, list[Point]]], default_height_m: float) -> float:
+    ranks: set[int] = set()
+    for boundary in boundaries:
+        ranks.update(_void_group_ranks_for_boundary(name, boundary, assignments))
+    return round(max(len(ranks), 1) * default_height_m, 2)
+
+
+def _void_group_ranks_for_boundary(name: str, boundary: list[Point], assignments: list[tuple[str, int | None, list[Point]]]) -> list[int]:
+    floor_rank = _floor_rank(_floor_from_name(name))
+    group_ranks = [
+        rank
+        for assigned_name, rank, assigned_boundary in assignments
+        if assigned_name != name and rank is not None and _boundaries_overlap(boundary, assigned_boundary)
+    ]
+    if floor_rank is not None:
+        group_ranks.append(floor_rank)
+    return sorted(set(group_ranks))
+
+
+def _boundaries_overlap(first: list[Point], second: list[Point]) -> bool:
+    first_bbox = _bbox_for_geometry([first])
+    second_bbox = _bbox_for_geometry([second])
+    x_overlap = max(0.0, min(first_bbox["max_x"], second_bbox["max_x"]) - max(first_bbox["min_x"], second_bbox["min_x"]))
+    y_overlap = max(0.0, min(first_bbox["max_y"], second_bbox["max_y"]) - max(first_bbox["min_y"], second_bbox["min_y"]))
+    overlap_area = x_overlap * y_overlap
+    smaller_area = min(abs(polygon_area(first)), abs(polygon_area(second)))
+    return smaller_area > 0 and overlap_area / smaller_area >= 0.5
+
+
 def _segment_in_room(room: list[Point], start: Point, end: Point) -> bool:
     midpoint = ((start[0] + end[0]) / 2, (start[1] + end[1]) / 2)
     return contains_point(room, midpoint) or _point_on_boundary(room, midpoint)
+
+
+def _segment_overlaps_any(start: Point, end: Point, candidates: list[tuple[Point, Point]]) -> bool:
+    return any(_segments_collinear_overlap((start, end), candidate) for candidate in candidates)
+
+
+def _segments_collinear_overlap(first: tuple[Point, Point], second: tuple[Point, Point], tolerance: float = 0.03) -> bool:
+    first_direction = _segment_unit_direction(first)
+    second_direction = _segment_unit_direction(second)
+    if abs(first_direction[0] * second_direction[0] + first_direction[1] * second_direction[1]) < 0.98:
+        return False
+    if _distance_to_segment(second[0], first[0], first[1]) > tolerance and _distance_to_segment(second[1], first[0], first[1]) > tolerance:
+        return False
+    axis = 0 if abs(first[1][0] - first[0][0]) >= abs(first[1][1] - first[0][1]) else 1
+    first_min, first_max = sorted((first[0][axis], first[1][axis]))
+    second_min, second_max = sorted((second[0][axis], second[1][axis]))
+    return min(first_max, second_max) - max(first_min, second_min) > tolerance
 
 
 def _boundary_in_room(room: list[Point], boundary: list[Point]) -> bool:

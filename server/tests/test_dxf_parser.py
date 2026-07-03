@@ -27,6 +27,7 @@ from server.tests.dxf_fixtures import (
     build_window_height_marker_dxf,
     build_new_wall_height_marker_dxf,
     build_two_room_quote_dxf_with_duplicate_close_point,
+    build_void_opening_railing_dxf,
 )
 
 
@@ -55,6 +56,32 @@ def test_parse_common_misspelled_quote_layers_as_standard_layers():
     assert [window.height_m for window in space.windows] == [1.5]
     assert [door.width_m for door in space.doors] == [0.9]
     assert review.drawing.building_area_m2 == 56
+
+
+def test_parse_void_opening_and_railing_layers_into_space_inputs():
+    review = parser.parse_dxf_review(build_void_opening_railing_dxf(), ProjectDefaults())
+
+    space = review.spaces[0]
+    assert space.wall_lengths_m == [4.0, 4.0, 3.0]
+    assert space.void_area_m2 == 6
+    assert space.floor_void_area_m2 == 6
+    assert space.ceiling_void_area_m2 == 6
+    assert space.stair_railing_lengths_m == [3.0]
+    assert space.guardrail_lengths_m == []
+    assert review.drawing.void_boundaries == [[(0.5, 0.5), (3.5, 0.5), (3.5, 2.5), (0.5, 2.5)]]
+    assert review.drawing.railings == [((0.5, 0.5), (3.5, 0.5))]
+
+
+def test_void_deductions_use_overlapped_floor_group_roles():
+    boundary = [(0, 0), (3, 0), (3, 2), (0, 2)]
+    assignments = [
+        ("一层-挑空", 1, boundary),
+        ("二层-挑空", 2, boundary),
+    ]
+
+    assert parser._void_deduction_areas_for_room("一层-挑空", [boundary], assignments) == (0, 6)
+    assert parser._void_deduction_areas_for_room("二层-挑空", [boundary], assignments) == (6, 0)
+    assert parser._atrium_curtain_height_for_room("一层-挑空", [boundary], assignments, 2.8) == 5.6
 
 
 def test_parse_real_gbk_quote_dxf_from_fixture():

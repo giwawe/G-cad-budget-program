@@ -19,17 +19,77 @@ def test_villa_common_space_names_are_classified_or_excluded():
     assert classify_space_type("客房") == "卧室"
     assert classify_space_type("楼梯过道") == "楼梯过道"
     assert classify_space_type("露台") == "露台"
-    assert classify_space_type("挑空") == "其他"
     assert classify_space_type("上层楼板洞口") == "其他"
     assert classify_space_type("阳台栏杆") == "阳台"
     assert classify_space_type("护栏") == "其他"
     assert classify_space_type("开放边") == "其他"
     assert is_excluded_space("电梯井") is True
-    assert is_excluded_space("挑空") is True
+    assert classify_space_type("挑空") == "挑空"
+    assert is_excluded_space("挑空") is False
     assert is_excluded_space("上层楼板洞口") is True
     assert is_excluded_space("阳台栏杆") is True
     assert is_excluded_space("护栏") is True
     assert is_excluded_space("开放边") is True
+
+
+def test_void_area_deducts_floor_and_ceiling_independently():
+    row = calculate_quantity_row(
+        SpaceInput(
+            name="一层-楼梯间",
+            boundary_points_m=[(0, 0), (4, 0), (4, 3), (0, 3)],
+            wall_lengths_m=[4, 3, 4, 3],
+            floor_void_area_m2=0,
+            ceiling_void_area_m2=12,
+            void_area_m2=12,
+        ),
+        ProjectDefaults(),
+    )
+
+    assert row.gross_floor_area_m2 == 12
+    assert row.floor_area_m2 == 12
+    assert row.ceiling_area_m2 == 0
+    assert row.floor_tile_piece_count == 12
+    assert row.void_area_m2 == 12
+
+
+def test_railing_lengths_split_stair_slope_and_guardrail_plan_length():
+    row = calculate_quantity_row(
+        SpaceInput(
+            name="一层-楼梯间",
+            boundary_points_m=[(0, 0), (4, 0), (4, 3), (0, 3)],
+            wall_lengths_m=[4, 3, 4, 3],
+            stair_railing_lengths_m=[3],
+            guardrail_lengths_m=[2],
+            height_m=2.8,
+        ),
+        ProjectDefaults(),
+    )
+
+    assert row.stair_railing_length_m == 4.1
+    assert row.guardrail_length_m == 2
+
+
+def test_atrium_space_keeps_separate_curtain_candidate_without_normal_curtain():
+    row = calculate_quantity_row(
+        SpaceInput(
+            name="一层-挑空",
+            boundary_points_m=[(0, 0), (5, 0), (5, 4), (0, 4)],
+            wall_lengths_m=[5, 4, 5, 4],
+            windows=[OpeningInput(width_m=3, height_m=4.8)],
+            curtain_wall_width_candidate_m=5,
+            curtain_wall_width_source="matched_window_wall",
+            atrium_curtain_width_m=5,
+            atrium_curtain_height_m=5.6,
+        ),
+        ProjectDefaults(),
+    )
+
+    assert row.space_type == "挑空"
+    assert row.curtain_wall_width_m == 0
+    assert row.curtain_wall_width_source == "not_applicable"
+    assert row.atrium_curtain_width_m == 5
+    assert row.atrium_curtain_height_m == 5.6
+    assert row.atrium_curtain_area_m2 == 28
 
 
 def test_latex_area_adds_door_width_back_before_optional_deduction():

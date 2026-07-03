@@ -6,8 +6,10 @@ export type QuantityRow = {
   floor: string;
   spaceName: string;
   spaceType: string;
+  grossFloorAreaM2?: number;
   floorAreaM2: number;
   ceilingAreaM2: number;
+  voidAreaM2?: number;
   ceilingFinishType?: CeilingFinishType;
   wallMeasureLengthM: number;
   heightM: number;
@@ -15,6 +17,9 @@ export type QuantityRow = {
   windowsillLengthM: number;
   curtainWallWidthM: number;
   curtainWallWidthSource: CurtainWallWidthSource;
+  atriumCurtainWidthM?: number;
+  atriumCurtainHeightM?: number;
+  atriumCurtainAreaM2?: number;
   windowAreaM2: number;
   doorWidthTotalM: number;
   doorDeductAreaM2: number;
@@ -43,6 +48,8 @@ export type QuantityRow = {
   customCabinetAreaM2: number;
   toiletCount: number;
   bathroomVanityCount: number;
+  stairRailingLengthM?: number;
+  guardrailLengthM?: number;
   waterproofAreaM2: number;
   evidence: string;
   anomalies: string[];
@@ -97,6 +104,9 @@ export type DrawingGeometry = {
   spaces: DrawingSpace[];
   walls: DrawingSegment[];
   measured_walls: DrawingSegment[];
+  opening_edges?: DrawingSegment[];
+  void_boundaries?: DrawingPoint[][];
+  railings?: DrawingSegment[];
   tile_walls: DrawingSegment[];
   new_walls: DrawingSegment[];
   demolition_walls: DrawingSegment[];

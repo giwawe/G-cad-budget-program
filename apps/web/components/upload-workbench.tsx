@@ -151,8 +151,10 @@ type ApiQuantityRow = {
   floor: string;
   space_name: string;
   space_type: string;
+  gross_floor_area_m2?: number;
   floor_area_m2: number;
   ceiling_area_m2: number;
+  void_area_m2?: number;
   ceiling_finish_type?: CeilingFinishType;
   wall_measure_length_m: number;
   height_m: number;
@@ -160,6 +162,9 @@ type ApiQuantityRow = {
   windowsill_length_m: number;
   curtain_wall_width_m: number;
   curtain_wall_width_source?: CurtainWallWidthSource;
+  atrium_curtain_width_m?: number;
+  atrium_curtain_height_m?: number;
+  atrium_curtain_area_m2?: number;
   window_area_m2: number;
   door_width_total_m: number;
   door_deduct_area_m2: number;
@@ -188,6 +193,8 @@ type ApiQuantityRow = {
   custom_cabinet_area_m2: number;
   toilet_count: number;
   bathroom_vanity_count: number;
+  stair_railing_length_m?: number;
+  guardrail_length_m?: number;
   waterproof_area_m2: number;
   evidence: string;
   anomalies: string[];
@@ -225,8 +232,10 @@ function toQuantityRow(row: ApiQuantityRow): QuantityRow {
     floor: row.floor,
     spaceName: row.space_name,
     spaceType: row.space_type,
+    grossFloorAreaM2: row.gross_floor_area_m2 ?? row.floor_area_m2,
     floorAreaM2: row.floor_area_m2,
     ceilingAreaM2: row.ceiling_area_m2,
+    voidAreaM2: row.void_area_m2 ?? 0,
     ceilingFinishType: row.ceiling_finish_type ?? defaultCeilingFinishType(row.space_type),
     wallMeasureLengthM: row.wall_measure_length_m,
     heightM: row.height_m,
@@ -234,6 +243,9 @@ function toQuantityRow(row: ApiQuantityRow): QuantityRow {
     windowsillLengthM: row.windowsill_length_m,
     curtainWallWidthM: row.curtain_wall_width_m,
     curtainWallWidthSource: row.curtain_wall_width_source ?? "not_applicable",
+    atriumCurtainWidthM: row.atrium_curtain_width_m ?? 0,
+    atriumCurtainHeightM: row.atrium_curtain_height_m ?? 0,
+    atriumCurtainAreaM2: row.atrium_curtain_area_m2 ?? 0,
     windowAreaM2: row.window_area_m2,
     doorWidthTotalM: row.door_width_total_m,
     doorDeductAreaM2: row.door_deduct_area_m2,
@@ -262,6 +274,8 @@ function toQuantityRow(row: ApiQuantityRow): QuantityRow {
     customCabinetAreaM2: row.custom_cabinet_area_m2 ?? 0,
     toiletCount: row.toilet_count ?? 0,
     bathroomVanityCount: row.bathroom_vanity_count ?? 0,
+    stairRailingLengthM: row.stair_railing_length_m ?? 0,
+    guardrailLengthM: row.guardrail_length_m ?? 0,
     waterproofAreaM2: row.waterproof_area_m2,
     evidence: row.evidence,
     anomalies: row.anomalies,

@@ -42,6 +42,24 @@ def build_misspelled_quote_layer_dxf() -> bytes:
     return _save_doc(doc)
 
 
+def build_void_opening_railing_dxf() -> bytes:
+    doc = ezdxf.new("R2010")
+    msp = doc.modelspace()
+    for layer in ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_TEXT", "QUOTE_VOID", "QUOTE_OPENING", "QUOTE_RAILING"]:
+        doc.layers.add(layer)
+    msp.add_lwpolyline([(0, 0), (4000, 0), (4000, 3000), (0, 3000), (0, 0)], dxfattribs={"layer": "QUOTE_ROOM"})
+    msp.add_line((0, 0), (4000, 0), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((4000, 0), (4000, 3000), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((4000, 3000), (0, 3000), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((0, 3000), (0, 0), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((4000, 0), (4000, 3000), dxfattribs={"layer": "QUOTE_OPENING"})
+    void = msp.add_hatch(color=4, dxfattribs={"layer": "QUOTE_VOID"})
+    void.paths.add_polyline_path([(500, 500), (3500, 500), (3500, 2500), (500, 2500)], is_closed=True)
+    msp.add_line((500, 500), (3500, 500), dxfattribs={"layer": "QUOTE_RAILING"})
+    msp.add_text("一层-楼梯间", dxfattribs={"layer": "QUOTE_TEXT", "insert": (2000, 1500)})
+    return _save_doc(doc)
+
+
 def build_closed_window_polyline_dxf() -> bytes:
     doc = ezdxf.new("R2010")
     msp = doc.modelspace()

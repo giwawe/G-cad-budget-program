@@ -371,6 +371,24 @@
     ]
   },
   {
+    "item_name": "楼梯扶手",
+    "metric": "stair_railing_length_m",
+    "unit": "M",
+    "unit_price": 0,
+    "material_price": 0,
+    "auxiliary_price": 0,
+    "labor_price": 0
+  },
+  {
+    "item_name": "栏杆/护栏",
+    "metric": "guardrail_length_m",
+    "unit": "M",
+    "unit_price": 0,
+    "material_price": 0,
+    "auxiliary_price": 0,
+    "labor_price": 0
+  },
+  {
     "item_name": "铝合金封门窗",
     "metric": "manual_count",
     "unit": "M2",

@@ -3,13 +3,19 @@ import type { QuantityRow, QuantitySummary } from "./types";
 export type CalibrationTemplateRow = {
   space_name: string;
   space_type: string;
+  gross_floor_area_m2: number;
   floor_area_m2: number;
+  ceiling_area_m2: number;
+  void_area_m2: number;
   ceiling_finish_type: QuantityRow["ceilingFinishType"];
   wall_measure_length_m: number;
   window_width_total_m: number;
   windowsill_length_m: number;
   curtain_wall_width_m: number;
   curtain_wall_width_source: QuantityRow["curtainWallWidthSource"];
+  atrium_curtain_width_m: number;
+  atrium_curtain_height_m: number;
+  atrium_curtain_area_m2: number;
   window_area_m2: number;
   door_width_total_m: number;
   door_deduct_area_m2: number;
@@ -33,6 +39,8 @@ export type CalibrationTemplateRow = {
   bathroom_door_count: number;
   sliding_door_area_m2: number;
   sliding_door_casing_length_m: number;
+  stair_railing_length_m: number;
+  guardrail_length_m: number;
   kitchen_base_cabinet_length_m: number;
   kitchen_wall_cabinet_length_m: number;
   custom_cabinet_area_m2: number;
@@ -53,13 +61,19 @@ export function quantityRowsToCalibrationTemplate(rows: QuantityRow[], summary?:
   const templateRows = rows.map((row) => ({
     space_name: row.spaceName,
     space_type: row.spaceType,
+    gross_floor_area_m2: row.grossFloorAreaM2 ?? row.floorAreaM2,
     floor_area_m2: row.floorAreaM2,
+    ceiling_area_m2: row.ceilingAreaM2,
+    void_area_m2: row.voidAreaM2 ?? 0,
     ceiling_finish_type: row.ceilingFinishType ?? defaultCeilingFinishType(row.spaceType),
     wall_measure_length_m: row.wallMeasureLengthM,
     window_width_total_m: row.windowWidthTotalM,
     windowsill_length_m: row.windowsillLengthM,
     curtain_wall_width_m: row.curtainWallWidthM,
     curtain_wall_width_source: row.curtainWallWidthSource,
+    atrium_curtain_width_m: row.atriumCurtainWidthM ?? 0,
+    atrium_curtain_height_m: row.atriumCurtainHeightM ?? 0,
+    atrium_curtain_area_m2: row.atriumCurtainAreaM2 ?? 0,
     window_area_m2: row.windowAreaM2,
     door_width_total_m: row.doorWidthTotalM,
     door_deduct_area_m2: row.doorDeductAreaM2,
@@ -83,6 +97,8 @@ export function quantityRowsToCalibrationTemplate(rows: QuantityRow[], summary?:
     bathroom_door_count: row.bathroomDoorCount,
     sliding_door_area_m2: row.slidingDoorAreaM2,
     sliding_door_casing_length_m: row.slidingDoorCasingLengthM,
+    stair_railing_length_m: row.stairRailingLengthM ?? 0,
+    guardrail_length_m: row.guardrailLengthM ?? 0,
     kitchen_base_cabinet_length_m: row.kitchenBaseCabinetLengthM,
     kitchen_wall_cabinet_length_m: row.kitchenWallCabinetLengthM,
     custom_cabinet_area_m2: row.customCabinetAreaM2,

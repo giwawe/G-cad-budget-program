@@ -25,6 +25,8 @@ type QuantityRowMetric =
   | "kitchenBaseCabinetLengthM"
   | "kitchenWallCabinetLengthM"
   | "customCabinetAreaM2"
+  | "stairRailingLengthM"
+  | "guardrailLengthM"
   | "toiletCount"
   | "bathroomVanityCount";
 export type QuoteMetric =
@@ -62,6 +64,8 @@ export type QuoteMetric =
   | "kitchen_base_cabinet_length_m"
   | "kitchen_wall_cabinet_length_m"
   | "custom_cabinet_area_m2"
+  | "stair_railing_length_m"
+  | "guardrail_length_m"
   | "toilet_count"
   | "bathroom_vanity_count"
   | "bathroom_count"
@@ -136,6 +140,17 @@ export type CurtainQuoteCandidate = {
   note: string;
 };
 
+export type AtriumCurtainCandidate = {
+  floor: string;
+  space_name: string;
+  space_type: string;
+  item_name: "挑空窗帘";
+  width_m: number;
+  height_m: number;
+  area_m2: number;
+  note: string;
+};
+
 export type QuoteMapping = {
   items: QuoteMappingItem[];
   summary: {
@@ -146,6 +161,7 @@ export type QuoteMapping = {
   };
   curtain_quote_readiness: CurtainQuoteReadiness;
   curtain_quote_candidates: CurtainQuoteCandidate[];
+  atrium_curtain_candidates: AtriumCurtainCandidate[];
   building_area_quote_readiness: BuildingAreaQuoteReadiness;
   quantity_health_readiness: QuantityHealthReadiness;
 };
@@ -235,6 +251,8 @@ const DEFAULT_RULES: QuoteRule[] = [
   quoteRule("厨房推拉门双包套", "sliding_door_casing_length_m", "M", 300, 0, 0, KITCHEN_CABINET_SPACE_TYPES),
   quoteRule("阳台推拉门", "sliding_door_area_m2", "M2", 550, 0, 0, BALCONY_SLIDING_DOOR_SPACE_TYPES),
   quoteRule("阳台推拉门双包套", "sliding_door_casing_length_m", "M", 300, 0, 0, BALCONY_SLIDING_DOOR_SPACE_TYPES),
+  quoteRule("楼梯扶手", "stair_railing_length_m", "M", 0, 0, 0),
+  quoteRule("栏杆/护栏", "guardrail_length_m", "M", 0, 0, 0),
   quoteRule("铝合金封门窗", "manual_count", "M2", 0, 0, 0),
   quoteRule("橱柜", "kitchen_cabinet_length_m", "M", 600, 0, 0, KITCHEN_CABINET_SPACE_TYPES),
   quoteRule("全屋定制", "custom_cabinet_area_m2", "M2", 600, 0, 0),
@@ -272,6 +290,8 @@ const METRIC_TO_ROW_FIELD: Record<DirectRowQuoteMetric, QuantityRowMetric> = {
   kitchen_base_cabinet_length_m: "kitchenBaseCabinetLengthM",
   kitchen_wall_cabinet_length_m: "kitchenWallCabinetLengthM",
   custom_cabinet_area_m2: "customCabinetAreaM2",
+  stair_railing_length_m: "stairRailingLengthM",
+  guardrail_length_m: "guardrailLengthM",
   toilet_count: "toiletCount",
   bathroom_vanity_count: "bathroomVanityCount",
 };
@@ -397,6 +417,21 @@ export function curtainQuoteCandidates(rows: QuantityRow[]): CurtainQuoteCandida
     }));
 }
 
+export function atriumCurtainCandidates(rows: QuantityRow[]): AtriumCurtainCandidate[] {
+  return rows
+    .filter((row) => row.status !== "excluded" && row.spaceType === "挑空" && (row.atriumCurtainAreaM2 ?? 0) > 0)
+    .map((row) => ({
+      floor: row.floor,
+      space_name: row.spaceName,
+      space_type: row.spaceType,
+      item_name: "挑空窗帘",
+      width_m: round2(row.atriumCurtainWidthM ?? 0),
+      height_m: round2(row.atriumCurtainHeightM ?? 0),
+      area_m2: round2(row.atriumCurtainAreaM2 ?? 0),
+      note: "挑空窗帘为非常规尺寸，宽度按窗户所在墙面候选，帘高按关联楼层层高汇总，需设计师复核。",
+    }));
+}
+
 export function buildQuoteMapping(
   rows: QuantityRow[],
   rules: QuoteRule[] = DEFAULT_RULES,
@@ -437,6 +472,7 @@ export function buildQuoteMapping(
     },
     curtain_quote_readiness: curtainQuoteReadiness(rows),
     curtain_quote_candidates: curtainQuoteCandidates(rows),
+    atrium_curtain_candidates: atriumCurtainCandidates(rows),
     building_area_quote_readiness: buildingAreaQuoteReadiness(rules, buildingAreaM2),
     quantity_health_readiness: quantityHealthReadiness,
   };
@@ -703,6 +739,8 @@ function isQuoteMetric(metric: unknown): metric is QuoteMetric {
     metric === "kitchen_base_cabinet_length_m" ||
     metric === "kitchen_wall_cabinet_length_m" ||
     metric === "custom_cabinet_area_m2" ||
+    metric === "stair_railing_length_m" ||
+    metric === "guardrail_length_m" ||
     metric === "toilet_count" ||
     metric === "bathroom_vanity_count" ||
     metric === "bathroom_count" ||

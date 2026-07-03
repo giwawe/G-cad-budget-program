@@ -34,6 +34,9 @@ class SpaceInput:
     boundary_points_m: list[tuple[float, float]] = field(default_factory=list)
     wall_lengths_m: list[float] = field(default_factory=list)
     wall_tile_lengths_m: list[float] = field(default_factory=list)
+    floor_void_area_m2: float = 0
+    ceiling_void_area_m2: float = 0
+    void_area_m2: float = 0
     new_wall_lengths_m: list[float] = field(default_factory=list)
     new_wall_heights_m: list[float | None] = field(default_factory=list)
     new_wall_thicknesses_m: list[float | None] = field(default_factory=list)
@@ -48,6 +51,10 @@ class SpaceInput:
     bathroom_vanity_count: int = 0
     curtain_wall_width_candidate_m: float = 0
     curtain_wall_width_source: str = "not_applicable"
+    atrium_curtain_width_m: float = 0
+    atrium_curtain_height_m: float = 0
+    stair_railing_lengths_m: list[float] = field(default_factory=list)
+    guardrail_lengths_m: list[float] = field(default_factory=list)
     windows: list[OpeningInput] = field(default_factory=list)
     doors: list[OpeningInput] = field(default_factory=list)
     height_m: float | None = None
@@ -60,14 +67,19 @@ class QuantityRow:
     floor: str
     space_name: str
     space_type: str
+    gross_floor_area_m2: float
     floor_area_m2: float
     ceiling_area_m2: float
+    void_area_m2: float
     wall_measure_length_m: float
     height_m: float
     window_width_total_m: float
     windowsill_length_m: float
     curtain_wall_width_m: float
     curtain_wall_width_source: str
+    atrium_curtain_width_m: float
+    atrium_curtain_height_m: float
+    atrium_curtain_area_m2: float
     window_area_m2: float
     door_width_total_m: float
     door_deduct_area_m2: float
@@ -96,6 +108,8 @@ class QuantityRow:
     custom_cabinet_area_m2: float
     toilet_count: int
     bathroom_vanity_count: int
+    stair_railing_length_m: float
+    guardrail_length_m: float
     waterproof_area_m2: float
     evidence: str
     anomalies: list[str]

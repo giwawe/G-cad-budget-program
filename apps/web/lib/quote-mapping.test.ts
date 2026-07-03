@@ -422,6 +422,69 @@ assert.ok(villaDrySpaceMapping.items.some((item) => item.space_name === "麻将�
 assert.equal(villaDrySpaceMapping.curtain_quote_readiness.ready_count, 2);
 assert.equal(villaDrySpaceMapping.items.filter((item) => item.item_name === "暗窗帘箱").length, 2);
 
+const villaSpecialSpaceMapping = buildQuoteMapping(
+  [
+    {
+      ...rows[0],
+      spaceName: "一层-楼梯间",
+      spaceType: "楼梯",
+      floorAreaM2: 12,
+      ceilingAreaM2: 0,
+      wallTileAreaM2: 0,
+      waterproofAreaM2: 0,
+      stairRailingLengthM: 4.1,
+      guardrailLengthM: 0,
+      curtainWallWidthM: 0,
+      curtainWallWidthSource: "not_applicable",
+    },
+    {
+      ...rows[0],
+      spaceName: "一层-露台",
+      spaceType: "露台",
+      floorAreaM2: 8,
+      ceilingAreaM2: 8,
+      wallTileAreaM2: 0,
+      waterproofAreaM2: 10,
+      stairRailingLengthM: 0,
+      guardrailLengthM: 6,
+      curtainWallWidthM: 0,
+      curtainWallWidthSource: "not_applicable",
+    },
+    {
+      ...rows[0],
+      spaceName: "一层-挑空",
+      spaceType: "挑空",
+      floorAreaM2: 20,
+      ceilingAreaM2: 0,
+      wallTileAreaM2: 0,
+      waterproofAreaM2: 0,
+      curtainWallWidthM: 0,
+      curtainWallWidthSource: "not_applicable",
+      atriumCurtainWidthM: 5,
+      atriumCurtainHeightM: 5.6,
+      atriumCurtainAreaM2: 28,
+    },
+  ],
+  defaultQuoteRules(),
+  { building_area_m2: 0 },
+);
+
+assert.ok(villaSpecialSpaceMapping.items.some((item) => item.space_name === "一层-楼梯间" && item.item_name === "楼梯扶手" && item.quantity === 4.1));
+assert.ok(villaSpecialSpaceMapping.items.some((item) => item.space_name === "一层-露台" && item.item_name === "栏杆/护栏" && item.quantity === 6));
+assert.deepEqual(villaSpecialSpaceMapping.atrium_curtain_candidates, [
+  {
+    floor: "一层",
+    space_name: "一层-挑空",
+    space_type: "挑空",
+    item_name: "挑空窗帘",
+    width_m: 5,
+    height_m: 5.6,
+    area_m2: 28,
+    note: "挑空窗帘为非常规尺寸，宽度按窗户所在墙面候选，帘高按关联楼层层高汇总，需设计师复核。",
+  },
+]);
+assert.ok(!villaSpecialSpaceMapping.items.some((item) => item.space_name === "一层-挑空" && ["窗帘", "暗窗帘箱"].includes(item.item_name)));
+
 const livingRoomWallTileMapping = buildQuoteMapping([{ ...rows[0], spaceName: "客厅", spaceType: "客厅", wallTileAreaM2: 11.2, waterproofAreaM2: 0, customCabinetAreaM2: 0, kitchenBaseCabinetLengthM: 0, kitchenWallCabinetLengthM: 0 }]);
 assert.ok(livingRoomWallTileMapping.items.some((item) => item.space_name === "客厅" && item.item_name === "墙面贴瓷砖(600X1200)" && item.quantity === 11.2));
 
@@ -520,7 +583,7 @@ assert.equal(dryAreaMapping.summary.total_amount, 600);
 
 const rules = defaultQuoteRules();
 assert.equal(DEFAULT_QUOTE_RULES_NAME, "商品房整装默认规则");
-assert.equal(rules.length, 55);
+assert.equal(rules.length, 57);
 assert.equal(rules[0].item_name, "墙面界面剂处理");
 assert.equal(rules[0].metric, "latex_paint_area_m2");
 assert.equal(rules[0].unit_price, 7);
@@ -567,6 +630,26 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "砌240厚砖墙"), {
   material_price: 100,
   auxiliary_price: 0,
   labor_price: 120,
+  space_types: undefined,
+});
+assert.deepEqual(rules.find((rule) => rule.item_name === "楼梯扶手"), {
+  item_name: "楼梯扶手",
+  metric: "stair_railing_length_m",
+  unit: "M",
+  unit_price: 0,
+  material_price: 0,
+  auxiliary_price: 0,
+  labor_price: 0,
+  space_types: undefined,
+});
+assert.deepEqual(rules.find((rule) => rule.item_name === "栏杆/护栏"), {
+  item_name: "栏杆/护栏",
+  metric: "guardrail_length_m",
+  unit: "M",
+  unit_price: 0,
+  material_price: 0,
+  auxiliary_price: 0,
+  labor_price: 0,
   space_types: undefined,
 });
 assert.deepEqual(rules.find((rule) => rule.item_name === "水泥墙开槽"), {

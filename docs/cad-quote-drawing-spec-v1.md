@@ -47,11 +47,13 @@
 |---|---|---|
 | `QUOTE_FLOOR` | 可读取文字，但规则未完整落地 | 后续用于多楼层项目的楼层标记 |
 | `QUOTE_HEIGHT` | 高度文字标识 | 目前可为邻近窗洞提供 `HEIGHT`/`H`/`窗高` 标识；未标注窗高时默认 1.8m |
-| `QUOTE_OPENING` | 规范预留 | 后续用于开放边界或非墙体边界 |
+| `QUOTE_OPENING` | 开放边界或非墙体边界 | 与 `QUOTE_WALL` 重叠时，从墙面计量长度中排除该段 |
+| `QUOTE_VOID` | 挑空区域或楼板洞口，推荐用 HATCH 色块，也兼容闭合多段线 | 按所在空间和楼层关系扣减地面/顶面面积 |
+| `QUOTE_RAILING` | 栏杆、护栏、楼梯扶手线 | 位于楼梯/楼梯过道时按楼梯扶手换算斜长，其它空间按栏杆/护栏平面长度 |
 
 > 兼容说明：系统会兼容常见错拼 `QUQTE_*` 到对应 `QUOTE_*`，并把 `QUQTE_WINDOM` 按 `QUOTE_WINDOW`、`OUOTE_HEIGHT` 按 `QUOTE_HEIGHT` 读取。规范制图仍必须使用标准 `QUOTE_*` 图层名，错拼兼容仅用于降低旧图纸导入失败风险。
 
-注意：预留图层可以先按规范保留，但当前不要依赖它们参与核心自动算量。`QUOTE_EXT_WALL` 已参与建筑面积计算，不再作为预留图层处理。
+注意：`QUOTE_EXT_WALL` 已参与建筑面积计算，不再作为预留图层处理。`QUOTE_VOID` 每层都应按实际洞口位置绘制，避免跨层挑空或地下室挑空被错误合并。
 
 ## 3. 空间边界画法
 
@@ -401,15 +403,21 @@
 
 建筑面积当前作为项目级报价口径处理：报价规则 JSON 可以使用 `building_area_m2` 作为 metric，系统从当前 `QUOTE_EXT_WALL` 计算出的 summary 建筑面积生成“全屋”清单项。默认商品房整装规则已内置水泥墙开槽、补线/管槽及零星修补等按建筑面积计价项目；打混凝土过梁孔使用 `building_area_tenth_count`，按建筑面积 10% 生成。
 
+挑空和楼板洞口使用 `QUOTE_VOID` 表示，推荐画闭合 HATCH 色块，也兼容闭合多段线。`QUOTE_VOID` 按中心点归属到所在 `QUOTE_ROOM`，并按楼层名称判断扣减规则：同一平面位置的洞口如果跨多层，底层保留地面但扣顶面，顶层扣地面但保留顶面，中间层地面和顶面都扣；如果只有单层或楼层名称无法识别，则地面和顶面都扣。楼层名称建议明确写为 `负二层-空间名`、`负一层-空间名`、`一层-空间名`、`二层-空间名` 等，`QUOTE_VOID` 需要每层按实际洞口位置都画。
+
+开放边界使用 `QUOTE_OPENING` 表示，不需要额外新增开放边图层。系统会把与 `QUOTE_OPENING` 重叠的 `QUOTE_WALL` 段从墙面计量长度中排除，适合挑空、露台、阳台、通道等非墙边界。
+
+栏杆、护栏和楼梯扶手统一画在 `QUOTE_RAILING`。系统按线段所在空间判断口径：在楼梯或楼梯过道内时生成 `stair_railing_length_m`，并用 `sqrt(平面长度^2 + 层高^2)` 换算楼梯扶手斜长；其它空间生成 `guardrail_length_m`，按平面长度计。默认报价规则已提供“楼梯扶手”和“栏杆/护栏”占位单价，后续可在报价规则单价表中调整。
+
 全屋定制当前按非厨房空间的 `QUOTE_CUSTOM` 投影延米线计算：未标注高度时按默认 `2.6m` 换算投影面积；闭合柜体轮廓按最长边取一次投影长度，不按周长累加；同图层邻近文字标注高度低于 `1m` 时，按低柜长度米取值，并入同一个 `custom_cabinet_area_m2` 数量；`TYPE=衣柜` 这类类型标识允许保留在图上，当前不拆分金额，留作后续分类扩展；厨房空间已经由 `QUOTE_BASE_CABINET` 和 `QUOTE_WALL_CABINET` 单独承接，避免重复计价。
 
 背景墙当前按可选 `QUOTE_BACKGROUND_WALL` 计算 `background_wall_area_m2` 并按真实模板“背景墙”汇总报价；如果没有画背景墙线，自动数量为 0，Excel 草稿不显示背景墙占位。
 
 防水高度当前按空间类型取默认值：卫生间 `1.8m`，厨房、阳台、露台、洗衣房 `0.3m`。除厨房/卫生间外，只有画了 `QUOTE_WALL_TILE` 的贴砖墙面线才自动计算墙砖面积；当前按空间实际层高计算，暂不单独扣除未匹配贴砖墙的门窗洞。
 
-窗帘和窗帘箱不按窗洞宽度计量，应按窗户所在墙面的整面墙宽度计量。厨房、卫生间、过道等空间默认不做窗帘和窗帘箱；一般不做窗帘箱的位置也不生成窗帘。当前系统生成 `curtain_wall_width_m` 候选值：若识别到 L 形、转角窗或异形窗，按同一个窗组内两条非平行长窗边合计或现有窗户长度口径直接计算窗帘候选；若普通窗洞中心线能匹配到邻近且平行的 `QUOTE_WALL`，取该墙段整宽；若匹配不到，回退到空间最长一段 `QUOTE_WALL`。系统同时输出 `curtain_wall_width_source`：`matched_l_shape_window` 表示已按 L 形窗自动取数，`matched_window_wall` 表示已匹配窗户所在墙，`fallback_longest_wall` 表示回退最长墙，`manual_required_l_shape_window` 仅兼容旧快照中的 L 形窗状态，`not_applicable` 表示不适用，前端人工编辑后为 `manual`。该候选值允许在工程量表中人工校准、随校对快照保存/恢复；来源为 `manual`、`matched_window_wall`、`matched_l_shape_window` 或 `fallback_longest_wall` 且长度大于 `0` 时，暗窗帘箱进入空间项金额汇总，公共大项“窗帘”按可报价窗帘箱长度合计 * 2 的展开长度生成，默认主材单价 60。
+窗帘和窗帘箱不按窗洞宽度计量，应按窗户所在墙面的整面墙宽度计量。厨房、卫生间、过道等空间默认不做窗帘和窗帘箱；一般不做窗帘箱的位置也不生成窗帘。当前系统生成 `curtain_wall_width_m` 候选值：若识别到 L 形、转角窗或异形窗，按同一个窗组内两条非平行长窗边合计或现有窗户长度口径直接计算窗帘候选；若普通窗洞中心线能匹配到邻近且平行的 `QUOTE_WALL`，取该墙段整宽；若匹配不到，回退到空间最长一段 `QUOTE_WALL`。系统同时输出 `curtain_wall_width_source`：`matched_l_shape_window` 表示已按 L 形窗自动取数，`matched_window_wall` 表示已匹配窗户所在墙，`fallback_longest_wall` 表示回退最长墙，`manual_required_l_shape_window` 仅兼容旧快照中的 L 形窗状态，`not_applicable` 表示不适用，前端人工编辑后为 `manual`。该候选值允许在工程量表中人工校准、随校对快照保存/恢复；来源为 `manual`、`matched_window_wall`、`matched_l_shape_window` 或 `fallback_longest_wall` 且长度大于 `0` 时，暗窗帘箱进入空间项金额汇总，公共大项“窗帘”按可报价窗帘箱长度合计 * 2 的展开长度生成，默认主材单价 60。挑空空间不会混入普通窗帘/暗窗帘箱金额汇总，会单独生成 `atrium_curtain_candidates` 复核候选：宽度沿用窗户所在墙面候选，高度按同一 `QUOTE_VOID` 跨越的楼层数量乘默认层高汇总，并提示非常规尺寸窗帘需设计师复核。
 
-校准模板当前导出为 `{ summary, rows }` 对象格式：`summary.building_area_m2` 用于校准项目级建筑面积，`rows` 中会导出 `windowsill_length_m`、`curtain_wall_width_m`、`curtain_wall_width_source`、`wall_tile_measure_length_m`、`wall_tile_area_m2`、`floor_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`new_wall_length_m`、`new_wall_area_m2`、`new_wall_unclassified_area_m2`、`new_wall_120_area_m2`、`new_wall_240_area_m2`、`demolition_wall_length_m`、`demolition_wall_area_m2`、`background_wall_area_m2`、`entry_door_count`、`interior_door_count`、`bathroom_door_count`、`sliding_door_area_m2`、`sliding_door_casing_length_m`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`custom_cabinet_area_m2`、`toilet_count` 和 `bathroom_vanity_count`。报价员可以把建筑面积、窗帘墙宽实际延米、贴砖墙、地砖主材片数、水电备用施工面积、新砌墙、拆墙、背景墙、入户门数、室内门数、卫生间门数、推拉门、厨房橱柜长度、全屋定制面积或洁具数量校准值填回模板，再作为 golden JSON 固定校准结果。旧版纯数组行格式仍可上传，只是不包含项目级建筑面积校准。
+校准模板当前导出为 `{ summary, rows }` 对象格式：`summary.building_area_m2` 用于校准项目级建筑面积，`rows` 中会导出 `gross_floor_area_m2`、`floor_area_m2`、`ceiling_area_m2`、`void_area_m2`、`windowsill_length_m`、`curtain_wall_width_m`、`curtain_wall_width_source`、`atrium_curtain_width_m`、`atrium_curtain_height_m`、`atrium_curtain_area_m2`、`wall_tile_measure_length_m`、`wall_tile_area_m2`、`floor_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`new_wall_length_m`、`new_wall_area_m2`、`new_wall_unclassified_area_m2`、`new_wall_120_area_m2`、`new_wall_240_area_m2`、`demolition_wall_length_m`、`demolition_wall_area_m2`、`background_wall_area_m2`、`entry_door_count`、`interior_door_count`、`bathroom_door_count`、`sliding_door_area_m2`、`sliding_door_casing_length_m`、`stair_railing_length_m`、`guardrail_length_m`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`custom_cabinet_area_m2`、`toilet_count` 和 `bathroom_vanity_count`。报价员可以把建筑面积、窗帘墙宽实际延米、挑空窗帘、楼板洞口、栏杆扶手、贴砖墙、地砖主材片数、水电备用施工面积、新砌墙、拆墙、背景墙、入户门数、室内门数、卫生间门数、推拉门、厨房橱柜长度、全屋定制面积或洁具数量校准值填回模板，再作为 golden JSON 固定校准结果。旧版纯数组行格式仍可上传，只是不包含项目级建筑面积校准。
 
 上传包含 `curtain_wall_width_m` 的校准 JSON 后，若当前行来源是 `manual_required_l_shape_window` 或 `fallback_longest_wall`，工程量表会提供“应用校准”按钮，把校准值写回当前行、将来源标记为 `manual`，并清除该单元格的当前差异。
 
@@ -438,9 +446,10 @@
 | 客厅、餐厅、厨房、卫生间、阳台、卧室、书房、衣帽间、储物间、洗衣房、门厅、过道、楼梯过道、楼梯、露台、外墙 | 可识别空间类型并进入校对 |
 | 电梯井、设备井、管井、风井 | 可识别，但默认不计价，状态为不计价 |
 | 茶室、麻将房、棋牌室、影音室、健身房、客房 | 别墅常见空间；茶室、娱乐室按普通干区，客房按卧室 |
-| 挑空、上层楼板洞口、楼板开洞、阳台栏杆、护栏、开放边 | 辅助边界或洞口信息；默认不计价，避免误算地面/顶面 |
+| 挑空 | 可作为计价空间进入校对；按普通干区基础规则处理，但地面/顶面按 `QUOTE_VOID` 扣减，窗帘单独生成挑空窗帘复核候选 |
+| 上层楼板洞口、楼板开洞、阳台栏杆、护栏、开放边 | 不作为空间报价名称；应使用 `QUOTE_VOID`、`QUOTE_RAILING`、`QUOTE_OPENING` 辅助图层表达 |
 
-楼梯踏步、踢面、栏杆、复杂防水、外墙洞口等项目当前不作为核心自动算量能力，需要后续规则扩展或人工校对。楼梯、楼梯过道、露台按普通可计价空间处理；挑空和楼板洞口等辅助边界不直接生成报价。
+楼梯踏步、踢面、复杂防水、外墙洞口等项目当前不作为核心自动算量能力，需要后续规则扩展或人工校对。楼梯、楼梯过道、露台按普通可计价空间处理；楼梯扶手、栏杆/护栏已可通过 `QUOTE_RAILING` 生成候选数量，但默认占位单价仍需设计师或报价员按项目调整。
 
 ## 10. 常见错误和处理
 

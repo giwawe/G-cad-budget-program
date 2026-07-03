@@ -35,7 +35,9 @@ def resolve_height(defaults: ProjectDefaults, space: SpaceInput) -> float:
 def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> QuantityRow:
     space_type = classify_space_type(space.name)
     height_m = resolve_height(defaults, space)
-    floor_area_m2 = round(polygon_area(space.boundary_points_m), 2)
+    gross_floor_area_m2 = round(polygon_area(space.boundary_points_m), 2)
+    floor_area_m2 = round(max(gross_floor_area_m2 - space.floor_void_area_m2, 0), 2)
+    ceiling_area_m2 = round(max(gross_floor_area_m2 - space.ceiling_void_area_m2, 0), 2)
     wall_measure_length_m = round(sum(space.wall_lengths_m), 2)
 
     window_width_total_m = round(sum(window.width_m for window in space.windows), 2)
@@ -104,6 +106,11 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
     toilet_count = calculate_bathroom_fixture_count(space_type, space.toilet_count)
     bathroom_vanity_count = calculate_bathroom_fixture_count(space_type, space.bathroom_vanity_count)
     waterproof_area_m2 = calculate_waterproof_area_m2(space_type, floor_area_m2, wall_measure_length_m, height_m)
+    stair_railing_length_m = calculate_stair_railing_length_m(space.stair_railing_lengths_m, height_m)
+    guardrail_length_m = round(sum(space.guardrail_lengths_m), 2)
+    atrium_curtain_width_m = round(space.atrium_curtain_width_m, 2) if space_type == "挑空" else 0
+    atrium_curtain_height_m = round(space.atrium_curtain_height_m, 2) if space_type == "挑空" else 0
+    atrium_curtain_area_m2 = round(atrium_curtain_width_m * atrium_curtain_height_m, 2)
 
     anomalies = list(space.anomalies)
     if len(space.boundary_points_m) < 3:
@@ -132,14 +139,19 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
         floor=space.floor,
         space_name=space.name,
         space_type=space_type,
+        gross_floor_area_m2=gross_floor_area_m2,
         floor_area_m2=floor_area_m2,
-        ceiling_area_m2=floor_area_m2,
+        ceiling_area_m2=ceiling_area_m2,
+        void_area_m2=round(space.void_area_m2, 2),
         wall_measure_length_m=wall_measure_length_m,
         height_m=height_m,
         window_width_total_m=window_width_total_m,
         windowsill_length_m=windowsill_length_m,
         curtain_wall_width_m=curtain_wall_width_m,
         curtain_wall_width_source=curtain_wall_width_source,
+        atrium_curtain_width_m=atrium_curtain_width_m,
+        atrium_curtain_height_m=atrium_curtain_height_m,
+        atrium_curtain_area_m2=atrium_curtain_area_m2,
         window_area_m2=window_area_m2,
         door_width_total_m=door_width_total_m,
         door_deduct_area_m2=door_deduct_area_m2,
@@ -168,6 +180,8 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
         custom_cabinet_area_m2=custom_cabinet_area_m2,
         toilet_count=toilet_count,
         bathroom_vanity_count=bathroom_vanity_count,
+        stair_railing_length_m=stair_railing_length_m,
+        guardrail_length_m=guardrail_length_m,
         waterproof_area_m2=waterproof_area_m2,
         evidence=evidence,
         anomalies=anomalies,
@@ -239,6 +253,10 @@ def calculate_floor_tile_piece_count(floor_area_m2: float) -> int:
     if floor_area_m2 <= 0:
         return 0
     return math.ceil(floor_area_m2 * FLOOR_TILE_LOSS_RATE / (FLOOR_TILE_WIDTH_M * FLOOR_TILE_LENGTH_M))
+
+
+def calculate_stair_railing_length_m(plan_lengths_m: list[float], height_m: float) -> float:
+    return round(sum(math.sqrt(length_m * length_m + height_m * height_m) for length_m in plan_lengths_m), 2)
 
 
 def calculate_new_wall_area_m2(new_wall_length_m: float, height_m: float) -> float:
