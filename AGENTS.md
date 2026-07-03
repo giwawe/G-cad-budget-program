@@ -112,7 +112,8 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - `QUOTE_BATHROOM_VANITY`：可选浴室柜点位；不画时卫生间默认按 1 套浴室柜计。
 - `QUOTE_WINDOW`：窗洞宽度标记，默认参与墙面扣减。
 - `QUOTE_DOOR`：门洞宽度标记，普通门默认不扣墙面。
-- `QUOTE_TEXT`：空间名称文字；`QUOTE_FLOOR`、`QUOTE_HEIGHT` 当前只读取文字，能力仍有限。
+- `QUOTE_TEXT`：空间名称文字；`QUOTE_FLOOR`、`QUOTE_HEIGHT` 当前读取文字，`QUOTE_HEIGHT`/常见错拼 `OUOTE_HEIGHT` 中邻近窗洞的 `HEIGHT/H/窗高` 标识可作为窗高。
+- 图层名兼容常见错拼：`QUQTE_*` 会按对应 `QUOTE_*` 读取，`QUQTE_WINDOM` 会按 `QUOTE_WINDOW` 读取；规范出图仍应使用标准 `QUOTE_*` 名称。
 
 核心公式：
 
@@ -150,8 +151,8 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 空间分类：
 
 - 关键词分类在 `server/app/quantity/classification.py`。
-- 已覆盖：客厅、餐厅、厨房、卫生间、阳台、卧室、书房、衣帽间、储物间、洗衣房、门厅、楼梯过道、楼梯、过道、露台、外墙。常用别名包含：客卧/主卧/次卧 -> 卧室，公卫/客卫/主卫/次卫 -> 卫生间。
-- `电梯井`、`设备井`、`管井`、`风井` 默认识别但不计价，状态为 `excluded`。
+- 已覆盖：客厅、餐厅、厨房、卫生间、阳台、卧室、书房、茶室、娱乐室、衣帽间、储物间、洗衣房、门厅、楼梯过道、楼梯、过道、露台、外墙。常用别名包含：客卧/主卧/次卧/客房 -> 卧室，公卫/客卫/主卫/次卫 -> 卫生间，麻将房/棋牌室/影音室/健身房 -> 娱乐室。
+- `电梯井`、`设备井`、`管井`、`风井`、`挑空`、`楼板洞口`、`楼板开洞`、`栏杆`、`护栏`、`开放边`、`开口边` 默认识别但不计价，状态为 `excluded`。楼梯、楼梯过道、露台仍按普通可计价空间处理。
 
 门洞规则：
 
@@ -226,7 +227,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 
 报价映射默认规则在 `apps/web/lib/quote-mapping.ts`：
 
-- 墙面界面剂处理、墙面批嵌、墙面乳胶漆：按 `latexPaintAreaM2`，仅匹配干区和露台等适用空间。
+- 墙面界面剂处理、墙面批嵌、墙面乳胶漆：按 `latexPaintAreaM2`，仅匹配干区和露台等适用空间；茶室、娱乐室按普通干区接入。
 - 厨房、卫生间顶面类型是可校对选项：默认 `ceilingFinishType=integrated`，按“厨房卫生间集成吊顶”候选项输出，默认单价为 260，可在报价规则单价表中修改；人工切换为 `gypsum` 后，按 `ceilingAreaM2` 进入轻钢龙骨平顶、顶面批嵌、顶面乳胶漆。其它干区默认按石膏板/普通顶面处理。
 - 地面找平：按 `floorAreaM2`，仅匹配厨房、卫生间、阳台、露台、洗衣房。
 - 地面砖铺贴(750X1500)：按 `floorAreaM2`，当前不限制空间类型。
@@ -258,7 +259,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 马桶：按 `toiletCount`，卫生间默认 1 个，点位覆盖时按 `QUOTE_TOILET` 数量生成。
 - 浴室柜：按 `bathroomVanityCount`，卫生间默认 1 套，点位覆盖时按 `QUOTE_BATHROOM_VANITY` 数量生成。
 - 花洒、卫浴五件套：按 `bathroom_count`，每个可计价卫生间默认 1 套，报价员可在 Excel 草稿中调整数量或删除。
-- 窗帘墙宽候选 `curtainWallWidthM` 在工程量表展示，自动候选和人工校准值都会导出为 `curtain_quote_candidates` 候选清单；`curtain_wall_width_m` 已属于可导入报价规则 metric，来源为 `manual`、`matched_window_wall`、`matched_l_shape_window` 或 `fallback_longest_wall` 且长度大于 0 时生成暗窗帘箱金额。
+- 窗帘墙宽候选 `curtainWallWidthM` 在工程量表展示，自动候选和人工校准值都会导出为 `curtain_quote_candidates` 候选清单；`curtain_wall_width_m` 已属于可导入报价规则 metric，来源为 `manual`、`matched_window_wall`、`matched_l_shape_window` 或 `fallback_longest_wall` 且长度大于 0 时生成暗窗帘箱金额；茶室、娱乐室按普通干区进入窗帘候选。
 
 这些规则只覆盖现有算量口径能稳定承接的自动计价项目，不等于完整整装报价。
 

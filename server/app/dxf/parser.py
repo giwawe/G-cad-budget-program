@@ -30,6 +30,11 @@ QUOTE_LAYERS = {
     "QUOTE_EXT_WALL",
     "QUOTE_TEXT",
 }
+QUOTE_LAYER_ALIASES = {
+    "OUOTE_HEIGHT": "QUOTE_HEIGHT",
+    "QUQTE_WINDOM": "QUOTE_WINDOW",
+    **{f"QUQTE_{layer.removeprefix('QUOTE_')}": layer for layer in QUOTE_LAYERS},
+}
 L_SHAPED_WINDOW_MIN_SEGMENT_LENGTH_M = 0.45
 L_SHAPED_WINDOW_MIN_SEGMENT_COUNT = 6
 KITCHEN_CABINET_OUTLINE_DEPTH_MIN_M = 0.25
@@ -132,6 +137,10 @@ def parse_dxf_layers(_: bytes) -> ParsedDxf:
     raise NotImplementedError("DXF layer extraction will be implemented after standardized sample files exist.")
 
 
+def _normalize_quote_layer(layer: str) -> str:
+    return QUOTE_LAYER_ALIASES.get(layer, layer)
+
+
 def parse_dxf_spaces(content: bytes, defaults: ProjectDefaults) -> list[SpaceInput]:
     return parse_dxf_review(content, defaults).spaces
 
@@ -167,7 +176,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
     measured_walls: list[tuple[Point, Point]] = []
 
     for entity in modelspace:
-        layer = entity.dxf.layer
+        layer = _normalize_quote_layer(entity.dxf.layer)
         if layer == "QUOTE_ROOM":
             points = _polyline_points(entity, defaults.unit_scale_to_m)
             if points:
@@ -243,6 +252,10 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         elif layer in {"QUOTE_TEXT", "QUOTE_FLOOR", "QUOTE_HEIGHT"} and entity.dxftype() in {"TEXT", "MTEXT"}:
             text = _text_content(entity)
             point = _text_point(entity, defaults.unit_scale_to_m)
+            if layer == "QUOTE_HEIGHT":
+                height_m = _height_from_text(text)
+                if height_m is not None:
+                    window_height_markers.append((point, height_m))
             if text:
                 texts.append((point, text))
 
@@ -841,7 +854,7 @@ def _door_insert_width_m(entity, scale: float) -> float:
 
 
 def _door_quote_category_from_entity(entity) -> str | None:
-    texts = [str(getattr(entity.dxf, "layer", ""))]
+    texts = [_normalize_quote_layer(str(getattr(entity.dxf, "layer", "")))]
     if entity.dxftype() == "INSERT":
         texts.append(str(getattr(entity.dxf, "name", "")))
     haystack = " ".join(texts).lower()
@@ -1003,7 +1016,7 @@ def _extract_base_drawing(modelspace, scale: float, bbox: dict[str, float]) -> t
 
 
 def _skip_base_entity(entity) -> bool:
-    layer = entity.dxf.layer
+    layer = _normalize_quote_layer(entity.dxf.layer)
     return (layer.startswith("QUOTE_") and layer != "QUOTE_TEXT") or layer in {"图框", "SH-尺寸标注"}
 
 

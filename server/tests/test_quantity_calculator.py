@@ -13,6 +13,25 @@ def test_polygon_area_and_closed_length():
     assert contains_point(points, (5, 2)) is False
 
 
+def test_villa_common_space_names_are_classified_or_excluded():
+    assert classify_space_type("麻将房") == "娱乐室"
+    assert classify_space_type("茶室") == "茶室"
+    assert classify_space_type("客房") == "卧室"
+    assert classify_space_type("楼梯过道") == "楼梯过道"
+    assert classify_space_type("露台") == "露台"
+    assert classify_space_type("挑空") == "其他"
+    assert classify_space_type("上层楼板洞口") == "其他"
+    assert classify_space_type("阳台栏杆") == "阳台"
+    assert classify_space_type("护栏") == "其他"
+    assert classify_space_type("开放边") == "其他"
+    assert is_excluded_space("电梯井") is True
+    assert is_excluded_space("挑空") is True
+    assert is_excluded_space("上层楼板洞口") is True
+    assert is_excluded_space("阳台栏杆") is True
+    assert is_excluded_space("护栏") is True
+    assert is_excluded_space("开放边") is True
+
+
 def test_latex_area_adds_door_width_back_before_optional_deduction():
     defaults = ProjectDefaults(project_height_m=2.8, default_window_height_m=1.5, default_door_height_m=2.1)
     space = SpaceInput(

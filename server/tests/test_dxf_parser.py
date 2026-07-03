@@ -20,6 +20,7 @@ from server.tests.dxf_fixtures import (
     build_kitchen_cabinet_dxf,
     build_kitchen_cabinet_outline_dxf,
     build_l_shaped_window_dxf,
+    build_misspelled_quote_layer_dxf,
     build_new_wall_dxf,
     build_simple_quote_dxf,
     build_window_on_short_wall_dxf,
@@ -41,6 +42,19 @@ def test_parse_standard_quote_dxf_into_space_input():
     assert [window.width_m for window in space.windows] == [3.2]
     assert [door.width_m for door in space.doors] == [0.9]
     assert space.anomalies == []
+
+
+def test_parse_common_misspelled_quote_layers_as_standard_layers():
+    review = parser.parse_dxf_review(build_misspelled_quote_layer_dxf(), ProjectDefaults(default_window_height_m=1.8))
+
+    assert len(review.spaces) == 1
+    space = review.spaces[0]
+    assert space.name == "一层-客厅"
+    assert space.wall_lengths_m == [6.0, 5.0, 4.0]
+    assert [window.width_m for window in space.windows] == [3.2]
+    assert [window.height_m for window in space.windows] == [1.5]
+    assert [door.width_m for door in space.doors] == [0.9]
+    assert review.drawing.building_area_m2 == 56
 
 
 def test_parse_real_gbk_quote_dxf_from_fixture():

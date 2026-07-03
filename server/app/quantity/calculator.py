@@ -7,10 +7,10 @@ from server.app.quantity.geometry import polygon_area
 FULL_WALL_TILE_SPACE_TYPES = {"厨房", "卫生间"}
 WATERPROOF_SPACE_TYPES = {"厨房", "卫生间", "阳台", "露台", "洗衣房"}
 SLIDING_DOOR_QUOTE_SPACE_TYPES = {"厨房", "阳台", "露台"}
-CURTAIN_CANDIDATE_SPACE_TYPES = {"客厅", "餐厅", "卧室", "书房"}
+CURTAIN_CANDIDATE_SPACE_TYPES = {"客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室"}
 KITCHEN_CABINET_SPACE_TYPES = {"厨房"}
 BATHROOM_FIXTURE_SPACE_TYPES = {"卫生间"}
-INTERIOR_DOOR_COUNT_SPACE_TYPES = {"厨房", "卫生间", "卧室", "书房", "衣帽间", "储物间", "洗衣房"}
+INTERIOR_DOOR_COUNT_SPACE_TYPES = {"厨房", "卫生间", "卧室", "书房", "茶室", "娱乐室", "衣帽间", "储物间", "洗衣房"}
 WALL_TILE_HEIGHT_M = 2.5
 KITCHEN_WALL_TILE_WINDOW_DEDUCTION_THRESHOLD_M2 = 3.0
 SLIDING_DOOR_DEFAULT_HEIGHT_M = 2.2

@@ -376,6 +376,52 @@ assert.deepEqual(bedroomDefaultMapping.items.map((item) => item.item_name), [
 assert.deepEqual(bedroomDefaultMapping.items.filter((item) => ["地面瓷砖", "瓷砖加工费", "美缝", "强电布线", "弱电布线", "水路布管"].includes(item.item_name)).map((item) => item.space_name), ["全屋", "全屋", "全屋", "全屋", "全屋", "全屋"]);
 assert.equal(bedroomDefaultMapping.summary.total_amount, 50321.2);
 
+const villaDrySpaceMapping = buildQuoteMapping(
+  [
+    {
+      ...rows[0],
+      spaceName: "茶室",
+      spaceType: "茶室",
+      floorAreaM2: 9,
+      ceilingAreaM2: 9,
+      wallMeasureLengthM: 10,
+      latexPaintAreaM2: 28,
+      wallTileAreaM2: 0,
+      waterproofAreaM2: 0,
+      curtainWallWidthM: 3,
+      curtainWallWidthSource: "matched_window_wall",
+      interiorDoorCount: 1,
+      customCabinetAreaM2: 0,
+      kitchenBaseCabinetLengthM: 0,
+      kitchenWallCabinetLengthM: 0,
+    },
+    {
+      ...rows[0],
+      spaceName: "麻将房",
+      spaceType: "娱乐室",
+      floorAreaM2: 8,
+      ceilingAreaM2: 8,
+      wallMeasureLengthM: 9,
+      latexPaintAreaM2: 25,
+      wallTileAreaM2: 0,
+      waterproofAreaM2: 0,
+      curtainWallWidthM: 2.5,
+      curtainWallWidthSource: "matched_window_wall",
+      interiorDoorCount: 1,
+      customCabinetAreaM2: 0,
+      kitchenBaseCabinetLengthM: 0,
+      kitchenWallCabinetLengthM: 0,
+    },
+  ],
+  defaultQuoteRules(),
+  { building_area_m2: 0 },
+);
+
+assert.ok(villaDrySpaceMapping.items.some((item) => item.space_name === "茶室" && item.item_name === "墙面乳胶漆"));
+assert.ok(villaDrySpaceMapping.items.some((item) => item.space_name === "麻将房" && item.item_name === "顶面乳胶漆"));
+assert.equal(villaDrySpaceMapping.curtain_quote_readiness.ready_count, 2);
+assert.equal(villaDrySpaceMapping.items.filter((item) => item.item_name === "暗窗帘箱").length, 2);
+
 const livingRoomWallTileMapping = buildQuoteMapping([{ ...rows[0], spaceName: "客厅", spaceType: "客厅", wallTileAreaM2: 11.2, waterproofAreaM2: 0, customCabinetAreaM2: 0, kitchenBaseCabinetLengthM: 0, kitchenWallCabinetLengthM: 0 }]);
 assert.ok(livingRoomWallTileMapping.items.some((item) => item.space_name === "客厅" && item.item_name === "墙面贴瓷砖(600X1200)" && item.quantity === 11.2));
 
@@ -491,7 +537,7 @@ assert.deepEqual(rules.at(-1), {
   material_price: 65,
   auxiliary_price: 0,
   labor_price: 45,
-  space_types: ["客厅", "餐厅", "卧室", "书房"],
+  space_types: ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室"],
 });
 assert.deepEqual(rules.find((rule) => rule.item_name === "砌砖墙"), {
   item_name: "砌砖墙",
@@ -765,11 +811,11 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "卫浴五件套"), {
   labor_price: 0,
   space_types: ["卫生间"],
 });
-assert.deepEqual(rules[0].space_types, ["客厅", "餐厅", "卧室", "书房", "过道", "门厅", "楼梯过道", "衣帽间", "储物间", "露台"]);
+assert.deepEqual(rules[0].space_types, ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯过道", "衣帽间", "储物间", "露台"]);
 rules[0].unit_price = 99;
 rules[0].space_types?.push("厨房");
 assert.equal(defaultQuoteRules()[0].unit_price, 7);
-assert.deepEqual(defaultQuoteRules()[0].space_types, ["客厅", "餐厅", "卧室", "书房", "过道", "门厅", "楼梯过道", "衣帽间", "储物间", "露台"]);
+assert.deepEqual(defaultQuoteRules()[0].space_types, ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯过道", "衣帽间", "储物间", "露台"]);
 
 const editedRules = updateQuoteRuleUnitPrice(defaultQuoteRules(), 3, 128.456);
 assert.equal(editedRules[3].item_name, "厨房卫生间集成吊顶");
