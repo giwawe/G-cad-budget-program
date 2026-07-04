@@ -583,7 +583,7 @@ assert.equal(dryAreaMapping.summary.total_amount, 600);
 
 const rules = defaultQuoteRules();
 assert.equal(DEFAULT_QUOTE_RULES_NAME, "商品房整装默认规则");
-assert.equal(rules.length, 57);
+assert.equal(rules.length, 59);
 assert.equal(rules[0].item_name, "墙面界面剂处理");
 assert.equal(rules[0].metric, "latex_paint_area_m2");
 assert.equal(rules[0].unit_price, 7);
@@ -636,8 +636,8 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "楼梯扶手"), {
   item_name: "楼梯扶手",
   metric: "stair_railing_length_m",
   unit: "M",
-  unit_price: 0,
-  material_price: 0,
+  unit_price: 470,
+  material_price: 470,
   auxiliary_price: 0,
   labor_price: 0,
   space_types: undefined,
@@ -894,11 +894,11 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "卫浴五件套"), {
   labor_price: 0,
   space_types: ["卫生间"],
 });
-assert.deepEqual(rules[0].space_types, ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯过道", "衣帽间", "储物间", "露台"]);
+assert.deepEqual(rules[0].space_types, ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "衣帽间", "储物间", "露台"]);
 rules[0].unit_price = 99;
 rules[0].space_types?.push("厨房");
 assert.equal(defaultQuoteRules()[0].unit_price, 7);
-assert.deepEqual(defaultQuoteRules()[0].space_types, ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯过道", "衣帽间", "储物间", "露台"]);
+assert.deepEqual(defaultQuoteRules()[0].space_types, ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "衣帽间", "储物间", "露台"]);
 
 const editedRules = updateQuoteRuleUnitPrice(defaultQuoteRules(), 3, 128.456);
 assert.equal(editedRules[3].item_name, "厨房卫生间集成吊顶");
@@ -1298,7 +1298,16 @@ assert.deepEqual(bathroomFixtureMapping.items.filter((item) => item.item_name ==
 
 const windowedBedroomMapping = buildQuoteMapping([{ ...rows[0], spaceName: "主卧", spaceType: "卧室", windowWidthTotalM: 1.8, windowsillLengthM: 1.8, wallTileAreaM2: 0, waterproofAreaM2: 0 }]);
 const windowsillItem = windowedBedroomMapping.items.find((item) => item.item_name === "窗台石铺贴");
-assert.equal(windowsillItem, undefined);
+assert.deepEqual(windowsillItem && stripQuoteItemPriceParts(windowsillItem), {
+  floor: "一层",
+  space_name: "主卧",
+  space_type: "卧室",
+  item_name: "窗台石铺贴",
+  quantity: 1.8,
+  unit: "M",
+  unit_price: 73,
+  amount: 131.4,
+});
 
 const curtainReadiness = curtainQuoteReadiness([
   curtainOnlyRow("主卧", "卧室", 4.2, "manual"),

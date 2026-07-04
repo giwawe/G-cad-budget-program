@@ -7,7 +7,7 @@
     "material_price": 0,
     "auxiliary_price": 4,
     "labor_price": 3,
-    "space_types": ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯过道", "衣帽间", "储物间", "露台"]
+    "space_types": ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "衣帽间", "储物间", "露台"]
   },
   {
     "item_name": "墙面批嵌",
@@ -17,7 +17,7 @@
     "material_price": 0,
     "auxiliary_price": 15,
     "labor_price": 10,
-    "space_types": ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯过道", "衣帽间", "储物间", "露台"]
+    "space_types": ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "衣帽间", "储物间", "露台"]
   },
   {
     "item_name": "墙面乳胶漆",
@@ -27,7 +27,7 @@
     "material_price": 10,
     "auxiliary_price": 0,
     "labor_price": 10,
-    "space_types": ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯过道", "衣帽间", "储物间", "露台"]
+    "space_types": ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "衣帽间", "储物间", "露台"]
   },
   {
     "item_name": "厨房卫生间集成吊顶",
@@ -47,7 +47,7 @@
     "material_price": 110,
     "auxiliary_price": 10,
     "labor_price": 60,
-    "space_types": ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯过道", "衣帽间", "储物间", "厨房", "卫生间"]
+    "space_types": ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "衣帽间", "储物间", "厨房", "卫生间"]
   },
   {
     "item_name": "顶面批嵌",
@@ -57,7 +57,7 @@
     "material_price": 0,
     "auxiliary_price": 15,
     "labor_price": 10,
-    "space_types": ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯过道", "衣帽间", "储物间", "露台", "厨房", "卫生间"]
+    "space_types": ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "衣帽间", "储物间", "露台", "厨房", "卫生间"]
   },
   {
     "item_name": "顶面乳胶漆",
@@ -67,7 +67,7 @@
     "material_price": 10,
     "auxiliary_price": 0,
     "labor_price": 10,
-    "space_types": ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯过道", "衣帽间", "储物间", "露台", "厨房", "卫生间"]
+    "space_types": ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "衣帽间", "储物间", "露台", "厨房", "卫生间"]
   },
   {
     "item_name": "地面找平",
@@ -196,6 +196,15 @@
     "auxiliary_price": 10.5,
     "labor_price": 13,
     "space_types": ["厨房", "卫生间", "阳台", "露台", "洗衣房"]
+  },
+  {
+    "item_name": "窗台石铺贴",
+    "metric": "windowsill_length_m",
+    "unit": "M",
+    "unit_price": 73,
+    "material_price": 0,
+    "auxiliary_price": 28,
+    "labor_price": 45
   },
   {
     "item_name": "砌砖墙",
@@ -374,10 +383,23 @@
     "item_name": "楼梯扶手",
     "metric": "stair_railing_length_m",
     "unit": "M",
-    "unit_price": 0,
-    "material_price": 0,
+    "unit_price": 470,
+    "material_price": 470,
     "auxiliary_price": 0,
     "labor_price": 0
+  },
+  {
+    "item_name": "楼梯踏步铺贴",
+    "metric": "stair_tread_count",
+    "unit": "步",
+    "unit_price": 125,
+    "material_price": 0,
+    "auxiliary_price": 45,
+    "labor_price": 80,
+    "space_types": [
+      "楼梯",
+      "楼梯过道"
+    ]
   },
   {
     "item_name": "栏杆/护栏",

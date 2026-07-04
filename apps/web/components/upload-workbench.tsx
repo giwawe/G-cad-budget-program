@@ -727,7 +727,11 @@ export function UploadWorkbench({
 
   function handleDownloadQuoteExcel(mapping: QuoteMapping) {
     const downloadName = quoteExcelFileName(fileName);
-    const content = buildQuoteExcelHtml(mapping, fileName, { manualItems: manualQuoteItemQuantities });
+    const content = buildQuoteExcelHtml(mapping, fileName, {
+      manualItems: manualQuoteItemQuantities,
+      bathroomChoices: bathroomManualChoices,
+      bathroomRows,
+    });
     const blob = new Blob([content], { type: "application/vnd.ms-excel;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");

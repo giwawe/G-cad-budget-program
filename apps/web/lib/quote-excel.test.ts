@@ -372,6 +372,132 @@ assert.ok(defaultProjectHtml.includes("<td>窗帘</td><td>M</td><td>36.06</td><t
 assert.ok(defaultProjectHtml.includes("<td>暗窗帘箱</td><td>M</td><td>6.63</td><td>65.00</td><td>0.00</td><td>45.00</td><td>729.30</td>"));
 assert.ok(defaultProjectHtml.includes("<td>窗台石</td><td>套</td><td>1</td><td>3600.00</td><td>0.00</td><td>0.00</td><td>0.00</td>"));
 
+const defaultBathroomRows = defaultProjectRows.filter((row) => row.spaceType === "卫生间");
+const bathroomInstallHtml = buildQuoteExcelHtml(defaultProjectMapping, "默认10号图纸", {
+  bathroomRows: defaultBathroomRows,
+  bathroomChoices: {
+    [`${defaultBathroomRows[0].floor}::${defaultBathroomRows[0].spaceName}::0`]: { shower: "淋浴隔断" },
+  },
+});
+assert.ok(bathroomInstallHtml.includes("<td>卫生间一工程</td>"));
+assert.ok(bathroomInstallHtml.includes("<td>淋浴隔断安装</td><td>套</td><td>1</td><td>0.00</td><td>0.00</td><td>200.00</td><td>200.00</td>"));
+
+const villaLikeHtml = buildQuoteExcelHtml(
+  {
+    ...mapping,
+    items: [
+      {
+        floor: "一层",
+        space_name: "楼梯间",
+        space_type: "楼梯",
+        item_name: "墙面乳胶漆",
+        quantity: 18,
+        unit: "m2",
+        unit_price: 20,
+        amount: 360,
+      },
+      {
+        floor: "一层",
+        space_name: "楼梯间",
+        space_type: "楼梯",
+        item_name: "轻钢龙骨平顶",
+        quantity: 6,
+        unit: "m2",
+        unit_price: 180,
+        amount: 1080,
+      },
+      {
+        floor: "一层",
+        space_name: "楼梯间",
+        space_type: "楼梯",
+        item_name: "楼梯踏步铺贴",
+        quantity: 15,
+        unit: "步",
+        unit_price: 125,
+        amount: 1875,
+      },
+      {
+        floor: "一层",
+        space_name: "卧室一",
+        space_type: "卧室",
+        item_name: "墙面乳胶漆",
+        quantity: 20,
+        unit: "m2",
+        unit_price: 20,
+        amount: 400,
+      },
+      {
+        floor: "一层",
+        space_name: "卧室二",
+        space_type: "卧室",
+        item_name: "墙面乳胶漆",
+        quantity: 22,
+        unit: "m2",
+        unit_price: 20,
+        amount: 440,
+      },
+      {
+        floor: "二层",
+        space_name: "卫生间",
+        space_type: "卫生间",
+        item_name: "地面找平",
+        quantity: 3,
+        unit: "m2",
+        unit_price: 56,
+        amount: 168,
+      },
+      {
+        floor: "二层",
+        space_name: "公卫",
+        space_type: "卫生间",
+        item_name: "地面找平",
+        quantity: 4,
+        unit: "m2",
+        unit_price: 56,
+        amount: 224,
+      },
+      {
+        floor: "二层",
+        space_name: "卫生间",
+        space_type: "卫生间",
+        item_name: "淋浴隔断安装",
+        quantity: 2,
+        unit: "套",
+        unit_price: 200,
+        amount: 400,
+      },
+      {
+        floor: "二层",
+        space_name: "卧室",
+        space_type: "卧室",
+        item_name: "窗台石铺贴",
+        quantity: 2.4,
+        unit: "M",
+        unit_price: 73,
+        amount: 175.2,
+      },
+    ],
+    summary: {
+      ...mapping.summary,
+      item_count: 9,
+      total_amount: 5122.2,
+    },
+  },
+  "别墅口径项目",
+);
+assert.ok(villaLikeHtml.includes("<td>二</td><td>一层楼梯间工程</td>"));
+assert.ok(villaLikeHtml.includes("<td>楼梯踏步铺贴</td><td>步</td><td>15</td><td>0.00</td><td>45.00</td><td>80.00</td><td>1875.00</td>"));
+assert.ok(villaLikeHtml.includes("<td>墙面乳胶漆</td><td>m2</td><td>18</td><td>10.00</td><td>0.00</td><td>10.00</td><td>360.00</td>"));
+assert.ok(villaLikeHtml.includes("<td>轻钢龙骨平顶</td><td>m2</td><td>6</td><td>110.00</td><td>10.00</td><td>60.00</td><td>1080.00</td>"));
+assert.ok(villaLikeHtml.includes("<td>三</td><td>一层卧室工程一</td>"));
+assert.ok(villaLikeHtml.includes("<td>四</td><td>一层卧室工程二</td>"));
+assert.ok(villaLikeHtml.includes("<td>五</td><td>二层卫生间、盥洗区工程</td>"));
+assert.equal(countOccurrences(villaLikeHtml, "<td>二层卫生间、盥洗区工程</td>"), 1);
+assert.ok(villaLikeHtml.includes("<td>地面找平</td><td>m2</td><td>7</td><td>0.00</td><td>26.00</td><td>30.00</td><td>392.00</td>"));
+assert.ok(villaLikeHtml.includes("<td>淋浴隔断安装</td><td>套</td><td>2</td><td>0.00</td><td>0.00</td><td>200.00</td><td>400.00</td>"));
+assert.ok(villaLikeHtml.includes("<td>六</td><td>二层卧室工程</td>"));
+assert.ok(villaLikeHtml.includes("<td>窗台石铺贴</td><td>M</td><td>2.40</td><td>0.00</td><td>28.00</td><td>45.00</td><td>175.20</td>"));
+
 function countOccurrences(value: string, pattern: string): number {
   return value.split(pattern).length - 1;
 }

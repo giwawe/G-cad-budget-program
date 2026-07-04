@@ -1,4 +1,6 @@
 import type { QuoteMapping } from "./quote-mapping";
+import type { BathroomManualChoice } from "./manual-quote-options";
+import type { QuantityRow } from "./types";
 
 export type ManualQuoteDraftItem = {
   floor: string;
@@ -11,6 +13,8 @@ export type QuoteExcelManualItemQuantities = Partial<Record<string, number>>;
 
 export type QuoteExcelOptions = {
   manualItems?: QuoteExcelManualItemQuantities;
+  bathroomChoices?: Record<string, BathroomManualChoice>;
+  bathroomRows?: QuantityRow[];
 };
 
 type QuoteTemplateSection = {
@@ -20,6 +24,11 @@ type QuoteTemplateSection = {
 };
 
 type QuoteTemplateSectionDefinition = Omit<QuoteTemplateSection, "code">;
+type RoomSectionGroup = {
+  key: string;
+  title: string;
+  items: QuoteMapping["items"];
+};
 
 const ROOM_SECTION_ITEM_NAMES = [
   "轻钢龙骨平顶",
@@ -33,6 +42,9 @@ const ROOM_SECTION_ITEM_NAMES = [
   "墙地面防漏处理",
   "墙面贴瓷砖(600X1200)",
   "地面砖铺贴(750X1500)",
+  "窗台石铺贴",
+  "淋浴隔断安装",
+  "楼梯踏步铺贴",
 ];
 
 const ONE_ITEM_PLACEHOLDER_NAMES = new Set(["窗台石"]);
@@ -96,6 +108,8 @@ const TEMPLATE_PRICES: Record<string, QuoteTemplatePrice> = {
   "墙面贴瓷砖(600X1200)": { material: 0, auxiliary: 40, labor: 60, note: "辅料为水泥、黄沙、瓷砖背胶、胶泥。" },
   墙地面防漏处理: { material: 28, auxiliary: 10.5, labor: 13, note: "墙地面清理，涂刷防水涂料。" },
   窗台石铺贴: { material: 0, auxiliary: 28, labor: 45, note: "主材及磨边业主甲供，辅料为水泥、黄沙。" },
+  淋浴隔断安装: { material: 0, auxiliary: 0, labor: 200, note: "淋浴隔断或玻璃淋浴房安装人工。" },
+  楼梯踏步铺贴: { material: 0, auxiliary: 45, labor: 80, note: "主材及磨边，按楼梯踏步数计。" },
   砌砖墙: { material: 100, auxiliary: 0, labor: 120, note: "未标注墙厚时按 240 厚砌墙口径输出，设计师可调整。" },
   砌120厚砖墙: { material: 80, auxiliary: 0, labor: 90, note: "水泥、沙、砖、人工辅料。" },
   砌240厚砖墙: { material: 100, auxiliary: 0, labor: 120, note: "水泥、沙、砖、人工辅料。" },
@@ -130,6 +144,7 @@ const TEMPLATE_PRICES: Record<string, QuoteTemplatePrice> = {
   窗台石: { material: 3600, auxiliary: 0, labor: 0, note: "按套预留，设计师确认价格。" },
   全屋保洁: { material: 4500, auxiliary: 0, labor: 0, note: "最后全屋开荒保洁，默认 1 套。" },
   暗窗帘箱: { material: 65, auxiliary: 0, labor: 45, note: "木工板立架，石膏板饰面。" },
+  楼梯扶手: { material: 470, auxiliary: 0, labor: 0, note: "楼梯扶手，按模板主材单价。" },
 };
 
 const QUOTE_EXCEL_FOOTER_NOTES = [
@@ -261,15 +276,16 @@ function quoteTemplateRows(mapping: QuoteMapping, options: QuoteExcelOptions): s
   const rows: string[][] = [];
   let sectionIndex = 1;
   let directTotal = 0;
+  const multiFloorProject = isMultiFloorProject(mapping.items, options.bathroomRows);
 
   const firstFixedSection = templateSectionWithCode(FIXED_TEMPLATE_SECTIONS[0], sectionIndex++);
   const firstFixedSectionRows = quoteTemplateSectionRows(firstFixedSection, fixedSectionItems(mapping.items, remainingItems, firstFixedSection), remainingItems, true, options);
   rows.push(...firstFixedSectionRows.rows);
   directTotal += firstFixedSectionRows.subtotal;
 
-  for (const spaceName of dynamicSpaceNames(mapping.items)) {
-    const roomSection = templateSectionWithCode({ title: `${spaceName}工程`, itemNames: ROOM_SECTION_ITEM_NAMES }, sectionIndex++);
-    const roomRows = quoteTemplateSectionRows(roomSection, roomSectionItems(mapping.items, remainingItems, spaceName), remainingItems, false, options);
+  for (const group of dynamicRoomSectionGroups(mapping.items, remainingItems, options, multiFloorProject)) {
+    const roomSection = templateSectionWithCode({ title: group.title, itemNames: ROOM_SECTION_ITEM_NAMES }, sectionIndex++);
+    const roomRows = quoteTemplateSectionRows(roomSection, group.items, remainingItems, false, options);
     rows.push(...roomRows.rows);
     directTotal += roomRows.subtotal;
   }
@@ -423,6 +439,9 @@ function shouldRenderZeroPlaceholder(itemName: string): boolean {
 }
 
 function templateUnitForItem(itemName: string): string {
+  if (itemName === "楼梯踏步铺贴") {
+    return "步";
+  }
   if (["蹲坑", "马桶", "淋浴隔断", "玻璃淋浴房", "窗台石"].includes(itemName)) {
     return "套";
   }
@@ -435,7 +454,7 @@ function templateUnitForItem(itemName: string): string {
   if (["砌砖墙", "砌120厚砖墙", "砌240厚砖墙", "外墙批嵌以及修补", "水泥墙开槽", "补线、管槽及零星修补", "铝合金封门窗"].includes(itemName)) {
     return "M2";
   }
-  if (["阳台推拉门双包套", "窗帘"].includes(itemName)) {
+  if (["阳台推拉门双包套", "窗帘", "窗台石铺贴"].includes(itemName)) {
     return "M";
   }
   if (["阳台推拉门"].includes(itemName)) {
@@ -487,21 +506,124 @@ function templateSectionWithCode(section: QuoteTemplateSectionDefinition, index:
   return { ...section, code: chineseSectionCode(index) };
 }
 
-function dynamicSpaceNames(items: QuoteMapping["items"]): string[] {
-  const spaceNames: string[] = [];
+function dynamicRoomSectionGroups(items: QuoteMapping["items"], remainingItems: Set<QuoteMapping["items"][number]>, options: QuoteExcelOptions, multiFloorProject: boolean): RoomSectionGroup[] {
+  const groups: RoomSectionGroup[] = [];
+  const groupedItems = new Map<string, QuoteMapping["items"]>();
+  const groupTitles = new Map<string, string>();
   for (const item of items) {
     if (item.space_name === "全屋" || !isRoomSectionItem(item.item_name)) {
       continue;
     }
-    if (!spaceNames.includes(item.space_name)) {
-      spaceNames.push(item.space_name);
-    }
+    const group = roomSectionGroupForItem(item, multiFloorProject);
+    groupedItems.set(group.key, [...(groupedItems.get(group.key) ?? []), item]);
+    groupTitles.set(group.key, group.title);
   }
-  return spaceNames;
+  for (const item of bathroomInstallationItemsFromOptions(options, multiFloorProject)) {
+    const group = roomSectionGroupForItem(item, multiFloorProject);
+    groupedItems.set(group.key, [...(groupedItems.get(group.key) ?? []), item]);
+    groupTitles.set(group.key, group.title);
+  }
+  for (const [key, groupItems] of groupedItems.entries()) {
+    groups.push({
+      key,
+      title: groupTitles.get(key) ?? key,
+      items: groupItems.filter((item) => !items.includes(item) || remainingItems.has(item)),
+    });
+  }
+  return groups.filter((group) => group.items.length > 0);
 }
 
-function roomSectionItems(items: QuoteMapping["items"], remainingItems: Set<QuoteMapping["items"][number]>, spaceName: string): QuoteMapping["items"] {
-  return items.filter((item) => remainingItems.has(item) && item.space_name === spaceName && isRoomSectionItem(item.item_name));
+function roomSectionGroupForItem(item: QuoteMapping["items"][number], multiFloorProject: boolean): Pick<RoomSectionGroup, "key" | "title"> {
+  if (multiFloorProject && item.space_type === "卫生间") {
+    return { key: bathroomSectionKey(item.floor), title: bathroomSectionTitle(item.floor) };
+  }
+  if (!multiFloorProject) {
+    return { key: item.space_name, title: `${item.space_name}工程` };
+  }
+  return {
+    key: `${item.floor}::${item.space_name}`,
+    title: standardRoomSectionTitle(item.floor, item.space_name),
+  };
+}
+
+function bathroomSectionKey(floor: string): string {
+  return `${floor}::卫生间、盥洗区`;
+}
+
+function bathroomSectionTitle(floor: string): string {
+  return `${sectionFloorPrefix(floor)}卫生间、盥洗区工程`;
+}
+
+function standardRoomSectionTitle(floor: string, spaceName: string): string {
+  const match = spaceName.match(/^(.+?)([一二三四五六七八九十]+)$/);
+  if (match) {
+    return `${sectionFloorPrefix(floor)}${match[1]}工程${match[2]}`;
+  }
+  return `${sectionFloorPrefix(floor)}${spaceName}工程`;
+}
+
+function sectionFloorPrefix(floor: string): string {
+  return floor && floor !== "全屋" ? floor : "";
+}
+
+function bathroomInstallationItemsFromOptions(options: QuoteExcelOptions, multiFloorProject: boolean): QuoteMapping["items"] {
+  const bathroomRows = options.bathroomRows ?? [];
+  const bathroomChoices = options.bathroomChoices ?? {};
+  const items: QuoteMapping["items"] = [];
+  const quantityByFloor = new Map<string, { floor: string; quantity: number }>();
+  const displayNames = displayBathroomNamesByRow(bathroomRows);
+  bathroomRows.forEach((row, index) => {
+    const choice = bathroomChoices[`${row.floor}::${row.spaceName}::${index}`];
+    if (choice?.shower === "淋浴隔断" || choice?.shower === "玻璃淋浴房") {
+      if (multiFloorProject) {
+        const current = quantityByFloor.get(row.floor) ?? { floor: row.floor, quantity: 0 };
+        quantityByFloor.set(row.floor, { ...current, quantity: current.quantity + 1 });
+      } else {
+        items.push(bathroomInstallationItem(row.floor, displayNames.get(row) ?? row.spaceName, 1));
+      }
+    }
+  });
+  return [...items, ...[...quantityByFloor.values()].map((entry) => bathroomInstallationItem(entry.floor, "卫生间、盥洗区", entry.quantity))];
+}
+
+function bathroomInstallationItem(floor: string, spaceName: string, quantity: number): QuoteMapping["items"][number] {
+  const price = TEMPLATE_PRICES["淋浴隔断安装"];
+  const unitPrice = round2(price.material + price.auxiliary + price.labor);
+  return {
+    floor,
+    space_name: spaceName,
+    space_type: "卫生间",
+    item_name: "淋浴隔断安装",
+    quantity,
+    unit: "套",
+    unit_price: unitPrice,
+    material_price: price.material,
+    auxiliary_price: price.auxiliary,
+    labor_price: price.labor,
+    amount: round2(quantity * unitPrice),
+  };
+}
+
+function displayBathroomNamesByRow(rows: QuantityRow[]): Map<QuantityRow, string> {
+  const totalByName = new Map<string, number>();
+  rows.forEach((row) => totalByName.set(row.spaceName, (totalByName.get(row.spaceName) ?? 0) + 1));
+  const seenByName = new Map<string, number>();
+  return new Map(rows.map((row) => {
+    const total = totalByName.get(row.spaceName) ?? 0;
+    if (total <= 1) {
+      return [row, row.spaceName] as const;
+    }
+    const nextIndex = (seenByName.get(row.spaceName) ?? 0) + 1;
+    seenByName.set(row.spaceName, nextIndex);
+    return [row, `${row.spaceName}${chineseSectionCode(nextIndex)}`] as const;
+  }));
+}
+
+function isMultiFloorProject(items: QuoteMapping["items"], bathroomRows: QuantityRow[] = []): boolean {
+  const floors = new Set<string>();
+  items.filter((item) => item.floor && item.floor !== "全屋").forEach((item) => floors.add(item.floor));
+  bathroomRows.filter((row) => row.floor && row.floor !== "全屋").forEach((row) => floors.add(row.floor));
+  return floors.size > 1;
 }
 
 function fixedSectionItems(items: QuoteMapping["items"], remainingItems: Set<QuoteMapping["items"][number]>, section: QuoteTemplateSection): QuoteMapping["items"] {

@@ -65,6 +65,7 @@ export type QuoteMetric =
   | "kitchen_wall_cabinet_length_m"
   | "custom_cabinet_area_m2"
   | "stair_railing_length_m"
+  | "stair_tread_count"
   | "guardrail_length_m"
   | "toilet_count"
   | "bathroom_vanity_count"
@@ -93,6 +94,7 @@ type SummedProjectQuoteMetric =
   | "background_wall_area_m2";
 type RowQuoteMetric = Exclude<QuoteMetric, ProjectQuoteMetric | SummedProjectQuoteMetric>;
 type DirectRowQuoteMetric = Exclude<RowQuoteMetric, "bathroom_count">;
+type DirectFieldRowQuoteMetric = Exclude<DirectRowQuoteMetric, "stair_tread_count">;
 
 export type QuoteRule = {
   item_name: string;
@@ -188,8 +190,8 @@ export type QuantityHealthReadiness = {
 
 export const DEFAULT_QUOTE_RULES_NAME = "商品房整装默认规则";
 
-const DRY_SPACE_TYPES = ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯过道", "衣帽间", "储物间", "露台"];
-const CEILING_SPACE_TYPES = ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯过道", "衣帽间", "储物间"];
+const DRY_SPACE_TYPES = ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "衣帽间", "储物间", "露台"];
+const CEILING_SPACE_TYPES = ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "衣帽间", "储物间"];
 const KITCHEN_BATHROOM_SPACE_TYPES = ["厨房", "卫生间"];
 const GYPSUM_CEILING_SPACE_TYPES = [...CEILING_SPACE_TYPES, ...KITCHEN_BATHROOM_SPACE_TYPES];
 const CEILING_PAINT_SPACE_TYPES = [...DRY_SPACE_TYPES, ...KITCHEN_BATHROOM_SPACE_TYPES];
@@ -233,6 +235,7 @@ const DEFAULT_RULES: QuoteRule[] = [
   quoteRule("地面砖现场维护费", "building_area_m2", "M2", 0, 3, 5),
   quoteRule("墙面贴瓷砖(600X1200)", "wall_tile_area_m2", "m2", 0, 40, 60),
   quoteRule("墙地面防漏处理", "waterproof_area_m2", "m2", 28, 10.5, 13, WET_FLOOR_SPACE_TYPES),
+  quoteRule("窗台石铺贴", "windowsill_length_m", "M", 0, 28, 45),
   quoteRule("砌砖墙", "new_wall_unclassified_area_m2", "M2", 100, 0, 120),
   quoteRule("砌120厚砖墙", "new_wall_120_area_m2", "M2", 80, 0, 90),
   quoteRule("砌240厚砖墙", "new_wall_240_area_m2", "M2", 100, 0, 120),
@@ -251,7 +254,8 @@ const DEFAULT_RULES: QuoteRule[] = [
   quoteRule("厨房推拉门双包套", "sliding_door_casing_length_m", "M", 300, 0, 0, KITCHEN_CABINET_SPACE_TYPES),
   quoteRule("阳台推拉门", "sliding_door_area_m2", "M2", 550, 0, 0, BALCONY_SLIDING_DOOR_SPACE_TYPES),
   quoteRule("阳台推拉门双包套", "sliding_door_casing_length_m", "M", 300, 0, 0, BALCONY_SLIDING_DOOR_SPACE_TYPES),
-  quoteRule("楼梯扶手", "stair_railing_length_m", "M", 0, 0, 0),
+  quoteRule("楼梯扶手", "stair_railing_length_m", "M", 470, 0, 0),
+  quoteRule("楼梯踏步铺贴", "stair_tread_count", "步", 0, 45, 80, ["楼梯", "楼梯过道"]),
   quoteRule("栏杆/护栏", "guardrail_length_m", "M", 0, 0, 0),
   quoteRule("铝合金封门窗", "manual_count", "M2", 0, 0, 0),
   quoteRule("橱柜", "kitchen_cabinet_length_m", "M", 600, 0, 0, KITCHEN_CABINET_SPACE_TYPES),
@@ -273,7 +277,7 @@ const DEFAULT_RULES: QuoteRule[] = [
 
 const APARTMENT_PENDING_METRICS: PendingQuoteMetric[] = [];
 
-const METRIC_TO_ROW_FIELD: Record<DirectRowQuoteMetric, QuantityRowMetric> = {
+const METRIC_TO_ROW_FIELD: Record<DirectFieldRowQuoteMetric, QuantityRowMetric> = {
   latex_paint_area_m2: "latexPaintAreaM2",
   floor_area_m2: "floorAreaM2",
   ceiling_area_m2: "ceilingAreaM2",
@@ -480,16 +484,20 @@ export function buildQuoteMapping(
 
 function displaySpaceNamesByRow(rows: QuantityRow[]): Map<QuantityRow, string> {
   const totalByName = new Map<string, number>();
-  rows.forEach((row) => totalByName.set(row.spaceName, (totalByName.get(row.spaceName) ?? 0) + 1));
+  rows.forEach((row) => {
+    const key = `${row.floor}::${row.spaceName}`;
+    totalByName.set(key, (totalByName.get(key) ?? 0) + 1);
+  });
   const seenByName = new Map<string, number>();
   return new Map(
     rows.map((row) => {
-      const total = totalByName.get(row.spaceName) ?? 0;
+      const key = `${row.floor}::${row.spaceName}`;
+      const total = totalByName.get(key) ?? 0;
       if (total <= 1) {
         return [row, row.spaceName] as const;
       }
-      const nextIndex = (seenByName.get(row.spaceName) ?? 0) + 1;
-      seenByName.set(row.spaceName, nextIndex);
+      const nextIndex = (seenByName.get(key) ?? 0) + 1;
+      seenByName.set(key, nextIndex);
       return [row, `${row.spaceName}${chineseOrdinal(nextIndex)}`] as const;
     }),
   );
@@ -512,7 +520,18 @@ function rowRuleQuantity(row: QuantityRow, rule: QuoteRule & { metric: RowQuoteM
   if (rule.metric === "bathroom_count") {
     return 1;
   }
+  if (rule.metric === "stair_tread_count") {
+    return stairTreadCount(row.heightM);
+  }
   return round2(row[METRIC_TO_ROW_FIELD[rule.metric]] ?? 0);
+}
+
+function stairTreadCount(heightM: number): number {
+  if (!Number.isFinite(heightM) || heightM <= 0) {
+    return 0;
+  }
+  const rawCount = Math.floor(heightM / 0.17);
+  return rawCount % 2 === 1 ? rawCount : Math.max(rawCount - 1, 0);
 }
 
 function buildingAreaQuoteReadiness(rules: QuoteRule[], buildingAreaM2: number): BuildingAreaQuoteReadiness {
@@ -740,6 +759,7 @@ function isQuoteMetric(metric: unknown): metric is QuoteMetric {
     metric === "kitchen_wall_cabinet_length_m" ||
     metric === "custom_cabinet_area_m2" ||
     metric === "stair_railing_length_m" ||
+    metric === "stair_tread_count" ||
     metric === "guardrail_length_m" ||
     metric === "toilet_count" ||
     metric === "bathroom_vanity_count" ||
