@@ -857,9 +857,9 @@ export function UploadWorkbench({
     setMessage("Excel 可选补项已恢复默认");
   }
 
-  function handleChangeBathroomManualChoice(row: QuantityRow, part: keyof BathroomManualChoice, itemName: NonNullable<BathroomManualChoice[keyof BathroomManualChoice]>) {
+  function handleChangeBathroomManualChoice(row: QuantityRow, rowIndex: number, part: keyof BathroomManualChoice, itemName: NonNullable<BathroomManualChoice[keyof BathroomManualChoice]>) {
     setBathroomManualChoices((current) => {
-      const key = bathroomChoiceKey(row);
+      const key = bathroomChoiceKey(row, rowIndex);
       const nextChoices = { ...current, [key]: { ...current[key], [part]: itemName } };
       setManualQuoteItemInputs((inputs) => manualQuoteInputsFromBathroomChoices(inputs, nextChoices, bathroomRows));
       return nextChoices;
@@ -1284,11 +1284,12 @@ export function UploadWorkbench({
           ))}
         </div>
         <div className="manualBathroomChoices">
-          {bathroomRows.map((row) => {
-            const choice = bathroomManualChoices[bathroomChoiceKey(row)] ?? {};
+          {bathroomRows.map((row, rowIndex) => {
+            const choiceKey = bathroomChoiceKey(row, rowIndex);
+            const choice = bathroomManualChoices[choiceKey] ?? {};
             const selectedFixture = choice.fixture ?? "马桶";
             return (
-              <div className="manualBathroomChoice" key={bathroomChoiceKey(row)}>
+              <div className="manualBathroomChoice" key={choiceKey}>
                 <strong>{row.spaceName}</strong>
                 <div>
                   <span>洁具</span>
@@ -1296,7 +1297,7 @@ export function UploadWorkbench({
                     <button
                       type="button"
                       className={selectedFixture === itemName ? "active" : ""}
-                      onClick={() => handleChangeBathroomManualChoice(row, "fixture", itemName)}
+                      onClick={() => handleChangeBathroomManualChoice(row, rowIndex, "fixture", itemName)}
                       key={itemName}
                     >
                       {itemName}
@@ -1309,7 +1310,7 @@ export function UploadWorkbench({
                     <button
                       type="button"
                       className={choice.shower === itemName ? "active" : ""}
-                      onClick={() => handleChangeBathroomManualChoice(row, "shower", itemName)}
+                      onClick={() => handleChangeBathroomManualChoice(row, rowIndex, "shower", itemName)}
                       key={itemName}
                     >
                       {itemName}

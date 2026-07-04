@@ -988,6 +988,29 @@ code {
   font-weight: 700;
 }
 
+.floorFilter {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-height: 32px;
+}
+
+.floorFilter button {
+  min-width: 0;
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #1e40af;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.floorFilter button.active {
+  border-color: #0f766e;
+  background: #0f766e;
+  color: #fff;
+}
+
 .drawingLayerToggle {
   display: inline-flex;
   grid-template-columns: none;

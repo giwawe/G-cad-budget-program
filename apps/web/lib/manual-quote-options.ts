@@ -8,8 +8,8 @@ export type BathroomManualChoice = {
 
 const BATHROOM_MANUAL_ITEM_NAMES = new Set(["马桶", "蹲坑", "淋浴隔断", "玻璃淋浴房"]);
 
-export function bathroomChoiceKey(row: QuantityRow): string {
-  return `${row.floor}::${row.spaceName}`;
+export function bathroomChoiceKey(row: QuantityRow, index = 0): string {
+  return `${row.floor}::${row.spaceName}::${index}`;
 }
 
 export function bathroomRowsFromRows(rows: QuantityRow[]): QuantityRow[] {
@@ -39,8 +39,8 @@ export function manualQuoteInputsFromBathroomChoices(
   bathroomRows: QuantityRow[],
 ): Record<string, string> {
   const quantities = { 马桶: 0, 蹲坑: 0, 淋浴隔断: 0, 玻璃淋浴房: 0 };
-  for (const row of bathroomRows) {
-    const choice = choices[bathroomChoiceKey(row)] ?? {};
+  for (const [index, row] of bathroomRows.entries()) {
+    const choice = choices[bathroomChoiceKey(row, index)] ?? {};
     quantities[choice.fixture ?? "马桶"] += 1;
     if (choice.shower) {
       quantities[choice.shower] += 1;
@@ -66,7 +66,7 @@ export function bathroomManualChoicesFromQuantities(quantities: Record<string, n
     const fixture = fixtureQueue[index];
     const shower = showerQueue[index];
     if (fixture || shower) {
-      choices[bathroomChoiceKey(row)] = { fixture, shower };
+      choices[bathroomChoiceKey(row, index)] = { fixture, shower };
     }
   });
   return choices;

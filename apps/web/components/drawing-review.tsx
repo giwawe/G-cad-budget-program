@@ -15,6 +15,47 @@ function pointList(points: DrawingPoint[]) {
   return points.map((point) => `${point.x},${point.y}`).join(" ");
 }
 
+function pointInPolygon(point: DrawingPoint, polygon: DrawingPoint[]) {
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const current = polygon[i];
+    const previous = polygon[j];
+    const intersects = current.y > point.y !== previous.y > point.y && point.x < ((previous.x - current.x) * (point.y - current.y)) / (previous.y - current.y || 1) + current.x;
+    if (intersects) {
+      inside = !inside;
+    }
+  }
+  return inside;
+}
+
+function pointInAnyPolygon(point: DrawingPoint, polygons: DrawingPoint[][]) {
+  return polygons.some((polygon) => pointInPolygon(point, polygon));
+}
+
+function segmentCenter(segment: { start: DrawingPoint; end: DrawingPoint }) {
+  return { x: (segment.start.x + segment.end.x) / 2, y: (segment.start.y + segment.end.y) / 2 };
+}
+
+function segmentInAnyPolygon(segment: { start: DrawingPoint; end: DrawingPoint }, polygons: DrawingPoint[][]) {
+  return pointInAnyPolygon(segmentCenter(segment), polygons) || pointInAnyPolygon(segment.start, polygons) || pointInAnyPolygon(segment.end, polygons);
+}
+
+function boundaryInAnyPolygon(boundary: DrawingPoint[], polygons: DrawingPoint[][]) {
+  return pointInAnyPolygon(centerOf(boundary), polygons) || boundary.some((point) => pointInAnyPolygon(point, polygons));
+}
+
+function bboxForPoints(points: DrawingPoint[], fallback: DrawingGeometry["bbox"]) {
+  if (points.length === 0) {
+    return fallback;
+  }
+  return {
+    min_x: Math.min(...points.map((point) => point.x)),
+    min_y: Math.min(...points.map((point) => point.y)),
+    max_x: Math.max(...points.map((point) => point.x)),
+    max_y: Math.max(...points.map((point) => point.y)),
+  };
+}
+
 function chineseOnly(name: string) {
   return name
     .split("/")
@@ -57,15 +98,55 @@ export function DrawingReview({
   const [showWindows, setShowWindows] = useState(true);
   const [showDoors, setShowDoors] = useState(true);
   const [selectedWindowIndex, setSelectedWindowIndex] = useState<number | null>(null);
+  const [selectedFloor, setSelectedFloor] = useState<string>("");
 
   if (!drawing || !summary) {
     return null;
   }
 
-  const width = Math.max(drawing.bbox.max_x - drawing.bbox.min_x, 1);
-  const height = Math.max(drawing.bbox.max_y - drawing.bbox.min_y, 1);
+  const floorOptions = Array.from(new Set(rows.map((row) => row.floor))).filter(Boolean);
+  const effectiveFloor = selectedFloor === "all" || floorOptions.includes(selectedFloor) ? selectedFloor : floorOptions[0] ?? "all";
+  const showAllFloors = effectiveFloor === "all";
+  const visibleSpaceEntries = drawing.spaces
+    .map((space, index) => ({ space, index, row: rows[index] }))
+    .filter((entry) => showAllFloors || entry.row?.floor === effectiveFloor);
+  const visibleSpacePolygons = visibleSpaceEntries.map((entry) => entry.space.points);
+  const visibleDrawing = (() => {
+    if (showAllFloors || visibleSpacePolygons.length === 0) {
+      return drawing;
+    }
+    return {
+      ...drawing,
+      base_segments: drawing.base_segments.filter((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons)),
+      walls: drawing.walls.filter((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons)),
+      measured_walls: drawing.measured_walls.filter((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons)),
+      opening_edges: drawing.opening_edges?.filter((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons)),
+      void_boundaries: drawing.void_boundaries?.filter((boundary) => boundaryInAnyPolygon(boundary, visibleSpacePolygons)),
+      railings: drawing.railings?.filter((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons)),
+      tile_walls: drawing.tile_walls.filter((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons)),
+      new_walls: drawing.new_walls.filter((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons)),
+      demolition_walls: drawing.demolition_walls.filter((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons)),
+      background_walls: drawing.background_walls?.filter((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons)),
+      base_cabinets: drawing.base_cabinets.filter((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons)),
+      wall_cabinets: drawing.wall_cabinets.filter((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons)),
+      base_cabinet_boundaries: drawing.base_cabinet_boundaries?.filter((boundary) => boundaryInAnyPolygon(boundary, visibleSpacePolygons)),
+      wall_cabinet_boundaries: drawing.wall_cabinet_boundaries?.filter((boundary) => boundaryInAnyPolygon(boundary, visibleSpacePolygons)),
+      custom_cabinets: drawing.custom_cabinets.filter((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons)),
+      toilets: drawing.toilets.filter((point) => pointInAnyPolygon(point, visibleSpacePolygons)),
+      bathroom_vanities: drawing.bathroom_vanities.filter((point) => pointInAnyPolygon(point, visibleSpacePolygons)),
+      window_openings: drawing.window_openings.filter((window) => window.segments.some((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons))),
+      windows: drawing.windows.filter((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons)),
+      door_openings: drawing.door_openings.filter((door) => segmentInAnyPolygon(door.segment, visibleSpacePolygons)),
+      doors: drawing.doors.filter((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons)),
+      exterior_wall_boundaries: [],
+      spaces: visibleSpaceEntries.map((entry) => entry.space),
+      bbox: bboxForPoints(visibleSpacePolygons.flat(), drawing.bbox),
+    };
+  })();
+  const width = Math.max(visibleDrawing.bbox.max_x - visibleDrawing.bbox.min_x, 1);
+  const height = Math.max(visibleDrawing.bbox.max_y - visibleDrawing.bbox.min_y, 1);
   const padding = Math.max(width, height) * 0.05;
-  const baseViewBox = { x: drawing.bbox.min_x - padding, y: drawing.bbox.min_y - padding, width: width + padding * 2, height: height + padding * 2 };
+  const baseViewBox = { x: visibleDrawing.bbox.min_x - padding, y: visibleDrawing.bbox.min_y - padding, width: width + padding * 2, height: height + padding * 2 };
   const viewWidth = baseViewBox.width / zoom;
   const viewHeight = baseViewBox.height / zoom;
   const center = panCenter ?? { x: baseViewBox.x + baseViewBox.width / 2, y: baseViewBox.y + baseViewBox.height / 2 };
@@ -75,6 +156,8 @@ export function DrawingReview({
   const labelWidth = Math.max(width, height) * 0.9;
   const labelHeight = Math.max(width, height) * 0.22;
   const labelFontSize = Math.max(width, height) * 0.018;
+  const indexedWindows = visibleDrawing.window_openings.map((window) => ({ window, index: drawing.window_openings.indexOf(window) }));
+  const indexedDoors = visibleDrawing.door_openings.map((door) => ({ door, index: drawing.door_openings.indexOf(door) }));
   const selectedWindow = selectedWindowIndex === null ? null : drawing.window_openings[selectedWindowIndex] ?? null;
 
   function clientPointToSvgPoint(clientX: number, clientY: number): DrawingPoint | null {
@@ -108,6 +191,13 @@ export function DrawingReview({
   function resetView() {
     setZoom(1);
     setPanCenter(null);
+  }
+
+  function changeFloor(nextFloor: string) {
+    setSelectedFloor(nextFloor);
+    setSelectedWindowIndex(null);
+    setEditingIndex(null);
+    resetView();
   }
 
   function handlePointerDown(event: PointerEvent<SVGSVGElement>) {
@@ -181,17 +271,25 @@ export function DrawingReview({
         <button type="button" onClick={() => applyZoom(zoom * 1.25)}>+</button>
         <button type="button" onClick={resetView}>适应窗口</button>
         <span>{Math.round(zoom * 100)}%</span>
-        <label className="drawingLayerToggle"><input type="checkbox" checked={showMeasuredWalls} onChange={(event) => setShowMeasuredWalls(event.target.checked)} />计入墙线 {drawing.measured_walls.length}</label>
-        <label className="drawingLayerToggle"><input type="checkbox" checked={showTileWalls} onChange={(event) => setShowTileWalls(event.target.checked)} />贴砖墙 {drawing.tile_walls.length}</label>
-        <label className="drawingLayerToggle"><input type="checkbox" checked={showNewWalls} onChange={(event) => setShowNewWalls(event.target.checked)} />新砌墙 {drawing.new_walls.length}</label>
-        <label className="drawingLayerToggle"><input type="checkbox" checked={showDemolitionWalls} onChange={(event) => setShowDemolitionWalls(event.target.checked)} />拆墙 {drawing.demolition_walls.length}</label>
-        <label className="drawingLayerToggle"><input type="checkbox" checked={showBaseCabinets} onChange={(event) => setShowBaseCabinets(event.target.checked)} />地柜 {drawing.base_cabinets.length + (drawing.base_cabinet_boundaries?.length ?? 0)}</label>
-        <label className="drawingLayerToggle"><input type="checkbox" checked={showWallCabinets} onChange={(event) => setShowWallCabinets(event.target.checked)} />吊柜 {drawing.wall_cabinets.length + (drawing.wall_cabinet_boundaries?.length ?? 0)}</label>
-        <label className="drawingLayerToggle"><input type="checkbox" checked={showCustomCabinets} onChange={(event) => setShowCustomCabinets(event.target.checked)} />定制柜 {drawing.custom_cabinets.length}</label>
-        <label className="drawingLayerToggle"><input type="checkbox" checked={showExteriorWalls} onChange={(event) => setShowExteriorWalls(event.target.checked)} />外墙 {drawing.exterior_wall_boundaries.length}</label>
-        <label className="drawingLayerToggle"><input type="checkbox" checked={showBathroomFixtures} onChange={(event) => setShowBathroomFixtures(event.target.checked)} />洁具 {drawing.toilets.length + drawing.bathroom_vanities.length}</label>
-        <label className="drawingLayerToggle"><input type="checkbox" checked={showWindows} onChange={(event) => setShowWindows(event.target.checked)} />窗 {drawing.window_openings.length}</label>
-        <label className="drawingLayerToggle"><input type="checkbox" checked={showDoors} onChange={(event) => setShowDoors(event.target.checked)} />门 {drawing.door_openings.length}</label>
+        {floorOptions.length > 1 && (
+          <div className="floorFilter" aria-label="图纸楼层筛选">
+            <button type="button" className={effectiveFloor === "all" ? "active" : ""} onClick={() => changeFloor("all")}>全部楼层</button>
+            {floorOptions.map((floor) => (
+              <button type="button" className={effectiveFloor === floor ? "active" : ""} onClick={() => changeFloor(floor)} key={floor}>{floor}</button>
+            ))}
+          </div>
+        )}
+        <label className="drawingLayerToggle"><input type="checkbox" checked={showMeasuredWalls} onChange={(event) => setShowMeasuredWalls(event.target.checked)} />计入墙线 {visibleDrawing.measured_walls.length}</label>
+        <label className="drawingLayerToggle"><input type="checkbox" checked={showTileWalls} onChange={(event) => setShowTileWalls(event.target.checked)} />贴砖墙 {visibleDrawing.tile_walls.length}</label>
+        <label className="drawingLayerToggle"><input type="checkbox" checked={showNewWalls} onChange={(event) => setShowNewWalls(event.target.checked)} />新砌墙 {visibleDrawing.new_walls.length}</label>
+        <label className="drawingLayerToggle"><input type="checkbox" checked={showDemolitionWalls} onChange={(event) => setShowDemolitionWalls(event.target.checked)} />拆墙 {visibleDrawing.demolition_walls.length}</label>
+        <label className="drawingLayerToggle"><input type="checkbox" checked={showBaseCabinets} onChange={(event) => setShowBaseCabinets(event.target.checked)} />地柜 {visibleDrawing.base_cabinets.length + (visibleDrawing.base_cabinet_boundaries?.length ?? 0)}</label>
+        <label className="drawingLayerToggle"><input type="checkbox" checked={showWallCabinets} onChange={(event) => setShowWallCabinets(event.target.checked)} />吊柜 {visibleDrawing.wall_cabinets.length + (visibleDrawing.wall_cabinet_boundaries?.length ?? 0)}</label>
+        <label className="drawingLayerToggle"><input type="checkbox" checked={showCustomCabinets} onChange={(event) => setShowCustomCabinets(event.target.checked)} />定制柜 {visibleDrawing.custom_cabinets.length}</label>
+        <label className="drawingLayerToggle"><input type="checkbox" checked={showExteriorWalls} onChange={(event) => setShowExteriorWalls(event.target.checked)} />外墙 {visibleDrawing.exterior_wall_boundaries.length}</label>
+        <label className="drawingLayerToggle"><input type="checkbox" checked={showBathroomFixtures} onChange={(event) => setShowBathroomFixtures(event.target.checked)} />洁具 {visibleDrawing.toilets.length + visibleDrawing.bathroom_vanities.length}</label>
+        <label className="drawingLayerToggle"><input type="checkbox" checked={showWindows} onChange={(event) => setShowWindows(event.target.checked)} />窗 {visibleDrawing.window_openings.length}</label>
+        <label className="drawingLayerToggle"><input type="checkbox" checked={showDoors} onChange={(event) => setShowDoors(event.target.checked)} />门 {visibleDrawing.door_openings.length}</label>
         {selectedWindow && (
           <div className="windowEditor">
             <span>窗宽 {selectedWindow.width_m.toFixed(2)} m</span>
@@ -206,23 +304,23 @@ export function DrawingReview({
 
       <div className="drawingCanvas" onWheel={handleWheel}>
         <svg ref={svgRef} viewBox={viewBox} role="img" aria-label="DXF 空间核对图" onClick={handleSvgClick} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp}>
-          <g transform={`scale(1 -1) translate(0 ${-(drawing.bbox.min_y + drawing.bbox.max_y)})`}>
-            {drawing.base_segments.map((segment, index) => <line key={`base-${index}`} className="svgBase" x1={segment.start.x} y1={segment.start.y} x2={segment.end.x} y2={segment.end.y} />)}
-            {drawing.walls.map((wall, index) => <line key={`wall-${index}`} className="svgWall" x1={wall.start.x} y1={wall.start.y} x2={wall.end.x} y2={wall.end.y} />)}
-            {showExteriorWalls && drawing.exterior_wall_boundaries.map((boundary, index) => <polygon key={`exterior-wall-${index}`} points={pointList(boundary)} className="svgExteriorWall" />)}
-            {drawing.spaces.map((space, index) => <polygon key={`space-${index}-${space.name}`} points={pointList(space.points)} className="svgSpace" style={{ fill: palette[index % palette.length], stroke: palette[index % palette.length] }} />)}
-            {showMeasuredWalls && drawing.measured_walls.map((wall, index) => <line key={`measured-wall-${index}`} className="svgMeasuredWall" x1={wall.start.x} y1={wall.start.y} x2={wall.end.x} y2={wall.end.y} />)}
-            {showTileWalls && drawing.tile_walls.map((wall, index) => <line key={`tile-wall-${index}`} className="svgTileWall" x1={wall.start.x} y1={wall.start.y} x2={wall.end.x} y2={wall.end.y} />)}
-            {showNewWalls && drawing.new_walls.map((wall, index) => <line key={`new-wall-${index}`} className="svgNewWall" x1={wall.start.x} y1={wall.start.y} x2={wall.end.x} y2={wall.end.y} />)}
-            {showDemolitionWalls && drawing.demolition_walls.map((wall, index) => <line key={`demolition-wall-${index}`} className="svgDemolitionWall" x1={wall.start.x} y1={wall.start.y} x2={wall.end.x} y2={wall.end.y} />)}
-            {showBaseCabinets && drawing.base_cabinet_boundaries?.map((boundary, index) => <polygon key={`base-cabinet-boundary-${index}`} className="svgBaseCabinet" points={pointList(boundary)} />)}
-            {showBaseCabinets && drawing.base_cabinets.map((cabinet, index) => <line key={`base-cabinet-${index}`} className="svgBaseCabinet" x1={cabinet.start.x} y1={cabinet.start.y} x2={cabinet.end.x} y2={cabinet.end.y} />)}
-            {showWallCabinets && drawing.wall_cabinet_boundaries?.map((boundary, index) => <polygon key={`wall-cabinet-boundary-${index}`} className="svgWallCabinet" points={pointList(boundary)} />)}
-            {showWallCabinets && drawing.wall_cabinets.map((cabinet, index) => <line key={`wall-cabinet-${index}`} className="svgWallCabinet" x1={cabinet.start.x} y1={cabinet.start.y} x2={cabinet.end.x} y2={cabinet.end.y} />)}
-            {showCustomCabinets && drawing.custom_cabinets.map((cabinet, index) => <line key={`custom-cabinet-${index}`} className="svgCustomCabinet" x1={cabinet.start.x} y1={cabinet.start.y} x2={cabinet.end.x} y2={cabinet.end.y} />)}
-            {showBathroomFixtures && drawing.toilets.map((point, index) => <circle key={`toilet-${index}`} className="svgToilet" cx={point.x} cy={point.y} r="0.16" />)}
-            {showBathroomFixtures && drawing.bathroom_vanities.map((point, index) => <rect key={`bathroom-vanity-${index}`} className="svgBathroomVanity" x={point.x - 0.16} y={point.y - 0.16} width="0.32" height="0.32" />)}
-            {showWindows && drawing.window_openings.map((window, index) => (
+          <g transform={`scale(1 -1) translate(0 ${-(visibleDrawing.bbox.min_y + visibleDrawing.bbox.max_y)})`}>
+            {visibleDrawing.base_segments.map((segment, index) => <line key={`base-${index}`} className="svgBase" x1={segment.start.x} y1={segment.start.y} x2={segment.end.x} y2={segment.end.y} />)}
+            {visibleDrawing.walls.map((wall, index) => <line key={`wall-${index}`} className="svgWall" x1={wall.start.x} y1={wall.start.y} x2={wall.end.x} y2={wall.end.y} />)}
+            {showExteriorWalls && visibleDrawing.exterior_wall_boundaries.map((boundary, index) => <polygon key={`exterior-wall-${index}`} points={pointList(boundary)} className="svgExteriorWall" />)}
+            {visibleSpaceEntries.map(({ space, index }) => <polygon key={`space-${index}-${space.name}`} points={pointList(space.points)} className="svgSpace" style={{ fill: palette[index % palette.length], stroke: palette[index % palette.length] }} />)}
+            {showMeasuredWalls && visibleDrawing.measured_walls.map((wall, index) => <line key={`measured-wall-${index}`} className="svgMeasuredWall" x1={wall.start.x} y1={wall.start.y} x2={wall.end.x} y2={wall.end.y} />)}
+            {showTileWalls && visibleDrawing.tile_walls.map((wall, index) => <line key={`tile-wall-${index}`} className="svgTileWall" x1={wall.start.x} y1={wall.start.y} x2={wall.end.x} y2={wall.end.y} />)}
+            {showNewWalls && visibleDrawing.new_walls.map((wall, index) => <line key={`new-wall-${index}`} className="svgNewWall" x1={wall.start.x} y1={wall.start.y} x2={wall.end.x} y2={wall.end.y} />)}
+            {showDemolitionWalls && visibleDrawing.demolition_walls.map((wall, index) => <line key={`demolition-wall-${index}`} className="svgDemolitionWall" x1={wall.start.x} y1={wall.start.y} x2={wall.end.x} y2={wall.end.y} />)}
+            {showBaseCabinets && visibleDrawing.base_cabinet_boundaries?.map((boundary, index) => <polygon key={`base-cabinet-boundary-${index}`} className="svgBaseCabinet" points={pointList(boundary)} />)}
+            {showBaseCabinets && visibleDrawing.base_cabinets.map((cabinet, index) => <line key={`base-cabinet-${index}`} className="svgBaseCabinet" x1={cabinet.start.x} y1={cabinet.start.y} x2={cabinet.end.x} y2={cabinet.end.y} />)}
+            {showWallCabinets && visibleDrawing.wall_cabinet_boundaries?.map((boundary, index) => <polygon key={`wall-cabinet-boundary-${index}`} className="svgWallCabinet" points={pointList(boundary)} />)}
+            {showWallCabinets && visibleDrawing.wall_cabinets.map((cabinet, index) => <line key={`wall-cabinet-${index}`} className="svgWallCabinet" x1={cabinet.start.x} y1={cabinet.start.y} x2={cabinet.end.x} y2={cabinet.end.y} />)}
+            {showCustomCabinets && visibleDrawing.custom_cabinets.map((cabinet, index) => <line key={`custom-cabinet-${index}`} className="svgCustomCabinet" x1={cabinet.start.x} y1={cabinet.start.y} x2={cabinet.end.x} y2={cabinet.end.y} />)}
+            {showBathroomFixtures && visibleDrawing.toilets.map((point, index) => <circle key={`toilet-${index}`} className="svgToilet" cx={point.x} cy={point.y} r="0.16" />)}
+            {showBathroomFixtures && visibleDrawing.bathroom_vanities.map((point, index) => <rect key={`bathroom-vanity-${index}`} className="svgBathroomVanity" x={point.x - 0.16} y={point.y - 0.16} width="0.32" height="0.32" />)}
+            {showWindows && indexedWindows.map(({ window, index }) => (
               <g
                 key={`window-${index}`}
                 className={`svgWindowGroup ${selectedWindowIndex === index ? "selected" : ""}`}
@@ -247,7 +345,7 @@ export function DrawingReview({
                 <title>{window.included_in_wall_deduction ? "窗洞已计入扣减，点击改为不计入" : "窗洞未计入扣减，点击改为计入"}</title>
               </g>
             ))}
-            {showDoors && drawing.door_openings.map((door, index) => (
+            {showDoors && indexedDoors.map(({ door, index }) => (
               <g
                 key={`door-${index}`}
                 className="svgDoorGroup"
@@ -271,11 +369,10 @@ export function DrawingReview({
               </g>
             ))}
           </g>
-          {drawing.spaces.map((space, index) => {
+          {visibleSpaceEntries.map(({ space, index, row }) => {
             const labelCenter = centerOf(space.points);
-            const row = rows.find((item) => item.spaceName === space.name);
             const labelX = labelCenter.x;
-            const labelY = drawing.bbox.min_y + drawing.bbox.max_y - labelCenter.y;
+            const labelY = visibleDrawing.bbox.min_y + visibleDrawing.bbox.max_y - labelCenter.y;
             const name = chineseOnly(space.name);
             return (
               <g key={`label-${index}-${space.name}`}>

@@ -58,6 +58,7 @@ const bathroomRows = bathroomRowsFromRows([
   { ...baseRow, spaceName: "设备间", spaceType: "卫生间", status: "excluded" },
 ]);
 assert.deepEqual(bathroomRows.map((row) => row.spaceName), ["卫生间", "主卫"]);
+assert.notEqual(bathroomChoiceKey(bathroomRows[0], 0), bathroomChoiceKey({ ...bathroomRows[0] }, 1));
 
 assert.equal(
   aluminumWindowSuggestedAreaFromRows([
@@ -79,8 +80,8 @@ assert.deepEqual(
   manualQuoteInputsFromBathroomChoices(
     { 入户门: "1", 马桶: "5", 蹲坑: "0", 淋浴隔断: "3" },
     {
-      [bathroomChoiceKey(bathroomRows[0])]: { fixture: "蹲坑", shower: "淋浴隔断" },
-      [bathroomChoiceKey(bathroomRows[1])]: { fixture: "马桶", shower: "玻璃淋浴房" },
+      [bathroomChoiceKey(bathroomRows[0], 0)]: { fixture: "蹲坑", shower: "淋浴隔断" },
+      [bathroomChoiceKey(bathroomRows[1], 1)]: { fixture: "马桶", shower: "玻璃淋浴房" },
     },
     bathroomRows,
   ),
@@ -96,7 +97,7 @@ assert.deepEqual(
 assert.deepEqual(
   bathroomManualChoicesFromQuantities({ 马桶: 1, 蹲坑: 1, 淋浴隔断: 1, 玻璃淋浴房: 1 }, bathroomRows),
   {
-    [bathroomChoiceKey(bathroomRows[0])]: { fixture: "马桶", shower: "淋浴隔断" },
-    [bathroomChoiceKey(bathroomRows[1])]: { fixture: "蹲坑", shower: "玻璃淋浴房" },
+    [bathroomChoiceKey(bathroomRows[0], 0)]: { fixture: "马桶", shower: "淋浴隔断" },
+    [bathroomChoiceKey(bathroomRows[1], 1)]: { fixture: "蹲坑", shower: "玻璃淋浴房" },
   },
 );
