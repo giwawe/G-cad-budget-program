@@ -27,13 +27,14 @@ def build_simple_quote_dxf() -> bytes:
 def build_misspelled_quote_layer_dxf() -> bytes:
     doc = ezdxf.new("R2010")
     msp = doc.modelspace()
-    for layer in ["QUQTE_ROOM", "QUQTE_WALL", "QUQTE_WINDOM", "QUQTE_DOOR", "QUQTE_TEXT", "QUQTE_EXT_WALL", "OUOTE_HEIGHT"]:
+    for layer in ["QUQTE_ROOM", "QUQTE_WALL", "QUQTE_WINDOM", "QUOTE_WINDOM", "QUQTE_DOOR", "QUQTE_TEXT", "QUQTE_EXT_WALL", "OUOTE_HEIGHT"]:
         doc.layers.add(layer)
     msp.add_lwpolyline([(0, 0), (6000, 0), (6000, 5000), (0, 5000), (0, 0)], dxfattribs={"layer": "QUQTE_ROOM"})
     msp.add_line((0, 0), (6000, 0), dxfattribs={"layer": "QUQTE_WALL"})
     msp.add_line((6000, 0), (6000, 5000), dxfattribs={"layer": "QUQTE_WALL"})
     msp.add_line((0, 5000), (4000, 5000), dxfattribs={"layer": "QUQTE_WALL"})
     msp.add_line((1000, 0), (4200, 0), dxfattribs={"layer": "QUQTE_WINDOM"})
+    msp.add_line((4500, 0), (5500, 0), dxfattribs={"layer": "QUOTE_WINDOM"})
     msp.add_text("HEIGHT=1500", dxfattribs={"layer": "OUOTE_HEIGHT", "insert": (2600, 200)})
     msp.add_line((5000, 0), (5900, 0), dxfattribs={"layer": "QUQTE_DOOR"})
     msp.add_text("一层-客厅", dxfattribs={"layer": "QUQTE_TEXT", "insert": (3000, 2500)})

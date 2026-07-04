@@ -51,7 +51,7 @@
 | `QUOTE_VOID` | 挑空区域或楼板洞口，推荐用 HATCH 色块，也兼容闭合多段线 | 按所在空间和楼层关系扣减地面/顶面面积 |
 | `QUOTE_RAILING` | 栏杆、护栏、楼梯扶手线 | 位于楼梯/楼梯过道时按楼梯扶手换算斜长，其它空间按栏杆/护栏平面长度 |
 
-> 兼容说明：系统会兼容常见错拼 `QUQTE_*` 到对应 `QUOTE_*`，并把 `QUQTE_WINDOM` 按 `QUOTE_WINDOW`、`OUOTE_HEIGHT` 按 `QUOTE_HEIGHT` 读取。规范制图仍必须使用标准 `QUOTE_*` 图层名，错拼兼容仅用于降低旧图纸导入失败风险。
+> 兼容说明：系统会兼容常见错拼 `QUQTE_*` 到对应 `QUOTE_*`，并把 `QUQTE_WINDOM`、`QUOTE_WINDOM` 按 `QUOTE_WINDOW`，`OUOTE_HEIGHT` 按 `QUOTE_HEIGHT` 读取。规范制图仍必须使用标准 `QUOTE_*` 图层名，错拼兼容仅用于降低旧图纸导入失败风险。
 
 注意：`QUOTE_EXT_WALL` 已参与建筑面积计算，不再作为预留图层处理。`QUOTE_VOID` 每层都应按实际洞口位置绘制，避免跨层挑空或地下室挑空被错误合并。
 

@@ -52,8 +52,8 @@ def test_parse_common_misspelled_quote_layers_as_standard_layers():
     space = review.spaces[0]
     assert space.name == "一层-客厅"
     assert space.wall_lengths_m == [6.0, 5.0, 4.0]
-    assert [window.width_m for window in space.windows] == [3.2]
-    assert [window.height_m for window in space.windows] == [1.5]
+    assert [window.width_m for window in space.windows] == [3.2, 1.0]
+    assert [window.height_m for window in space.windows] == [1.5, 1.8]
     assert [door.width_m for door in space.doors] == [0.9]
     assert review.drawing.building_area_m2 == 56
 

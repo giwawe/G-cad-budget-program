@@ -116,7 +116,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - `QUOTE_OPENING`：开放边界或非墙体边界；与 `QUOTE_WALL` 重叠时从墙面计量长度中排除。
 - `QUOTE_VOID`：挑空区域或楼板洞口；推荐用闭合 HATCH 色块，也兼容闭合多段线；每层按实际洞口位置绘制。
 - `QUOTE_RAILING`：栏杆、护栏、楼梯扶手线；所在空间为楼梯/楼梯过道时按楼梯扶手换算斜长，其它空间按栏杆/护栏平面长度。
-- 图层名兼容常见错拼：`QUQTE_*` 会按对应 `QUOTE_*` 读取，`QUQTE_WINDOM` 会按 `QUOTE_WINDOW` 读取；规范出图仍应使用标准 `QUOTE_*` 名称。
+- 图层名兼容常见错拼：`QUQTE_*` 会按对应 `QUOTE_*` 读取，`QUQTE_WINDOM` 和 `QUOTE_WINDOM` 会按 `QUOTE_WINDOW` 读取；规范出图仍应使用标准 `QUOTE_*` 名称。
 
 核心公式：
 
