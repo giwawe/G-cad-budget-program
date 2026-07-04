@@ -15,45 +15,61 @@ function pointList(points: DrawingPoint[]) {
   return points.map((point) => `${point.x},${point.y}`).join(" ");
 }
 
-function pointInPolygon(point: DrawingPoint, polygon: DrawingPoint[]) {
-  let inside = false;
-  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    const current = polygon[i];
-    const previous = polygon[j];
-    const intersects = current.y > point.y !== previous.y > point.y && point.x < ((previous.x - current.x) * (point.y - current.y)) / (previous.y - current.y || 1) + current.x;
-    if (intersects) {
-      inside = !inside;
-    }
-  }
-  return inside;
-}
-
-function pointInAnyPolygon(point: DrawingPoint, polygons: DrawingPoint[][]) {
-  return polygons.some((polygon) => pointInPolygon(point, polygon));
-}
-
 function segmentCenter(segment: { start: DrawingPoint; end: DrawingPoint }) {
   return { x: (segment.start.x + segment.end.x) / 2, y: (segment.start.y + segment.end.y) / 2 };
 }
 
-function segmentInAnyPolygon(segment: { start: DrawingPoint; end: DrawingPoint }, polygons: DrawingPoint[][]) {
-  return pointInAnyPolygon(segmentCenter(segment), polygons) || pointInAnyPolygon(segment.start, polygons) || pointInAnyPolygon(segment.end, polygons);
-}
-
-function boundaryInAnyPolygon(boundary: DrawingPoint[], polygons: DrawingPoint[][]) {
-  return pointInAnyPolygon(centerOf(boundary), polygons) || boundary.some((point) => pointInAnyPolygon(point, polygons));
-}
-
-function bboxForPoints(points: DrawingPoint[], fallback: DrawingGeometry["bbox"]) {
-  if (points.length === 0) {
-    return fallback;
-  }
+function bboxForPointList(points: DrawingPoint[]) {
   return {
     min_x: Math.min(...points.map((point) => point.x)),
     min_y: Math.min(...points.map((point) => point.y)),
     max_x: Math.max(...points.map((point) => point.x)),
     max_y: Math.max(...points.map((point) => point.y)),
   };
+}
+
+function bboxForPoints(points: DrawingPoint[], fallback: DrawingGeometry["bbox"]) {
+  if (points.length === 0) {
+    return fallback;
+  }
+  return bboxForPointList(points);
+}
+
+function segmentPoints(segment: { start: DrawingPoint; end: DrawingPoint }) {
+  return [segment.start, segment.end];
+}
+
+function boundaryCenter(boundary: DrawingPoint[]) {
+  return centerOf(boundary);
+}
+
+function bboxForGeometry(parts: DrawingPoint[][], fallback: DrawingGeometry["bbox"]) {
+  const points = parts.flat();
+  return bboxForPoints(points, fallback);
+}
+
+function expandBbox(bbox: DrawingGeometry["bbox"], ratio: number) {
+  const width = Math.max(bbox.max_x - bbox.min_x, 1);
+  const height = Math.max(bbox.max_y - bbox.min_y, 1);
+  const padding = Math.max(width, height) * ratio;
+  return {
+    min_x: bbox.min_x - padding,
+    min_y: bbox.min_y - padding,
+    max_x: bbox.max_x + padding,
+    max_y: bbox.max_y + padding,
+  };
+}
+
+function pointInBbox(point: DrawingPoint, bbox: DrawingGeometry["bbox"]) {
+  return point.x >= bbox.min_x && point.x <= bbox.max_x && point.y >= bbox.min_y && point.y <= bbox.max_y;
+}
+
+function segmentInBbox(segment: { start: DrawingPoint; end: DrawingPoint }, bbox: DrawingGeometry["bbox"]) {
+  return pointInBbox(segmentCenter(segment), bbox) || pointInBbox(segment.start, bbox) || pointInBbox(segment.end, bbox);
+}
+
+function boundaryInBbox(boundary: DrawingPoint[], bbox: DrawingGeometry["bbox"]) {
+  return pointInBbox(boundaryCenter(boundary), bbox) || boundary.some((point) => pointInBbox(point, bbox));
 }
 
 function chineseOnly(name: string) {
@@ -107,6 +123,15 @@ export function DrawingReview({
   const floorOptions = Array.from(new Set(rows.map((row) => row.floor))).filter(Boolean);
   const effectiveFloor = selectedFloor === "all" || floorOptions.includes(selectedFloor) ? selectedFloor : floorOptions[0] ?? "all";
   const showAllFloors = effectiveFloor === "all";
+  const floorSpaceBboxes = floorOptions.map((floor) => {
+    const points = drawing.spaces
+      .map((space, index) => ({ space, row: rows[index] }))
+      .filter((entry) => entry.row?.floor === floor)
+      .flatMap((entry) => entry.space.points);
+    return { floor, bbox: bboxForPoints(points, drawing.bbox) };
+  });
+  const selectedFloorBbox = floorSpaceBboxes.find((entry) => entry.floor === effectiveFloor)?.bbox ?? drawing.bbox;
+  const selectedFloorBand = expandBbox(selectedFloorBbox, 0.18);
   const visibleSpaceEntries = drawing.spaces
     .map((space, index) => ({ space, index, row: rows[index] }))
     .filter((entry) => showAllFloors || entry.row?.floor === effectiveFloor);
@@ -115,32 +140,76 @@ export function DrawingReview({
     if (showAllFloors || visibleSpacePolygons.length === 0) {
       return drawing;
     }
+    const baseSegments = drawing.base_segments.filter((segment) => segmentInBbox(segment, selectedFloorBand));
+    const walls = drawing.walls.filter((segment) => segmentInBbox(segment, selectedFloorBand));
+    const measuredWalls = drawing.measured_walls.filter((segment) => segmentInBbox(segment, selectedFloorBand));
+    const openingEdges = drawing.opening_edges?.filter((segment) => segmentInBbox(segment, selectedFloorBand));
+    const voidBoundaries = drawing.void_boundaries?.filter((boundary) => boundaryInBbox(boundary, selectedFloorBand));
+    const railings = drawing.railings?.filter((segment) => segmentInBbox(segment, selectedFloorBand));
+    const tileWalls = drawing.tile_walls.filter((segment) => segmentInBbox(segment, selectedFloorBand));
+    const newWalls = drawing.new_walls.filter((segment) => segmentInBbox(segment, selectedFloorBand));
+    const demolitionWalls = drawing.demolition_walls.filter((segment) => segmentInBbox(segment, selectedFloorBand));
+    const backgroundWalls = drawing.background_walls?.filter((segment) => segmentInBbox(segment, selectedFloorBand));
+    const baseCabinets = drawing.base_cabinets.filter((segment) => segmentInBbox(segment, selectedFloorBand));
+    const wallCabinets = drawing.wall_cabinets.filter((segment) => segmentInBbox(segment, selectedFloorBand));
+    const baseCabinetBoundaries = drawing.base_cabinet_boundaries?.filter((boundary) => boundaryInBbox(boundary, selectedFloorBand));
+    const wallCabinetBoundaries = drawing.wall_cabinet_boundaries?.filter((boundary) => boundaryInBbox(boundary, selectedFloorBand));
+    const customCabinets = drawing.custom_cabinets.filter((segment) => segmentInBbox(segment, selectedFloorBand));
+    const toilets = drawing.toilets.filter((point) => pointInBbox(point, selectedFloorBand));
+    const bathroomVanities = drawing.bathroom_vanities.filter((point) => pointInBbox(point, selectedFloorBand));
+    const windowOpenings = drawing.window_openings.filter((window) => window.segments.some((segment) => segmentInBbox(segment, selectedFloorBand)));
+    const windows = drawing.windows.filter((segment) => segmentInBbox(segment, selectedFloorBand));
+    const doorOpenings = drawing.door_openings.filter((door) => segmentInBbox(door.segment, selectedFloorBand));
+    const doors = drawing.doors.filter((segment) => segmentInBbox(segment, selectedFloorBand));
     return {
       ...drawing,
-      base_segments: drawing.base_segments.filter((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons)),
-      walls: drawing.walls.filter((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons)),
-      measured_walls: drawing.measured_walls.filter((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons)),
-      opening_edges: drawing.opening_edges?.filter((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons)),
-      void_boundaries: drawing.void_boundaries?.filter((boundary) => boundaryInAnyPolygon(boundary, visibleSpacePolygons)),
-      railings: drawing.railings?.filter((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons)),
-      tile_walls: drawing.tile_walls.filter((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons)),
-      new_walls: drawing.new_walls.filter((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons)),
-      demolition_walls: drawing.demolition_walls.filter((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons)),
-      background_walls: drawing.background_walls?.filter((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons)),
-      base_cabinets: drawing.base_cabinets.filter((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons)),
-      wall_cabinets: drawing.wall_cabinets.filter((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons)),
-      base_cabinet_boundaries: drawing.base_cabinet_boundaries?.filter((boundary) => boundaryInAnyPolygon(boundary, visibleSpacePolygons)),
-      wall_cabinet_boundaries: drawing.wall_cabinet_boundaries?.filter((boundary) => boundaryInAnyPolygon(boundary, visibleSpacePolygons)),
-      custom_cabinets: drawing.custom_cabinets.filter((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons)),
-      toilets: drawing.toilets.filter((point) => pointInAnyPolygon(point, visibleSpacePolygons)),
-      bathroom_vanities: drawing.bathroom_vanities.filter((point) => pointInAnyPolygon(point, visibleSpacePolygons)),
-      window_openings: drawing.window_openings.filter((window) => window.segments.some((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons))),
-      windows: drawing.windows.filter((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons)),
-      door_openings: drawing.door_openings.filter((door) => segmentInAnyPolygon(door.segment, visibleSpacePolygons)),
-      doors: drawing.doors.filter((segment) => segmentInAnyPolygon(segment, visibleSpacePolygons)),
+      base_segments: baseSegments,
+      walls,
+      measured_walls: measuredWalls,
+      opening_edges: openingEdges,
+      void_boundaries: voidBoundaries,
+      railings,
+      tile_walls: tileWalls,
+      new_walls: newWalls,
+      demolition_walls: demolitionWalls,
+      background_walls: backgroundWalls,
+      base_cabinets: baseCabinets,
+      wall_cabinets: wallCabinets,
+      base_cabinet_boundaries: baseCabinetBoundaries,
+      wall_cabinet_boundaries: wallCabinetBoundaries,
+      custom_cabinets: customCabinets,
+      toilets,
+      bathroom_vanities: bathroomVanities,
+      window_openings: windowOpenings,
+      windows,
+      door_openings: doorOpenings,
+      doors,
       exterior_wall_boundaries: [],
       spaces: visibleSpaceEntries.map((entry) => entry.space),
-      bbox: bboxForPoints(visibleSpacePolygons.flat(), drawing.bbox),
+      bbox: bboxForGeometry([
+        visibleSpacePolygons.flat(),
+        baseSegments.flatMap(segmentPoints),
+        walls.flatMap(segmentPoints),
+        measuredWalls.flatMap(segmentPoints),
+        (openingEdges ?? []).flatMap(segmentPoints),
+        (voidBoundaries ?? []).flat(),
+        (railings ?? []).flatMap(segmentPoints),
+        tileWalls.flatMap(segmentPoints),
+        newWalls.flatMap(segmentPoints),
+        demolitionWalls.flatMap(segmentPoints),
+        (backgroundWalls ?? []).flatMap(segmentPoints),
+        baseCabinets.flatMap(segmentPoints),
+        wallCabinets.flatMap(segmentPoints),
+        (baseCabinetBoundaries ?? []).flat(),
+        (wallCabinetBoundaries ?? []).flat(),
+        customCabinets.flatMap(segmentPoints),
+        toilets,
+        bathroomVanities,
+        windowOpenings.flatMap((window) => window.segments.flatMap(segmentPoints)),
+        windows.flatMap(segmentPoints),
+        doorOpenings.flatMap((door) => segmentPoints(door.segment)),
+        doors.flatMap(segmentPoints),
+      ], selectedFloorBbox),
     };
   })();
   const width = Math.max(visibleDrawing.bbox.max_x - visibleDrawing.bbox.min_x, 1);
