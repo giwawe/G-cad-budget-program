@@ -46,6 +46,7 @@ import {
   type QuoteMapping,
   type QuoteRule,
   updateQuoteRulePricePart,
+  withDefaultQuoteRuleCoverage,
 } from "@/lib/quote-mapping";
 import { buildReviewSnapshot, parseReviewSnapshot, reviewSnapshotFileName } from "@/lib/review-snapshot";
 import type { CalibrationComparison, CeilingFinishType, CurtainWallWidthSource, DrawingGeometry, QuantityRow, QuantitySummary, ReviewStatus } from "@/lib/types";
@@ -442,7 +443,7 @@ export function UploadWorkbench({
       if (!Array.isArray(parsed.rules)) {
         throw new Error("saved quote rules are invalid");
       }
-      const restoredRules = parseQuoteRules(JSON.stringify(parsed.rules));
+      const restoredRules = withDefaultQuoteRuleCoverage(parseQuoteRules(JSON.stringify(parsed.rules)));
       setQuoteRules(restoredRules);
       setQuoteRulesFileName(typeof parsed.fileName === "string" && parsed.fileName.trim() ? parsed.fileName : `${DEFAULT_QUOTE_RULES_NAME}（已编辑）`);
     } catch {

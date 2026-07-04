@@ -15,6 +15,7 @@ import {
   quoteRulesTemplateFileName,
   updateQuoteRulePricePart,
   updateQuoteRuleUnitPrice,
+  withDefaultQuoteRuleCoverage,
 } from "./quote-mapping.ts";
 import type { QuantityRow } from "./types.ts";
 
@@ -919,6 +920,27 @@ assert.throws(() => updateQuoteRulePricePart(defaultQuoteRules(), 7, "labor_pric
 
 const apartmentRules = parseQuoteRules(readFileSync(new URL("../../../quote-rules-apartment-current.json", import.meta.url), "utf8"));
 assert.deepEqual(apartmentRules, defaultQuoteRules());
+
+const legacyDefaultRules = defaultQuoteRules()
+  .filter((rule) => !["窗台石铺贴", "楼梯踏步铺贴"].includes(rule.item_name))
+  .map((rule) => {
+    if (rule.item_name === "墙面乳胶漆") {
+      return { ...rule, space_types: rule.space_types?.filter((spaceType) => spaceType !== "楼梯") };
+    }
+    if (rule.item_name === "楼梯扶手") {
+      return { ...rule, unit_price: 0, material_price: 0 };
+    }
+    return rule;
+  });
+const coveredDefaultRules = withDefaultQuoteRuleCoverage(legacyDefaultRules);
+assert.equal(coveredDefaultRules.length, defaultQuoteRules().length);
+assert.ok(coveredDefaultRules.some((rule) => rule.item_name === "窗台石铺贴"));
+assert.ok(coveredDefaultRules.some((rule) => rule.item_name === "楼梯踏步铺贴"));
+assert.ok(coveredDefaultRules.find((rule) => rule.item_name === "墙面乳胶漆")?.space_types?.includes("楼梯"));
+assert.deepEqual(
+  (({ unit_price, material_price, auxiliary_price, labor_price }) => ({ unit_price, material_price, auxiliary_price, labor_price }))(coveredDefaultRules.find((rule) => rule.item_name === "楼梯扶手")!),
+  { unit_price: 470, material_price: 470, auxiliary_price: 0, labor_price: 0 },
+);
 
 const pendingMetricGroups = new Set(apartmentPendingQuoteMetrics().map((item) => item.source_group));
 assert.equal(apartmentPendingQuoteMetrics().length, 0);

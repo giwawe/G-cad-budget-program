@@ -382,6 +382,51 @@ const bathroomInstallHtml = buildQuoteExcelHtml(defaultProjectMapping, "默认10
 assert.ok(bathroomInstallHtml.includes("<td>卫生间一工程</td>"));
 assert.ok(bathroomInstallHtml.includes("<td>淋浴隔断安装</td><td>套</td><td>1</td><td>0.00</td><td>0.00</td><td>200.00</td><td>200.00</td>"));
 
+const unorderedVillaRows = [
+  {
+    ...defaultProjectRows[0],
+    floor: "二层",
+    spaceName: "麻将房",
+    spaceType: "娱乐室",
+    floorAreaM2: 12,
+    ceilingAreaM2: 12,
+    latexPaintAreaM2: 30,
+    wallTileAreaM2: 0,
+    waterproofAreaM2: 0,
+  },
+  {
+    ...defaultProjectRows[0],
+    floor: "一层",
+    spaceName: "茶室",
+    spaceType: "茶室",
+    floorAreaM2: 10,
+    ceilingAreaM2: 10,
+    latexPaintAreaM2: 24,
+    wallTileAreaM2: 0,
+    waterproofAreaM2: 0,
+  },
+  {
+    ...defaultProjectRows[0],
+    floor: "一层",
+    spaceName: "楼梯间",
+    spaceType: "楼梯",
+    floorAreaM2: 8,
+    ceilingAreaM2: 6,
+    latexPaintAreaM2: 20,
+    wallTileAreaM2: 0,
+    waterproofAreaM2: 0,
+  },
+];
+const unorderedVillaHtml = buildQuoteExcelHtml(buildQuoteMapping(unorderedVillaRows, defaultQuoteRules(), { building_area_m2: 0 }), "乱序别墅项目");
+assert.ok(unorderedVillaHtml.includes("<td>二</td><td>一层茶室工程</td>"));
+assert.ok(unorderedVillaHtml.includes("<td>三</td><td>一层楼梯间工程</td>"));
+assert.ok(unorderedVillaHtml.includes("<td>四</td><td>二层麻将房工程</td>"));
+assert.ok(unorderedVillaHtml.indexOf("<td>一层茶室工程</td>") < unorderedVillaHtml.indexOf("<td>二层麻将房工程</td>"));
+assert.ok(unorderedVillaHtml.indexOf("<td>一层楼梯间工程</td>") < unorderedVillaHtml.indexOf("<td>二层麻将房工程</td>"));
+assert.ok(unorderedVillaHtml.includes("<td>墙面乳胶漆</td><td>m2</td><td>20</td><td>10.00</td><td>0.00</td><td>10.00</td><td>400.00</td>"));
+assert.ok(unorderedVillaHtml.includes("<td>顶面乳胶漆</td><td>m2</td><td>10</td><td>10.00</td><td>0.00</td><td>10.00</td><td>200.00</td>"));
+assert.ok(unorderedVillaHtml.includes("<td>顶面乳胶漆</td><td>m2</td><td>12</td><td>10.00</td><td>0.00</td><td>10.00</td><td>240.00</td>"));
+
 const villaLikeHtml = buildQuoteExcelHtml(
   {
     ...mapping,

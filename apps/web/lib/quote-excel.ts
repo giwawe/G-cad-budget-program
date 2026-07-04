@@ -29,6 +29,7 @@ type RoomSectionGroup = {
   title: string;
   items: QuoteMapping["items"];
 };
+type OrderedRoomSectionGroup = RoomSectionGroup & { order: number };
 
 const ROOM_SECTION_ITEM_NAMES = [
   "轻钢龙骨平顶",
@@ -507,7 +508,7 @@ function templateSectionWithCode(section: QuoteTemplateSectionDefinition, index:
 }
 
 function dynamicRoomSectionGroups(items: QuoteMapping["items"], remainingItems: Set<QuoteMapping["items"][number]>, options: QuoteExcelOptions, multiFloorProject: boolean): RoomSectionGroup[] {
-  const groups: RoomSectionGroup[] = [];
+  const groups: OrderedRoomSectionGroup[] = [];
   const groupedItems = new Map<string, QuoteMapping["items"]>();
   const groupTitles = new Map<string, string>();
   for (const item of items) {
@@ -523,14 +524,61 @@ function dynamicRoomSectionGroups(items: QuoteMapping["items"], remainingItems: 
     groupedItems.set(group.key, [...(groupedItems.get(group.key) ?? []), item]);
     groupTitles.set(group.key, group.title);
   }
-  for (const [key, groupItems] of groupedItems.entries()) {
+  [...groupedItems.entries()].forEach(([key, groupItems], index) => {
     groups.push({
       key,
       title: groupTitles.get(key) ?? key,
       items: groupItems.filter((item) => !items.includes(item) || remainingItems.has(item)),
+      order: index,
     });
+  });
+  return groups
+    .filter((group) => group.items.length > 0)
+    .sort((left, right) => roomSectionGroupSortValue(left) - roomSectionGroupSortValue(right) || left.order - right.order)
+    .map(({ order, ...group }) => group);
+}
+
+function roomSectionGroupSortValue(group: OrderedRoomSectionGroup): number {
+  return floorSortValue(group.items[0]?.floor ?? "");
+}
+
+function floorSortValue(floor: string): number {
+  const normalized = floor.trim();
+  const negativeChineseMatch = normalized.match(/^负([一二三四五六七八九十\d]+)[层楼]?$/);
+  if (negativeChineseMatch) {
+    return -chineseFloorNumber(negativeChineseMatch[1]);
   }
-  return groups.filter((group) => group.items.length > 0);
+  const chineseMatch = normalized.match(/^([一二三四五六七八九十\d]+)[层楼]?$/);
+  if (chineseMatch) {
+    return chineseFloorNumber(chineseMatch[1]);
+  }
+  const basementMatch = normalized.match(/^(?:B|b|负)(\d+)$/);
+  if (basementMatch) {
+    return -Number(basementMatch[1]);
+  }
+  const numberMatch = normalized.match(/^(-?\d+)/);
+  if (numberMatch) {
+    return Number(numberMatch[1]);
+  }
+  return Number.MAX_SAFE_INTEGER;
+}
+
+function chineseFloorNumber(value: string): number {
+  if (/^\d+$/.test(value)) {
+    return Number(value);
+  }
+  const numerals: Record<string, number> = { 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9 };
+  if (value === "十") {
+    return 10;
+  }
+  if (value.startsWith("十")) {
+    return 10 + (numerals[value.slice(1)] ?? 0);
+  }
+  if (value.includes("十")) {
+    const [tens, ones] = value.split("十");
+    return (numerals[tens] ?? 0) * 10 + (ones ? numerals[ones] ?? 0 : 0);
+  }
+  return numerals[value] ?? Number.MAX_SAFE_INTEGER;
 }
 
 function roomSectionGroupForItem(item: QuoteMapping["items"][number], multiFloorProject: boolean): Pick<RoomSectionGroup, "key" | "title"> {

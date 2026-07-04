@@ -313,7 +313,41 @@ const SUMMED_PROJECT_METRIC_TO_ROW_FIELD: Record<SummedProjectQuoteMetric, Quant
 };
 
 export function defaultQuoteRules(): QuoteRule[] {
-  return DEFAULT_RULES.map((rule) => ({ ...rule, space_types: rule.space_types ? [...rule.space_types] : undefined }));
+  return DEFAULT_RULES.map(cloneQuoteRule);
+}
+
+export function withDefaultQuoteRuleCoverage(rules: QuoteRule[]): QuoteRule[] {
+  const remainingRules = [...rules];
+  const mergedDefaultRules = DEFAULT_RULES.map((defaultRule) => {
+    const existingIndex = remainingRules.findIndex((rule) => rule.item_name === defaultRule.item_name && rule.metric === defaultRule.metric);
+    if (existingIndex < 0) {
+      return cloneQuoteRule(defaultRule);
+    }
+    const existingRule = remainingRules.splice(existingIndex, 1)[0];
+    const shouldUseDefaultPrice = existingRule.unit_price <= 0 && defaultRule.unit_price > 0;
+    return {
+      ...cloneQuoteRule(defaultRule),
+      ...existingRule,
+      unit: defaultRule.unit,
+      unit_price: shouldUseDefaultPrice ? defaultRule.unit_price : existingRule.unit_price,
+      material_price: shouldUseDefaultPrice ? defaultRule.material_price : existingRule.material_price,
+      auxiliary_price: shouldUseDefaultPrice ? defaultRule.auxiliary_price : existingRule.auxiliary_price,
+      labor_price: shouldUseDefaultPrice ? defaultRule.labor_price : existingRule.labor_price,
+      space_types: mergeSpaceTypes(existingRule.space_types, defaultRule.space_types),
+    };
+  });
+  return [...mergedDefaultRules, ...remainingRules.map(cloneQuoteRule)];
+}
+
+function cloneQuoteRule(rule: QuoteRule): QuoteRule {
+  return { ...rule, space_types: rule.space_types ? [...rule.space_types] : undefined };
+}
+
+function mergeSpaceTypes(existingSpaceTypes: string[] | undefined, defaultSpaceTypes: string[] | undefined): string[] | undefined {
+  if (!existingSpaceTypes && !defaultSpaceTypes) {
+    return undefined;
+  }
+  return [...new Set([...(existingSpaceTypes ?? []), ...(defaultSpaceTypes ?? [])])];
 }
 
 export function updateQuoteRulePricePart(rules: QuoteRule[], index: number, part: "material_price" | "auxiliary_price" | "labor_price", price: number): QuoteRule[] {
