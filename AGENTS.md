@@ -112,7 +112,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - `QUOTE_BATHROOM_VANITY`：可选浴室柜点位；不画时卫生间默认按 1 套浴室柜计。
 - `QUOTE_WINDOW`：窗洞宽度标记，默认参与墙面扣减。
 - `QUOTE_DOOR`：门洞宽度标记，普通门默认不扣墙面。
-- `QUOTE_TEXT`：空间名称文字；`QUOTE_FLOOR`、`QUOTE_HEIGHT` 当前读取文字，`QUOTE_HEIGHT`/常见错拼 `OUOTE_HEIGHT` 中邻近窗洞的 `HEIGHT/H/窗高` 标识可作为窗高。
+- `QUOTE_TEXT`：空间名称文字；`QUOTE_FLOOR` 可用 `负2楼`、`负1楼`、`1楼`、`2楼` 或 `负二层`、`一层` 等文字给多楼层平铺图纸分层；`QUOTE_HEIGHT`/常见错拼 `OUOTE_HEIGHT` 中邻近窗洞的 `HEIGHT/H/窗高` 标识可作为窗高。
 - `QUOTE_OPENING`：开放边界或非墙体边界；与 `QUOTE_WALL` 重叠时从墙面计量长度中排除。
 - `QUOTE_VOID`：挑空区域或楼板洞口；推荐用闭合 HATCH 色块，也兼容闭合多段线；每层按实际洞口位置绘制。
 - `QUOTE_RAILING`：栏杆、护栏、楼梯扶手线；所在空间为楼梯/楼梯过道时按楼梯扶手换算斜长，其它空间按栏杆/护栏平面长度。
@@ -152,7 +152,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 楼层规则：
 
 - 空间名包含 `-` 时，`-` 前作为楼层，例如 `一层-客厅`。
-- 空间名没有楼层前缀时，当前规则默认显示为 `一层`，不要恢复成 `未分层`。
+- 空间名没有楼层前缀但图纸有 `QUOTE_FLOOR` 标记时，系统按空间中心点最近的楼层标记归属楼层；没有 `QUOTE_FLOOR` 时默认显示为 `一层`，不要恢复成 `未分层`。
 - 多楼层项目建议明确使用 `负二层`、`负一层`、`一层`、`二层` 等楼层前缀；`QUOTE_VOID` 的跨层扣减和挑空窗帘高度会依赖这些楼层序号。
 
 空间分类：

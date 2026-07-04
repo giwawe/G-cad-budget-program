@@ -61,6 +61,20 @@ def build_void_opening_railing_dxf() -> bytes:
     return _save_doc(doc)
 
 
+def build_floor_marker_dxf() -> bytes:
+    doc = ezdxf.new("R2010")
+    msp = doc.modelspace()
+    for layer in ["QUOTE_ROOM", "QUOTE_TEXT", "QUOTE_FLOOR"]:
+        doc.layers.add(layer)
+    msp.add_lwpolyline([(0, 0), (3000, 0), (3000, 2500), (0, 2500), (0, 0)], dxfattribs={"layer": "QUOTE_ROOM"})
+    msp.add_text("储藏间", dxfattribs={"layer": "QUOTE_TEXT", "insert": (1500, 1200)})
+    msp.add_text("负1楼", dxfattribs={"layer": "QUOTE_FLOOR", "insert": (3500, 0)})
+    msp.add_lwpolyline([(0, -5000), (3000, -5000), (3000, -2500), (0, -2500), (0, -5000)], dxfattribs={"layer": "QUOTE_ROOM"})
+    msp.add_text("客厅", dxfattribs={"layer": "QUOTE_TEXT", "insert": (1500, -3800)})
+    msp.add_text("1楼", dxfattribs={"layer": "QUOTE_FLOOR", "insert": (3500, -5000)})
+    return _save_doc(doc)
+
+
 def build_closed_window_polyline_dxf() -> bytes:
     doc = ezdxf.new("R2010")
     msp = doc.modelspace()

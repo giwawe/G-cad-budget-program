@@ -16,6 +16,7 @@ from server.tests.dxf_fixtures import (
     build_ext_wall_area_dxf,
     build_ext_wall_area_repeated_endpoint_dxf,
     build_auto_door_type_dxf,
+    build_floor_marker_dxf,
     build_insert_door_dxf,
     build_kitchen_cabinet_dxf,
     build_kitchen_cabinet_outline_dxf,
@@ -79,9 +80,15 @@ def test_void_deductions_use_overlapped_floor_group_roles():
         ("二层-挑空", 2, boundary),
     ]
 
-    assert parser._void_deduction_areas_for_room("一层-挑空", [boundary], assignments) == (0, 6)
-    assert parser._void_deduction_areas_for_room("二层-挑空", [boundary], assignments) == (6, 0)
-    assert parser._atrium_curtain_height_for_room("一层-挑空", [boundary], assignments, 2.8) == 5.6
+    assert parser._void_deduction_areas_for_room("一层-挑空", "一层", [boundary], assignments) == (0, 6)
+    assert parser._void_deduction_areas_for_room("二层-挑空", "二层", [boundary], assignments) == (6, 0)
+    assert parser._atrium_curtain_height_for_room("一层-挑空", "一层", [boundary], assignments, 2.8) == 5.6
+
+
+def test_quote_floor_markers_assign_room_floors():
+    spaces = parser.parse_dxf_spaces(build_floor_marker_dxf(), ProjectDefaults())
+
+    assert [(space.name, space.floor) for space in spaces] == [("储藏间", "负一层"), ("客厅", "一层")]
 
 
 def test_parse_real_gbk_quote_dxf_from_fixture():
