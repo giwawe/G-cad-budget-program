@@ -1276,7 +1276,9 @@ def _floor_for_room(name: str, room: list[Point], floor_markers: list[tuple[Poin
     if "-" in name or not floor_markers:
         return name_floor
     center = centerOf_points(room)
-    nearest = min(floor_markers, key=lambda marker: (abs(marker[0][1] - center[1]), abs(marker[0][0] - center[0])))
+    markers_below_room = [marker for marker in floor_markers if marker[0][1] <= center[1]]
+    candidates = markers_below_room or floor_markers
+    nearest = max(candidates, key=lambda marker: marker[0][1])
     return nearest[1]
 
 

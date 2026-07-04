@@ -16,6 +16,7 @@ from server.tests.dxf_fixtures import (
     build_ext_wall_area_dxf,
     build_ext_wall_area_repeated_endpoint_dxf,
     build_auto_door_type_dxf,
+    build_floor_marker_below_room_dxf,
     build_floor_marker_dxf,
     build_insert_door_dxf,
     build_kitchen_cabinet_dxf,
@@ -89,6 +90,12 @@ def test_quote_floor_markers_assign_room_floors():
     spaces = parser.parse_dxf_spaces(build_floor_marker_dxf(), ProjectDefaults())
 
     assert [(space.name, space.floor) for space in spaces] == [("储藏间", "负一层"), ("客厅", "一层")]
+
+
+def test_quote_floor_markers_use_nearest_marker_below_room_panel():
+    spaces = parser.parse_dxf_spaces(build_floor_marker_below_room_dxf(), ProjectDefaults())
+
+    assert [(space.name, space.floor) for space in spaces] == [("储藏间", "负二层"), ("麻将房", "负一层")]
 
 
 def test_parse_real_gbk_quote_dxf_from_fixture():

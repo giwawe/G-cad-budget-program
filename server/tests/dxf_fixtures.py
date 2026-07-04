@@ -75,6 +75,20 @@ def build_floor_marker_dxf() -> bytes:
     return _save_doc(doc)
 
 
+def build_floor_marker_below_room_dxf() -> bytes:
+    doc = ezdxf.new("R2010")
+    msp = doc.modelspace()
+    for layer in ["QUOTE_ROOM", "QUOTE_TEXT", "QUOTE_FLOOR"]:
+        doc.layers.add(layer)
+    msp.add_lwpolyline([(0, -1500), (3000, -1500), (3000, -500), (0, -500), (0, -1500)], dxfattribs={"layer": "QUOTE_ROOM"})
+    msp.add_text("储藏间", dxfattribs={"layer": "QUOTE_TEXT", "insert": (1500, -1000)})
+    msp.add_text("负2楼", dxfattribs={"layer": "QUOTE_FLOOR", "insert": (3500, -3000)})
+    msp.add_lwpolyline([(0, -5700), (3000, -5700), (3000, -4700), (0, -4700), (0, -5700)], dxfattribs={"layer": "QUOTE_ROOM"})
+    msp.add_text("麻将房", dxfattribs={"layer": "QUOTE_TEXT", "insert": (1500, -5200)})
+    msp.add_text("负1楼", dxfattribs={"layer": "QUOTE_FLOOR", "insert": (3500, -8000)})
+    return _save_doc(doc)
+
+
 def build_closed_window_polyline_dxf() -> bytes:
     doc = ezdxf.new("R2010")
     msp = doc.modelspace()
