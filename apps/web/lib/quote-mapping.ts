@@ -807,6 +807,9 @@ function ruleAppliesToRow(rule: QuoteRule, row: QuantityRow) {
   if (rule.metric === "curtain_wall_width_m" && !curtainWallWidthIsQuoteReady(row.curtainWallWidthSource)) {
     return false;
   }
+  if (rule.metric === "ceiling_area_m2" && row.spaceType === "露台") {
+    return false;
+  }
   if (rule.metric === "ceiling_area_m2" && KITCHEN_BATHROOM_SPACE_TYPES.includes(row.spaceType)) {
     const finishType = row.ceilingFinishType ?? "integrated";
     if (rule.item_name === "厨房卫生间集成吊顶") {

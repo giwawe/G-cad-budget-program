@@ -290,6 +290,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         if (name := _name_for_room(room, texts))
     ]
     void_assignments = _void_assignments(named_rooms, void_boundaries)
+    stair_void_overrides = _stair_void_deduction_overrides(named_rooms, void_boundaries)
     measured_tile_walls: list[tuple[Point, Point]] = []
     measured_new_walls: list[tuple[Point, Point]] = []
     measured_demolition_walls: list[tuple[Point, Point]] = []
@@ -327,7 +328,10 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         room_bathroom_vanities = [point for point in bathroom_vanity_points if contains_point(room, point) or _point_on_boundary(room, point)]
         room_void_boundaries = [boundary for boundary in void_boundaries if _boundary_in_room(room, boundary)]
         room_void_area_m2 = round(sum(polygon_area(boundary) for boundary in room_void_boundaries), 2)
-        room_floor_void_area_m2, room_ceiling_void_area_m2 = _void_deduction_areas_for_room(name, floor, room_void_boundaries, void_assignments)
+        room_floor_void_area_m2, room_ceiling_void_area_m2 = stair_void_overrides.get(
+            (name, floor),
+            _void_deduction_areas_for_room(name, floor, room_void_boundaries, void_assignments),
+        )
         room_railings = [(start, end) for start, end in railing_segments if _segment_in_room(room, start, end)]
         room_space_type = classify_space_type(name)
         room_stair_railings = room_railings if room_space_type in {"楼梯", "楼梯过道"} else []
@@ -1352,6 +1356,30 @@ def _void_deduction_areas_for_room(name: str, floor: str, boundaries: list[list[
         if floor_rank != unique_ranks[-1]:
             ceiling_area += area
     return round(floor_area, 2), round(ceiling_area, 2)
+
+
+def _stair_void_deduction_overrides(named_rooms: list[tuple[str, str, list[Point]]], void_boundaries: list[list[Point]]) -> dict[tuple[str, str], tuple[float, float]]:
+    stair_rooms: dict[str, list[tuple[str, int, float]]] = {}
+    for name, floor, room in named_rooms:
+        if classify_space_type(name) not in {"楼梯", "楼梯过道"}:
+            continue
+        rank = _floor_rank(floor)
+        if rank is None:
+            continue
+        area = round(sum(abs(polygon_area(boundary)) for boundary in void_boundaries if _boundary_in_room(room, boundary)), 2)
+        stair_rooms.setdefault(name, []).append((floor, rank, area))
+
+    overrides: dict[tuple[str, str], tuple[float, float]] = {}
+    for name, entries in stair_rooms.items():
+        if len(entries) <= 1:
+            continue
+        ordered = sorted(entries, key=lambda item: item[1])
+        for index, (floor, _rank, area) in enumerate(ordered):
+            next_area = ordered[index + 1][2] if index + 1 < len(ordered) else 0
+            floor_void = area if index > 0 else 0
+            ceiling_void = 0 if index == len(ordered) - 1 else (area or next_area)
+            overrides[(name, floor)] = (round(floor_void, 2), round(ceiling_void, 2))
+    return overrides
 
 
 def _atrium_curtain_height_for_room(name: str, floor: str, boundaries: list[list[Point]], assignments, default_height_m: float) -> float:

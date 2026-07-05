@@ -621,7 +621,7 @@ function bathroomInstallationItemsFromOptions(options: QuoteExcelOptions, multiF
   const quantityByFloor = new Map<string, { floor: string; quantity: number }>();
   const displayNames = displayBathroomNamesByRow(bathroomRows);
   bathroomRows.forEach((row, index) => {
-    const choice = bathroomChoices[`${row.floor}::${row.spaceName}::${index}`];
+    const choice = bathroomChoices[`${row.floor}::${row.spaceName}::${index}`] ?? { shower: "淋浴隔断" };
     if (choice?.shower === "淋浴隔断" || choice?.shower === "玻璃淋浴房") {
       if (multiFloorProject) {
         const current = quantityByFloor.get(row.floor) ?? { floor: row.floor, quantity: 0 };

@@ -100,6 +100,25 @@ def test_void_deductions_include_same_named_stair_rooms_on_other_floors():
     assert parser._void_deduction_areas_for_room("楼梯间", "三层", [boundary], assignments) == (6, 0)
 
 
+def test_stair_void_overrides_use_adjacent_opening_for_bottom_and_restore_top_ceiling():
+    bottom_room = [(0, 0), (4, 0), (4, 3), (0, 3)]
+    middle_room = [(10, 0), (14, 0), (14, 3), (10, 3)]
+    top_room = [(20, 0), (24, 0), (24, 3), (20, 3)]
+    middle_void = [(10, 0), (12, 0), (12, 2), (10, 2)]
+    top_void = [(21, 0), (23, 0), (23, 2), (21, 2)]
+    named_rooms = [
+        ("楼梯间", "负二层", bottom_room),
+        ("楼梯间", "负一层", middle_room),
+        ("楼梯间", "一层", top_room),
+    ]
+
+    overrides = parser._stair_void_deduction_overrides(named_rooms, [middle_void, top_void])
+
+    assert overrides[("楼梯间", "负二层")] == (0, 4)
+    assert overrides[("楼梯间", "负一层")] == (4, 4)
+    assert overrides[("楼梯间", "一层")] == (4, 0)
+
+
 def test_building_area_sums_floor_ext_walls_and_deducts_voids_once():
     first_floor = [(0, 0), (5, 0), (5, 4), (0, 4)]
     second_floor = [(10, 0), (15, 0), (15, 4), (10, 4)]

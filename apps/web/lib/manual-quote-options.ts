@@ -42,9 +42,7 @@ export function manualQuoteInputsFromBathroomChoices(
   for (const [index, row] of bathroomRows.entries()) {
     const choice = choices[bathroomChoiceKey(row, index)] ?? {};
     quantities[choice.fixture ?? "马桶"] += 1;
-    if (choice.shower) {
-      quantities[choice.shower] += 1;
-    }
+    quantities[choice.shower ?? "淋浴隔断"] += 1;
   }
   return {
     ...Object.fromEntries(Object.entries(inputs).filter(([itemName]) => !BATHROOM_MANUAL_ITEM_NAMES.has(itemName))),

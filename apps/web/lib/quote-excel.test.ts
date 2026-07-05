@@ -382,6 +382,12 @@ const bathroomInstallHtml = buildQuoteExcelHtml(defaultProjectMapping, "默认10
 assert.ok(bathroomInstallHtml.includes("<td>卫生间一工程</td>"));
 assert.ok(bathroomInstallHtml.includes("<td>淋浴隔断安装</td><td>套</td><td>1</td><td>0.00</td><td>0.00</td><td>200.00</td><td>200.00</td>"));
 
+const defaultBathroomInstallHtml = buildQuoteExcelHtml(defaultProjectMapping, "默认10号图纸", {
+  bathroomRows: defaultBathroomRows,
+  bathroomChoices: {},
+});
+assert.equal(countOccurrences(defaultBathroomInstallHtml, "<td>淋浴隔断安装</td><td>套</td><td>1</td><td>0.00</td><td>0.00</td><td>200.00</td><td>200.00</td>"), 2);
+
 const unorderedVillaRows = [
   {
     ...defaultProjectRows[0],
