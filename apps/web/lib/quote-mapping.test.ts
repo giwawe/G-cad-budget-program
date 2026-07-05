@@ -1331,6 +1331,16 @@ assert.deepEqual(windowsillItem && stripQuoteItemPriceParts(windowsillItem), {
   amount: 131.4,
 });
 
+const wetRoomWindowsillMapping = buildQuoteMapping([
+  { ...rows[0], spaceName: "厨房", spaceType: "厨房", windowsillLengthM: 1.2 },
+  { ...rows[0], spaceName: "卫生间", spaceType: "卫生间", windowsillLengthM: 0.8 },
+]);
+assert.ok(!wetRoomWindowsillMapping.items.some((item) => item.item_name === "窗台石铺贴"));
+
+const terraceCeilingMapping = buildQuoteMapping([{ ...rows[0], spaceName: "露台", spaceType: "露台", ceilingAreaM2: 12, latexPaintAreaM2: 20, wallTileAreaM2: 0, waterproofAreaM2: 8 }]);
+assert.ok(!terraceCeilingMapping.items.some((item) => ["轻钢龙骨平顶", "顶面批嵌", "顶面乳胶漆"].includes(item.item_name)));
+assert.ok(terraceCeilingMapping.items.some((item) => item.item_name === "墙面乳胶漆"));
+
 const curtainReadiness = curtainQuoteReadiness([
   curtainOnlyRow("主卧", "卧室", 4.2, "manual"),
   curtainOnlyRow("次卧", "卧室", 3.6, "matched_window_wall"),

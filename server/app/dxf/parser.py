@@ -407,9 +407,9 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
     grouped_window_openings = [_drawing_window_for_opening(opening, named_rooms, defaults, window_height_markers) for opening in grouped_window_opening_inputs]
     door_openings = [_drawing_door_for_opening(opening, named_rooms, walls) for opening in door_opening_inputs]
     doors = [door.segment for door in door_openings]
-    building_area_boundary = _building_area_boundary(exterior_wall_boundaries)
-    drawing_exterior_wall_boundaries = [building_area_boundary] if building_area_boundary else []
-    building_area_m2 = round(polygon_area(building_area_boundary), 2) if building_area_boundary else 0
+    building_area_boundaries = _building_area_boundaries(exterior_wall_boundaries, rooms)
+    drawing_exterior_wall_boundaries = building_area_boundaries
+    building_area_m2 = _building_area_m2(building_area_boundaries, void_boundaries)
 
     initial_bbox = _bbox_for_geometry([space.points for space in drawing_spaces])
     review_bbox = _expanded_bbox(initial_bbox, padding=2.0)
@@ -607,7 +607,26 @@ def _kitchen_cabinet_outline_boundary(entity, scale: float) -> list[Point]:
 def _building_area_boundary(boundaries: list[list[Point]]) -> list[Point]:
     if not boundaries:
         return []
-    return max(boundaries, key=polygon_area)
+    return max(boundaries, key=lambda boundary: abs(polygon_area(boundary)))
+
+
+def _building_area_boundaries(exterior_boundaries: list[list[Point]], room_boundaries: list[list[Point]]) -> list[list[Point]]:
+    if not exterior_boundaries:
+        return []
+    boundaries_with_rooms = [
+        exterior
+        for exterior in exterior_boundaries
+        if any(_boundary_in_room(exterior, room) for room in room_boundaries)
+    ]
+    return boundaries_with_rooms or [_building_area_boundary(exterior_boundaries)]
+
+
+def _building_area_m2(exterior_boundaries: list[list[Point]], void_boundaries: list[list[Point]]) -> float:
+    if not exterior_boundaries:
+        return 0
+    exterior_area = sum(abs(polygon_area(boundary)) for boundary in exterior_boundaries)
+    void_area = sum(abs(polygon_area(boundary)) for boundary in void_boundaries if any(_boundary_in_room(exterior, boundary) for exterior in exterior_boundaries))
+    return round(max(exterior_area - void_area, 0), 2)
 
 
 def _door_openings(entity, scale: float) -> list[DrawingOpening]:
@@ -1307,17 +1326,17 @@ def _floor_rank(floor: str) -> int | None:
     return -number if floor.startswith("负") else number
 
 
-def _void_assignments(named_rooms: list[tuple[str, str, list[Point]]], void_boundaries: list[list[Point]]) -> list[tuple[str, int | None, list[Point]]]:
-    assignments: list[tuple[str, int | None, list[Point]]] = []
+def _void_assignments(named_rooms: list[tuple[str, str, list[Point]]], void_boundaries: list[list[Point]]) -> list[tuple[str, str, int | None, list[Point]]]:
+    assignments: list[tuple[str, str, int | None, list[Point]]] = []
     for name, floor, room in named_rooms:
         rank = _floor_rank(floor)
         for boundary in void_boundaries:
             if _boundary_in_room(room, boundary):
-                assignments.append((name, rank, boundary))
+                assignments.append((name, floor, rank, boundary))
     return assignments
 
 
-def _void_deduction_areas_for_room(name: str, floor: str, boundaries: list[list[Point]], assignments: list[tuple[str, int | None, list[Point]]]) -> tuple[float, float]:
+def _void_deduction_areas_for_room(name: str, floor: str, boundaries: list[list[Point]], assignments) -> tuple[float, float]:
     floor_rank = _floor_rank(floor)
     floor_area = 0.0
     ceiling_area = 0.0
@@ -1335,23 +1354,34 @@ def _void_deduction_areas_for_room(name: str, floor: str, boundaries: list[list[
     return round(floor_area, 2), round(ceiling_area, 2)
 
 
-def _atrium_curtain_height_for_room(name: str, floor: str, boundaries: list[list[Point]], assignments: list[tuple[str, int | None, list[Point]]], default_height_m: float) -> float:
+def _atrium_curtain_height_for_room(name: str, floor: str, boundaries: list[list[Point]], assignments, default_height_m: float) -> float:
     ranks: set[int] = set()
     for boundary in boundaries:
         ranks.update(_void_group_ranks_for_boundary(name, floor, boundary, assignments))
     return round(max(len(ranks), 1) * default_height_m, 2)
 
 
-def _void_group_ranks_for_boundary(name: str, floor: str, boundary: list[Point], assignments: list[tuple[str, int | None, list[Point]]]) -> list[int]:
+def _void_group_ranks_for_boundary(name: str, floor: str, boundary: list[Point], assignments) -> list[int]:
     floor_rank = _floor_rank(floor)
     group_ranks = [
         rank
-        for assigned_name, rank, assigned_boundary in assignments
-        if assigned_name != name and rank is not None and _boundaries_overlap(boundary, assigned_boundary)
+        for assigned_name, assigned_floor, rank, assigned_boundary in (_normalize_void_assignments(assignments))
+        if assigned_floor != floor and rank is not None and _boundaries_overlap(boundary, assigned_boundary)
     ]
     if floor_rank is not None:
         group_ranks.append(floor_rank)
     return sorted(set(group_ranks))
+
+
+def _normalize_void_assignments(assignments) -> list[tuple[str, str, int | None, list[Point]]]:
+    normalized = []
+    for assignment in assignments:
+        if len(assignment) == 4:
+            normalized.append(assignment)
+        else:
+            assigned_name, rank, boundary = assignment
+            normalized.append((assigned_name, "", rank, boundary))
+    return normalized
 
 
 def _boundaries_overlap(first: list[Point], second: list[Point]) -> bool:

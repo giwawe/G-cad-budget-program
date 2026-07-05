@@ -543,6 +543,29 @@ assert.ok(villaLikeHtml.includes("<td>淋浴隔断安装</td><td>套</td><td>2</
 assert.ok(villaLikeHtml.includes("<td>六</td><td>二层卧室工程</td>"));
 assert.ok(villaLikeHtml.includes("<td>窗台石铺贴</td><td>M</td><td>2.40</td><td>0.00</td><td>28.00</td><td>45.00</td><td>175.20</td>"));
 
+const handrailHtml = buildQuoteExcelHtml(
+  {
+    ...mapping,
+    items: [
+      {
+        floor: "一层",
+        space_name: "楼梯间",
+        space_type: "楼梯",
+        item_name: "楼梯扶手",
+        quantity: 4.1,
+        unit: "M",
+        unit_price: 470,
+        amount: 1927,
+      },
+    ],
+    summary: { ...mapping.summary, item_count: 1, total_amount: 1927 },
+  },
+  "扶手项目",
+);
+assert.ok(!handrailHtml.includes("<td>一层楼梯间工程</td>"));
+assert.ok(handrailHtml.includes("<td>其他（窗帘、美缝、窗台石等）</td>"));
+assert.ok(handrailHtml.includes("<td>楼梯扶手</td><td>M</td><td>4.10</td><td>470.00</td><td>0.00</td><td>0.00</td><td>1927.00</td>"));
+
 function countOccurrences(value: string, pattern: string): number {
   return value.split(pattern).length - 1;
 }

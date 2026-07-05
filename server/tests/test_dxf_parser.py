@@ -86,6 +86,35 @@ def test_void_deductions_use_overlapped_floor_group_roles():
     assert parser._atrium_curtain_height_for_room("一层-挑空", "一层", [boundary], assignments, 2.8) == 5.6
 
 
+def test_void_deductions_include_same_named_stair_rooms_on_other_floors():
+    boundary = [(0, 0), (3, 0), (3, 2), (0, 2)]
+    assignments = [
+        ("楼梯间", "负二层", -2, boundary),
+        ("楼梯间", "负一层", -1, boundary),
+        ("楼梯间", "一层", 1, boundary),
+        ("楼梯间", "二层", 2, boundary),
+        ("楼梯间", "三层", 3, boundary),
+    ]
+
+    assert parser._void_deduction_areas_for_room("楼梯间", "负二层", [boundary], assignments) == (0, 6)
+    assert parser._void_deduction_areas_for_room("楼梯间", "三层", [boundary], assignments) == (6, 0)
+
+
+def test_building_area_sums_floor_ext_walls_and_deducts_voids_once():
+    first_floor = [(0, 0), (5, 0), (5, 4), (0, 4)]
+    second_floor = [(10, 0), (15, 0), (15, 4), (10, 4)]
+    void = [(1, 1), (3, 1), (3, 2), (1, 2)]
+
+    assert parser._building_area_m2([first_floor, second_floor], [void]) == 38
+
+
+def test_building_area_boundary_uses_absolute_area_when_falling_back():
+    small_clockwise = [(0, 0), (0, 2), (2, 2), (2, 0)]
+    large_clockwise = [(10, 0), (10, 4), (15, 4), (15, 0)]
+
+    assert parser._building_area_boundary([small_clockwise, large_clockwise]) == large_clockwise
+
+
 def test_quote_floor_markers_assign_room_floors():
     spaces = parser.parse_dxf_spaces(build_floor_marker_dxf(), ProjectDefaults())
 

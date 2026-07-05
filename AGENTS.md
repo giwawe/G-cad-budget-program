@@ -121,10 +121,10 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 核心公式：
 
 ```text
-建筑面积 = 最大闭合 QUOTE_EXT_WALL 多段线面积；closed 标记或首尾点重合都视为闭合，没有闭合外墙轮廓时为 0
+建筑面积 = 包含可计价房间的所有闭合 QUOTE_EXT_WALL 轮廓面积合计 - 轮廓内 QUOTE_VOID 洞口面积；closed 标记或首尾点重合都视为闭合，没有闭合外墙轮廓时为 0
 地面面积 = QUOTE_ROOM 闭合边界面积 - 地面洞口扣减
 顶面面积 = QUOTE_ROOM 闭合边界面积 - 顶面洞口扣减
-洞口扣减 = QUOTE_VOID 按楼层关系扣减；同位置跨多层时底层只扣顶面、顶层只扣地面、中间层地面顶面都扣；单层或无法识别楼层时地面顶面都扣
+洞口扣减 = QUOTE_VOID 按楼层关系扣减；同位置跨多层时最底层只扣顶面、最高层只扣地面、中间层地面顶面都扣；单层或无法识别楼层时地面顶面都扣；多层同名楼梯间也按楼层序号分组，不按空间名排除
 挑空窗帘候选 = 挑空空间窗户所在墙面候选宽度 * 同一 QUOTE_VOID 跨越楼层数量 * 默认层高；只进复核候选，不混入普通窗帘金额
 楼梯扶手长度 = 楼梯/楼梯过道内 QUOTE_RAILING 线段按 sqrt(平面长度^2 + 层高^2) 换算；其它空间 QUOTE_RAILING 生成栏杆/护栏平面长度
 墙面计量长度 = 与空间关联的 QUOTE_WALL 长度
@@ -193,8 +193,8 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 全屋定制：非厨房柜体画在 `QUOTE_CUSTOM`，默认生成 `custom_cabinet_area_m2`，公式为 `常规柜投影长度 * 2.6m`；如果 `QUOTE_CUSTOM` 是闭合柜体轮廓，按最长边取一次投影长度，不把轮廓周长累加。同图层邻近文字可标注柜高，如 `HEIGHT=800`、`H=800`、`高度800` 或 `H=0.8m`，也可保留 `TYPE=衣柜` 这类类型标识供后续分类扩展；高度低于 1m 的低柜按长度米取值，并入同一个 `custom_cabinet_area_m2` 数量，不单独生成低柜字段或报价项；厨房空间默认为 0，避免和橱柜地柜/吊柜重复计费。
 - 背景墙：可选画在 `QUOTE_BACKGROUND_WALL`，按背景墙线长 * 标注高度生成 `background_wall_area_m2`，未标注高度时按空间层高；不画时为 0。默认报价规则“背景墙”按全屋汇总生成金额；如果没有自动工程量，Excel 草稿仍保留背景墙空行供设计师补填。
 - 洁具：卫生间默认生成 `toilet_count=1` 和 `bathroom_vanity_count=1`，用于“马桶”和“浴室柜”报价；如果画了 `QUOTE_TOILET` 或 `QUOTE_BATHROOM_VANITY` 点位，则按点位数覆盖默认数量。
-- 建筑面积：`building_area_m2` 从 `QUOTE_EXT_WALL` 闭合多段线读取，closed 标记或首尾点重合都视为闭合；当前取面积最大的闭合外墙轮廓，写入 API summary、图形校对页和报价映射 summary；它不是每个 `QUOTE_ROOM` 面积的简单求和，暂不混入空间工程量行。
-- 窗台石当前仍自动计算 `windowsill_length_m` 作为校准字段；报价草稿中公共大项“窗台石”按 1 套材料占位，空间工程中另按窗户长度自动生成“窗台石铺贴”安装项，二者不冲突。
+- 建筑面积：`building_area_m2` 从 `QUOTE_EXT_WALL` 闭合多段线读取，closed 标记或首尾点重合都视为闭合；当前合计包含可计价房间的所有闭合外墙轮廓面积，并扣除对应 `QUOTE_VOID` 楼梯/挑空等洞口面积，写入 API summary、图形校对页和报价映射 summary；它不是每个 `QUOTE_ROOM` 面积的简单求和，暂不混入空间工程量行。
+- 窗台石当前仍自动计算 `windowsill_length_m` 作为校准字段；报价草稿中公共大项“窗台石”按 1 套材料占位，空间工程中另按窗户长度自动生成“窗台石铺贴”安装项，厨房、卫生间因瓷砖上墙不生成窗台石铺贴，二者不冲突。
 - 窗帘和窗帘箱不能按窗洞宽度计量，应按窗户所在墙面的整面墙宽度；厨房、卫生间、过道等空间默认不做窗帘/窗帘箱。
 - `curtain_wall_width_m` 是窗帘墙宽候选取数：客厅、餐厅、卧室、书房有窗时优先识别 L 形窗并按两条非平行长窗边合计；非 L 形窗按窗洞中心线匹配邻近且平行的 `QUOTE_WALL`，取窗户所在墙面的整面墙宽；匹配不到时回退到空间最长一段 `QUOTE_WALL`；其它空间为 `0`。异形窗户按现有窗户长度口径直接计算窗帘候选。`curtain_wall_width_source` 标记来源：`matched_l_shape_window`、`matched_window_wall`、`fallback_longest_wall`、`manual_required_l_shape_window`、`not_applicable` 或前端人工编辑后的 `manual`。前端工程量表可人工校准并随校对快照保存/恢复；来源为 `manual`、`matched_window_wall`、`matched_l_shape_window` 或 `fallback_longest_wall` 且长度大于 0 时，暗窗帘箱直接进入报价规则和金额汇总，不再作为待确认风险。
 - 挑空空间不进入普通窗帘/暗窗帘箱金额汇总；如果挑空空间有窗帘候选，报价映射会附带 `atrium_curtain_candidates`，宽度沿用窗户所在墙面候选，高度按同一 `QUOTE_VOID` 跨越楼层数量 * 默认层高汇总，并提示非常规尺寸需设计师复核。
@@ -238,7 +238,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 报价映射默认规则在 `apps/web/lib/quote-mapping.ts`：
 
 - 墙面界面剂处理、墙面批嵌、墙面乳胶漆：按 `latexPaintAreaM2`，仅匹配干区、楼梯和露台等适用空间；茶室、娱乐室、楼梯按普通干区接入。
-- 厨房、卫生间顶面类型是可校对选项：默认 `ceilingFinishType=integrated`，按“厨房卫生间集成吊顶”候选项输出，默认单价为 260，可在报价规则单价表中修改；人工切换为 `gypsum` 后，按 `ceilingAreaM2` 进入轻钢龙骨平顶、顶面批嵌、顶面乳胶漆。其它干区默认按石膏板/普通顶面处理。
+- 厨房、卫生间顶面类型是可校对选项：默认 `ceilingFinishType=integrated`，按“厨房卫生间集成吊顶”候选项输出，默认单价为 260，可在报价规则单价表中修改；人工切换为 `gypsum` 后，按 `ceilingAreaM2` 进入轻钢龙骨平顶、顶面批嵌、顶面乳胶漆。其它干区默认按石膏板/普通顶面处理；露台默认视为露天空间，不生成顶面吊顶、顶面批嵌和顶面乳胶漆，少量有顶面的露台后续由设计师补项或校准。
 - 地面找平：按 `floorAreaM2`，仅匹配厨房、卫生间、阳台、露台、洗衣房。
 - 地面砖铺贴(750X1500)：按 `floorAreaM2`，当前不限制空间类型。
 - 地面瓷砖：按 `floorTilePieceCount` 全屋汇总，当前不限制空间类型；片数由地面面积按 750X1500、5% 损耗向上取整。
@@ -254,7 +254,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 建筑面积：按项目级 `building_area_m2`，从当前 summary 取值生成“全屋”清单项；默认规则不配置具体项目，报价员可在报价规则 JSON 中添加管理费、成品保护、综合服务费等按建筑面积计价的项目。
 - 墙面贴瓷砖(600X1200)：按 `wallTileAreaM2`，厨房、卫生间默认全墙计算；其它空间只要画了 `QUOTE_WALL_TILE` 且墙砖面积大于 0 就进入报价。
 - 墙地面防漏处理：按 `waterproofAreaM2`，仅匹配厨房、卫生间、阳台、露台、洗衣房。
-- 窗台石：公共大项“窗台石”按套项材料占位，价格由设计师确认；空间工程中“窗台石铺贴”按 `windowsillLengthM` 自动生成安装项。
+- 窗台石：公共大项“窗台石”按套项材料占位，价格由设计师确认；空间工程中“窗台石铺贴”按 `windowsillLengthM` 自动生成安装项，厨房、卫生间不生成铺贴项。
 - 砌砖墙：画了 `QUOTE_NEW_WALL` 时生成；未标厚的 `newWallUnclassifiedAreaM2` 全屋汇总为“砌砖墙”，标 120mm 的 `newWall120AreaM2` 汇总为“砌120厚砖墙”，标 240mm 或其它非 120 厚度的 `newWall240AreaM2` 汇总为“砌240厚砖墙”。
 - 水泥墙开槽、补线/管槽及零星修补：按 `building_area_m2` 全屋汇总生成。
 - 打混凝土过梁孔：按 `building_area_m2 * 10%` 生成。
@@ -270,7 +270,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 浴室柜：按 `bathroomVanityCount`，卫生间默认 1 套，点位覆盖时按 `QUOTE_BATHROOM_VANITY` 数量生成。
 - 花洒、卫浴五件套：按 `bathroom_count`，每个可计价卫生间默认 1 套，报价员可在 Excel 草稿中调整数量或删除。
 - 淋浴隔断安装：在 Excel 可选补项中按每个卫生间选择淋浴隔断或玻璃淋浴房后生成，安装费按对应卫生间或楼层卫生间汇总。
-- 楼梯扶手：按 `stairRailingLengthM` 生成，默认主材单价 470。
+- 楼梯扶手：按 `stairRailingLengthM` 生成，默认主材单价 470；Excel 草稿归入公共大项“其他（窗帘、美缝、窗台石等）”。
 - 楼梯踏步铺贴：楼梯/楼梯过道按 `stair_tread_count = floor(层高 / 0.17m)` 再向下取奇数生成，单位为步。
 - 窗帘墙宽候选 `curtainWallWidthM` 在工程量表展示，自动候选和人工校准值都会导出为 `curtain_quote_candidates` 候选清单；`curtain_wall_width_m` 已属于可导入报价规则 metric，来源为 `manual`、`matched_window_wall`、`matched_l_shape_window` 或 `fallback_longest_wall` 且长度大于 0 时生成暗窗帘箱金额；茶室、娱乐室按普通干区进入窗帘候选。
 
