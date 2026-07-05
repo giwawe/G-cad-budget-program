@@ -239,7 +239,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 报价映射默认规则在 `apps/web/lib/quote-mapping.ts`：
 
 - 墙面界面剂处理、墙面批嵌、墙面乳胶漆：按 `latexPaintAreaM2`，仅匹配干区、楼梯和露台等适用空间；茶室、娱乐室、楼梯按普通干区接入。
-- 厨房、卫生间顶面类型是可校对选项：默认 `ceilingFinishType=integrated`，按“厨房卫生间集成吊顶”候选项输出，默认单价为 260，可在报价规则单价表中修改；人工切换为 `gypsum` 后，按 `ceilingAreaM2` 进入轻钢龙骨平顶、顶面批嵌、顶面乳胶漆。其它干区默认按石膏板/普通顶面处理；露台默认视为露天空间，不生成顶面吊顶、顶面批嵌和顶面乳胶漆，即使旧本机报价规则仍把露台写入顶面规则，映射时也会硬性排除露台顶面项。
+- 厨房、卫生间顶面类型是可校对选项：默认 `ceilingFinishType=integrated`，按“厨房卫生间集成吊顶”候选项输出，默认单价为 180，可在报价规则单价表中修改；人工切换为 `gypsum` 后，按 `ceilingAreaM2` 进入轻钢龙骨平顶、顶面批嵌、顶面乳胶漆。其它干区默认按石膏板/普通顶面处理；露台默认视为露天空间，不生成顶面吊顶、顶面批嵌和顶面乳胶漆，即使旧本机报价规则仍把露台写入顶面规则，映射时也会硬性排除露台顶面项。
 - 地面找平：按 `floorAreaM2`，仅匹配厨房、卫生间、阳台、露台、洗衣房。
 - 地面砖铺贴(750X1500)：按 `floorAreaM2`，当前不限制空间类型。
 - 地面瓷砖：按 `floorTilePieceCount` 全屋汇总，当前不限制空间类型；片数由地面面积按 750X1500、5% 损耗向上取整。
@@ -264,14 +264,14 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 拆改及拆墙：按 `demolitionWallAreaM2` 全屋汇总，画了 `QUOTE_DEMO_WALL` 时生成。
 - 背景墙：按 `backgroundWallAreaM2` 全屋汇总，画了 `QUOTE_BACKGROUND_WALL` 时生成；未画时 Excel 草稿保留空行。
 - 室内门：按 `interiorDoorCount`，普通 `QUOTE_DOOR` 门洞生成。
-- 入户门、卫生间门、推拉门面积、推拉门门套长度已进入工程量表、校准模板和默认报价规则；默认规则会按空间类型分别生成“入户门”“卫生间门”“厨房推拉门”“厨房推拉门双包套”“阳台推拉门”“阳台推拉门双包套”，单价按真实模板分别为 5000、1200、550、300。
+- 入户门、卫生间门、推拉门面积、推拉门门套长度已进入工程量表、校准模板和默认报价规则；默认规则会按空间类型分别生成“入户门”“卫生间门”“厨房推拉门”“厨房推拉门双包套”“阳台推拉门”“阳台推拉门双包套”，单价按当前核定默认规则分别为 2500、1200、550、300。
 - 橱柜：默认报价规则按项目级 `kitchen_cabinet_length_m = kitchenBaseCabinetLengthM + kitchenWallCabinetLengthM` 汇总为一条“橱柜”，用于匹配真实模板；工程量表和校准模板仍保留地柜、吊柜两个原始指标，方便分别校对。
 - 全屋定制：按 `customCabinetAreaM2`，非厨房空间画了 `QUOTE_CUSTOM` 时生成；高度低于 1m 的低柜按长度米并入同一数量。
 - 马桶：按 `toiletCount`，卫生间默认 1 个，点位覆盖时按 `QUOTE_TOILET` 数量生成。
 - 浴室柜：按 `bathroomVanityCount`，卫生间默认 1 套，点位覆盖时按 `QUOTE_BATHROOM_VANITY` 数量生成。
 - 花洒、卫浴五件套：按 `bathroom_count`，每个可计价卫生间默认 1 套，报价员可在 Excel 草稿中调整数量或删除。
 - 淋浴隔断安装：Excel 可选补项中每个卫生间默认按淋浴隔断生成并计入草稿；如果设计师改选玻璃淋浴房，安装数量仍按对应卫生间或楼层卫生间汇总。
-- 楼梯扶手：按 `stairRailingLengthM` 生成，默认主材单价 470；Excel 草稿归入公共大项“其他（窗帘、美缝、窗台石等）”。
+- 楼梯扶手：按 `stairRailingLengthM` 生成，默认主材单价 480；Excel 草稿归入公共大项“其他（窗帘、美缝、窗台石等）”。
 - 楼梯踏步铺贴：楼梯/楼梯过道按 `stair_tread_count = floor(层高 / 0.17m)` 再向下取奇数生成，单位为步。
 - 窗帘墙宽候选 `curtainWallWidthM` 在工程量表展示，自动候选和人工校准值都会导出为 `curtain_quote_candidates` 候选清单；`curtain_wall_width_m` 已属于可导入报价规则 metric，来源为 `manual`、`matched_window_wall`、`matched_l_shape_window` 或 `fallback_longest_wall` 且长度大于 0 时生成暗窗帘箱金额；茶室、娱乐室按普通干区进入窗帘候选。
 
