@@ -158,7 +158,6 @@ const doorChecks = buildQuantityHealthChecks({
 
 assert.deepEqual(doorChecks.map((check) => check.id), [
   "bathroom-door-classification",
-  "bedroom-interior-door-duplicate",
   "kitchen-sliding-door-missing",
 ]);
 assert.deepEqual(doorChecks[0], {
@@ -168,9 +167,8 @@ assert.deepEqual(doorChecks[0], {
   detail: "公卫 出现室内门数量，可能应归为卫生间门，避免室内门重复报价。",
   spaceNames: ["公卫"],
 });
-assert.equal(doorChecks[1].detail, "主卧 室内门数量超过 1，可能和套内卫生间门重复。");
-assert.equal(doorChecks[2].severity, "info");
-assert.equal(doorChecks[2].detail, "厨房 有 1.20m 以上门洞但推拉门面积或门套为 0，请确认是否应生成厨房推拉门报价。");
+assert.equal(doorChecks[1].severity, "info");
+assert.equal(doorChecks[1].detail, "厨房 有 1.20m 以上门洞但推拉门面积或门套为 0，请确认是否应生成厨房推拉门报价。");
 
 const openingAttributionChecks = buildQuantityHealthChecks({
   rows: [

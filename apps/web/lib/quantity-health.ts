@@ -9,7 +9,6 @@ export type QuantityHealthCheck = {
     | "building-area-missing"
     | "building-area-quote-missing"
     | "bathroom-door-classification"
-    | "bedroom-interior-door-duplicate"
     | "kitchen-sliding-door-missing"
     | "balcony-sliding-door-missing"
     | "entry-door-duplicate"
@@ -131,19 +130,6 @@ export function buildQuantityHealthChecks({
       title: "卫生间门分类待确认",
       detail: `${formatNames(bathroomInteriorDoorNames)} 出现室内门数量，可能应归为卫生间门，避免室内门重复报价。`,
       spaceNames: bathroomInteriorDoorNames,
-    });
-  }
-
-  const bedroomDuplicateDoorNames = uniqueNames(
-    billableRows.filter((row) => row.spaceType === "卧室" && row.interiorDoorCount > 1).map((row) => row.spaceName),
-  );
-  if (bedroomDuplicateDoorNames.length > 0) {
-    checks.push({
-      id: "bedroom-interior-door-duplicate",
-      severity: "warning",
-      title: "卧室室内门数量待确认",
-      detail: `${formatNames(bedroomDuplicateDoorNames)} 室内门数量超过 1，可能和套内卫生间门重复。`,
-      spaceNames: bedroomDuplicateDoorNames,
     });
   }
 
@@ -374,8 +360,6 @@ function healthFixSuggestion(id: QuantityHealthCheck["id"]): string {
       return "先补齐 QUOTE_EXT_WALL 建筑面积，再重新导出报价映射。";
     case "bathroom-door-classification":
       return "检查卫生间门洞是否应标记为卫生间门，避免进入室内门报价。";
-    case "bedroom-interior-door-duplicate":
-      return "核对卧室门洞归属，套内卫生间门应归为卫生间门，不应重复算室内门。";
     case "kitchen-sliding-door-missing":
       return "确认该门洞是开放洞口还是厨房推拉门；如为推拉门，检查门洞宽度或标记。";
     case "balcony-sliding-door-missing":

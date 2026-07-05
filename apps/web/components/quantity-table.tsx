@@ -1,5 +1,6 @@
 import { AlertTriangle, CheckCircle2, CircleDashed, MinusCircle } from "lucide-react";
 import { curtainWallCalibrationTarget, differenceKey, indexDifferencesByCell } from "@/lib/calibration-differences";
+import { compareFloors } from "@/lib/floor-sort";
 import { quantityRowAnchorId } from "@/lib/quantity-row-anchor";
 import type { CalibrationDifference, CeilingFinishType, CurtainWallWidthSource, QuantityRow, ReviewStatus } from "@/lib/types";
 
@@ -63,6 +64,9 @@ export function QuantityTable({
   onChangeCeilingFinishType?: (spaceName: string, finishType: CeilingFinishType) => void;
 }) {
   const differencesByCell = indexDifferencesByCell(differences);
+  const displayRows = rows
+    .map((row, index) => ({ row, index }))
+    .sort((left, right) => compareFloors(left.row.floor, right.row.floor) || left.index - right.index);
 
   return (
     <div className="tableWrap">
@@ -97,7 +101,7 @@ export function QuantityTable({
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, index) => {
+          {displayRows.map(({ row, index }) => {
             const floorAreaDifference = differencesByCell.get(differenceKey(row.spaceName, "floor_area_m2"));
             const wallLengthDifference = differencesByCell.get(differenceKey(row.spaceName, "wall_measure_length_m"));
             const windowsillDifference = differencesByCell.get(differenceKey(row.spaceName, "windowsill_length_m"));
