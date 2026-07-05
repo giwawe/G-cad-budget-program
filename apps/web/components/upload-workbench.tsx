@@ -1293,6 +1293,7 @@ export function UploadWorkbench({
             const choiceKey = bathroomChoiceKey(row, rowIndex);
             const choice = bathroomManualChoices[choiceKey] ?? {};
             const selectedFixture = choice.fixture ?? "马桶";
+            const selectedShower = choice.shower ?? "淋浴隔断";
             return (
               <div className="manualBathroomChoice" key={choiceKey}>
                 <strong>{row.spaceName}</strong>
@@ -1314,7 +1315,7 @@ export function UploadWorkbench({
                   {(["淋浴隔断", "玻璃淋浴房"] as const).map((itemName) => (
                     <button
                       type="button"
-                      className={choice.shower === itemName ? "active" : ""}
+                      className={selectedShower === itemName ? "active" : ""}
                       onClick={() => handleChangeBathroomManualChoice(row, rowIndex, "shower", itemName)}
                       key={itemName}
                     >

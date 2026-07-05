@@ -40,4 +40,5 @@ assert.ok(!uploadWorkbenchSource.includes('{ itemName: "入户门"'), "entry doo
 assert.ok(uploadWorkbenchSource.includes("bathroomRowsFromRows(rows)"), "manual quote options should use billable bathroom rows");
 assert.ok(uploadWorkbenchSource.includes("manualQuoteInputsFromBathroomChoices"), "manual quote options should aggregate per-bathroom choices");
 assert.ok(uploadWorkbenchSource.includes("manualBathroomChoices"), "manual quote options should expose per-bathroom choice controls");
+assert.ok(uploadWorkbenchSource.includes('const selectedShower = choice.shower ?? "淋浴隔断"'), "bathroom shower choice should default to shower partition in the UI");
 assert.ok(uploadWorkbenchSource.includes("application/vnd.ms-excel;charset=utf-8"), "Excel draft download should use an Excel-compatible content type");
