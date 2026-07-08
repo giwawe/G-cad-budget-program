@@ -17,6 +17,7 @@ type QuantityRowMetric =
   | "newWall240AreaM2"
   | "demolitionWallAreaM2"
   | "backgroundWallAreaM2"
+  | "castSlabAreaM2"
   | "entryDoorCount"
   | "interiorDoorCount"
   | "bathroomDoorCount"
@@ -55,6 +56,7 @@ export type QuoteMetric =
   | "new_wall_240_area_m2"
   | "demolition_wall_area_m2"
   | "background_wall_area_m2"
+  | "cast_slab_area_m2"
   | "entry_door_count"
   | "interior_door_count"
   | "bathroom_door_count"
@@ -137,7 +139,8 @@ type SummedProjectQuoteMetric =
   | "new_wall_120_area_m2"
   | "new_wall_240_area_m2"
   | "demolition_wall_area_m2"
-  | "background_wall_area_m2";
+  | "background_wall_area_m2"
+  | "cast_slab_area_m2";
 type RowQuoteMetric = Exclude<QuoteMetric, ProjectQuoteMetric | SummedProjectQuoteMetric>;
 type DirectRowQuoteMetric = Exclude<RowQuoteMetric, "bathroom_count">;
 type DirectFieldRowQuoteMetric = Exclude<DirectRowQuoteMetric, "stair_tread_count">;
@@ -211,10 +214,10 @@ export type QuoteMapping = {
   curtain_quote_candidates: CurtainQuoteCandidate[];
   atrium_curtain_candidates: AtriumCurtainCandidate[];
   building_area_quote_readiness: BuildingAreaQuoteReadiness;
+  legacy_hydropower_area_rule_item_names: string[];
   quantity_health_readiness: QuantityHealthReadiness;
 };
 
-  legacy_hydropower_area_rule_item_names: string[];
 export type CurtainQuoteReadiness = {
   ready_count: number;
   pending_count: number;
@@ -253,6 +256,8 @@ const KITCHEN_CABINET_SPACE_TYPES = ["厨房"];
 const BALCONY_SLIDING_DOOR_SPACE_TYPES = ["阳台", "露台"];
 const BATHROOM_FIXTURE_SPACE_TYPES = ["卫生间"];
 const WINDOWSILL_PAVING_SPACE_TYPES = ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "衣帽间", "储物间", "阳台", "露台", "洗衣房"];
+const SWITCH_SOCKET_COUNT_PER_M2 = 0.8;
+const DUPLICATE_MANUAL_PLACEHOLDER_ITEM_NAMES = new Set(["砌砖墙", "砌120厚砖墙", "砌240厚砖墙", "入户门", "阳台推拉门", "阳台推拉门双包套"]);
 const SUMMED_PROJECT_METRICS = new Set<QuoteMetric>([
   "floor_tile_piece_count",
   "wall_tile_piece_count",
@@ -264,22 +269,23 @@ const SUMMED_PROJECT_METRICS = new Set<QuoteMetric>([
   "new_wall_240_area_m2",
   "demolition_wall_area_m2",
   "background_wall_area_m2",
+  "cast_slab_area_m2",
 ]);
 
 const DEFAULT_RULES: QuoteRule[] = [
   quoteRule("墙面界面剂处理", "latex_paint_area_m2", "m2", 0, 4, 3, DRY_SPACE_TYPES),
   quoteRule("墙面批嵌", "latex_paint_area_m2", "m2", 0, 15, 10, DRY_SPACE_TYPES),
   quoteRule("墙面乳胶漆", "latex_paint_area_m2", "m2", 10, 0, 10, DRY_SPACE_TYPES),
-  quoteRule("厨房卫生间集成吊顶", "ceiling_area_m2", "m2", 180, 0, 0, KITCHEN_BATHROOM_SPACE_TYPES),
-  quoteRule("轻钢龙骨平顶", "ceiling_area_m2", "m2", 110, 10, 60, GYPSUM_CEILING_SPACE_TYPES),
+  quoteRule("厨房卫生间集成吊顶", "ceiling_area_m2", "m2", 120, 0, 0, KITCHEN_BATHROOM_SPACE_TYPES),
+  quoteRule("轻钢龙骨平顶", "ceiling_area_m2", "m2", 60, 30, 90, GYPSUM_CEILING_SPACE_TYPES),
   quoteRule("顶面批嵌", "ceiling_area_m2", "m2", 0, 15, 10, CEILING_PAINT_SPACE_TYPES),
   quoteRule("顶面乳胶漆", "ceiling_area_m2", "m2", 10, 0, 10, CEILING_PAINT_SPACE_TYPES),
   quoteRule("地面找平", "floor_area_m2", "m2", 0, 25, 30, WET_FLOOR_SPACE_TYPES),
-  quoteRule("地面砖铺贴(750X1500)", "floor_area_m2", "m2", 0, 35, 55),
-  quoteRule("地面瓷砖", "floor_tile_piece_count", "片", 90, 0, 0),
-  quoteRule("墙面瓷砖", "wall_tile_piece_count", "片", 40, 0, 0),
-  quoteRule("瓷砖加工费", "tile_area_m2", "M2", 5, 0, 0),
-  quoteRule("美缝", "tile_area_m2", "M2", 0, 12, 0),
+  quoteRule("地面砖铺贴(750X1500)", "floor_area_m2", "m2", 40, 8, 50),
+  quoteRule("地面瓷砖", "floor_tile_piece_count", "片", 80, 0, 0, undefined, 90),
+  quoteRule("墙面瓷砖", "wall_tile_piece_count", "片", 55, 0, 0, undefined, 40),
+  quoteRule("瓷砖加工费", "tile_area_m2", "M2", 6, 0, 0),
+  quoteRule("美缝", "tile_area_m2", "M2", 0, 10, 0),
   quoteRule("开关点位", "hydropower_switch_point_count", "个", 0, 0, 35),
   quoteRule("普通插座点位", "hydropower_standard_outlet_count", "个", 0, 0, 45),
   quoteRule("沙发充电插座", "hydropower_sofa_charging_outlet_count", "个", 0, 0, 45),
@@ -306,14 +312,15 @@ const DEFAULT_RULES: QuoteRule[] = [
   quoteRule("材料搬运费", "building_area_m2", "M2", 0, 0, 8),
   quoteRule("垃圾清运费", "building_area_m2", "M2", 0, 0, 10),
   quoteRule("地面砖现场维护费", "building_area_m2", "M2", 0, 3, 5),
-  quoteRule("墙面贴瓷砖(600X1200)", "wall_tile_area_m2", "m2", 0, 35, 55),
-  quoteRule("墙地面防漏处理", "waterproof_area_m2", "m2", 28, 10, 12, WET_FLOOR_SPACE_TYPES),
+  quoteRule("墙面贴瓷砖(600X1200)", "wall_tile_area_m2", "m2", 40, 8, 50),
+  quoteRule("墙地面防漏处理", "waterproof_area_m2", "m2", 35, 7, 18, WET_FLOOR_SPACE_TYPES),
   quoteRule("窗台石铺贴", "windowsill_length_m", "M", 0, 20, 25, WINDOWSILL_PAVING_SPACE_TYPES),
-  quoteRule("砌砖墙", "new_wall_unclassified_area_m2", "M2", 100, 0, 120),
-  quoteRule("砌120厚砖墙", "new_wall_120_area_m2", "M2", 80, 0, 90),
-  quoteRule("砌240厚砖墙", "new_wall_240_area_m2", "M2", 100, 0, 120),
-  quoteRule("拆改及拆墙", "demolition_wall_area_m2", "M2", 0, 0, 60),
-  quoteRule("外墙批嵌以及修补", "manual_count", "M2", 0, 30, 50),
+  quoteRule("砌砖墙", "new_wall_unclassified_area_m2", "M2", 45, 25, 80),
+  quoteRule("砌120厚砖墙", "new_wall_120_area_m2", "M2", 45, 25, 80),
+  quoteRule("砌240厚砖墙", "new_wall_240_area_m2", "M2", 80, 30, 120),
+  quoteRule("现浇钢筋混凝土楼板", "cast_slab_area_m2", "m2", 145, 55, 120),
+  quoteRule("拆改及拆墙", "demolition_wall_area_m2", "M2", 0, 10, 60),
+  quoteRule("外墙批嵌以及修补", "manual_count", "M2", 20, 15, 35),
   quoteRule("砖墙门窗洞过梁", "manual_count", "支", 100, 0, 20),
   quoteRule("水泥墙开槽", "building_area_m2", "M2", 0, 3, 6),
   quoteRule("打混凝土过梁孔", "building_area_tenth_count", "个", 0, 0, 35),
@@ -322,29 +329,29 @@ const DEFAULT_RULES: QuoteRule[] = [
   quoteRule("背景墙", "background_wall_area_m2", "M2", 280, 0, 0),
   quoteRule("入户门", "entry_door_count", "樘", 2500, 0, 0),
   quoteRule("室内门", "interior_door_count", "樘", 1200, 0, 0),
-  quoteRule("卫生间门", "bathroom_door_count", "樘", 1200, 0, 0, BATHROOM_FIXTURE_SPACE_TYPES),
-  quoteRule("厨房推拉门", "sliding_door_area_m2", "m2", 550, 0, 0, KITCHEN_CABINET_SPACE_TYPES),
-  quoteRule("厨房推拉门双包套", "sliding_door_casing_length_m", "M", 300, 0, 0, KITCHEN_CABINET_SPACE_TYPES),
-  quoteRule("阳台推拉门", "sliding_door_area_m2", "M2", 550, 0, 0, BALCONY_SLIDING_DOOR_SPACE_TYPES),
-  quoteRule("阳台推拉门双包套", "sliding_door_casing_length_m", "M", 300, 0, 0, BALCONY_SLIDING_DOOR_SPACE_TYPES),
+  quoteRule("卫生间门", "bathroom_door_count", "樘", 900, 0, 0, BATHROOM_FIXTURE_SPACE_TYPES),
+  quoteRule("厨房推拉门", "sliding_door_area_m2", "m2", 400, 0, 0, KITCHEN_CABINET_SPACE_TYPES),
+  quoteRule("厨房推拉门双包套", "sliding_door_casing_length_m", "M", 110, 0, 0, KITCHEN_CABINET_SPACE_TYPES),
+  quoteRule("阳台推拉门", "sliding_door_area_m2", "M2", 400, 0, 0, BALCONY_SLIDING_DOOR_SPACE_TYPES),
+  quoteRule("阳台推拉门双包套", "sliding_door_casing_length_m", "M", 110, 0, 0, BALCONY_SLIDING_DOOR_SPACE_TYPES),
   quoteRule("楼梯扶手", "stair_railing_length_m", "M", 480, 0, 0),
   quoteRule("楼梯踏步铺贴", "stair_tread_count", "步", 0, 45, 80, ["楼梯", "楼梯过道"]),
-  quoteRule("栏杆/护栏", "guardrail_length_m", "M", 0, 0, 0),
-  quoteRule("铝合金封门窗", "manual_count", "M2", 0, 0, 0),
-  quoteRule("橱柜", "kitchen_cabinet_length_m", "M", 799, 0, 0, KITCHEN_CABINET_SPACE_TYPES),
-  quoteRule("全屋定制", "custom_cabinet_area_m2", "M2", 799, 0, 0),
+  quoteRule("栏杆/护栏", "guardrail_length_m", "M", 450, 0, 0),
+  quoteRule("铝合金封门窗", "manual_count", "M2", 600, 0, 0),
+  quoteRule("橱柜", "kitchen_cabinet_length_m", "M", 699, 0, 0, KITCHEN_CABINET_SPACE_TYPES),
+  quoteRule("全屋定制", "custom_cabinet_area_m2", "M2", 699, 0, 0),
   quoteRule("马桶", "toilet_count", "套", 1500, 0, 0, BATHROOM_FIXTURE_SPACE_TYPES),
   quoteRule("蹲坑", "manual_count", "套", 500, 0, 0),
-  quoteRule("浴室柜", "bathroom_vanity_count", "套", 1500, 0, 0, BATHROOM_FIXTURE_SPACE_TYPES),
-  quoteRule("淋浴隔断", "manual_count", "套", 400, 0, 0),
-  quoteRule("玻璃淋浴房", "manual_count", "套", 1800, 0, 0),
+  quoteRule("浴室柜", "bathroom_vanity_count", "套", 1800, 0, 0, BATHROOM_FIXTURE_SPACE_TYPES),
+  quoteRule("淋浴隔断", "manual_count", "套", 800, 0, 0),
+  quoteRule("玻璃淋浴房", "manual_count", "套", 1200, 0, 0),
   quoteRule("花洒", "bathroom_count", "套", 900, 0, 0, BATHROOM_FIXTURE_SPACE_TYPES),
   quoteRule("卫浴五件套", "bathroom_count", "套", 280, 0, 0, BATHROOM_FIXTURE_SPACE_TYPES),
-  quoteRule("全屋插座开关", "switch_socket_package_count", "套", 6000, 0, 0),
-  quoteRule("全屋灯饰", "lighting_package_count", "套", 15000, 0, 0),
-  quoteRule("窗帘", "curtain_box_length_m", "M", 60, 0, 0),
-  quoteRule("窗台石", "manual_count", "套", 3600, 0, 0),
-  quoteRule("全屋保洁", "cleaning_package_count", "套", 1200, 0, 0),
+  quoteRule("全屋插座开关", "switch_socket_package_count", "套", 20, 0, 0),
+  quoteRule("全屋灯饰", "lighting_package_count", "套", 0, 0, 0),
+  quoteRule("窗帘", "curtain_box_length_m", "M", 50, 20, 0),
+  quoteRule("窗台石", "windowsill_length_m", "M", 65, 0, 0, WINDOWSILL_PAVING_SPACE_TYPES),
+  quoteRule("全屋保洁", "cleaning_package_count", "套", 0, 0, 0),
   quoteRule("暗窗帘箱", "curtain_wall_width_m", "M", 65, 0, 45, CURTAIN_SPACE_TYPES),
 ];
 
@@ -382,6 +389,7 @@ const SUMMED_PROJECT_METRIC_TO_ROW_FIELD: Record<SummedProjectQuoteMetric, Quant
   new_wall_240_area_m2: "newWall240AreaM2",
   demolition_wall_area_m2: "demolitionWallAreaM2",
   background_wall_area_m2: "backgroundWallAreaM2",
+  cast_slab_area_m2: "castSlabAreaM2",
   kitchen_cabinet_length_m: "kitchenBaseCabinetLengthM",
 };
 
@@ -409,7 +417,7 @@ export function withDefaultQuoteRuleCoverage(rules: QuoteRule[]): QuoteRule[] {
       space_types: mergeSpaceTypes(existingRule.space_types, defaultRule.space_types),
     };
   });
-  return [...mergedDefaultRules, ...remainingRules.map(cloneQuoteRule)];
+  return [...mergedDefaultRules, ...remainingRules.filter((rule) => !isDuplicateManualPlaceholderRule(rule)).map(cloneQuoteRule)];
 }
 
 function cloneQuoteRule(rule: QuoteRule): QuoteRule {
@@ -421,6 +429,10 @@ function mergeSpaceTypes(existingSpaceTypes: string[] | undefined, defaultSpaceT
     return undefined;
   }
   return [...new Set([...(existingSpaceTypes ?? []), ...(defaultSpaceTypes ?? [])])];
+}
+
+function isDuplicateManualPlaceholderRule(rule: QuoteRule): boolean {
+  return rule.metric === "manual_count" && DUPLICATE_MANUAL_PLACEHOLDER_ITEM_NAMES.has(rule.item_name);
 }
 
 export function updateQuoteRulePricePart(rules: QuoteRule[], index: number, part: "material_price" | "auxiliary_price" | "labor_price", price: number): QuoteRule[] {
@@ -586,6 +598,7 @@ export function buildQuoteMapping(
     curtain_quote_candidates: curtainQuoteCandidates(rows),
     atrium_curtain_candidates: atriumCurtainCandidates(rows),
     building_area_quote_readiness: buildingAreaQuoteReadiness(rules, buildingAreaM2),
+    legacy_hydropower_area_rule_item_names: legacyHydropowerAreaRuleItemNames(rules),
     quantity_health_readiness: normalizedOptions.quantityHealthReadiness,
   };
 }
@@ -598,7 +611,6 @@ function normalizeBuildQuoteMappingOptions(options?: BuildQuoteMappingOptions | 
   if (isQuantityHealthReadiness(options)) {
     return {
       hydropowerSummary: undefined,
-    legacy_hydropower_area_rule_item_names: legacyHydropowerAreaRuleItemNames(rules),
       quantityHealthReadiness: options,
     };
   }
@@ -678,30 +690,38 @@ function buildingAreaQuoteReadiness(rules: QuoteRule[], buildingAreaM2: number):
   };
 }
 
-function buildProjectQuoteItems(billableRows: QuantityRow[], rules: QuoteRule[], buildingAreaM2: number, hydropowerSummary?: HydropowerSummary): QuoteMappingItem[] {
-  if (billableRows.length === 0) {
-    return [];
-  }
-  return rules.map((rule) => {
-    const quantity = projectRuleQuantity(billableRows, rule, buildingAreaM2, hydropowerSummary);
-    return {
-      floor: "全屋",
-      space_name: "全屋",
-      space_type: "全屋",
-      item_name: rule.item_name,
-      quantity,
 function legacyHydropowerAreaRuleItemNames(rules: QuoteRule[]): string[] {
   return rules
     .filter((rule) => rule.metric === "electrical_scope_area_m2" || rule.metric === "plumbing_scope_area_m2")
     .map((rule) => rule.item_name);
 }
 
+function buildProjectQuoteItems(billableRows: QuantityRow[], rules: QuoteRule[], buildingAreaM2: number, hydropowerSummary?: HydropowerSummary): QuoteMappingItem[] {
+  if (billableRows.length === 0) {
+    return [];
+  }
+  return rules.map((rule) => {
+    const quantity = projectRuleQuantity(billableRows, rule, buildingAreaM2, hydropowerSummary);
+    const amount = projectRuleAmount(quantity, rule, buildingAreaM2);
+    return {
+      floor: "全屋",
+      space_name: "全屋",
+      space_type: "全屋",
+      item_name: rule.item_name,
+      quantity,
       unit: rule.unit,
       unit_price: rule.unit_price,
       ...quoteRulePriceParts(rule),
-      amount: round2(quantity * rule.unit_price),
+      amount,
     };
   }).filter((item) => item.quantity > 0);
+}
+
+function projectRuleAmount(quantity: number, rule: QuoteRule, buildingAreaM2: number): number {
+  if (rule.metric === "switch_socket_package_count") {
+    return round2(Math.ceil(buildingAreaM2 * SWITCH_SOCKET_COUNT_PER_M2) * rule.unit_price);
+  }
+  return round2(quantity * rule.unit_price);
 }
 
 function quoteRulePriceParts(rule: QuoteRule): Pick<QuoteMappingItem, "material_price" | "auxiliary_price" | "labor_price"> {
@@ -942,6 +962,7 @@ function isQuoteMetric(metric: unknown): metric is QuoteMetric {
     metric === "new_wall_240_area_m2" ||
     metric === "demolition_wall_area_m2" ||
     metric === "background_wall_area_m2" ||
+    metric === "cast_slab_area_m2" ||
     metric === "entry_door_count" ||
     metric === "interior_door_count" ||
     metric === "bathroom_door_count" ||
@@ -1044,12 +1065,13 @@ function quoteRule(
   auxiliary_price: number,
   labor_price: number,
   space_types?: string[],
+  unit_price?: number,
 ): QuoteRule {
   return {
     item_name,
     metric,
     unit,
-    unit_price: round2(material_price + auxiliary_price + labor_price),
+    unit_price: round2(unit_price ?? material_price + auxiliary_price + labor_price),
     material_price,
     auxiliary_price,
     labor_price,
