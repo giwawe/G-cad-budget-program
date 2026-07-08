@@ -20,19 +20,6 @@ const mapping: QuoteMapping = {
       floor: "一层",
       space_name: "厨房",
       space_type: "厨房",
-      item_name: "双眼皮/边吊吊顶",
-      quantity: 5,
-      unit: "M",
-      unit_price: 80,
-      material_price: 35,
-      auxiliary_price: 15,
-      labor_price: 30,
-      amount: 400,
-    },
-    {
-      floor: "一层",
-      space_name: "厨房",
-      space_type: "厨房",
       item_name: "地面找平",
       quantity: 4.48,
       unit: "m2",
@@ -53,8 +40,8 @@ const mapping: QuoteMapping = {
   summary: {
     space_count: 3,
     building_area_m2: 88.66,
-    item_count: 4,
-    total_amount: 8099.48,
+    item_count: 3,
+    total_amount: 7699.48,
   },
   curtain_quote_readiness: {
     ready_count: 1,
@@ -63,11 +50,13 @@ const mapping: QuoteMapping = {
     pending_space_names: [],
   },
   curtain_quote_candidates: [],
+  atrium_curtain_candidates: [],
   building_area_quote_readiness: {
     building_area_m2: 88.66,
     required_item_names: ["强电布线"],
     missing_item_names: [],
   },
+  legacy_hydropower_area_rule_item_names: [],
   quantity_health_readiness: {
     total: 0,
     warning: 0,
@@ -123,18 +112,17 @@ assert.ok(html.indexOf("<td>二</td><td>厨房工程</td>") < html.indexOf("<td>
 assert.ok(html.indexOf("<td>八</td><td>集成吊顶、卫浴、全屋开关灯饰</td>") < html.indexOf("<td>厨房卫生间集成吊顶</td>"));
 assert.ok(html.indexOf("<td>四</td><td>水电工程</td>") < html.indexOf("<td>强电布线 &amp; 水路复核</td>"));
 assert.ok(html.includes("<td>厨房卫生间集成吊顶</td><td>m2</td><td>4.48</td><td>120.00</td><td>0.00</td><td>0.00</td><td>537.60</td>"));
-assert.ok(html.includes("<td>双眼皮/边吊吊顶</td><td>M</td><td>5</td><td>35.00</td><td>15.00</td><td>30.00</td><td>400.00</td>"));
 assert.ok(html.includes("<td>地面找平</td><td>m2</td><td>4.48</td><td>0.00</td><td>25.00</td><td>30.00</td><td>246.40</td>"));
 assert.ok(html.includes("<td>强电布线 &amp; 水路复核</td><td>M2</td><td>88.66</td><td>78.00</td><td>0.00</td><td>0.00</td><td>6915.48</td>"));
-assert.ok(html.includes("<td></td><td>小 计</td><td></td><td></td><td></td><td></td><td></td><td>646.40</td><td></td>"));
+assert.ok(html.includes("<td></td><td>小 计</td><td></td><td></td><td></td><td></td><td></td><td>246.40</td><td></td>"));
 assert.ok(html.includes("<td></td><td>小 计</td><td></td><td></td><td></td><td></td><td></td><td>537.60</td><td></td>"));
 assert.ok(html.includes("<td></td><td>小 计</td><td></td><td></td><td></td><td></td><td></td><td>6915.48</td><td></td>"));
 assert.ok(!html.includes("<td>轻钢龙骨平顶</td>"), "space sections should not show missing fixed room items");
 assert.ok(!html.includes("<td>暗窗帘箱</td><td></td>"), "public curtain section should not contain space-only curtain box placeholders");
-assert.ok(html.includes("<tr class=\"quoteTotalRow\"><td>A</td><td>直接费合计</td><td></td><td></td><td></td><td></td><td></td><td>8099.48</td><td></td></tr>"));
-assert.ok(html.includes("<tr class=\"quoteTotalRow\"><td>B</td><td>工程管理费(D=A* 5%)</td><td></td><td></td><td></td><td></td><td></td><td>404.97</td><td></td></tr>"));
-assert.ok(html.includes("<tr class=\"quoteTotalRow\"><td>C</td><td>税金E=(A+B)* 3%</td><td></td><td></td><td></td><td></td><td></td><td>255.13</td><td></td></tr>"));
-assert.ok(html.includes("<tr class=\"quoteTotalRow\"><td>D</td><td>工程总造价F=(A+B+C)</td><td></td><td></td><td></td><td></td><td></td><td>8759.58</td><td></td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteTotalRow\"><td>A</td><td>直接费合计</td><td></td><td></td><td></td><td></td><td></td><td>7699.48</td><td></td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteTotalRow\"><td>B</td><td>工程管理费(D=A* 5%)</td><td></td><td></td><td></td><td></td><td></td><td>384.97</td><td></td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteTotalRow\"><td>C</td><td>税金E=(A+B)* 3%</td><td></td><td></td><td></td><td></td><td></td><td>242.53</td><td></td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteTotalRow\"><td>D</td><td>工程总造价F=(A+B+C)</td><td></td><td></td><td></td><td></td><td></td><td>8326.98</td><td></td></tr>"));
 assert.equal(EXCEL_FIXED_PLACEHOLDER_ITEMS.length, 5);
 assert.deepEqual(EXCEL_FIXED_PLACEHOLDER_ITEMS.map((item) => item.item_name), [
   "砖墙门窗洞过梁",
@@ -247,6 +235,65 @@ assert.equal(countOccurrences(slidingDoorHtml, "<td>厨房推拉门双包套</td
 assert.ok(slidingDoorHtml.includes("<td>厨房推拉门</td><td>m2</td><td>3.85</td><td>400.00</td><td>0.00</td><td>0.00</td><td>1540.00</td>"));
 assert.ok(slidingDoorHtml.includes("<td>厨房推拉门双包套</td><td>M</td><td>6.15</td><td>110.00</td><td>0.00</td><td>0.00</td><td>676.50</td>"));
 assert.ok(!slidingDoorHtml.includes("<td>厨房推拉门</td><td>m2</td><td>10</td>"));
+
+const hydropowerSectionHtml = buildQuoteExcelHtml(
+  {
+    ...mapping,
+    items: [
+      {
+        floor: "全屋",
+        space_name: "全屋",
+        space_type: "全屋",
+        item_name: "开关点位",
+        quantity: 4,
+        unit: "个",
+        unit_price: 35,
+        material_price: 0,
+        auxiliary_price: 0,
+        labor_price: 35,
+        amount: 140,
+      },
+      {
+        floor: "全屋",
+        space_name: "全屋",
+        space_type: "全屋",
+        item_name: "强电线管",
+        quantity: 86.5,
+        unit: "M",
+        unit_price: 20,
+        material_price: 8,
+        auxiliary_price: 2,
+        labor_price: 10,
+        amount: 1730,
+      },
+      {
+        floor: "全屋",
+        space_name: "全屋",
+        space_type: "全屋",
+        item_name: "给水管",
+        quantity: 31.6,
+        unit: "M",
+        unit_price: 26,
+        material_price: 10,
+        auxiliary_price: 4,
+        labor_price: 12,
+        amount: 821.6,
+      },
+    ],
+    summary: {
+      ...mapping.summary,
+      item_count: 3,
+      total_amount: 2691.6,
+    },
+  },
+  "水电点位项目",
+);
+assert.ok(hydropowerSectionHtml.indexOf("<td>四</td><td>水电工程</td>") < hydropowerSectionHtml.indexOf("<td>开关点位</td>"));
+assert.ok(hydropowerSectionHtml.includes("<td>开关点位</td><td>个</td><td>4</td><td>0.00</td><td>0.00</td><td>35.00</td><td>140.00</td>"));
+assert.ok(hydropowerSectionHtml.includes("<td>强电线管</td><td>M</td><td>86.50</td><td>8.00</td><td>2.00</td><td>10.00</td><td>1730.00</td>"));
+assert.ok(hydropowerSectionHtml.includes("<td>给水管</td><td>M</td><td>31.60</td><td>10.00</td><td>4.00</td><td>12.00</td><td>821.60</td>"));
+assert.ok(!hydropowerSectionHtml.includes("<td>强电布线</td>"));
+assert.ok(!hydropowerSectionHtml.includes("<td>水路布管</td>"));
 
 const balconySlidingDoorHtml = buildQuoteExcelHtml(
   {

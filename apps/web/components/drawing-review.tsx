@@ -2,7 +2,7 @@
 
 import { ChangeEvent, KeyboardEvent, MouseEvent, PointerEvent, WheelEvent, useRef, useState } from "react";
 import { segmentRectPoints, windowBlockPolygons } from "@/lib/drawing-window-shape";
-import type { DrawingGeometry, DrawingPoint, QuantityRow, QuantitySummary } from "@/lib/types";
+import type { DrawingGeometry, DrawingPoint, HydropowerPoint, QuantityRow, QuantitySummary } from "@/lib/types";
 
 const palette = ["#2f80ed", "#27ae60", "#f2994a", "#9b51e0", "#00a6a6", "#eb5757", "#6fcf97", "#f2c94c", "#56ccf2"];
 
@@ -82,6 +82,7 @@ function chineseOnly(name: string) {
 
 export function DrawingReview({
   drawing,
+  hydropowerPoints,
   rows,
   summary,
   onRenameSpace,
@@ -90,6 +91,7 @@ export function DrawingReview({
   onChangeWindowHeight,
 }: {
   drawing: DrawingGeometry | null;
+  hydropowerPoints?: HydropowerPoint[];
   rows: QuantityRow[];
   summary: QuantitySummary | null;
   onRenameSpace: (index: number, name: string) => void;
@@ -114,6 +116,7 @@ export function DrawingReview({
   const [showBathroomFixtures, setShowBathroomFixtures] = useState(true);
   const [showWindows, setShowWindows] = useState(true);
   const [showDoors, setShowDoors] = useState(true);
+  const [showHydropowerPoints, setShowHydropowerPoints] = useState(true);
   const [selectedWindowIndex, setSelectedWindowIndex] = useState<number | null>(null);
   const [selectedFloor, setSelectedFloor] = useState<string>("");
 
@@ -231,7 +234,18 @@ export function DrawingReview({
   const labelFontSize = Math.max(width, height) * 0.018;
   const indexedWindows = visibleDrawing.window_openings.map((window) => ({ window, index: drawing.window_openings.indexOf(window) }));
   const indexedDoors = visibleDrawing.door_openings.map((door) => ({ door, index: drawing.door_openings.indexOf(door) }));
+  const visibleHydropowerPoints = hydropowerPoints?.filter((point) => point.point && (showAllFloors || point.floor === effectiveFloor)) ?? [];
   const selectedWindow = selectedWindowIndex === null ? null : drawing.window_openings[selectedWindowIndex] ?? null;
+
+  function hydropowerPointColor(confidence: HydropowerPoint["confidence"]) {
+    if (confidence === "high") {
+      return "#0f9d58";
+    }
+    if (confidence === "medium") {
+      return "#f2994a";
+    }
+    return "#eb5757";
+  }
 
   function clientPointToSvgPoint(clientX: number, clientY: number): DrawingPoint | null {
     const svg = svgRef.current;
@@ -364,6 +378,7 @@ export function DrawingReview({
         <label className="drawingLayerToggle"><input type="checkbox" checked={showBathroomFixtures} onChange={(event) => setShowBathroomFixtures(event.target.checked)} />洁具 {visibleDrawing.toilets.length + visibleDrawing.bathroom_vanities.length}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showWindows} onChange={(event) => setShowWindows(event.target.checked)} />窗 {visibleDrawing.window_openings.length}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showDoors} onChange={(event) => setShowDoors(event.target.checked)} />门 {visibleDrawing.door_openings.length}</label>
+        <label className="drawingLayerToggle" title="系统按空间轮廓和设备位置估算的推荐水电点位"><input type="checkbox" checked={showHydropowerPoints} onChange={(event) => setShowHydropowerPoints(event.target.checked)} />系统估算点位 {visibleHydropowerPoints.length}</label>
         {selectedWindow && (
           <div className="windowEditor">
             <span>窗宽 {selectedWindow.width_m.toFixed(2)} m</span>
@@ -395,6 +410,12 @@ export function DrawingReview({
             {showEdgeCeilings && visibleDrawing.edge_ceiling_boundaries?.map((boundary, index) => <polygon key={`edge-ceiling-${index}`} className="svgEdgeCeiling" points={pointList(boundary)} />)}
             {showBathroomFixtures && visibleDrawing.toilets.map((point, index) => <circle key={`toilet-${index}`} className="svgToilet" cx={point.x} cy={point.y} r="0.16" />)}
             {showBathroomFixtures && visibleDrawing.bathroom_vanities.map((point, index) => <rect key={`bathroom-vanity-${index}`} className="svgBathroomVanity" x={point.x - 0.16} y={point.y - 0.16} width="0.32" height="0.32" />)}
+            {showHydropowerPoints && hydropowerPoints?.filter((point) => point.point && (showAllFloors || point.floor === effectiveFloor)).map((point) => (
+              <g key={point.id} className={`svgHydropowerPoint ${point.confidence}`}>
+                <circle cx={point.point!.x} cy={point.point!.y} r="0.08" fill={hydropowerPointColor(point.confidence)} stroke="#ffffff" strokeWidth="0.02" />
+                <title>{`系统推荐点位：${point.label} · ${point.spaceName}`}</title>
+              </g>
+            ))}
             {showWindows && indexedWindows.map(({ window, index }) => (
               <g
                 key={`window-${index}`}

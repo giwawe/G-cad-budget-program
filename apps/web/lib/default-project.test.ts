@@ -16,5 +16,5 @@ assert.equal(defaultProjectRows.find((row) => row.spaceName === "客厅")?.anoma
 const mapping = buildQuoteMapping(defaultProjectRows, undefined, defaultProjectSummary);
 assert.equal(mapping.summary.space_count, 8);
 assert.equal(mapping.summary.building_area_m2, 136.24);
-assert.ok(mapping.items.some((item) => item.space_name === "全屋" && item.item_name === "强电布线" && item.quantity === 136.24));
+assert.ok(!mapping.items.some((item) => item.item_name === "强电布线" || item.item_name === "弱电布线" || item.item_name === "水路布管"));
 assert.ok(mapping.items.some((item) => item.item_name === "厨房卫生间集成吊顶" && item.space_name === "厨房" && item.unit_price === 120));

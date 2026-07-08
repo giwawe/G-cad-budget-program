@@ -187,12 +187,12 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 地面瓷砖：`floor_tile_piece_count = ceil(地面面积 * 1.05 / (0.75 * 1.5))`，按 750X1500 规格、5% 损耗、向上取整；默认报价规则“地面瓷砖”按全屋片数汇总生成金额，不按空间拆行。
 - 墙面瓷砖：`wall_tile_piece_count = ceil(墙面贴砖面积 * 1.05 / (0.6 * 1.2))`，按 600X1200 规格、5% 损耗、向上取整；默认报价规则“墙面瓷砖”按全屋片数汇总生成金额，不按空间拆行。
 - 瓷砖加工费和美缝：默认按项目级 `tile_area_m2` 生成“全屋”清单项；`tile_area_m2 = 可计价空间地面铺砖面积 + 墙面贴砖面积`。瓷砖加工费当前按用户确认口径挂钩贴砖面积生成候选，报价员可按实际加工米数调整。
-- 水电默认 scope：`electrical_scope_area_m2` 和 `plumbing_scope_area_m2` 当前仍保留为空间级备用字段，默认等于空间地面面积；商品房整装默认报价规则中的“强电布线”“水路布管”已改用项目级 `building_area_m2` 按建筑面积生成金额，不按空间拆行。点位、回路、特殊水路范围仍可通过校准 JSON 或后续图层细化。
+- 水电默认计价不再按建筑面积直接取数。系统根据空间类型、空间轮廓、门窗、柜体、洁具和楼层信息生成带坐标的水电推荐点位，并按推荐点位估算强电线管、弱电线管、给水管和排水管长度；`electrical_scope_area_m2` 和 `plumbing_scope_area_m2` 仅保留为旧校准字段或自定义规则备用。
 - 全屋灯饰：`lighting_package_count` 是项目级套餐 metric，只要报价映射存在至少一个可计价空间，就生成 1 套“全屋灯饰”；默认价格为 0，由设计师输入。
-- 全屋插座开关：`switch_socket_package_count` 是项目级套餐 metric，报价表仍显示 1 套，但金额按 `ceil(建筑面积 * 0.8) * 20` 自动估算，不把开关插座点位数量显示在表格中。
+- 全屋插座开关：`switch_socket_package_count` 是项目级套餐 metric，报价表仍显示 1 套；该项保留为项目级套餐，不再按建筑面积折算，不把开关插座点位数量显示在表格中。
 - 花洒、卫浴五件套：默认按 `bathroom_count` 对每个可计价卫生间生成 1 套候选，不复用 `toilet_count`，避免和马桶/蹲坑选择绑定。
 - 工程量表显示 `wall_tile_measure_length_m`，校准模板也会导出 `wall_tile_measure_length_m` 和 `wall_tile_area_m2`。
-- 工程量表默认不按空间显示地砖主材片数、强电备用面积、水路备用面积、新砌墙和拆墙字段；这些字段仍保留在校准模板与报价映射中，按全屋汇总生成金额。
+- 工程量表默认不按空间显示地砖主材片数、水电推荐点位和管线长度、新砌墙和拆墙字段；地砖、新砌墙、拆墙等仍保留在校准模板与报价映射中，水电推荐点位和管线长度保存在校对快照的 `hydropower` 字段，并按水电复核结果生成报价金额或长度结果。
 - 新砌墙：画在 `QUOTE_NEW_WALL` 的线段会生成 `new_wall_length_m` 和 `new_wall_area_m2`，公式为 `新砌墙逐段长度 * 标注高度`；同图层邻近文字可补 `HEIGHT=1200`、`H=1.2m`、`THICKNESS=240`、`厚度240` 等标识，没有高度时按空间实际层高。报价口径会进一步拆成 `new_wall_unclassified_area_m2`、`new_wall_120_area_m2`、`new_wall_240_area_m2`：未标厚进入通用“砌砖墙”，120mm 进入“砌120厚砖墙”，240mm 或其它非 120 厚度进入“砌240厚砖墙”。
 - 拆墙：画在 `QUOTE_DEMO_WALL` 的线段会生成 `demolition_wall_length_m` 和 `demolition_wall_area_m2`，公式为 `拆墙长度 * 空间实际层高`；默认报价规则“拆改及拆墙”按全屋 `demolition_wall_area_m2` 汇总生成金额，不按空间拆行。
 - 现浇钢筋混凝土楼板：画在 `QUOTE_CAST_SLAB` 的闭合 HATCH 或闭合多段线会生成 `cast_slab_area_m2`，按所在空间归属面积并在报价规则中全屋汇总为“现浇钢筋混凝土楼板”，默认单价为 0，供报价员核定。
@@ -224,7 +224,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 每行可改 review 状态：待确认、已确认、需修图、不计价。
 - SVG 图形 review 可缩放/平移，支持空间改名、门洞扣减切换、窗洞扣减切换、窗高调整。
 - 图形 review 和汇总卡会显示 `QUOTE_EXT_WALL` 外墙轮廓与 `building_area_m2` 建筑面积，便于核对项目级建筑面积。
-- 页面会显示“算量健康检查”面板，集中提示可计价空间被识别为“其他”、建筑面积为 0、卫生间门/厨房/阳台/露台推拉门分类异常、入户门疑似重复、厨卫窗洞归属异常、厨房橱柜/全屋定制/卫生间洁具异常、自定义报价规则中集成吊顶单价为 0，以及依赖建筑面积的报价项未进入金额汇总等问题。卧室套房存在多个室内门属于正常场景，不再作为健康检查提醒。检查项分 `warning` 和 `info`：高概率影响报价的空间/建筑面积/门窗归属问题为 warning；厨房/阳台/露台推拉门未生成、橱柜缺失、洁具缺失、集成吊顶待补价这类可能需要报价员确认的问题为 info；面板标题会汇总显示需优先处理项和提醒项数量，列表可按“全部 / 需优先处理 / 提醒”筛选，并可导出 Markdown 格式的 CAD 修图清单；涉及具体空间的检查项可一键把对应空间标记为“需修图”或“已确认”。检查项也可“接受此项”，被接受后不再进入当前健康提示、修图清单和报价风险摘要；校对快照会保存这些接受状态，导入后恢复。修图清单会带出涉及空间的当前状态，并提示修图后重新上传 DXF 复核健康检查。筛选只影响面板展示，不影响未接受检查项的修图清单和报价映射健康检查摘要。
+- 页面会显示“算量健康检查”面板，集中提示可计价空间被识别为“其他”、建筑面积为 0、卫生间门/厨房/阳台/露台推拉门分类异常、入户门疑似重复、厨卫窗洞归属异常、厨房橱柜/全屋定制/卫生间洁具异常、水电推荐点位或管线长度缺少坐标或低置信度、自定义报价规则中集成吊顶单价为 0、旧水电面积报价规则仍在使用，以及依赖建筑面积的报价项未进入金额汇总等问题。卧室套房存在多个室内门属于正常场景，不再作为健康检查提醒。检查项分 `warning` 和 `info`：高概率影响报价的空间/建筑面积/门窗归属、旧水电面积报价规则问题为 warning；厨房/阳台/露台推拉门未生成、橱柜缺失、洁具缺失、水电推荐点位待复核、集成吊顶待补价这类可能需要报价员确认的问题为 info；面板标题会汇总显示需优先处理项和提醒项数量，列表可按“全部 / 需优先处理 / 提醒”筛选，并可导出 Markdown 格式的 CAD 修图清单；涉及具体空间的检查项可一键把对应空间标记为“需修图”或“已确认”。检查项也可“接受此项”，被接受后不再进入当前健康提示、修图清单和报价风险摘要；校对快照会保存这些接受状态，导入后恢复。修图清单会带出涉及空间的当前状态，并提示修图后重新上传 DXF 复核健康检查。筛选只影响面板展示，不影响未接受检查项的修图清单和报价映射健康检查摘要。
 - 工程量表不再展示地砖主材片数、强电备用面积、水路备用面积、新砌墙和拆墙等全屋汇总项，避免设计师在每个空间行重复校对；这些字段仍进入校准模板和报价映射。
 - 空间工程量校对表按楼层从低到高展示：负二层、负一层、一层、二层、三层。同楼层保持解析顺序，避免别墅或复式图纸查看时上下楼层混排。
 - 导出报价映射 JSON；默认使用商品房报价表 `整装` 工作表中当前可自动取数的 27 条规则，跳过不计价空间；如果导出时仍有 `warning` 健康检查项、自定义报价规则导致的零单价或建筑面积缺失，页面会弹出草稿报价确认，确认后仍可继续导出。
@@ -236,9 +236,9 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 导出报价映射后会显示窗帘/窗帘箱可报价候选空间数；导出的报价映射 JSON 会附带 `curtain_quote_readiness` 摘要，并把自动候选或人工校准后的暗窗帘箱写入 `curtain_quote_candidates` 候选清单和 `items` 金额汇总。挑空空间另附 `atrium_curtain_candidates` 复核候选，不混入普通窗帘金额。
 - 导出报价映射 JSON 会附带 `building_area_quote_readiness` 摘要；如果报价规则中存在 `building_area_m2` 项目但当前建筑面积为 0，页面会提示这些项目未进入金额汇总。
 - 导出报价映射 JSON 会附带 `quantity_health_readiness` 摘要，记录当前未接受健康检查的 warning/info 数量和提示文案，便于报价文件流转时保留风险状态。
-- 报价映射面板会提前展示导出前风险明细，复用导出确认里的 warning、零单价和建筑面积缺失提示，避免报价员等到点击导出时才看到风险原因。
+- 报价映射面板会提前展示导出前风险明细，复用导出确认里的 warning、零单价和水电推荐点位缺失提示，避免报价员等到点击导出时才看到风险原因。
 - 报价映射面板如果发现“厨房卫生间集成吊顶”已有工程量但 `unit_price <= 0`，会额外显示集成吊顶单价待补提醒，提示报价员在报价规则 JSON 中补 `unit_price`；如果实际做石膏板吊顶，则回到工程量表切换顶面类型。该提醒不阻断导出。
-- 报价映射面板会单独展示“全屋汇总项”，把地砖主材、强电布线、水路布管、砌墙、拆墙、全屋灯饰等 `space_name="全屋"` 的清单集中列出，避免这些项目从空间工程量表隐藏后不直观。
+- 报价映射面板会单独展示“全屋汇总项”，把地砖主材、砌墙、拆墙、全屋灯饰等 `space_name="全屋"` 的清单集中列出，避免这些项目从空间工程量表隐藏后不直观。
 - 报价映射面板会提示 Excel 草稿的“Excel 可选补项”数量填写情况；这些项目用于报价员补填或按卫生间二选一，不写入报价映射 `items`，也不影响 `summary.total_amount`。Excel 草稿会按固定公共大项输出这些人工项或同名模板项；已自动接入的项目会用自动数量和金额替代占位行，设计师在面板中填写数量或选择卫生间配置时会覆盖 Excel 草稿中的同名行数量并计入 Excel 小计和总计。
 - 报价映射面板会显示“报价接入状态清单”，按“已自动取数 / 自动取数，需复核 / 固定占位或设计师手填 / 暂不接入”四类说明当前报价项能力边界；该清单只解释当前导出能力，不改变报价映射金额。
 - 窗帘墙宽候选列可在工程量表中直接编辑；编辑后会清空已生成的报价映射，避免沿用旧结果。
@@ -253,12 +253,10 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 地面瓷砖：按 `floorTilePieceCount` 全屋汇总，当前不限制空间类型；片数由地面面积按 750X1500、5% 损耗向上取整。
 - 墙面瓷砖：按 `wall_tile_piece_count` 全屋汇总，片数由墙面贴砖面积按 600X1200、5% 损耗向上取整。
 - 瓷砖加工费和美缝：按项目级 `tile_area_m2` 全屋汇总；`tile_area_m2 = 可计价空间地面铺砖面积 + 墙面贴砖面积`。瓷砖加工费当前按贴砖面积挂钩生成候选。
-- 强电布线：默认按项目级 `building_area_m2` 生成“全屋”清单项；`electrical_scope_area_m2` 仍可通过自定义规则使用。
-- 弱电布线：默认按项目级 `building_area_m2` 生成“全屋”清单项。
-- 水路布管：默认按项目级 `building_area_m2` 生成“全屋”清单项；`plumbing_scope_area_m2` 仍可通过自定义规则使用。
+- 水电推荐点位：开关点位、普通插座点位、沙发充电插座、取暖设备插座、床尾风扇插座、厨房台面插座、灯位点位、弱电点位、空调专线、大功率电器专线、浴霸/暖风机专线、智能马桶插座、洗衣机插座、烘干机插座、净水机插座、冷水点位、热水点位、排水点位和地漏点位按 `hydropower_*` 点位 metric 进入报价；强电线管、弱电线管、给水管、排水管按对应长度 metric 进入报价。`electrical_scope_area_m2` 和 `plumbing_scope_area_m2` 仅保留为旧校准字段或自定义规则备用。
 - 材料搬运费、垃圾清运费、墙地面砖现场保护：默认按项目级 `building_area_m2` 生成“全屋”清单项。
 - 全屋灯饰：按项目级 `lightingPackageCount=1`，有可计价空间时生成 1 套，不随空间重复；默认价格为 0。
-- 全屋插座开关：按项目级 `switchSocketPackageCount=1`，有可计价空间时生成 1 套，不随空间重复；金额按 `ceil(building_area_m2 * 0.8) * 20` 计算。
+- 全屋插座开关：按项目级 `switchSocketPackageCount=1`，有可计价空间时生成 1 套；该项保留为项目级套餐，不再按建筑面积折算，不随空间重复。
 - 全屋保洁：按项目级 `cleaningPackageCount=1`，有可计价空间时生成 1 套，不随空间重复；默认价格为 0。
 - 建筑面积：按项目级 `building_area_m2`，从当前 summary 取值生成“全屋”清单项；默认规则不配置具体项目，报价员可在报价规则 JSON 中添加管理费、成品保护、综合服务费等按建筑面积计价的项目。
 - 墙面贴瓷砖(600X1200)：按 `wallTileAreaM2`，厨房、卫生间默认全墙计算；其它空间只要画了 `QUOTE_WALL_TILE` 且墙砖面积大于 0 就进入报价。
@@ -289,7 +287,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 报价规则 JSON 是数组格式，字段为：
 
 - `item_name`：清单项名称。
-- `metric`：取数指标，当前只允许 `building_area_m2`、`building_area_tenth_count`、`manual_count`、`tile_area_m2`、`curtain_box_length_m`、`cleaning_package_count`、`kitchen_bathroom_pipe_insulation_length_m`、`latex_paint_area_m2`、`floor_area_m2`、`floor_tile_piece_count`、`wall_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`lighting_package_count`、`switch_socket_package_count`、`ceiling_area_m2`、`wall_tile_area_m2`、`waterproof_area_m2`、`windowsill_length_m`、`new_wall_area_m2`、`new_wall_unclassified_area_m2`、`new_wall_120_area_m2`、`new_wall_240_area_m2`、`demolition_wall_area_m2`、`background_wall_area_m2`、`cast_slab_area_m2`、`entry_door_count`、`interior_door_count`、`bathroom_door_count`、`sliding_door_area_m2`、`sliding_door_casing_length_m`、`stair_railing_length_m`、`guardrail_length_m`、`stair_tread_count`、`kitchen_cabinet_length_m`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`custom_cabinet_area_m2`、`toilet_count`、`bathroom_vanity_count`、`bathroom_count`、`curtain_wall_width_m`。
+- `metric`：取数指标，当前只允许 `building_area_m2`、`building_area_tenth_count`、`manual_count`、`tile_area_m2`、`curtain_box_length_m`、`cleaning_package_count`、`kitchen_bathroom_pipe_insulation_length_m`、`latex_paint_area_m2`、`floor_area_m2`、`floor_tile_piece_count`、`wall_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`lighting_package_count`、`switch_socket_package_count`、`ceiling_area_m2`、`gypsum_flat_ceiling_area_m2`、`edge_ceiling_length_m`、`wall_tile_area_m2`、`waterproof_area_m2`、`windowsill_length_m`、`new_wall_area_m2`、`new_wall_unclassified_area_m2`、`new_wall_120_area_m2`、`new_wall_240_area_m2`、`demolition_wall_area_m2`、`background_wall_area_m2`、`cast_slab_area_m2`、`entry_door_count`、`interior_door_count`、`bathroom_door_count`、`sliding_door_area_m2`、`sliding_door_casing_length_m`、`stair_railing_length_m`、`guardrail_length_m`、`stair_tread_count`、`kitchen_cabinet_length_m`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`custom_cabinet_area_m2`、`toilet_count`、`bathroom_vanity_count`、`bathroom_count`、`curtain_wall_width_m`。另外，水电推荐类 metric 还包括 `hydropower_switch_point_count`、`hydropower_standard_outlet_count`、`hydropower_sofa_charging_outlet_count`、`hydropower_heating_outlet_count`、`hydropower_bed_end_fan_outlet_count`、`hydropower_kitchen_counter_outlet_count`、`hydropower_light_point_count`、`hydropower_weak_point_count`、`hydropower_ac_circuit_count`、`hydropower_high_power_circuit_count`、`hydropower_bathroom_heater_circuit_count`、`hydropower_smart_toilet_outlet_count`、`hydropower_washing_machine_outlet_count`、`hydropower_dryer_outlet_count`、`hydropower_water_purifier_outlet_count`、`hydropower_cold_water_point_count`、`hydropower_hot_water_point_count`、`hydropower_drain_point_count`、`hydropower_floor_drain_point_count`、`hydropower_strong_conduit_length_m`、`hydropower_weak_conduit_length_m`、`hydropower_water_pipe_length_m`、`hydropower_drain_pipe_length_m`。
 - `unit`：单位。
 - `unit_price`：汇总单价，必须是非负数字；默认规则中等于主材、辅材、人工三段单价合计。
 - `material_price` / `auxiliary_price` / `labor_price`：可选三段单价，用于报价规则面板编辑和真实 Excel 模板展示；`unit_price` 仍作为三段单价合计，并用于报价映射金额计算。

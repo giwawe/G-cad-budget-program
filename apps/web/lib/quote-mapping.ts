@@ -1,4 +1,4 @@
-import type { QuantityRow, QuantitySummary } from "./types";
+import type { HydropowerSummary, QuantityRow, QuantitySummary } from "./types";
 
 type QuantityRowMetric =
   | "latexPaintAreaM2"
@@ -76,7 +76,30 @@ export type QuoteMetric =
   | "toilet_count"
   | "bathroom_vanity_count"
   | "bathroom_count"
-  | "switch_socket_package_count";
+  | "switch_socket_package_count"
+  | "hydropower_switch_point_count"
+  | "hydropower_standard_outlet_count"
+  | "hydropower_sofa_charging_outlet_count"
+  | "hydropower_heating_outlet_count"
+  | "hydropower_bed_end_fan_outlet_count"
+  | "hydropower_kitchen_counter_outlet_count"
+  | "hydropower_light_point_count"
+  | "hydropower_weak_point_count"
+  | "hydropower_ac_circuit_count"
+  | "hydropower_high_power_circuit_count"
+  | "hydropower_bathroom_heater_circuit_count"
+  | "hydropower_smart_toilet_outlet_count"
+  | "hydropower_washing_machine_outlet_count"
+  | "hydropower_dryer_outlet_count"
+  | "hydropower_water_purifier_outlet_count"
+  | "hydropower_cold_water_point_count"
+  | "hydropower_hot_water_point_count"
+  | "hydropower_drain_point_count"
+  | "hydropower_floor_drain_point_count"
+  | "hydropower_strong_conduit_length_m"
+  | "hydropower_weak_conduit_length_m"
+  | "hydropower_water_pipe_length_m"
+  | "hydropower_drain_pipe_length_m";
 type ProjectQuoteMetric =
   | "building_area_m2"
   | "building_area_tenth_count"
@@ -86,7 +109,30 @@ type ProjectQuoteMetric =
   | "cleaning_package_count"
   | "kitchen_bathroom_pipe_insulation_length_m"
   | "lighting_package_count"
-  | "switch_socket_package_count";
+  | "switch_socket_package_count"
+  | "hydropower_switch_point_count"
+  | "hydropower_standard_outlet_count"
+  | "hydropower_sofa_charging_outlet_count"
+  | "hydropower_heating_outlet_count"
+  | "hydropower_bed_end_fan_outlet_count"
+  | "hydropower_kitchen_counter_outlet_count"
+  | "hydropower_light_point_count"
+  | "hydropower_weak_point_count"
+  | "hydropower_ac_circuit_count"
+  | "hydropower_high_power_circuit_count"
+  | "hydropower_bathroom_heater_circuit_count"
+  | "hydropower_smart_toilet_outlet_count"
+  | "hydropower_washing_machine_outlet_count"
+  | "hydropower_dryer_outlet_count"
+  | "hydropower_water_purifier_outlet_count"
+  | "hydropower_cold_water_point_count"
+  | "hydropower_hot_water_point_count"
+  | "hydropower_drain_point_count"
+  | "hydropower_floor_drain_point_count"
+  | "hydropower_strong_conduit_length_m"
+  | "hydropower_weak_conduit_length_m"
+  | "hydropower_water_pipe_length_m"
+  | "hydropower_drain_pipe_length_m";
 type SummedProjectQuoteMetric =
   | "floor_tile_piece_count"
   | "wall_tile_piece_count"
@@ -172,6 +218,7 @@ export type QuoteMapping = {
   curtain_quote_candidates: CurtainQuoteCandidate[];
   atrium_curtain_candidates: AtriumCurtainCandidate[];
   building_area_quote_readiness: BuildingAreaQuoteReadiness;
+  legacy_hydropower_area_rule_item_names: string[];
   quantity_health_readiness: QuantityHealthReadiness;
 };
 
@@ -193,6 +240,11 @@ export type QuantityHealthReadiness = {
   warning: number;
   info: number;
   label: string;
+};
+
+type BuildQuoteMappingOptions = {
+  hydropowerSummary?: HydropowerSummary;
+  quantityHealthReadiness?: QuantityHealthReadiness;
 };
 
 export const DEFAULT_QUOTE_RULES_NAME = "商品房整装默认规则";
@@ -239,9 +291,29 @@ const DEFAULT_RULES: QuoteRule[] = [
   quoteRule("墙面瓷砖", "wall_tile_piece_count", "片", 55, 0, 0, undefined, 40),
   quoteRule("瓷砖加工费", "tile_area_m2", "M2", 6, 0, 0),
   quoteRule("美缝", "tile_area_m2", "M2", 0, 10, 0),
-  quoteRule("强电布线", "building_area_m2", "M2", 40, 0, 38),
-  quoteRule("弱电布线", "building_area_m2", "M2", 15, 0, 10),
-  quoteRule("水路布管", "building_area_m2", "M2", 17.5, 0, 12),
+  quoteRule("开关点位", "hydropower_switch_point_count", "个", 0, 0, 35),
+  quoteRule("普通插座点位", "hydropower_standard_outlet_count", "个", 0, 0, 45),
+  quoteRule("沙发充电插座", "hydropower_sofa_charging_outlet_count", "个", 0, 0, 45),
+  quoteRule("取暖设备插座", "hydropower_heating_outlet_count", "个", 0, 0, 45),
+  quoteRule("床尾风扇插座", "hydropower_bed_end_fan_outlet_count", "个", 0, 0, 45),
+  quoteRule("厨房台面插座", "hydropower_kitchen_counter_outlet_count", "个", 0, 0, 45),
+  quoteRule("灯位点位", "hydropower_light_point_count", "个", 0, 0, 35),
+  quoteRule("弱电点位", "hydropower_weak_point_count", "个", 0, 0, 45),
+  quoteRule("空调专线", "hydropower_ac_circuit_count", "路", 0, 0, 120),
+  quoteRule("大功率电器专线", "hydropower_high_power_circuit_count", "路", 0, 0, 120),
+  quoteRule("浴霸/暖风机专线", "hydropower_bathroom_heater_circuit_count", "路", 0, 0, 120),
+  quoteRule("智能马桶插座", "hydropower_smart_toilet_outlet_count", "个", 0, 0, 45),
+  quoteRule("洗衣机插座", "hydropower_washing_machine_outlet_count", "个", 0, 0, 45),
+  quoteRule("烘干机插座", "hydropower_dryer_outlet_count", "个", 0, 0, 45),
+  quoteRule("净水机插座", "hydropower_water_purifier_outlet_count", "个", 0, 0, 45),
+  quoteRule("冷水点位", "hydropower_cold_water_point_count", "个", 0, 0, 65),
+  quoteRule("热水点位", "hydropower_hot_water_point_count", "个", 0, 0, 65),
+  quoteRule("排水点位", "hydropower_drain_point_count", "个", 0, 0, 65),
+  quoteRule("地漏点位", "hydropower_floor_drain_point_count", "个", 0, 0, 65),
+  quoteRule("强电线管", "hydropower_strong_conduit_length_m", "M", 8, 2, 10),
+  quoteRule("弱电线管", "hydropower_weak_conduit_length_m", "M", 6, 2, 8),
+  quoteRule("给水管", "hydropower_water_pipe_length_m", "M", 10, 4, 12),
+  quoteRule("排水管", "hydropower_drain_pipe_length_m", "M", 12, 4, 14),
   quoteRule("材料搬运费", "building_area_m2", "M2", 0, 3, 12),
   quoteRule("垃圾清运费", "building_area_m2", "M2", 0, 0, 12),
   quoteRule("墙地面砖现场保护", "building_area_m2", "M2", 0, 6, 15),
@@ -494,10 +566,11 @@ export function buildQuoteMapping(
   rows: QuantityRow[],
   rules: QuoteRule[] = DEFAULT_RULES,
   summary?: Pick<QuantitySummary, "building_area_m2">,
-  quantityHealthReadiness: QuantityHealthReadiness = { total: 0, warning: 0, info: 0, label: "当前无待确认项" },
+  options?: BuildQuoteMappingOptions | QuantityHealthReadiness,
 ): QuoteMapping {
   const billableRows = rows.filter((row) => row.status !== "excluded");
   const buildingAreaM2 = round2(summary?.building_area_m2 ?? 0);
+  const normalizedOptions = normalizeBuildQuoteMappingOptions(options);
   const rowRules = rules.filter((rule): rule is QuoteRule & { metric: RowQuoteMetric } => !isProjectMetric(rule.metric) && !SUMMED_PROJECT_METRICS.has(rule.metric));
   const projectRules = rules.filter((rule) => isProjectMetric(rule.metric) || SUMMED_PROJECT_METRICS.has(rule.metric));
   const rowSpaceNames = displaySpaceNamesByRow(billableRows);
@@ -517,7 +590,7 @@ export function buildQuoteMapping(
       };
     }).filter((item) => item.quantity > 0),
   );
-  const projectItems = buildProjectQuoteItems(billableRows, projectRules, buildingAreaM2);
+  const projectItems = buildProjectQuoteItems(billableRows, projectRules, buildingAreaM2, normalizedOptions.hydropowerSummary);
   const items = [...rowItems, ...projectItems];
 
   return {
@@ -532,8 +605,35 @@ export function buildQuoteMapping(
     curtain_quote_candidates: curtainQuoteCandidates(rows),
     atrium_curtain_candidates: atriumCurtainCandidates(rows),
     building_area_quote_readiness: buildingAreaQuoteReadiness(rules, buildingAreaM2),
-    quantity_health_readiness: quantityHealthReadiness,
+    legacy_hydropower_area_rule_item_names: legacyHydropowerAreaRuleItemNames(rules),
+    quantity_health_readiness: normalizedOptions.quantityHealthReadiness,
   };
+}
+
+function normalizeBuildQuoteMappingOptions(options?: BuildQuoteMappingOptions | QuantityHealthReadiness): Required<Pick<BuildQuoteMappingOptions, "quantityHealthReadiness">> & Pick<BuildQuoteMappingOptions, "hydropowerSummary"> {
+  const defaultQuantityHealthReadiness: QuantityHealthReadiness = { total: 0, warning: 0, info: 0, label: "当前无待确认项" };
+  if (!options) {
+    return { hydropowerSummary: undefined, quantityHealthReadiness: defaultQuantityHealthReadiness };
+  }
+  if (isQuantityHealthReadiness(options)) {
+    return {
+      hydropowerSummary: undefined,
+      quantityHealthReadiness: options,
+    };
+  }
+  return {
+    hydropowerSummary: options.hydropowerSummary,
+    quantityHealthReadiness: options.quantityHealthReadiness ?? defaultQuantityHealthReadiness,
+  };
+}
+
+function isQuantityHealthReadiness(options: BuildQuoteMappingOptions | QuantityHealthReadiness): options is QuantityHealthReadiness {
+  return (
+    typeof (options as QuantityHealthReadiness).total === "number" &&
+    typeof (options as QuantityHealthReadiness).warning === "number" &&
+    typeof (options as QuantityHealthReadiness).info === "number" &&
+    typeof (options as QuantityHealthReadiness).label === "string"
+  );
 }
 
 function displaySpaceNamesByRow(rows: QuantityRow[]): Map<QuantityRow, string> {
@@ -600,12 +700,18 @@ function buildingAreaQuoteReadiness(rules: QuoteRule[], buildingAreaM2: number):
   };
 }
 
-function buildProjectQuoteItems(billableRows: QuantityRow[], rules: QuoteRule[], buildingAreaM2: number): QuoteMappingItem[] {
+function legacyHydropowerAreaRuleItemNames(rules: QuoteRule[]): string[] {
+  return rules
+    .filter((rule) => rule.metric === "electrical_scope_area_m2" || rule.metric === "plumbing_scope_area_m2")
+    .map((rule) => rule.item_name);
+}
+
+function buildProjectQuoteItems(billableRows: QuantityRow[], rules: QuoteRule[], buildingAreaM2: number, hydropowerSummary?: HydropowerSummary): QuoteMappingItem[] {
   if (billableRows.length === 0) {
     return [];
   }
   return rules.map((rule) => {
-    const quantity = projectRuleQuantity(billableRows, rule, buildingAreaM2);
+    const quantity = projectRuleQuantity(billableRows, rule, buildingAreaM2, hydropowerSummary);
     const amount = projectRuleAmount(quantity, rule, buildingAreaM2);
     return {
       floor: "全屋",
@@ -639,7 +745,36 @@ function quoteRulePriceParts(rule: QuoteRule): Pick<QuoteMappingItem, "material_
   };
 }
 
-function projectRuleQuantity(billableRows: QuantityRow[], rule: QuoteRule, buildingAreaM2: number): number {
+function projectRuleQuantity(billableRows: QuantityRow[], rule: QuoteRule, buildingAreaM2: number, hydropowerSummary?: HydropowerSummary): number {
+  const hydropowerMetrics: Partial<Record<QuoteMetric, number>> = {
+    hydropower_switch_point_count: hydropowerSummary?.switchPointCount ?? 0,
+    hydropower_standard_outlet_count: hydropowerSummary?.standardOutletCount ?? 0,
+    hydropower_sofa_charging_outlet_count: hydropowerSummary?.sofaChargingOutletCount ?? 0,
+    hydropower_heating_outlet_count: hydropowerSummary?.heatingOutletCount ?? 0,
+    hydropower_bed_end_fan_outlet_count: hydropowerSummary?.bedEndFanOutletCount ?? 0,
+    hydropower_kitchen_counter_outlet_count: hydropowerSummary?.kitchenCounterOutletCount ?? 0,
+    hydropower_light_point_count: hydropowerSummary?.lightPointCount ?? 0,
+    hydropower_weak_point_count: hydropowerSummary?.weakPointCount ?? 0,
+    hydropower_ac_circuit_count: hydropowerSummary?.acCircuitCount ?? 0,
+    hydropower_high_power_circuit_count: hydropowerSummary?.highPowerCircuitCount ?? 0,
+    hydropower_bathroom_heater_circuit_count: hydropowerSummary?.bathroomHeaterCircuitCount ?? 0,
+    hydropower_smart_toilet_outlet_count: hydropowerSummary?.smartToiletOutletCount ?? 0,
+    hydropower_washing_machine_outlet_count: hydropowerSummary?.washingMachineOutletCount ?? 0,
+    hydropower_dryer_outlet_count: hydropowerSummary?.dryerOutletCount ?? 0,
+    hydropower_water_purifier_outlet_count: hydropowerSummary?.waterPurifierOutletCount ?? 0,
+    hydropower_cold_water_point_count: hydropowerSummary?.coldWaterPointCount ?? 0,
+    hydropower_hot_water_point_count: hydropowerSummary?.hotWaterPointCount ?? 0,
+    hydropower_drain_point_count: hydropowerSummary?.drainPointCount ?? 0,
+    hydropower_floor_drain_point_count: hydropowerSummary?.floorDrainPointCount ?? 0,
+    hydropower_strong_conduit_length_m: hydropowerSummary?.strongConduitLengthM ?? 0,
+    hydropower_weak_conduit_length_m: hydropowerSummary?.weakConduitLengthM ?? 0,
+    hydropower_water_pipe_length_m: hydropowerSummary?.waterPipeLengthM ?? 0,
+    hydropower_drain_pipe_length_m: hydropowerSummary?.drainPipeLengthM ?? 0,
+  };
+  const hydropowerQuantity = hydropowerMetrics[rule.metric];
+  if (hydropowerQuantity !== undefined) {
+    return round2(hydropowerQuantity);
+  }
   if (rule.metric === "building_area_m2") {
     return buildingAreaM2;
   }
@@ -722,7 +857,30 @@ function isProjectMetric(metric: QuoteMetric): metric is ProjectQuoteMetric {
     metric === "cleaning_package_count" ||
     metric === "kitchen_bathroom_pipe_insulation_length_m" ||
     metric === "lighting_package_count" ||
-    metric === "switch_socket_package_count"
+    metric === "switch_socket_package_count" ||
+    metric === "hydropower_switch_point_count" ||
+    metric === "hydropower_standard_outlet_count" ||
+    metric === "hydropower_sofa_charging_outlet_count" ||
+    metric === "hydropower_heating_outlet_count" ||
+    metric === "hydropower_bed_end_fan_outlet_count" ||
+    metric === "hydropower_kitchen_counter_outlet_count" ||
+    metric === "hydropower_light_point_count" ||
+    metric === "hydropower_weak_point_count" ||
+    metric === "hydropower_ac_circuit_count" ||
+    metric === "hydropower_high_power_circuit_count" ||
+    metric === "hydropower_bathroom_heater_circuit_count" ||
+    metric === "hydropower_smart_toilet_outlet_count" ||
+    metric === "hydropower_washing_machine_outlet_count" ||
+    metric === "hydropower_dryer_outlet_count" ||
+    metric === "hydropower_water_purifier_outlet_count" ||
+    metric === "hydropower_cold_water_point_count" ||
+    metric === "hydropower_hot_water_point_count" ||
+    metric === "hydropower_drain_point_count" ||
+    metric === "hydropower_floor_drain_point_count" ||
+    metric === "hydropower_strong_conduit_length_m" ||
+    metric === "hydropower_weak_conduit_length_m" ||
+    metric === "hydropower_water_pipe_length_m" ||
+    metric === "hydropower_drain_pipe_length_m"
   );
 }
 
@@ -832,7 +990,30 @@ function isQuoteMetric(metric: unknown): metric is QuoteMetric {
     metric === "toilet_count" ||
     metric === "bathroom_vanity_count" ||
     metric === "bathroom_count" ||
-    metric === "switch_socket_package_count"
+    metric === "switch_socket_package_count" ||
+    metric === "hydropower_switch_point_count" ||
+    metric === "hydropower_standard_outlet_count" ||
+    metric === "hydropower_sofa_charging_outlet_count" ||
+    metric === "hydropower_heating_outlet_count" ||
+    metric === "hydropower_bed_end_fan_outlet_count" ||
+    metric === "hydropower_kitchen_counter_outlet_count" ||
+    metric === "hydropower_light_point_count" ||
+    metric === "hydropower_weak_point_count" ||
+    metric === "hydropower_ac_circuit_count" ||
+    metric === "hydropower_high_power_circuit_count" ||
+    metric === "hydropower_bathroom_heater_circuit_count" ||
+    metric === "hydropower_smart_toilet_outlet_count" ||
+    metric === "hydropower_washing_machine_outlet_count" ||
+    metric === "hydropower_dryer_outlet_count" ||
+    metric === "hydropower_water_purifier_outlet_count" ||
+    metric === "hydropower_cold_water_point_count" ||
+    metric === "hydropower_hot_water_point_count" ||
+    metric === "hydropower_drain_point_count" ||
+    metric === "hydropower_floor_drain_point_count" ||
+    metric === "hydropower_strong_conduit_length_m" ||
+    metric === "hydropower_weak_conduit_length_m" ||
+    metric === "hydropower_water_pipe_length_m" ||
+    metric === "hydropower_drain_pipe_length_m"
   );
 }
 
