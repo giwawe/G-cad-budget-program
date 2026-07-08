@@ -30,7 +30,7 @@ const mapping: QuoteMapping = {
       floor: "全屋",
       space_name: "全屋",
       space_type: "全屋",
-      item_name: "强电布线 & 水路复核",
+      item_name: "强电线管 & 水路复核",
       quantity: 88.66,
       unit: "M2",
       unit_price: 78,
@@ -52,7 +52,7 @@ const mapping: QuoteMapping = {
   curtain_quote_candidates: [],
   building_area_quote_readiness: {
     building_area_m2: 88.66,
-    required_item_names: ["强电布线"],
+    required_item_names: ["材料搬运费"],
     missing_item_names: [],
   },
   quantity_health_readiness: {
@@ -108,10 +108,10 @@ assert.ok(!html.includes("<td>次卧工程</td>"));
 assert.ok(!html.includes("<td>露台工程</td>"));
 assert.ok(html.indexOf("<td>二</td><td>厨房工程</td>") < html.indexOf("<td>地面找平</td>"));
 assert.ok(html.indexOf("<td>八</td><td>集成吊顶、卫浴、全屋开关灯饰</td>") < html.indexOf("<td>厨房卫生间集成吊顶</td>"));
-assert.ok(html.indexOf("<td>四</td><td>水电工程</td>") < html.indexOf("<td>强电布线 &amp; 水路复核</td>"));
+assert.ok(html.indexOf("<td>四</td><td>水电工程</td>") < html.indexOf("<td>强电线管 &amp; 水路复核</td>"));
 assert.ok(html.includes("<td>厨房卫生间集成吊顶</td><td>m2</td><td>4.48</td><td>180.00</td><td>0.00</td><td>0.00</td><td>806.40</td>"));
 assert.ok(html.includes("<td>地面找平</td><td>m2</td><td>4.48</td><td>0.00</td><td>25.00</td><td>30.00</td><td>246.40</td>"));
-assert.ok(html.includes("<td>强电布线 &amp; 水路复核</td><td>M2</td><td>88.66</td><td>78.00</td><td>0.00</td><td>0.00</td><td>6915.48</td>"));
+assert.ok(html.includes("<td>强电线管 &amp; 水路复核</td><td>M2</td><td>88.66</td><td>78.00</td><td>0.00</td><td>0.00</td><td>6915.48</td>"));
 assert.ok(html.includes("<td></td><td>小 计</td><td></td><td></td><td></td><td></td><td></td><td>246.40</td><td></td>"));
 assert.ok(html.includes("<td></td><td>小 计</td><td></td><td></td><td></td><td></td><td></td><td>806.40</td><td></td>"));
 assert.ok(html.includes("<td></td><td>小 计</td><td></td><td></td><td></td><td></td><td></td><td>6915.48</td><td></td>"));
@@ -146,8 +146,8 @@ assert.ok(html.includes("<td>窗台石</td><td>套</td><td>1</td><td>3600.00</td
 assert.ok(!html.includes("<td>包上/下水管道(单管)</td>"));
 assert.ok(!html.includes("<td>砌240厚砖墙</td>"));
 assert.ok(!html.includes("<td>窗帘</td><td>项</td><td>1</td>"));
-assert.ok(html.includes("<td>强电布线 &amp; 水路复核</td>"), "item names should be escaped");
-assert.ok(!html.includes("强电布线 & 水路复核</td>"), "raw ampersands should not leak into HTML");
+assert.ok(html.includes("<td>强电线管 &amp; 水路复核</td>"), "item names should be escaped");
+assert.ok(!html.includes("强电线管 & 水路复核</td>"), "raw ampersands should not leak into HTML");
 
 const duplicateHtml = buildQuoteExcelHtml(
   {
@@ -237,6 +237,66 @@ assert.equal(countOccurrences(slidingDoorHtml, "<td>厨房推拉门双包套</td
 assert.ok(slidingDoorHtml.includes("<td>厨房推拉门</td><td>m2</td><td>3.85</td><td>550.00</td><td>0.00</td><td>0.00</td><td>2117.50</td>"));
 assert.ok(slidingDoorHtml.includes("<td>厨房推拉门双包套</td><td>M</td><td>6.15</td><td>300.00</td><td>0.00</td><td>0.00</td><td>1845.00</td>"));
 assert.ok(!slidingDoorHtml.includes("<td>厨房推拉门</td><td>m2</td><td>10</td>"));
+
+const hydropowerSectionHtml = buildQuoteExcelHtml(
+  {
+    ...mapping,
+    items: [
+      {
+        floor: "全屋",
+        space_name: "全屋",
+        space_type: "全屋",
+        item_name: "开关点位",
+        quantity: 4,
+        unit: "个",
+        unit_price: 35,
+        material_price: 0,
+        auxiliary_price: 0,
+        labor_price: 35,
+        amount: 140,
+      },
+      {
+        floor: "全屋",
+        space_name: "全屋",
+        space_type: "全屋",
+        item_name: "强电线管",
+        quantity: 86.5,
+        unit: "M",
+        unit_price: 20,
+        material_price: 8,
+        auxiliary_price: 2,
+        labor_price: 10,
+        amount: 1730,
+      },
+      {
+        floor: "全屋",
+        space_name: "全屋",
+        space_type: "全屋",
+        item_name: "给水管",
+        quantity: 31.6,
+        unit: "M",
+        unit_price: 26,
+        material_price: 10,
+        auxiliary_price: 4,
+        labor_price: 12,
+        amount: 821.6,
+      },
+    ],
+    summary: {
+      ...mapping.summary,
+      item_count: 3,
+      total_amount: 2691.6,
+    },
+  },
+  "水电点位项目",
+);
+assert.ok(hydropowerSectionHtml.indexOf("<td>四</td><td>水电工程</td>") < hydropowerSectionHtml.indexOf("<td>开关点位</td>"));
+assert.ok(hydropowerSectionHtml.includes("<td>开关点位</td><td>个</td><td>4</td><td>0.00</td><td>0.00</td><td>35.00</td><td>140.00</td>"));
+assert.ok(hydropowerSectionHtml.includes("<td>强电线管</td><td>M</td><td>86.50</td><td>8.00</td><td>2.00</td><td>10.00</td><td>1730.00</td>"));
+assert.ok(hydropowerSectionHtml.includes("<td>给水管</td><td>M</td><td>31.60</td><td>10.00</td><td>4.00</td><td>12.00</td><td>821.60</td>"));
+assert.ok(!hydropowerSectionHtml.includes("<td>强电布线</td>"));
+assert.ok(!hydropowerSectionHtml.includes("<td>水路布管</td>"));
+assert.ok(!hydropowerSectionHtml.includes("<td>补</td><td>未归类自动清单</td>"));
 
 const balconySlidingDoorHtml = buildQuoteExcelHtml(
   {
@@ -339,8 +399,8 @@ const riskyHtml = buildQuoteExcelHtml(
     ],
     building_area_quote_readiness: {
       building_area_m2: 0,
-      required_item_names: ["强电布线", "水路布管"],
-      missing_item_names: ["强电布线", "水路布管"],
+      required_item_names: ["材料搬运费", "垃圾清运费"],
+      missing_item_names: ["材料搬运费", "垃圾清运费"],
     },
     quantity_health_readiness: {
       total: 3,
@@ -354,7 +414,7 @@ const riskyHtml = buildQuoteExcelHtml(
 
 assert.ok(riskyHtml.includes("<td></td><td>报价风险备注</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>"));
 assert.ok(riskyHtml.includes("<td></td><td>健康检查</td><td></td><td></td><td></td><td></td><td></td><td></td><td>1 项需优先处理，2 项提醒</td>"));
-assert.ok(riskyHtml.includes("<td></td><td>建筑面积</td><td></td><td></td><td></td><td></td><td></td><td></td><td>强电布线、水路布管 需要 QUOTE_EXT_WALL 建筑面积，当前为 0。</td>"));
+assert.ok(riskyHtml.includes("<td></td><td>建筑面积</td><td></td><td></td><td></td><td></td><td></td><td></td><td>材料搬运费、垃圾清运费 需要 QUOTE_EXT_WALL 建筑面积，当前为 0。</td>"));
 assert.ok(riskyHtml.includes("<td></td><td>零单价</td><td></td><td></td><td></td><td></td><td></td><td></td><td>厨房卫生间集成吊顶：卫生间 3.20 m2</td>"));
 
 const defaultProjectMapping = buildQuoteMapping(defaultProjectRows, defaultQuoteRules(), defaultProjectSummary);

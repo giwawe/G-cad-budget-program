@@ -125,31 +125,211 @@
     "labor_price": 0
   },
   {
-    "item_name": "强电布线",
-    "metric": "building_area_m2",
-    "unit": "M2",
-    "unit_price": 78,
-    "material_price": 40,
+    "item_name": "开关点位",
+    "metric": "hydropower_switch_point_count",
+    "unit": "个",
+    "unit_price": 35,
+    "material_price": 0,
     "auxiliary_price": 0,
-    "labor_price": 38
+    "labor_price": 35
   },
   {
-    "item_name": "弱电布线",
-    "metric": "building_area_m2",
-    "unit": "M2",
-    "unit_price": 25,
-    "material_price": 15,
+    "item_name": "普通插座点位",
+    "metric": "hydropower_standard_outlet_count",
+    "unit": "个",
+    "unit_price": 45,
+    "material_price": 0,
     "auxiliary_price": 0,
+    "labor_price": 45
+  },
+  {
+    "item_name": "沙发充电插座",
+    "metric": "hydropower_sofa_charging_outlet_count",
+    "unit": "个",
+    "unit_price": 45,
+    "material_price": 0,
+    "auxiliary_price": 0,
+    "labor_price": 45
+  },
+  {
+    "item_name": "取暖设备插座",
+    "metric": "hydropower_heating_outlet_count",
+    "unit": "个",
+    "unit_price": 45,
+    "material_price": 0,
+    "auxiliary_price": 0,
+    "labor_price": 45
+  },
+  {
+    "item_name": "床尾风扇插座",
+    "metric": "hydropower_bed_end_fan_outlet_count",
+    "unit": "个",
+    "unit_price": 45,
+    "material_price": 0,
+    "auxiliary_price": 0,
+    "labor_price": 45
+  },
+  {
+    "item_name": "厨房台面插座",
+    "metric": "hydropower_kitchen_counter_outlet_count",
+    "unit": "个",
+    "unit_price": 45,
+    "material_price": 0,
+    "auxiliary_price": 0,
+    "labor_price": 45
+  },
+  {
+    "item_name": "灯位点位",
+    "metric": "hydropower_light_point_count",
+    "unit": "个",
+    "unit_price": 35,
+    "material_price": 0,
+    "auxiliary_price": 0,
+    "labor_price": 35
+  },
+  {
+    "item_name": "弱电点位",
+    "metric": "hydropower_weak_point_count",
+    "unit": "个",
+    "unit_price": 45,
+    "material_price": 0,
+    "auxiliary_price": 0,
+    "labor_price": 45
+  },
+  {
+    "item_name": "空调专线",
+    "metric": "hydropower_ac_circuit_count",
+    "unit": "路",
+    "unit_price": 120,
+    "material_price": 0,
+    "auxiliary_price": 0,
+    "labor_price": 120
+  },
+  {
+    "item_name": "大功率电器专线",
+    "metric": "hydropower_high_power_circuit_count",
+    "unit": "路",
+    "unit_price": 120,
+    "material_price": 0,
+    "auxiliary_price": 0,
+    "labor_price": 120
+  },
+  {
+    "item_name": "浴霸/暖风机专线",
+    "metric": "hydropower_bathroom_heater_circuit_count",
+    "unit": "路",
+    "unit_price": 120,
+    "material_price": 0,
+    "auxiliary_price": 0,
+    "labor_price": 120
+  },
+  {
+    "item_name": "智能马桶插座",
+    "metric": "hydropower_smart_toilet_outlet_count",
+    "unit": "个",
+    "unit_price": 45,
+    "material_price": 0,
+    "auxiliary_price": 0,
+    "labor_price": 45
+  },
+  {
+    "item_name": "洗衣机插座",
+    "metric": "hydropower_washing_machine_outlet_count",
+    "unit": "个",
+    "unit_price": 45,
+    "material_price": 0,
+    "auxiliary_price": 0,
+    "labor_price": 45
+  },
+  {
+    "item_name": "烘干机插座",
+    "metric": "hydropower_dryer_outlet_count",
+    "unit": "个",
+    "unit_price": 45,
+    "material_price": 0,
+    "auxiliary_price": 0,
+    "labor_price": 45
+  },
+  {
+    "item_name": "净水机插座",
+    "metric": "hydropower_water_purifier_outlet_count",
+    "unit": "个",
+    "unit_price": 45,
+    "material_price": 0,
+    "auxiliary_price": 0,
+    "labor_price": 45
+  },
+  {
+    "item_name": "冷水点位",
+    "metric": "hydropower_cold_water_point_count",
+    "unit": "个",
+    "unit_price": 65,
+    "material_price": 0,
+    "auxiliary_price": 0,
+    "labor_price": 65
+  },
+  {
+    "item_name": "热水点位",
+    "metric": "hydropower_hot_water_point_count",
+    "unit": "个",
+    "unit_price": 65,
+    "material_price": 0,
+    "auxiliary_price": 0,
+    "labor_price": 65
+  },
+  {
+    "item_name": "排水点位",
+    "metric": "hydropower_drain_point_count",
+    "unit": "个",
+    "unit_price": 65,
+    "material_price": 0,
+    "auxiliary_price": 0,
+    "labor_price": 65
+  },
+  {
+    "item_name": "地漏点位",
+    "metric": "hydropower_floor_drain_point_count",
+    "unit": "个",
+    "unit_price": 65,
+    "material_price": 0,
+    "auxiliary_price": 0,
+    "labor_price": 65
+  },
+  {
+    "item_name": "强电线管",
+    "metric": "hydropower_strong_conduit_length_m",
+    "unit": "M",
+    "unit_price": 20,
+    "material_price": 8,
+    "auxiliary_price": 2,
     "labor_price": 10
   },
   {
-    "item_name": "水路布管",
-    "metric": "building_area_m2",
-    "unit": "M2",
-    "unit_price": 29.5,
-    "material_price": 17.5,
-    "auxiliary_price": 0,
+    "item_name": "弱电线管",
+    "metric": "hydropower_weak_conduit_length_m",
+    "unit": "M",
+    "unit_price": 16,
+    "material_price": 6,
+    "auxiliary_price": 2,
+    "labor_price": 8
+  },
+  {
+    "item_name": "给水管",
+    "metric": "hydropower_water_pipe_length_m",
+    "unit": "M",
+    "unit_price": 26,
+    "material_price": 10,
+    "auxiliary_price": 4,
     "labor_price": 12
+  },
+  {
+    "item_name": "排水管",
+    "metric": "hydropower_drain_pipe_length_m",
+    "unit": "M",
+    "unit_price": 30,
+    "material_price": 12,
+    "auxiliary_price": 4,
+    "labor_price": 14
   },
   {
     "item_name": "材料搬运费",
