@@ -540,6 +540,18 @@ def test_large_door_opening_adds_door_width_back_and_deducts_selected_opening_ar
     assert "已选门洞扣减 3.78m2" in row.evidence
 
 
+def test_cast_slab_area_sums_room_boundaries():
+    space = SpaceInput(
+        name="客厅",
+        boundary_points_m=[(0, 0), (6, 0), (6, 5), (0, 5)],
+        cast_slab_areas_m2=[4.25, 1.5],
+    )
+
+    row = calculate_quantity_row(space, ProjectDefaults())
+
+    assert row.cast_slab_area_m2 == 5.75
+
+
 def test_suspected_large_door_opening_requires_review_without_default_deduction():
     space = SpaceInput(
         name="客厅",

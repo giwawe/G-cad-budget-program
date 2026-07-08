@@ -17,6 +17,7 @@ QUOTE_LAYERS = {
     "QUOTE_NEW_WALL",
     "QUOTE_DEMO_WALL",
     "QUOTE_BACKGROUND_WALL",
+    "QUOTE_CAST_SLAB",
     "QUOTE_BASE_CABINET",
     "QUOTE_WALL_CABINET",
     "QUOTE_CUSTOM",
@@ -115,6 +116,7 @@ class DrawingGeometry:
     new_walls: list[tuple[Point, Point]]
     demolition_walls: list[tuple[Point, Point]]
     background_walls: list[tuple[Point, Point]]
+    cast_slab_boundaries: list[list[Point]]
     base_cabinets: list[tuple[Point, Point]]
     wall_cabinets: list[tuple[Point, Point]]
     base_cabinet_boundaries: list[list[Point]]
@@ -164,6 +166,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
     demolition_wall_segments: list[tuple[Point, Point]] = []
     background_wall_segments: list[tuple[Point, Point]] = []
     background_wall_height_markers: list[tuple[Point, float]] = []
+    cast_slab_boundaries: list[list[Point]] = []
     base_cabinet_segments: list[tuple[Point, Point]] = []
     wall_cabinet_segments: list[tuple[Point, Point]] = []
     base_cabinet_boundaries: list[list[Point]] = []
@@ -216,6 +219,12 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
                     background_wall_height_markers.append((_text_point(entity, defaults.unit_scale_to_m), height_m))
             else:
                 background_wall_segments.extend(_entity_segments(entity, defaults.unit_scale_to_m))
+        elif layer == "QUOTE_CAST_SLAB":
+            boundary_points = _closed_polyline_boundary_points(entity, defaults.unit_scale_to_m)
+            if not boundary_points:
+                boundary_points = _void_boundary_points(entity, defaults.unit_scale_to_m)
+            if boundary_points:
+                cast_slab_boundaries.append(boundary_points)
         elif layer == "QUOTE_BASE_CABINET":
             base_cabinet_segments.extend(_kitchen_cabinet_segments(entity, defaults.unit_scale_to_m))
             boundary = _kitchen_cabinet_outline_boundary(entity, defaults.unit_scale_to_m)
@@ -295,6 +304,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
     measured_new_walls: list[tuple[Point, Point]] = []
     measured_demolition_walls: list[tuple[Point, Point]] = []
     measured_background_walls: list[tuple[Point, Point]] = []
+    measured_cast_slab_boundaries: list[list[Point]] = []
     measured_base_cabinets: list[tuple[Point, Point]] = []
     measured_wall_cabinets: list[tuple[Point, Point]] = []
     measured_base_cabinet_boundaries: list[list[Point]] = []
@@ -312,6 +322,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         room_new_walls = [(start, end) for start, end in new_wall_segments if _segment_in_room(room, start, end)]
         room_demolition_walls = [(start, end) for start, end in demolition_wall_segments if _segment_in_room(room, start, end)]
         room_background_walls = [(start, end) for start, end in background_wall_segments if _segment_in_room(room, start, end)]
+        room_cast_slab_boundaries = [boundary for boundary in cast_slab_boundaries if _boundary_in_room(room, boundary)]
         room_base_cabinets = [(start, end) for start, end in base_cabinet_segments if _segment_in_room(room, start, end)]
         room_wall_cabinets = [(start, end) for start, end in wall_cabinet_segments if _segment_in_room(room, start, end)]
         room_base_cabinet_boundaries = [boundary for boundary in base_cabinet_boundaries if _boundary_in_room(room, boundary)]
@@ -353,6 +364,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         measured_new_walls.extend(room_new_walls)
         measured_demolition_walls.extend(room_demolition_walls)
         measured_background_walls.extend(room_background_walls)
+        measured_cast_slab_boundaries.extend(room_cast_slab_boundaries)
         measured_base_cabinets.extend(room_base_cabinets)
         measured_wall_cabinets.extend(room_wall_cabinets)
         measured_base_cabinet_boundaries.extend(room_base_cabinet_boundaries)
@@ -384,6 +396,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
                 demolition_wall_lengths_m=[round(line_length(start, end), 2) for start, end in room_demolition_walls],
                 background_wall_lengths_m=[round(line_length(start, end), 2) for start, end in room_background_walls],
                 background_wall_heights_m=[_height_for_segment(segment, background_wall_height_markers) for segment in room_background_walls],
+                cast_slab_areas_m2=[round(polygon_area(boundary), 2) for boundary in room_cast_slab_boundaries],
                 base_cabinet_lengths_m=[round(line_length(start, end), 2) for start, end in room_base_cabinets],
                 wall_cabinet_lengths_m=[round(line_length(start, end), 2) for start, end in room_wall_cabinets],
                 custom_cabinet_lengths_m=[round(line_length(start, end), 2) for start, end in room_custom_cabinets],
@@ -429,6 +442,7 @@ def parse_dxf_review(content: bytes, defaults: ProjectDefaults) -> ParsedDxfRevi
         new_walls=measured_new_walls,
         demolition_walls=measured_demolition_walls,
         background_walls=measured_background_walls,
+        cast_slab_boundaries=measured_cast_slab_boundaries,
         base_cabinets=[segment for segment in measured_base_cabinets if not _segment_inside_any_boundary(segment, measured_base_cabinet_boundaries)],
         wall_cabinets=[segment for segment in measured_wall_cabinets if not _segment_inside_any_boundary(segment, measured_wall_cabinet_boundaries)],
         base_cabinet_boundaries=measured_base_cabinet_boundaries,

@@ -91,6 +91,7 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
     demolition_wall_length_m = round(sum(space.demolition_wall_lengths_m), 2)
     demolition_wall_area_m2 = calculate_demolition_wall_area_m2(demolition_wall_length_m, height_m)
     background_wall_area_m2 = calculate_segment_area_m2(space.background_wall_lengths_m, space.background_wall_heights_m, height_m)
+    cast_slab_area_m2 = round(sum(space.cast_slab_areas_m2), 2)
     entry_door_count = calculate_entry_door_count(space.doors)
     interior_door_count = calculate_interior_door_count(space_type, space.doors)
     bathroom_door_count = calculate_bathroom_door_count(space_type, space.doors)
@@ -170,6 +171,7 @@ def calculate_quantity_row(space: SpaceInput, defaults: ProjectDefaults) -> Quan
         demolition_wall_length_m=demolition_wall_length_m,
         demolition_wall_area_m2=demolition_wall_area_m2,
         background_wall_area_m2=background_wall_area_m2,
+        cast_slab_area_m2=cast_slab_area_m2,
         entry_door_count=entry_door_count,
         interior_door_count=interior_door_count,
         bathroom_door_count=bathroom_door_count,
