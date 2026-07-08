@@ -22,7 +22,7 @@ export type QuantityHealthCheck = {
   severity: QuantityHealthSeverity;
   title: string;
   detail: string;
-  message: string;
+  message?: string;
   spaceNames?: string[];
 };
 
