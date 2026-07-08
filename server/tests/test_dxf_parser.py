@@ -13,6 +13,7 @@ from server.tests.dxf_fixtures import (
     build_custom_cabinet_dxf,
     build_deep_rectangular_window_dxf,
     build_demolition_wall_dxf,
+    build_edge_ceiling_dxf,
     build_ext_wall_area_dxf,
     build_ext_wall_area_repeated_endpoint_dxf,
     build_auto_door_type_dxf,
@@ -72,6 +73,15 @@ def test_parse_void_opening_and_railing_layers_into_space_inputs():
     assert space.guardrail_lengths_m == []
     assert review.drawing.void_boundaries == [[(0.5, 0.5), (3.5, 0.5), (3.5, 2.5), (0.5, 2.5)]]
     assert review.drawing.railings == [((0.5, 0.5), (3.5, 0.5))]
+
+
+def test_quote_edge_ceiling_boundary_is_assigned_to_space():
+    review = parser.parse_dxf_review(build_edge_ceiling_dxf(), ProjectDefaults())
+
+    space = review.spaces[0]
+    assert space.edge_ceiling_areas_m2 == [5]
+    assert space.edge_ceiling_lengths_m == [12]
+    assert review.drawing.edge_ceiling_boundaries == [[(0.0, 0.0), (5.0, 0.0), (5.0, 1.0), (0.0, 1.0)]]
 
 
 def test_void_deductions_use_overlapped_floor_group_roles():

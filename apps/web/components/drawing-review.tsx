@@ -112,6 +112,7 @@ export function DrawingReview({
   const [showWallCabinets, setShowWallCabinets] = useState(true);
   const [showCustomCabinets, setShowCustomCabinets] = useState(true);
   const [showExteriorWalls, setShowExteriorWalls] = useState(true);
+  const [showEdgeCeilings, setShowEdgeCeilings] = useState(true);
   const [showBathroomFixtures, setShowBathroomFixtures] = useState(true);
   const [showWindows, setShowWindows] = useState(true);
   const [showDoors, setShowDoors] = useState(true);
@@ -148,6 +149,7 @@ export function DrawingReview({
     const measuredWalls = drawing.measured_walls.filter((segment) => segmentInBbox(segment, selectedFloorBand));
     const openingEdges = drawing.opening_edges?.filter((segment) => segmentInBbox(segment, selectedFloorBand));
     const voidBoundaries = drawing.void_boundaries?.filter((boundary) => boundaryInBbox(boundary, selectedFloorBand));
+    const edgeCeilingBoundaries = drawing.edge_ceiling_boundaries?.filter((boundary) => boundaryInBbox(boundary, selectedFloorBand));
     const railings = drawing.railings?.filter((segment) => segmentInBbox(segment, selectedFloorBand));
     const tileWalls = drawing.tile_walls.filter((segment) => segmentInBbox(segment, selectedFloorBand));
     const newWalls = drawing.new_walls.filter((segment) => segmentInBbox(segment, selectedFloorBand));
@@ -171,6 +173,7 @@ export function DrawingReview({
       measured_walls: measuredWalls,
       opening_edges: openingEdges,
       void_boundaries: voidBoundaries,
+      edge_ceiling_boundaries: edgeCeilingBoundaries,
       railings,
       tile_walls: tileWalls,
       new_walls: newWalls,
@@ -196,6 +199,7 @@ export function DrawingReview({
         measuredWalls.flatMap(segmentPoints),
         (openingEdges ?? []).flatMap(segmentPoints),
         (voidBoundaries ?? []).flat(),
+        (edgeCeilingBoundaries ?? []).flat(),
         (railings ?? []).flatMap(segmentPoints),
         tileWalls.flatMap(segmentPoints),
         newWalls.flatMap(segmentPoints),
@@ -370,6 +374,7 @@ export function DrawingReview({
         <label className="drawingLayerToggle"><input type="checkbox" checked={showWallCabinets} onChange={(event) => setShowWallCabinets(event.target.checked)} />吊柜 {visibleDrawing.wall_cabinets.length + (visibleDrawing.wall_cabinet_boundaries?.length ?? 0)}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showCustomCabinets} onChange={(event) => setShowCustomCabinets(event.target.checked)} />定制柜 {visibleDrawing.custom_cabinets.length}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showExteriorWalls} onChange={(event) => setShowExteriorWalls(event.target.checked)} />外墙 {visibleDrawing.exterior_wall_boundaries.length}</label>
+        <label className="drawingLayerToggle"><input type="checkbox" checked={showEdgeCeilings} onChange={(event) => setShowEdgeCeilings(event.target.checked)} />边吊 {visibleDrawing.edge_ceiling_boundaries?.length ?? 0}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showBathroomFixtures} onChange={(event) => setShowBathroomFixtures(event.target.checked)} />洁具 {visibleDrawing.toilets.length + visibleDrawing.bathroom_vanities.length}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showWindows} onChange={(event) => setShowWindows(event.target.checked)} />窗 {visibleDrawing.window_openings.length}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showDoors} onChange={(event) => setShowDoors(event.target.checked)} />门 {visibleDrawing.door_openings.length}</label>
@@ -402,6 +407,7 @@ export function DrawingReview({
             {showWallCabinets && visibleDrawing.wall_cabinet_boundaries?.map((boundary, index) => <polygon key={`wall-cabinet-boundary-${index}`} className="svgWallCabinet" points={pointList(boundary)} />)}
             {showWallCabinets && visibleDrawing.wall_cabinets.map((cabinet, index) => <line key={`wall-cabinet-${index}`} className="svgWallCabinet" x1={cabinet.start.x} y1={cabinet.start.y} x2={cabinet.end.x} y2={cabinet.end.y} />)}
             {showCustomCabinets && visibleDrawing.custom_cabinets.map((cabinet, index) => <line key={`custom-cabinet-${index}`} className="svgCustomCabinet" x1={cabinet.start.x} y1={cabinet.start.y} x2={cabinet.end.x} y2={cabinet.end.y} />)}
+            {showEdgeCeilings && visibleDrawing.edge_ceiling_boundaries?.map((boundary, index) => <polygon key={`edge-ceiling-${index}`} className="svgEdgeCeiling" points={pointList(boundary)} />)}
             {showBathroomFixtures && visibleDrawing.toilets.map((point, index) => <circle key={`toilet-${index}`} className="svgToilet" cx={point.x} cy={point.y} r="0.16" />)}
             {showBathroomFixtures && visibleDrawing.bathroom_vanities.map((point, index) => <rect key={`bathroom-vanity-${index}`} className="svgBathroomVanity" x={point.x - 0.16} y={point.y - 0.16} width="0.32" height="0.32" />)}
             {showHydropowerPoints && hydropowerPoints?.filter((point) => point.point && (showAllFloors || point.floor === effectiveFloor)).map((point) => (

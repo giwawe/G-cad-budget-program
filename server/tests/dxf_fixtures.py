@@ -61,6 +61,22 @@ def build_void_opening_railing_dxf() -> bytes:
     return _save_doc(doc)
 
 
+def build_edge_ceiling_dxf() -> bytes:
+    doc = ezdxf.new("R2010")
+    msp = doc.modelspace()
+    for layer in ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_TEXT", "QUOTE_EDGE_CEILING"]:
+        doc.layers.add(layer)
+    msp.add_lwpolyline([(0, 0), (5000, 0), (5000, 4000), (0, 4000), (0, 0)], dxfattribs={"layer": "QUOTE_ROOM"})
+    msp.add_line((0, 0), (5000, 0), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((5000, 0), (5000, 4000), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((5000, 4000), (0, 4000), dxfattribs={"layer": "QUOTE_WALL"})
+    msp.add_line((0, 4000), (0, 0), dxfattribs={"layer": "QUOTE_WALL"})
+    edge_ceiling = msp.add_lwpolyline([(0, 0), (5000, 0), (5000, 1000), (0, 1000)], dxfattribs={"layer": "QUOTE_EDGE_CEILING"})
+    edge_ceiling.closed = True
+    msp.add_text("一层-客厅", dxfattribs={"layer": "QUOTE_TEXT", "insert": (2500, 2000)})
+    return _save_doc(doc)
+
+
 def build_floor_marker_dxf() -> bytes:
     doc = ezdxf.new("R2010")
     msp = doc.modelspace()

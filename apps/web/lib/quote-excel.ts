@@ -33,6 +33,7 @@ type OrderedRoomSectionGroup = RoomSectionGroup & { order: number };
 
 const ROOM_SECTION_ITEM_NAMES = [
   "轻钢龙骨平顶",
+  "双眼皮/边吊吊顶",
   "暗窗帘箱",
   "顶面批嵌",
   "顶面乳胶漆",
@@ -55,7 +56,7 @@ const FIXED_TEMPLATE_SECTIONS: QuoteTemplateSectionDefinition[] = [
   { title: "全屋拆改工程", itemNames: ["拆改及拆墙", "砌砖墙", "砌120厚砖墙", "砌240厚砖墙", "现浇钢筋混凝土楼板", "外墙批嵌以及修补"] },
   {
     title: "其他工程",
-    itemNames: ["砖墙门窗洞过梁", "水泥墙开槽", "打混凝土过梁孔", "厨房、卫生间排污管包隔音棉", "补线、管槽及零星修补", "垃圾清运费", "材料搬运费", "地面砖现场维护费"],
+    itemNames: ["砖墙门窗洞过梁", "水泥墙开槽", "打混凝土过梁孔", "厨房、卫生间排污管包隔音棉", "补线、管槽及零星修补", "垃圾清运费", "材料搬运费", "墙地面砖现场保护"],
   },
   {
     title: "水电工程",
@@ -115,6 +116,7 @@ const TEMPLATE_PRICES: Record<string, QuoteTemplatePrice> = {
   墙面乳胶漆: { material: 10, auxiliary: 0, labor: 10, note: "乳胶漆一底两面。" },
   厨房卫生间集成吊顶: { material: 120, auxiliary: 0, labor: 0, note: "厨房、卫生间集成吊顶，设计师可调整单价。" },
   轻钢龙骨平顶: { material: 60, auxiliary: 30, labor: 90, note: "含龙骨及配件，含辅料。" },
+  "双眼皮/边吊吊顶": { material: 35, auxiliary: 15, labor: 30, note: "按 QUOTE_EDGE_CEILING 单一闭合边界周长计算，禁止画环形带状边吊。" },
   顶面批嵌: { material: 0, auxiliary: 15, labor: 10, note: "二底二面基础腻子找平，含打磨。" },
   顶面乳胶漆: { material: 10, auxiliary: 0, labor: 10, note: "乳胶漆一底两面。" },
   地面找平: { material: 0, auxiliary: 25, labor: 30, note: "水泥砂浆找平，厚度≤50mm。" },
@@ -146,9 +148,9 @@ const TEMPLATE_PRICES: Record<string, QuoteTemplatePrice> = {
   弱电线管: { material: 6, auxiliary: 2, labor: 8, note: "按弱电线管长度估算生成。" },
   给水管: { material: 10, auxiliary: 4, labor: 12, note: "按给水管长度估算生成。" },
   排水管: { material: 12, auxiliary: 4, labor: 14, note: "按排水管长度估算生成。" },
-  材料搬运费: { material: 0, auxiliary: 0, labor: 8, note: "按建筑面积计，设计师可按是否含吊机调整单价。" },
-  垃圾清运费: { material: 0, auxiliary: 0, labor: 10, note: "按建筑面积计，外运车费另计。" },
-  地面砖现场维护费: { material: 0, auxiliary: 3, labor: 5, note: "地面砖成品保护。" },
+  材料搬运费: { material: 0, auxiliary: 3, labor: 12, note: "按建筑面积计，设计师可按是否含吊机调整单价。" },
+  垃圾清运费: { material: 0, auxiliary: 0, labor: 12, note: "按建筑面积计，外运车费另计。" },
+  墙地面砖现场保护: { material: 0, auxiliary: 6, labor: 15, note: "墙地面砖成品保护。" },
   "墙面贴瓷砖(600X1200)": { material: 40, auxiliary: 8, labor: 50, note: "辅料为水泥、黄沙、瓷砖背胶、胶泥。" },
   墙地面防漏处理: { material: 35, auxiliary: 7, labor: 18, note: "墙地面清理，涂刷防水涂料。" },
   窗台石铺贴: { material: 0, auxiliary: 20, labor: 25, note: "主材及磨边业主甲供，辅料为水泥、黄沙。" },
@@ -161,9 +163,9 @@ const TEMPLATE_PRICES: Record<string, QuoteTemplatePrice> = {
   拆改及拆墙: { material: 0, auxiliary: 10, labor: 60, note: "人工拆除。" },
   外墙批嵌以及修补: { material: 20, auxiliary: 15, labor: 35, note: "有对应图层时按规则输出；无图层不显示。" },
   砖墙门窗洞过梁: { material: 100, auxiliary: 0, labor: 20, note: "设计师按现场数量填写。" },
-  水泥墙开槽: { material: 0, auxiliary: 3, labor: 6, note: "按建筑面积生成候选。" },
+  水泥墙开槽: { material: 0, auxiliary: 4, labor: 8, note: "按建筑面积生成候选。" },
   打混凝土过梁孔: { material: 0, auxiliary: 0, labor: 35, note: "按建筑面积 10% 生成候选。" },
-  "厨房、卫生间排污管包隔音棉": { material: 0, auxiliary: 20, labor: 15, note: "厨房和卫生间数量合计 * 1.5 * 层高。" },
+  "厨房、卫生间排污管包隔音棉": { material: 0, auxiliary: 35, labor: 15, note: "厨房和卫生间数量合计 * 1.5 * 层高。" },
   "补线、管槽及零星修补": { material: 0, auxiliary: 2.5, labor: 3, note: "按建筑面积生成候选。" },
   入户门: { material: 2500, auxiliary: 0, labor: 0, note: "设计师确认是否计入。" },
   室内门: { material: 1200, auxiliary: 0, labor: 0, note: "室内静音门。" },
@@ -188,7 +190,7 @@ const TEMPLATE_PRICES: Record<string, QuoteTemplatePrice> = {
   窗帘: { material: 50, auxiliary: 20, labor: 0, note: "按窗帘箱长度 * 2 计算展开长度，主材 50、辅材 20。" },
   窗台石: { material: 65, auxiliary: 0, labor: 0, note: "按窗户实际长度自动计算，厨房和卫生间不计窗台石。" },
   全屋保洁: { material: 0, auxiliary: 0, labor: 0, note: "默认不计价，由设计师输入。" },
-  暗窗帘箱: { material: 65, auxiliary: 0, labor: 45, note: "木工板立架，石膏板饰面。" },
+  暗窗帘箱: { material: 35, auxiliary: 10, labor: 45, note: "木工板立架，石膏板饰面。" },
   楼梯扶手: { material: 480, auxiliary: 0, labor: 0, note: "楼梯扶手，按模板主材单价。" },
 };
 

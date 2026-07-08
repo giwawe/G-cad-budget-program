@@ -426,7 +426,7 @@ assert.ok(defaultProjectHtml.includes("<td>厨房推拉门</td><td>m2</td><td>3.
 assert.ok(defaultProjectHtml.includes("<td>厨房推拉门双包套</td><td>M</td><td>6.15</td><td>110.00</td><td>0.00</td><td>0.00</td><td>676.50</td>"));
 assert.ok(defaultProjectHtml.includes("<td>厨房卫生间集成吊顶</td><td>m2</td><td>11.26</td><td>120.00</td><td>0.00</td><td>0.00</td><td>1351.20</td>"));
 assert.ok(defaultProjectHtml.includes("<td>窗帘</td><td>M</td><td>36.06</td><td>50.00</td><td>20.00</td><td>0.00</td><td>2524.20</td>"));
-assert.ok(defaultProjectHtml.includes("<td>暗窗帘箱</td><td>M</td><td>6.63</td><td>65.00</td><td>0.00</td><td>45.00</td><td>729.30</td>"));
+assert.ok(defaultProjectHtml.includes("<td>暗窗帘箱</td><td>M</td><td>6.63</td><td>35.00</td><td>10.00</td><td>45.00</td><td>596.70</td>"));
 assert.ok(!defaultProjectHtml.includes("<td>窗台石</td><td>套</td>"));
 
 const defaultBathroomRows = defaultProjectRows.filter((row) => row.spaceType === "卫生间");

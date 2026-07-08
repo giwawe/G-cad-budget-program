@@ -7,6 +7,8 @@ type QuantityRowMetric =
   | "electricalScopeAreaM2"
   | "plumbingScopeAreaM2"
   | "ceilingAreaM2"
+  | "gypsumFlatCeilingAreaM2"
+  | "edgeCeilingLengthM"
   | "wallTileAreaM2"
   | "waterproofAreaM2"
   | "windowsillLengthM"
@@ -46,6 +48,8 @@ export type QuoteMetric =
   | "plumbing_scope_area_m2"
   | "lighting_package_count"
   | "ceiling_area_m2"
+  | "gypsum_flat_ceiling_area_m2"
+  | "edge_ceiling_length_m"
   | "wall_tile_area_m2"
   | "waterproof_area_m2"
   | "windowsill_length_m"
@@ -277,7 +281,8 @@ const DEFAULT_RULES: QuoteRule[] = [
   quoteRule("墙面批嵌", "latex_paint_area_m2", "m2", 0, 15, 10, DRY_SPACE_TYPES),
   quoteRule("墙面乳胶漆", "latex_paint_area_m2", "m2", 10, 0, 10, DRY_SPACE_TYPES),
   quoteRule("厨房卫生间集成吊顶", "ceiling_area_m2", "m2", 120, 0, 0, KITCHEN_BATHROOM_SPACE_TYPES),
-  quoteRule("轻钢龙骨平顶", "ceiling_area_m2", "m2", 60, 30, 90, GYPSUM_CEILING_SPACE_TYPES),
+  quoteRule("轻钢龙骨平顶", "gypsum_flat_ceiling_area_m2", "m2", 60, 30, 90, GYPSUM_CEILING_SPACE_TYPES),
+  quoteRule("双眼皮/边吊吊顶", "edge_ceiling_length_m", "M", 35, 15, 30, GYPSUM_CEILING_SPACE_TYPES),
   quoteRule("顶面批嵌", "ceiling_area_m2", "m2", 0, 15, 10, CEILING_PAINT_SPACE_TYPES),
   quoteRule("顶面乳胶漆", "ceiling_area_m2", "m2", 10, 0, 10, CEILING_PAINT_SPACE_TYPES),
   quoteRule("地面找平", "floor_area_m2", "m2", 0, 25, 30, WET_FLOOR_SPACE_TYPES),
@@ -309,9 +314,9 @@ const DEFAULT_RULES: QuoteRule[] = [
   quoteRule("弱电线管", "hydropower_weak_conduit_length_m", "M", 6, 2, 8),
   quoteRule("给水管", "hydropower_water_pipe_length_m", "M", 10, 4, 12),
   quoteRule("排水管", "hydropower_drain_pipe_length_m", "M", 12, 4, 14),
-  quoteRule("材料搬运费", "building_area_m2", "M2", 0, 0, 8),
-  quoteRule("垃圾清运费", "building_area_m2", "M2", 0, 0, 10),
-  quoteRule("地面砖现场维护费", "building_area_m2", "M2", 0, 3, 5),
+  quoteRule("材料搬运费", "building_area_m2", "M2", 0, 3, 12),
+  quoteRule("垃圾清运费", "building_area_m2", "M2", 0, 0, 12),
+  quoteRule("墙地面砖现场保护", "building_area_m2", "M2", 0, 6, 15),
   quoteRule("墙面贴瓷砖(600X1200)", "wall_tile_area_m2", "m2", 40, 8, 50),
   quoteRule("墙地面防漏处理", "waterproof_area_m2", "m2", 35, 7, 18, WET_FLOOR_SPACE_TYPES),
   quoteRule("窗台石铺贴", "windowsill_length_m", "M", 0, 20, 25, WINDOWSILL_PAVING_SPACE_TYPES),
@@ -322,9 +327,9 @@ const DEFAULT_RULES: QuoteRule[] = [
   quoteRule("拆改及拆墙", "demolition_wall_area_m2", "M2", 0, 10, 60),
   quoteRule("外墙批嵌以及修补", "manual_count", "M2", 20, 15, 35),
   quoteRule("砖墙门窗洞过梁", "manual_count", "支", 100, 0, 20),
-  quoteRule("水泥墙开槽", "building_area_m2", "M2", 0, 3, 6),
+  quoteRule("水泥墙开槽", "building_area_m2", "M2", 0, 4, 8),
   quoteRule("打混凝土过梁孔", "building_area_tenth_count", "个", 0, 0, 35),
-  quoteRule("厨房、卫生间排污管包隔音棉", "kitchen_bathroom_pipe_insulation_length_m", "M", 0, 20, 15),
+  quoteRule("厨房、卫生间排污管包隔音棉", "kitchen_bathroom_pipe_insulation_length_m", "M", 0, 35, 15),
   quoteRule("补线、管槽及零星修补", "building_area_m2", "M2", 0, 2.5, 3),
   quoteRule("背景墙", "background_wall_area_m2", "M2", 280, 0, 0),
   quoteRule("入户门", "entry_door_count", "樘", 2500, 0, 0),
@@ -352,7 +357,7 @@ const DEFAULT_RULES: QuoteRule[] = [
   quoteRule("窗帘", "curtain_box_length_m", "M", 50, 20, 0),
   quoteRule("窗台石", "windowsill_length_m", "M", 65, 0, 0, WINDOWSILL_PAVING_SPACE_TYPES),
   quoteRule("全屋保洁", "cleaning_package_count", "套", 0, 0, 0),
-  quoteRule("暗窗帘箱", "curtain_wall_width_m", "M", 65, 0, 45, CURTAIN_SPACE_TYPES),
+  quoteRule("暗窗帘箱", "curtain_wall_width_m", "M", 35, 10, 45, CURTAIN_SPACE_TYPES),
 ];
 
 const APARTMENT_PENDING_METRICS: PendingQuoteMetric[] = [];
@@ -361,6 +366,8 @@ const METRIC_TO_ROW_FIELD: Record<DirectFieldRowQuoteMetric, QuantityRowMetric> 
   latex_paint_area_m2: "latexPaintAreaM2",
   floor_area_m2: "floorAreaM2",
   ceiling_area_m2: "ceilingAreaM2",
+  gypsum_flat_ceiling_area_m2: "gypsumFlatCeilingAreaM2",
+  edge_ceiling_length_m: "edgeCeilingLengthM",
   wall_tile_area_m2: "wallTileAreaM2",
   waterproof_area_m2: "waterproofAreaM2",
   windowsill_length_m: "windowsillLengthM",
@@ -534,7 +541,7 @@ export function curtainQuoteCandidates(rows: QuantityRow[]): CurtainQuoteCandida
       item_name: "暗窗帘箱",
       quantity: round2(row.curtainWallWidthM),
       unit: "M",
-      unit_price: 110,
+      unit_price: 90,
       source: row.curtainWallWidthSource as CurtainQuoteCandidate["source"],
       note: "已进入金额汇总",
     }));
@@ -669,6 +676,9 @@ function rowRuleQuantity(row: QuantityRow, rule: QuoteRule & { metric: RowQuoteM
   }
   if (rule.metric === "stair_tread_count") {
     return stairTreadCount(row.heightM);
+  }
+  if (rule.metric === "gypsum_flat_ceiling_area_m2") {
+    return round2(row.gypsumFlatCeilingAreaM2 ?? row.ceilingAreaM2);
   }
   return round2(row[METRIC_TO_ROW_FIELD[rule.metric]] ?? 0);
 }
@@ -952,6 +962,8 @@ function isQuoteMetric(metric: unknown): metric is QuoteMetric {
     metric === "plumbing_scope_area_m2" ||
     metric === "lighting_package_count" ||
     metric === "ceiling_area_m2" ||
+    metric === "gypsum_flat_ceiling_area_m2" ||
+    metric === "edge_ceiling_length_m" ||
     metric === "wall_tile_area_m2" ||
     metric === "waterproof_area_m2" ||
     metric === "windowsill_length_m" ||
@@ -1009,15 +1021,15 @@ function ruleAppliesToRow(rule: QuoteRule, row: QuantityRow) {
   if (rule.metric === "curtain_wall_width_m" && !curtainWallWidthIsQuoteReady(row.curtainWallWidthSource)) {
     return false;
   }
-  if (rule.metric === "ceiling_area_m2" && row.spaceType === "露台") {
+  if ((rule.metric === "ceiling_area_m2" || rule.metric === "gypsum_flat_ceiling_area_m2" || rule.metric === "edge_ceiling_length_m") && row.spaceType === "露台") {
     return false;
   }
-  if (rule.metric === "ceiling_area_m2" && KITCHEN_BATHROOM_SPACE_TYPES.includes(row.spaceType)) {
+  if ((rule.metric === "ceiling_area_m2" || rule.metric === "gypsum_flat_ceiling_area_m2" || rule.metric === "edge_ceiling_length_m") && KITCHEN_BATHROOM_SPACE_TYPES.includes(row.spaceType)) {
     const finishType = row.ceilingFinishType ?? "integrated";
     if (rule.item_name === "厨房卫生间集成吊顶") {
       return finishType === "integrated";
     }
-    if (["轻钢龙骨平顶", "顶面批嵌", "顶面乳胶漆"].includes(rule.item_name)) {
+    if (["轻钢龙骨平顶", "双眼皮/边吊吊顶", "顶面批嵌", "顶面乳胶漆"].includes(rule.item_name)) {
       return finishType === "gypsum";
     }
   }

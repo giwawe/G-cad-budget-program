@@ -50,6 +50,7 @@ import {
   updateQuoteRulePricePart,
   withDefaultQuoteRuleCoverage,
 } from "@/lib/quote-mapping";
+import { shouldResetSavedQuoteRules } from "@/lib/quote-rule-storage";
 import { buildReviewSnapshot, parseReviewSnapshot, reviewSnapshotFileName } from "@/lib/review-snapshot";
 import type { CalibrationComparison, CeilingFinishType, CurtainWallWidthSource, DrawingGeometry, HydropowerEstimate, QuantityRow, QuantitySummary, ReviewStatus } from "@/lib/types";
 
@@ -57,7 +58,7 @@ const DEFAULT_DOOR_HEIGHT_M = 2.1;
 const FULL_WALL_TILE_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 const DEFAULT_INTEGRATED_CEILING_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 const QUOTE_RULES_STORAGE_KEY = "cad-budget-program.quote-rules.v2";
-const DEFAULT_QUOTE_RULES_STORAGE_VERSION = 2;
+const DEFAULT_QUOTE_RULES_STORAGE_VERSION = 4;
 const QUOTE_RULE_GROUPS_STORAGE_KEY = "cad-budget-program.quote-rule-groups.v1";
 const ALUMINUM_WINDOW_ITEM_NAME = "铝合金封门窗";
 const MANUAL_QUOTE_OPTION_ITEMS = [{ itemName: ALUMINUM_WINDOW_ITEM_NAME, unit: "M2", hint: "按窗户实际面积，默认不计价" }];
@@ -69,6 +70,7 @@ const quoteRuleGroups = [
       "墙面批嵌",
       "墙面乳胶漆",
       "轻钢龙骨平顶",
+      "双眼皮/边吊吊顶",
       "顶面批嵌",
       "顶面乳胶漆",
       "厨房卫生间集成吊顶",
@@ -129,7 +131,7 @@ const quoteRuleGroups = [
       "水路布管",
       "材料搬运费",
       "垃圾清运费",
-      "地面砖现场维护费",
+      "墙地面砖现场保护",
       "全屋保洁",
     ]),
   },
@@ -190,6 +192,9 @@ type ApiQuantityRow = {
   gross_floor_area_m2?: number;
   floor_area_m2: number;
   ceiling_area_m2: number;
+  gypsum_flat_ceiling_area_m2?: number;
+  edge_ceiling_area_m2?: number;
+  edge_ceiling_length_m?: number;
   void_area_m2?: number;
   ceiling_finish_type?: CeilingFinishType;
   wall_measure_length_m: number;
@@ -272,6 +277,9 @@ function toQuantityRow(row: ApiQuantityRow): QuantityRow {
     grossFloorAreaM2: row.gross_floor_area_m2 ?? row.floor_area_m2,
     floorAreaM2: row.floor_area_m2,
     ceilingAreaM2: row.ceiling_area_m2,
+    gypsumFlatCeilingAreaM2: row.gypsum_flat_ceiling_area_m2 ?? row.ceiling_area_m2,
+    edgeCeilingAreaM2: row.edge_ceiling_area_m2 ?? 0,
+    edgeCeilingLengthM: row.edge_ceiling_length_m ?? 0,
     voidAreaM2: row.void_area_m2 ?? 0,
     ceilingFinishType: row.ceiling_finish_type ?? defaultCeilingFinishType(row.space_type),
     wallMeasureLengthM: row.wall_measure_length_m,
@@ -485,7 +493,8 @@ export function UploadWorkbench({
       if (!Array.isArray(parsed.rules)) {
         throw new Error("saved quote rules are invalid");
       }
-      if (parsed.fileName === DEFAULT_QUOTE_RULES_NAME && parsed.defaultVersion !== DEFAULT_QUOTE_RULES_STORAGE_VERSION) {
+      if (shouldResetSavedQuoteRules({ fileName: parsed.fileName, defaultVersion: parsed.defaultVersion, currentVersion: DEFAULT_QUOTE_RULES_STORAGE_VERSION, defaultRuleName: DEFAULT_QUOTE_RULES_NAME })) {
+        window.localStorage.removeItem(QUOTE_RULES_STORAGE_KEY);
         return;
       }
       const restoredRules = withDefaultQuoteRuleCoverage(parseQuoteRules(JSON.stringify(parsed.rules)));
@@ -1744,7 +1753,7 @@ export function UploadWorkbench({
   );
 }
 
-const layers = ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_EXT_WALL", "QUOTE_WALL_TILE", "QUOTE_NEW_WALL", "QUOTE_DEMO_WALL", "QUOTE_BASE_CABINET", "QUOTE_WALL_CABINET", "QUOTE_CUSTOM", "QUOTE_TOILET", "QUOTE_BATHROOM_VANITY", "QUOTE_WINDOW", "QUOTE_DOOR", "QUOTE_FLOOR", "QUOTE_HEIGHT"];
+const layers = ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_EXT_WALL", "QUOTE_WALL_TILE", "QUOTE_NEW_WALL", "QUOTE_DEMO_WALL", "QUOTE_CAST_SLAB", "QUOTE_EDGE_CEILING", "QUOTE_BASE_CABINET", "QUOTE_WALL_CABINET", "QUOTE_CUSTOM", "QUOTE_TOILET", "QUOTE_BATHROOM_VANITY", "QUOTE_WINDOW", "QUOTE_DOOR", "QUOTE_FLOOR", "QUOTE_HEIGHT"];
 
 const statusLabels: Record<ReviewStatus, string> = {
   pending_review: "待确认",
