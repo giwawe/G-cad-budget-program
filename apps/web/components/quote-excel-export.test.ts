@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const uploadWorkbenchSource = readFileSync(new URL("./upload-workbench.tsx", import.meta.url), "utf8");
+const drawingReviewSource = readFileSync(new URL("./drawing-review.tsx", import.meta.url), "utf8");
+const hydropowerReviewPanelSource = readFileSync(new URL("./hydropower-review-panel.tsx", import.meta.url), "utf8");
 
 assert.ok(uploadWorkbenchSource.includes("buildQuoteExcelHtml"), "workbench should build Excel draft content from generated quote mapping");
 assert.ok(uploadWorkbenchSource.includes("quoteExcelFileName"), "workbench should use the Excel draft filename helper");
@@ -36,9 +38,25 @@ assert.ok(uploadWorkbenchSource.includes("暂不接入"), "quote integration sta
 assert.ok(uploadWorkbenchSource.includes("manualItems: manualQuoteItemQuantities"), "Excel draft export should apply manual quote item quantities");
 assert.ok(uploadWorkbenchSource.includes("excelManualItemQuantities: manualQuoteItemQuantities"), "review snapshots should persist manual quote item quantities");
 assert.ok(uploadWorkbenchSource.includes("manualQuoteInputsFromQuantities(snapshot.excel_manual_item_quantities)"), "review snapshot import should restore manual quote item inputs");
+assert.ok(uploadWorkbenchSource.includes('buildHydropowerEstimate'), "workbench should build a hydropower estimate from rows and drawing");
+assert.ok(uploadWorkbenchSource.includes("HydropowerReviewPanel"), "workbench should render the hydropower review panel");
+assert.ok(uploadWorkbenchSource.includes("const [hydropowerOverride, setHydropowerOverride]"), "workbench should keep hydropower override state");
+assert.ok(uploadWorkbenchSource.includes("hydropowerSummary: hydropowerEstimate.summary"), "quote mapping export should pass hydropower summary into quote mapping");
+assert.ok(uploadWorkbenchSource.includes("hydropower: hydropowerEstimate"), "review snapshot export should persist the current hydropower estimate");
+assert.ok(uploadWorkbenchSource.includes("setHydropowerOverride(snapshot.hydropower ?? null)"), "review snapshot import should restore hydropower overrides");
+assert.ok(uploadWorkbenchSource.includes("hydropowerPoints={hydropowerEstimate.points}"), "drawing review should receive hydropower point overlays from the workbench");
 assert.ok(!uploadWorkbenchSource.includes('{ itemName: "入户门"'), "entry door should be auto quoted instead of shown as a manual Excel option");
 assert.ok(uploadWorkbenchSource.includes("bathroomRowsFromRows(rows)"), "manual quote options should use billable bathroom rows");
 assert.ok(uploadWorkbenchSource.includes("manualQuoteInputsFromBathroomChoices"), "manual quote options should aggregate per-bathroom choices");
 assert.ok(uploadWorkbenchSource.includes("manualBathroomChoices"), "manual quote options should expose per-bathroom choice controls");
 assert.ok(uploadWorkbenchSource.includes('const selectedShower = choice.shower ?? "淋浴隔断"'), "bathroom shower choice should default to shower partition in the UI");
 assert.ok(uploadWorkbenchSource.includes("application/vnd.ms-excel;charset=utf-8"), "Excel draft download should use an Excel-compatible content type");
+assert.ok(drawingReviewSource.includes("hydropowerPoints?: HydropowerPoint[]"), "drawing review should accept hydropower points as an optional overlay prop");
+assert.ok(drawingReviewSource.includes("showHydropowerPoints"), "drawing review should expose a hydropower point layer toggle");
+assert.ok(drawingReviewSource.includes("svgHydropowerPoint"), "drawing review should render hydropower point markers");
+assert.ok(drawingReviewSource.includes("水电点位"), "drawing review toolbar should show the hydropower overlay label");
+assert.ok(hydropowerReviewPanelSource.includes("HydropowerEstimate"), "hydropower review panel should type its estimate prop");
+assert.ok(hydropowerReviewPanelSource.includes("HydropowerPointKind"), "hydropower review panel should map point kinds to labels");
+assert.ok(hydropowerReviewPanelSource.includes("水电点位复核"), "hydropower review panel should render the review heading");
+assert.ok(hydropowerReviewPanelSource.includes("确认水电点位"), "hydropower review panel should render the confirm action");
+assert.ok(hydropowerReviewPanelSource.includes("onPointQuantityChange"), "hydropower review panel should let the user edit suggested point quantities");

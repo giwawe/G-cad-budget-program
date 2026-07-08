@@ -3,9 +3,11 @@
 import { ChangeEvent, Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { Download, FileUp, Layers3, Loader2, ReceiptText, Settings2 } from "lucide-react";
 import { DrawingReview } from "@/components/drawing-review";
+import { HydropowerReviewPanel } from "@/components/hydropower-review-panel";
 import { QuantityTable } from "@/components/quantity-table";
 import { calibrationTemplateFileName, quantityRowsToCalibrationTemplate } from "@/lib/calibration-template";
 import { resolveCalibrationDifference } from "@/lib/calibration-differences";
+import { buildHydropowerEstimate } from "@/lib/hydropower-estimate";
 import { quantityRowAnchorHref } from "@/lib/quantity-row-anchor";
 import {
   buildHealthFixListMarkdown,
@@ -49,7 +51,7 @@ import {
   withDefaultQuoteRuleCoverage,
 } from "@/lib/quote-mapping";
 import { buildReviewSnapshot, parseReviewSnapshot, reviewSnapshotFileName } from "@/lib/review-snapshot";
-import type { CalibrationComparison, CeilingFinishType, CurtainWallWidthSource, DrawingGeometry, QuantityRow, QuantitySummary, ReviewStatus } from "@/lib/types";
+import type { CalibrationComparison, CeilingFinishType, CurtainWallWidthSource, DrawingGeometry, HydropowerEstimate, QuantityRow, QuantitySummary, ReviewStatus } from "@/lib/types";
 
 const DEFAULT_DOOR_HEIGHT_M = 2.1;
 const FULL_WALL_TILE_SPACE_TYPES = new Set(["厨房", "卫生间"]);
@@ -383,6 +385,7 @@ export function UploadWorkbench({
   const [acceptedHealthCheckKeys, setAcceptedHealthCheckKeys] = useState<string[]>([]);
   const [manualQuoteItemInputs, setManualQuoteItemInputs] = useState<Record<string, string>>({});
   const [bathroomManualChoices, setBathroomManualChoices] = useState<Record<string, BathroomManualChoice>>({});
+  const [hydropowerOverride, setHydropowerOverride] = useState<HydropowerEstimate | null>(null);
 
   const excludedCount = useMemo(() => rows.filter((row) => row.status === "excluded").length, [rows]);
   const pendingQuoteMetrics = useMemo(() => apartmentPendingQuoteMetrics(), []);
@@ -390,6 +393,10 @@ export function UploadWorkbench({
   const bathroomRows = useMemo(() => bathroomRowsFromRows(rows), [rows]);
   const aluminumWindowSuggestedArea = useMemo(() => aluminumWindowSuggestedAreaFromRows(rows), [rows]);
   const manualQuoteItemQuantities = useMemo(() => manualQuoteQuantitiesFromInputs(manualQuoteItemInputs), [manualQuoteItemInputs]);
+  const hydropowerEstimate = useMemo(
+    () => buildHydropowerEstimate(rows, drawing, hydropowerOverride),
+    [rows, drawing, hydropowerOverride],
+  );
   const manualQuoteEditedCount = Object.keys(manualQuoteItemQuantities).length;
   const filteredQuoteRules = useMemo(() => {
     const keyword = quoteRuleSearch.trim().toLowerCase();
@@ -426,8 +433,8 @@ export function UploadWorkbench({
   const integratedCeilingPriceReminderItemsForMapping = generatedQuoteMapping ? integratedCeilingPriceReminderItems(generatedQuoteMapping.mapping) : [];
   const quoteExportRisks = generatedQuoteMapping ? exportQuoteMappingConfirmationMessages(generatedQuoteMapping.mapping) : [];
   const rawHealthChecks = useMemo(
-    () => buildQuantityHealthChecks({ rows, summary, quoteMapping: generatedQuoteMapping?.mapping ?? null }),
-    [rows, summary, generatedQuoteMapping],
+    () => buildQuantityHealthChecks({ rows, summary, quoteMapping: generatedQuoteMapping?.mapping ?? null, hydropower: hydropowerEstimate }),
+    [rows, summary, generatedQuoteMapping, hydropowerEstimate],
   );
   const healthChecks = useMemo(() => filterAcceptedHealthChecks(rawHealthChecks, acceptedHealthCheckKeys), [rawHealthChecks, acceptedHealthCheckKeys]);
   const healthSummary = useMemo(() => summarizeQuantityHealthChecks(healthChecks), [healthChecks]);
@@ -513,6 +520,7 @@ export function UploadWorkbench({
       setRows(nextRows);
       setDrawing(payload.drawing);
       setSummary(payload.summary);
+      setHydropowerOverride(null);
       setFileName(file.name);
       setCurrentDxfFile(file);
       setMessage(`解析完成：${payload.rows.length} 个空间`);
@@ -555,6 +563,7 @@ export function UploadWorkbench({
       setRows(nextRows);
       setSummary(payload.summary);
       setComparison(payload.comparison);
+      setHydropowerOverride(null);
       setGeneratedQuoteMapping(null);
       setGeneratedHealthFixList(null);
       setAcceptedHealthCheckKeys([]);
@@ -583,6 +592,7 @@ export function UploadWorkbench({
       setCalibrationFileName(snapshot.calibration_file ?? "");
       setCurrentDxfFile(null);
       setDrawing(null);
+      setHydropowerOverride(snapshot.hydropower ?? null);
       setGeneratedTemplate(null);
       setGeneratedHealthFixList(null);
       setGeneratedQuoteMapping(null);
@@ -627,7 +637,7 @@ export function UploadWorkbench({
 
   function handleDownloadReviewSnapshot() {
     const downloadName = reviewSnapshotFileName(fileName);
-    const content = `${JSON.stringify(buildReviewSnapshot({ fileName, calibrationFileName, rows, acceptedHealthCheckKeys, excelManualItemQuantities: manualQuoteItemQuantities, summary, comparison }), null, 2)}\n`;
+    const content = `${JSON.stringify(buildReviewSnapshot({ fileName, calibrationFileName, rows, acceptedHealthCheckKeys, excelManualItemQuantities: manualQuoteItemQuantities, summary, comparison, hydropower: hydropowerEstimate }), null, 2)}\n`;
     const blob = new Blob([content], { type: "application/json;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -683,10 +693,13 @@ export function UploadWorkbench({
   }
 
   function buildCurrentQuoteMapping() {
-    const baseMapping = buildQuoteMapping(rows, quoteRules, summary ?? undefined);
-    const quoteHealthChecks = filterAcceptedHealthChecks(buildQuantityHealthChecks({ rows, summary, quoteMapping: baseMapping }), acceptedHealthCheckKeys);
+    const baseMapping = buildQuoteMapping(rows, quoteRules, summary ?? undefined, { hydropowerSummary: hydropowerEstimate.summary });
+    const quoteHealthChecks = filterAcceptedHealthChecks(buildQuantityHealthChecks({ rows, summary, quoteMapping: baseMapping, hydropower: hydropowerEstimate }), acceptedHealthCheckKeys);
     const quoteHealthSummary = summarizeQuantityHealthChecks(quoteHealthChecks);
-    const mapping = buildQuoteMapping(rows, quoteRules, summary ?? undefined, quoteHealthSummary);
+    const mapping = buildQuoteMapping(rows, quoteRules, summary ?? undefined, {
+      hydropowerSummary: hydropowerEstimate.summary,
+      quantityHealthReadiness: quoteHealthSummary,
+    });
     const confirmationMessages = exportQuoteMappingConfirmationMessages(mapping);
     if (confirmationMessages.length > 0) {
       const confirmed = window.confirm(`当前报价映射仍有待确认风险，将作为草稿报价导出：\n\n${confirmationMessages.join("\n")}\n\n是否继续导出？`);
@@ -770,6 +783,23 @@ export function UploadWorkbench({
     URL.revokeObjectURL(url);
     setGeneratedQuoteRules({ fileName: downloadName, content });
     setMessage(`已生成报价规则模板：${downloadName}`);
+  }
+
+  function handleHydropowerConfirm() {
+    setHydropowerOverride({ ...hydropowerEstimate, reviewStatus: "confirmed" });
+    setGeneratedQuoteMapping(null);
+    setGeneratedHealthFixList(null);
+  }
+
+  function handleHydropowerPointQuantityChange(id: string, quantity: number) {
+    const safeQuantity = Number.isFinite(quantity) && quantity >= 0 ? Math.floor(quantity) : 0;
+    setHydropowerOverride({
+      ...hydropowerEstimate,
+      points: hydropowerEstimate.points.map((point) => (point.id === id ? { ...point, quantity: safeQuantity } : point)),
+      reviewStatus: "needs_review",
+    });
+    setGeneratedQuoteMapping(null);
+    setGeneratedHealthFixList(null);
   }
 
   async function handleCopyQuoteRulesTemplate() {
@@ -1646,8 +1676,15 @@ export function UploadWorkbench({
         </section>
       )}
 
+      <HydropowerReviewPanel
+        estimate={hydropowerEstimate}
+        onConfirm={handleHydropowerConfirm}
+        onPointQuantityChange={handleHydropowerPointQuantityChange}
+      />
+
       <DrawingReview
         drawing={drawing}
+        hydropowerPoints={hydropowerEstimate.points}
         rows={rows}
         summary={summary}
         onRenameSpace={handleRenameSpace}
