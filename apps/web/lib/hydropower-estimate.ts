@@ -119,13 +119,93 @@ export function buildHydropowerEstimate(
   }
 
   const points = rows.flatMap((row) => pointsForRow(row, drawing));
-  const pipes: HydropowerPipeEstimate[] = [];
+  const pipes = estimatePipes(points, drawing);
 
   return {
     points,
     pipes,
     summary: summarizePointsAndPipes(points, pipes),
     reviewStatus: "auto_estimated",
+  };
+}
+
+const STRONG_POINT_KINDS = new Set<HydropowerPointKind>([
+  "switch",
+  "standard_outlet",
+  "sofa_charging_outlet",
+  "heating_outlet",
+  "bed_end_fan_outlet",
+  "kitchen_counter_outlet",
+  "light",
+  "ac_circuit",
+  "high_power_circuit",
+  "bathroom_heater_circuit",
+  "smart_toilet_outlet",
+  "washing_machine_outlet",
+  "dryer_outlet",
+  "water_purifier_outlet",
+]);
+const WEAK_POINT_KINDS = new Set<HydropowerPointKind>(["weak_point"]);
+const WATER_POINT_KINDS = new Set<HydropowerPointKind>(["cold_water", "hot_water"]);
+const DRAIN_POINT_KINDS = new Set<HydropowerPointKind>(["drain", "floor_drain"]);
+
+function estimatePipes(points: HydropowerPoint[], drawing: DrawingGeometry | null): HydropowerPipeEstimate[] {
+  return points.flatMap((point) => {
+    const source = point.point ? "virtual_point_distance" : "fallback_count_factor";
+    const confidence = point.point ? point.confidence : "low";
+    const baseLength = source === "virtual_point_distance" ? distanceFromRoomCenter(point, drawing) : fallbackLengthForPoint(point);
+
+    if (STRONG_POINT_KINDS.has(point.kind)) {
+      return [pipeForPoint(point, "strong_conduit", "强电线管", baseLength, source, confidence)];
+    }
+    if (WEAK_POINT_KINDS.has(point.kind)) {
+      return [pipeForPoint(point, "weak_conduit", "弱电线管", baseLength, source, confidence)];
+    }
+    if (WATER_POINT_KINDS.has(point.kind)) {
+      return [pipeForPoint(point, "water_pipe", "给水管", baseLength, source, confidence)];
+    }
+    if (DRAIN_POINT_KINDS.has(point.kind)) {
+      return [pipeForPoint(point, "drain_pipe", "排水管", baseLength, source, confidence)];
+    }
+    return [];
+  });
+}
+
+function distanceFromRoomCenter(point: HydropowerPoint, drawing: DrawingGeometry | null): number {
+  const space = drawing?.spaces.find((entry) => entry.name === point.spaceName);
+  const center = space ? centerOf(space.points) : null;
+  if (!point.point || !center) {
+    return 2.5;
+  }
+  return round2(Math.hypot(point.point.x - center.x, point.point.y - center.y) * 1.15 + 1.2);
+}
+
+function fallbackLengthForPoint(point: HydropowerPoint): number {
+  if (WATER_POINT_KINDS.has(point.kind)) return 1.8;
+  if (DRAIN_POINT_KINDS.has(point.kind)) return 1.2;
+  if (point.kind === "ac_circuit" || point.kind === "high_power_circuit" || point.kind === "bathroom_heater_circuit") return 6;
+  return 2.5;
+}
+
+function pipeForPoint(
+  point: HydropowerPoint,
+  kind: HydropowerPipeEstimate["kind"],
+  label: string,
+  lengthM: number,
+  source: HydropowerPipeEstimate["source"],
+  confidence: HydropowerPipeEstimate["confidence"],
+): HydropowerPipeEstimate {
+  return {
+    id: `${point.id}-${kind}`,
+    floor: point.floor,
+    spaceName: point.spaceName,
+    spaceType: point.spaceType,
+    kind,
+    label,
+    lengthM: round2(lengthM),
+    source,
+    confidence,
+    note: source === "virtual_point_distance" ? "按推荐点位到空间中心/墙边干线估算" : "缺少点位坐标，按数量系数估算",
   };
 }
 
@@ -160,6 +240,21 @@ function summarizePointsAndPipes(points: HydropowerPoint[], pipes: HydropowerPip
     waterPipeLengthM: pipeLength("water_pipe"),
     drainPipeLengthM: pipeLength("drain_pipe"),
     lowConfidencePointCount: points.filter((point) => point.confidence === "low").length,
+  };
+}
+
+function centerOf(points: Array<{ x: number; y: number }>): { x: number; y: number } {
+  const total = points.reduce(
+    (accumulator, point) => ({
+      x: accumulator.x + point.x,
+      y: accumulator.y + point.y,
+    }),
+    { x: 0, y: 0 },
+  );
+
+  return {
+    x: round2(total.x / points.length),
+    y: round2(total.y / points.length),
   };
 }
 

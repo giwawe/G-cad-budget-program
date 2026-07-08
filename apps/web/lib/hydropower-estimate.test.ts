@@ -187,3 +187,18 @@ assert.ok((publicToilet?.point?.x ?? 0) > 5);
 assert.ok((mainVanity?.point?.x ?? 0) < 4);
 assert.ok((publicVanity?.point?.x ?? 0) > 5);
 assert.equal(twoBathroomEstimate.points.filter((point) => point.source === "fixture_point").length, 0);
+
+const pipeEstimate = buildHydropowerEstimate(hydropowerRows, roomDrawing);
+assert.ok(pipeEstimate.summary.strongConduitLengthM > 0);
+assert.ok(pipeEstimate.summary.weakConduitLengthM > 0);
+assert.ok(pipeEstimate.summary.waterPipeLengthM > 0);
+assert.ok(pipeEstimate.summary.drainPipeLengthM > 0);
+assert.ok(pipeEstimate.pipes.some((pipe) => pipe.source === "virtual_point_distance"));
+
+const fallbackPipeEstimate = buildHydropowerEstimate(
+  [baseRow({ spaceName: "无图形卧室", spaceType: "卧室" })],
+  emptyDrawing,
+);
+assert.ok(fallbackPipeEstimate.summary.strongConduitLengthM > 0);
+assert.ok(fallbackPipeEstimate.summary.lowConfidencePointCount > 0);
+assert.ok(fallbackPipeEstimate.pipes.some((pipe) => pipe.source === "fallback_count_factor"));
