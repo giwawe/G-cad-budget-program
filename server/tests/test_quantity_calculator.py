@@ -540,6 +540,49 @@ def test_large_door_opening_adds_door_width_back_and_deducts_selected_opening_ar
     assert "已选门洞扣减 3.78m2" in row.evidence
 
 
+def test_cast_slab_area_sums_room_boundaries():
+    space = SpaceInput(
+        name="客厅",
+        boundary_points_m=[(0, 0), (6, 0), (6, 5), (0, 5)],
+        cast_slab_areas_m2=[4.25, 1.5],
+    )
+
+    row = calculate_quantity_row(space, ProjectDefaults())
+
+    assert row.cast_slab_area_m2 == 5.75
+
+
+def test_edge_ceiling_area_deducts_gypsum_flat_ceiling_and_keeps_paint_ceiling_area():
+    space = SpaceInput(
+        name="客厅",
+        boundary_points_m=[(0, 0), (5, 0), (5, 4), (0, 4)],
+        edge_ceiling_areas_m2=[6, 4],
+        edge_ceiling_lengths_m=[8, 6],
+    )
+
+    row = calculate_quantity_row(space, ProjectDefaults())
+
+    assert row.ceiling_area_m2 == 20
+    assert row.edge_ceiling_area_m2 == 10
+    assert row.edge_ceiling_length_m == 14
+    assert row.gypsum_flat_ceiling_area_m2 == 10
+
+
+def test_edge_ceiling_can_zero_out_gypsum_flat_ceiling():
+    space = SpaceInput(
+        name="卧室",
+        boundary_points_m=[(0, 0), (4, 0), (4, 3), (0, 3)],
+        edge_ceiling_areas_m2=[12],
+        edge_ceiling_lengths_m=[14],
+    )
+
+    row = calculate_quantity_row(space, ProjectDefaults())
+
+    assert row.ceiling_area_m2 == 12
+    assert row.edge_ceiling_area_m2 == 12
+    assert row.gypsum_flat_ceiling_area_m2 == 0
+
+
 def test_suspected_large_door_opening_requires_review_without_default_deduction():
     space = SpaceInput(
         name="客厅",

@@ -6,6 +6,9 @@ export type CalibrationTemplateRow = {
   gross_floor_area_m2: number;
   floor_area_m2: number;
   ceiling_area_m2: number;
+  gypsum_flat_ceiling_area_m2: number;
+  edge_ceiling_area_m2: number;
+  edge_ceiling_length_m: number;
   void_area_m2: number;
   ceiling_finish_type: QuantityRow["ceilingFinishType"];
   wall_measure_length_m: number;
@@ -34,6 +37,7 @@ export type CalibrationTemplateRow = {
   demolition_wall_length_m: number;
   demolition_wall_area_m2: number;
   background_wall_area_m2: number;
+  cast_slab_area_m2: number;
   entry_door_count: number;
   interior_door_count: number;
   bathroom_door_count: number;
@@ -64,6 +68,9 @@ export function quantityRowsToCalibrationTemplate(rows: QuantityRow[], summary?:
     gross_floor_area_m2: row.grossFloorAreaM2 ?? row.floorAreaM2,
     floor_area_m2: row.floorAreaM2,
     ceiling_area_m2: row.ceilingAreaM2,
+    gypsum_flat_ceiling_area_m2: row.gypsumFlatCeilingAreaM2 ?? row.ceilingAreaM2,
+    edge_ceiling_area_m2: row.edgeCeilingAreaM2 ?? 0,
+    edge_ceiling_length_m: row.edgeCeilingLengthM ?? 0,
     void_area_m2: row.voidAreaM2 ?? 0,
     ceiling_finish_type: row.ceilingFinishType ?? defaultCeilingFinishType(row.spaceType),
     wall_measure_length_m: row.wallMeasureLengthM,
@@ -92,6 +99,7 @@ export function quantityRowsToCalibrationTemplate(rows: QuantityRow[], summary?:
     demolition_wall_length_m: row.demolitionWallLengthM,
     demolition_wall_area_m2: row.demolitionWallAreaM2,
     background_wall_area_m2: row.backgroundWallAreaM2 ?? 0,
+    cast_slab_area_m2: row.castSlabAreaM2 ?? 0,
     entry_door_count: row.entryDoorCount ?? 0,
     interior_door_count: row.interiorDoorCount,
     bathroom_door_count: row.bathroomDoorCount,

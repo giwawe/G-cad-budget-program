@@ -43,6 +43,9 @@ class SpaceInput:
     demolition_wall_lengths_m: list[float] = field(default_factory=list)
     background_wall_lengths_m: list[float] = field(default_factory=list)
     background_wall_heights_m: list[float | None] = field(default_factory=list)
+    cast_slab_areas_m2: list[float] = field(default_factory=list)
+    edge_ceiling_areas_m2: list[float] = field(default_factory=list)
+    edge_ceiling_lengths_m: list[float] = field(default_factory=list)
     base_cabinet_lengths_m: list[float] = field(default_factory=list)
     wall_cabinet_lengths_m: list[float] = field(default_factory=list)
     custom_cabinet_lengths_m: list[float] = field(default_factory=list)
@@ -98,6 +101,10 @@ class QuantityRow:
     demolition_wall_length_m: float
     demolition_wall_area_m2: float
     background_wall_area_m2: float
+    cast_slab_area_m2: float
+    edge_ceiling_area_m2: float
+    edge_ceiling_length_m: float
+    gypsum_flat_ceiling_area_m2: float
     entry_door_count: int
     interior_door_count: int
     bathroom_door_count: int

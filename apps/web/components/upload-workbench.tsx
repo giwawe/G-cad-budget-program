@@ -54,7 +54,8 @@ import type { CalibrationComparison, CeilingFinishType, CurtainWallWidthSource, 
 const DEFAULT_DOOR_HEIGHT_M = 2.1;
 const FULL_WALL_TILE_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 const DEFAULT_INTEGRATED_CEILING_SPACE_TYPES = new Set(["厨房", "卫生间"]);
-const QUOTE_RULES_STORAGE_KEY = "cad-budget-program.quote-rules.v1";
+const QUOTE_RULES_STORAGE_KEY = "cad-budget-program.quote-rules.v2";
+const DEFAULT_QUOTE_RULES_STORAGE_VERSION = 3;
 const QUOTE_RULE_GROUPS_STORAGE_KEY = "cad-budget-program.quote-rule-groups.v1";
 const ALUMINUM_WINDOW_ITEM_NAME = "铝合金封门窗";
 const MANUAL_QUOTE_OPTION_ITEMS = [{ itemName: ALUMINUM_WINDOW_ITEM_NAME, unit: "M2", hint: "按窗户实际面积，默认不计价" }];
@@ -85,6 +86,7 @@ const quoteRuleGroups = [
       "砌砖墙",
       "砌120厚砖墙",
       "砌240厚砖墙",
+      "现浇钢筋混凝土楼板",
       "拆改及拆墙",
       "外墙批嵌以及修补",
       "砖墙门窗洞过梁",
@@ -96,7 +98,7 @@ const quoteRuleGroups = [
   },
   {
     title: "水电/项目服务",
-    itemNames: new Set(["强电布线", "弱电布线", "水路布管", "材料搬运费", "垃圾清运费", "地面砖现场维护费", "全屋保洁"]),
+    itemNames: new Set(["强电布线", "弱电布线", "水路布管", "材料搬运费", "垃圾清运费", "墙地面砖现场保护", "全屋保洁"]),
   },
   {
     title: "门窗/定制",
@@ -130,7 +132,7 @@ const QUOTE_INTEGRATION_STATUS_GROUPS = [
     items: [
       "墙顶地面、墙砖/地砖、防水",
       "强弱电、水路、搬运、清运、成品保护",
-      "砌墙/拆墙/开槽/过梁孔/管槽修补",
+      "砌墙/拆墙/现浇楼板/开槽/过梁孔/管槽修补",
       "门类、推拉门、橱柜、全屋定制、洁具、灯饰、窗帘",
     ],
   },
@@ -140,7 +142,7 @@ const QUOTE_INTEGRATION_STATUS_GROUPS = [
   },
   {
     title: "固定占位/设计师手填",
-    items: ["铝合金封门窗、窗台石、蹲坑/马桶二选一、淋浴隔断/玻璃淋浴房二选一、砖墙门窗洞过梁"],
+    items: ["铝合金封门窗、蹲坑/马桶二选一、淋浴隔断/玻璃淋浴房二选一、砖墙门窗洞过梁"],
   },
   {
     title: "暂不接入",
@@ -155,6 +157,9 @@ type ApiQuantityRow = {
   gross_floor_area_m2?: number;
   floor_area_m2: number;
   ceiling_area_m2: number;
+  gypsum_flat_ceiling_area_m2?: number;
+  edge_ceiling_area_m2?: number;
+  edge_ceiling_length_m?: number;
   void_area_m2?: number;
   ceiling_finish_type?: CeilingFinishType;
   wall_measure_length_m: number;
@@ -184,6 +189,7 @@ type ApiQuantityRow = {
   demolition_wall_length_m: number;
   demolition_wall_area_m2: number;
   background_wall_area_m2?: number;
+  cast_slab_area_m2?: number;
   entry_door_count?: number;
   interior_door_count: number;
   bathroom_door_count: number;
@@ -236,6 +242,9 @@ function toQuantityRow(row: ApiQuantityRow): QuantityRow {
     grossFloorAreaM2: row.gross_floor_area_m2 ?? row.floor_area_m2,
     floorAreaM2: row.floor_area_m2,
     ceilingAreaM2: row.ceiling_area_m2,
+    gypsumFlatCeilingAreaM2: row.gypsum_flat_ceiling_area_m2 ?? row.ceiling_area_m2,
+    edgeCeilingAreaM2: row.edge_ceiling_area_m2 ?? 0,
+    edgeCeilingLengthM: row.edge_ceiling_length_m ?? 0,
     voidAreaM2: row.void_area_m2 ?? 0,
     ceilingFinishType: row.ceiling_finish_type ?? defaultCeilingFinishType(row.space_type),
     wallMeasureLengthM: row.wall_measure_length_m,
@@ -265,6 +274,7 @@ function toQuantityRow(row: ApiQuantityRow): QuantityRow {
     demolitionWallLengthM: row.demolition_wall_length_m ?? 0,
     demolitionWallAreaM2: row.demolition_wall_area_m2 ?? 0,
     backgroundWallAreaM2: row.background_wall_area_m2 ?? 0,
+    castSlabAreaM2: row.cast_slab_area_m2 ?? 0,
     entryDoorCount: row.entry_door_count ?? 0,
     interiorDoorCount: row.interior_door_count ?? 0,
     bathroomDoorCount: row.bathroom_door_count ?? 0,
@@ -439,9 +449,12 @@ export function UploadWorkbench({
       if (!savedRules) {
         return;
       }
-      const parsed = JSON.parse(savedRules) as { fileName?: unknown; rules?: unknown };
+      const parsed = JSON.parse(savedRules) as { fileName?: unknown; rules?: unknown; defaultVersion?: unknown };
       if (!Array.isArray(parsed.rules)) {
         throw new Error("saved quote rules are invalid");
+      }
+      if (parsed.fileName === DEFAULT_QUOTE_RULES_NAME && parsed.defaultVersion !== DEFAULT_QUOTE_RULES_STORAGE_VERSION) {
+        return;
       }
       const restoredRules = withDefaultQuoteRuleCoverage(parseQuoteRules(JSON.stringify(parsed.rules)));
       setQuoteRules(restoredRules);
@@ -457,7 +470,7 @@ export function UploadWorkbench({
     if (!quoteRulesStorageReady) {
       return;
     }
-    window.localStorage.setItem(QUOTE_RULES_STORAGE_KEY, JSON.stringify({ fileName: quoteRulesFileName, rules: quoteRules }));
+    window.localStorage.setItem(QUOTE_RULES_STORAGE_KEY, JSON.stringify({ fileName: quoteRulesFileName, rules: quoteRules, defaultVersion: DEFAULT_QUOTE_RULES_STORAGE_VERSION }));
   }, [quoteRulesStorageReady, quoteRules, quoteRulesFileName]);
 
   useEffect(() => {
@@ -1257,7 +1270,7 @@ export function UploadWorkbench({
         <div className="templateHeader">
           <div>
             <strong>Excel 可选补项</strong>
-            <span>数量留空时沿用自动识别或默认占位；填写后只影响 Excel 草稿。入户门、阳台推拉门、窗台石等 Excel 固定占位由自动识别或草稿模板处理。</span>
+            <span>数量留空时沿用自动识别或默认占位；填写后只影响 Excel 草稿。入户门、阳台推拉门和窗台石由自动识别结果处理。</span>
           </div>
           <div className="quoteRulesActions">
             <button type="button" disabled={manualQuoteEditedCount === 0} onClick={handleResetManualQuoteItems}>恢复默认</button>
@@ -1669,7 +1682,7 @@ export function UploadWorkbench({
   );
 }
 
-const layers = ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_EXT_WALL", "QUOTE_WALL_TILE", "QUOTE_NEW_WALL", "QUOTE_DEMO_WALL", "QUOTE_BASE_CABINET", "QUOTE_WALL_CABINET", "QUOTE_CUSTOM", "QUOTE_TOILET", "QUOTE_BATHROOM_VANITY", "QUOTE_WINDOW", "QUOTE_DOOR", "QUOTE_FLOOR", "QUOTE_HEIGHT"];
+const layers = ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_EXT_WALL", "QUOTE_WALL_TILE", "QUOTE_NEW_WALL", "QUOTE_DEMO_WALL", "QUOTE_CAST_SLAB", "QUOTE_EDGE_CEILING", "QUOTE_BASE_CABINET", "QUOTE_WALL_CABINET", "QUOTE_CUSTOM", "QUOTE_TOILET", "QUOTE_BATHROOM_VANITY", "QUOTE_WINDOW", "QUOTE_DOOR", "QUOTE_FLOOR", "QUOTE_HEIGHT"];
 
 const statusLabels: Record<ReviewStatus, string> = {
   pending_review: "待确认",

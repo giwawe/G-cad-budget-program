@@ -9,6 +9,9 @@ export type QuantityRow = {
   grossFloorAreaM2?: number;
   floorAreaM2: number;
   ceilingAreaM2: number;
+  gypsumFlatCeilingAreaM2?: number;
+  edgeCeilingAreaM2?: number;
+  edgeCeilingLengthM?: number;
   voidAreaM2?: number;
   ceilingFinishType?: CeilingFinishType;
   wallMeasureLengthM: number;
@@ -38,6 +41,7 @@ export type QuantityRow = {
   demolitionWallLengthM: number;
   demolitionWallAreaM2: number;
   backgroundWallAreaM2?: number;
+  castSlabAreaM2?: number;
   entryDoorCount?: number;
   interiorDoorCount: number;
   bathroomDoorCount: number;
@@ -106,11 +110,13 @@ export type DrawingGeometry = {
   measured_walls: DrawingSegment[];
   opening_edges?: DrawingSegment[];
   void_boundaries?: DrawingPoint[][];
+  edge_ceiling_boundaries?: DrawingPoint[][];
   railings?: DrawingSegment[];
   tile_walls: DrawingSegment[];
   new_walls: DrawingSegment[];
   demolition_walls: DrawingSegment[];
   background_walls?: DrawingSegment[];
+  cast_slab_boundaries?: DrawingPoint[][];
   base_cabinets: DrawingSegment[];
   wall_cabinets: DrawingSegment[];
   base_cabinet_boundaries?: DrawingPoint[][];
