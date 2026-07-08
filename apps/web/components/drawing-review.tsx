@@ -373,7 +373,7 @@ export function DrawingReview({
         <label className="drawingLayerToggle"><input type="checkbox" checked={showBathroomFixtures} onChange={(event) => setShowBathroomFixtures(event.target.checked)} />洁具 {visibleDrawing.toilets.length + visibleDrawing.bathroom_vanities.length}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showWindows} onChange={(event) => setShowWindows(event.target.checked)} />窗 {visibleDrawing.window_openings.length}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showDoors} onChange={(event) => setShowDoors(event.target.checked)} />门 {visibleDrawing.door_openings.length}</label>
-        <label className="drawingLayerToggle"><input type="checkbox" checked={showHydropowerPoints} onChange={(event) => setShowHydropowerPoints(event.target.checked)} />水电点位 {visibleHydropowerPoints.length}</label>
+        <label className="drawingLayerToggle" title="系统按空间轮廓和设备位置估算的推荐水电点位"><input type="checkbox" checked={showHydropowerPoints} onChange={(event) => setShowHydropowerPoints(event.target.checked)} />系统估算点位 {visibleHydropowerPoints.length}</label>
         {selectedWindow && (
           <div className="windowEditor">
             <span>窗宽 {selectedWindow.width_m.toFixed(2)} m</span>
@@ -407,7 +407,7 @@ export function DrawingReview({
             {showHydropowerPoints && hydropowerPoints?.filter((point) => point.point && (showAllFloors || point.floor === effectiveFloor)).map((point) => (
               <g key={point.id} className={`svgHydropowerPoint ${point.confidence}`}>
                 <circle cx={point.point!.x} cy={point.point!.y} r="0.08" fill={hydropowerPointColor(point.confidence)} stroke="#ffffff" strokeWidth="0.02" />
-                <title>{point.label} · {point.spaceName}</title>
+                <title>{`系统推荐点位：${point.label} · ${point.spaceName}`}</title>
               </g>
             ))}
             {showWindows && indexedWindows.map(({ window, index }) => (

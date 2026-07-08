@@ -28,7 +28,7 @@ assert.ok(uploadWorkbenchSource.includes("handleCollapseAllQuoteRuleGroups"), "q
 assert.ok(uploadWorkbenchSource.includes("handleExpandAllQuoteRuleGroups"), "quote rule panel should expand all groups at once");
 assert.ok(uploadWorkbenchSource.includes("全部收起"), "quote rule panel should expose collapse all action");
 assert.ok(uploadWorkbenchSource.includes("全部展开"), "quote rule panel should expose expand all action");
-assert.ok(uploadWorkbenchSource.includes("Excel 固定占位"), "manual Excel options should explain fixed placeholders");
+assert.ok(uploadWorkbenchSource.includes("自动识别结果处理"), "manual Excel options should explain auto quoted fixed items");
 assert.ok(uploadWorkbenchSource.includes("QUOTE_INTEGRATION_STATUS_GROUPS"), "quote panel should define quote integration status groups");
 assert.ok(uploadWorkbenchSource.includes("报价接入状态清单"), "quote panel should show the quote integration status summary");
 assert.ok(uploadWorkbenchSource.includes("已自动取数"), "quote integration status should include auto-quoted items");
@@ -54,7 +54,8 @@ assert.ok(uploadWorkbenchSource.includes("application/vnd.ms-excel;charset=utf-8
 assert.ok(drawingReviewSource.includes("hydropowerPoints?: HydropowerPoint[]"), "drawing review should accept hydropower points as an optional overlay prop");
 assert.ok(drawingReviewSource.includes("showHydropowerPoints"), "drawing review should expose a hydropower point layer toggle");
 assert.ok(drawingReviewSource.includes("svgHydropowerPoint"), "drawing review should render hydropower point markers");
-assert.ok(drawingReviewSource.includes("水电点位"), "drawing review toolbar should show the hydropower overlay label");
+assert.ok(drawingReviewSource.includes("系统估算点位"), "drawing review toolbar should mark the hydropower overlay as system-estimated");
+assert.ok(drawingReviewSource.includes("系统推荐点位"), "drawing review point tooltip should explain the overlay markers are recommendations");
 assert.ok(hydropowerReviewPanelSource.includes("HydropowerEstimate"), "hydropower review panel should type its estimate prop");
 assert.ok(hydropowerReviewPanelSource.includes("HydropowerPointKind"), "hydropower review panel should map point kinds to labels");
 assert.ok(hydropowerReviewPanelSource.includes("水电点位复核"), "hydropower review panel should render the review heading");

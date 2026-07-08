@@ -114,19 +114,33 @@ export function buildHydropowerEstimate(
   drawing: DrawingGeometry | null,
   overrides?: HydropowerEstimate | null,
 ): HydropowerEstimate {
-  if (overrides) {
-    return overrides;
-  }
-
-  const points = rows.flatMap((row) => pointsForRow(row, drawing));
+  const basePoints = rows.flatMap((row) => pointsForRow(row, drawing));
+  const points = overrides ? applyHydropowerOverrides(basePoints, overrides) : basePoints;
   const pipes = estimatePipes(points, drawing);
 
   return {
     points,
     pipes,
     summary: summarizePointsAndPipes(points, pipes),
-    reviewStatus: "auto_estimated",
+    reviewStatus: overrides?.reviewStatus ?? "auto_estimated",
   };
+}
+
+function applyHydropowerOverrides(points: HydropowerPoint[], overrides: HydropowerEstimate): HydropowerPoint[] {
+  const quantityByPointId = new Map(
+    overrides.points.map((point) => [
+      point.id,
+      Number.isFinite(point.quantity) && point.quantity >= 0 ? Math.floor(point.quantity) : 0,
+    ]),
+  );
+
+  return points.map((point) => {
+    const overrideQuantity = quantityByPointId.get(point.id);
+    if (overrideQuantity === undefined) {
+      return point;
+    }
+    return { ...point, quantity: overrideQuantity };
+  });
 }
 
 const STRONG_POINT_KINDS = new Set<HydropowerPointKind>([
@@ -154,7 +168,6 @@ function estimatePipes(points: HydropowerPoint[], drawing: DrawingGeometry | nul
     const source = point.point ? "virtual_point_distance" : "fallback_count_factor";
     const confidence = point.point ? point.confidence : "low";
     const baseLength = source === "virtual_point_distance" ? distanceFromRoomCenter(point, drawing) : fallbackLengthForPoint(point);
-
     if (STRONG_POINT_KINDS.has(point.kind)) {
       return [pipeForPoint(point, "strong_conduit", "强电线管", baseLength, source, confidence)];
     }
@@ -202,7 +215,7 @@ function pipeForPoint(
     spaceType: point.spaceType,
     kind,
     label,
-    lengthM: round2(lengthM),
+    lengthM: round2(lengthM * point.quantity),
     source,
     confidence,
     note: source === "virtual_point_distance" ? "按推荐点位到空间中心/墙边干线估算" : "缺少点位坐标，按数量系数估算",

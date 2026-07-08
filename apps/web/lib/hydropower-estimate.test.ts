@@ -195,6 +195,25 @@ assert.ok(pipeEstimate.summary.waterPipeLengthM > 0);
 assert.ok(pipeEstimate.summary.drainPipeLengthM > 0);
 assert.ok(pipeEstimate.pipes.some((pipe) => pipe.source === "virtual_point_distance"));
 
+const overriddenPoint = pipeEstimate.points.find((point) => point.kind === "standard_outlet");
+assert.ok(overriddenPoint, "expected a standard outlet point for override coverage");
+
+const recalculatedOverrideEstimate = buildHydropowerEstimate(hydropowerRows, roomDrawing, {
+  ...pipeEstimate,
+  points: pipeEstimate.points.map((point) => (point.id === overriddenPoint.id ? { ...point, quantity: 3 } : point)),
+  reviewStatus: "needs_review",
+});
+
+assert.equal(
+  recalculatedOverrideEstimate.summary.standardOutletCount,
+  pipeEstimate.summary.standardOutletCount + 2,
+  "override quantities should recompute hydropower summary totals",
+);
+assert.ok(
+  recalculatedOverrideEstimate.summary.strongConduitLengthM > pipeEstimate.summary.strongConduitLengthM,
+  "override quantities should recompute conduit totals",
+);
+
 const fallbackPipeEstimate = buildHydropowerEstimate(
   [baseRow({ spaceName: "无图形卧室", spaceType: "卧室" })],
   emptyDrawing,
