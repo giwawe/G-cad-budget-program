@@ -6,7 +6,6 @@ import type {
   HydropowerPipeEstimate,
   HydropowerPoint,
   HydropowerPointKind,
-  HydropowerSource,
   HydropowerSummary,
   QuantityRow,
 } from "./types";
@@ -217,7 +216,7 @@ function buildPoint(
   index: number,
   quantity: number,
 ): HydropowerPoint {
-  const anchor = anchorPoint(row, space, drawing, spec, index, quantity);
+  const anchor = anchorPoint(space, drawing, spec, index, quantity);
   return {
     id: `${row.floor}-${row.spaceName}-${spec.kind}-${index + 1}`,
     floor: row.floor,
@@ -227,63 +226,116 @@ function buildPoint(
     label: spec.label,
     quantity: 1,
     point: anchor.point,
-    source: anchor.source,
+    source: anchor.point ? "virtual_point" : "fallback_count",
     confidence: anchor.confidence,
-    note: anchor.point ? "系统按空间轮廓生成推荐点位" : "缺少空间几何，按数量候选生成",
+    note: anchor.note,
   };
 }
 
 function anchorPoint(
-  row: QuantityRow,
   space: DrawingSpace | null,
   drawing: DrawingGeometry | null,
   spec: PointSpec,
   index: number,
   quantity: number,
-): { point: DrawingPoint | null; source: HydropowerSource; confidence: "high" | "medium" | "low" } {
+): { point: DrawingPoint | null; confidence: "high" | "medium" | "low"; note: string } {
   if (!space || space.points.length === 0) {
-    return { point: null, source: "fallback_count", confidence: "low" };
-  }
-
-  if (spec.anchor === "toilet") {
-    const fixturePoint = drawing?.toilets[index];
-    if (fixturePoint) {
-      return { point: fixturePoint, source: "fixture_point", confidence: "high" };
-    }
-  }
-
-  if (spec.anchor === "vanity") {
-    const fixturePoint = drawing?.bathroom_vanities[index];
-    if (fixturePoint) {
-      return { point: fixturePoint, source: "fixture_point", confidence: "high" };
-    }
-  }
-
-  if (spec.anchor === "door") {
-    const fixturePoint = midpointOfSegment(drawing?.doors[index] ?? null);
-    if (fixturePoint) {
-      return { point: fixturePoint, source: "fixture_point", confidence: "high" };
-    }
-  }
-
-  if (spec.anchor === "cabinet") {
-    const fixturePoint =
-      midpointOfSegment(drawing?.base_cabinets[index] ?? null) ??
-      midpointOfSegment(drawing?.wall_cabinets[index] ?? null) ??
-      midpointOfSegment(drawing?.custom_cabinets[index] ?? null);
-    if (fixturePoint) {
-      return { point: fixturePoint, source: "fixture_point", confidence: "high" };
-    }
+    return { point: null, confidence: "low", note: "缺少空间几何，按数量候选生成" };
   }
 
   const bounds = boundsOf(space.points);
-  const point = pointForAnchor(bounds, spec.anchor, index, quantity);
+  const virtualPoint = pointForAnchor(bounds, spec.anchor, index, quantity);
+  const fixturePoint = fixturePointForAnchor(space, drawing, spec.anchor, virtualPoint);
+
+  if (!fixturePoint) {
+    return {
+      point: virtualPoint,
+      confidence: spec.anchor === "center" ? "high" : "medium",
+      note: "系统按空间轮廓生成推荐点位",
+    };
+  }
 
   return {
-    point,
-    source: "virtual_point",
+    point: blendPoints(virtualPoint, fixturePoint, 0.35),
     confidence: spec.anchor === "center" ? "high" : "medium",
+    note: "系统按空间轮廓生成推荐点位，并参考本房间设备位置",
   };
+}
+
+function fixturePointForAnchor(
+  space: DrawingSpace,
+  drawing: DrawingGeometry | null,
+  anchor: PointAnchor,
+  reference: DrawingPoint,
+): DrawingPoint | null {
+  if (!drawing) {
+    return null;
+  }
+
+  if (anchor === "toilet") {
+    return nearestPointInSpace(drawing.toilets, space, reference);
+  }
+
+  if (anchor === "vanity") {
+    return nearestPointInSpace(drawing.bathroom_vanities, space, reference);
+  }
+
+  if (anchor === "door") {
+    return nearestSegmentMidpointInSpace(drawing.doors, space, reference);
+  }
+
+  if (anchor === "cabinet") {
+    return (
+      nearestSegmentMidpointInSpace(drawing.base_cabinets, space, reference) ??
+      nearestSegmentMidpointInSpace(drawing.wall_cabinets, space, reference) ??
+      nearestSegmentMidpointInSpace(drawing.custom_cabinets, space, reference)
+    );
+  }
+
+  return null;
+}
+
+function nearestPointInSpace(points: DrawingPoint[], space: DrawingSpace, reference: DrawingPoint): DrawingPoint | null {
+  let bestPoint: DrawingPoint | null = null;
+  let bestDistance = Number.POSITIVE_INFINITY;
+
+  for (const point of points) {
+    if (!pointInSpaceOrBoundary(point, space.points)) {
+      continue;
+    }
+
+    const distance = distanceSquared(point, reference);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      bestPoint = point;
+    }
+  }
+
+  return bestPoint;
+}
+
+function nearestSegmentMidpointInSpace(
+  segments: Array<{ start: DrawingPoint; end: DrawingPoint }>,
+  space: DrawingSpace,
+  reference: DrawingPoint,
+): DrawingPoint | null {
+  let bestPoint: DrawingPoint | null = null;
+  let bestDistance = Number.POSITIVE_INFINITY;
+
+  for (const segment of segments) {
+    const midpoint = midpointOfSegment(segment);
+    if (!midpoint || !pointInSpaceOrBoundary(midpoint, space.points)) {
+      continue;
+    }
+
+    const distance = distanceSquared(midpoint, reference);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      bestPoint = midpoint;
+    }
+  }
+
+  return bestPoint;
 }
 
 function spaceForRow(row: QuantityRow, drawing: DrawingGeometry | null): DrawingSpace | null {
@@ -352,6 +404,69 @@ function midpointOfSegment(segment: { start: DrawingPoint; end: DrawingPoint } |
     x: round2((segment.start.x + segment.end.x) / 2),
     y: round2((segment.start.y + segment.end.y) / 2),
   };
+}
+
+function blendPoints(first: DrawingPoint, second: DrawingPoint, secondWeight: number): DrawingPoint {
+  const firstWeight = 1 - secondWeight;
+  return {
+    x: round2(first.x * firstWeight + second.x * secondWeight),
+    y: round2(first.y * firstWeight + second.y * secondWeight),
+  };
+}
+
+function distanceSquared(first: DrawingPoint, second: DrawingPoint): number {
+  const dx = first.x - second.x;
+  const dy = first.y - second.y;
+  return dx * dx + dy * dy;
+}
+
+function pointInSpaceOrBoundary(point: DrawingPoint, polygon: DrawingPoint[]): boolean {
+  if (pointInPolygon(point, polygon)) {
+    return true;
+  }
+
+  for (let index = 0; index < polygon.length; index += 1) {
+    const next = polygon[(index + 1) % polygon.length];
+    if (pointOnSegment(point, polygon[index], next)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function pointOnSegment(point: DrawingPoint, start: DrawingPoint, end: DrawingPoint): boolean {
+  const cross = (point.y - start.y) * (end.x - start.x) - (point.x - start.x) * (end.y - start.y);
+  if (Math.abs(cross) > 0.001) {
+    return false;
+  }
+
+  const dot = (point.x - start.x) * (end.x - start.x) + (point.y - start.y) * (end.y - start.y);
+  if (dot < -0.001) {
+    return false;
+  }
+
+  const squaredLength = distanceSquared(start, end);
+  if (dot - squaredLength > 0.001) {
+    return false;
+  }
+
+  return true;
+}
+
+function pointInPolygon(point: DrawingPoint, polygon: DrawingPoint[]): boolean {
+  let inside = false;
+  for (let index = 0, previousIndex = polygon.length - 1; index < polygon.length; previousIndex = index, index += 1) {
+    const current = polygon[index];
+    const previous = polygon[previousIndex];
+    const intersects =
+      current.y > point.y !== previous.y > point.y &&
+      point.x < ((previous.x - current.x) * (point.y - current.y)) / (previous.y - current.y) + current.x;
+    if (intersects) {
+      inside = !inside;
+    }
+  }
+  return inside;
 }
 
 function round2(value: number): number {

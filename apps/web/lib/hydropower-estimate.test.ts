@@ -137,21 +137,53 @@ assert.equal(estimate.points.filter((point) => point.kind === "heating_outlet").
 assert.equal(estimate.points.filter((point) => point.kind === "smart_toilet_outlet").length, 1);
 assert.equal(estimate.points.filter((point) => point.kind === "cold_water" && point.spaceType === "卫生间").length, 3);
 assert.ok(estimate.points.every((point) => point.id.includes(point.spaceName)));
-assert.ok(estimate.points.filter((point) => point.source === "virtual_point").length > 0);
-assert.ok(estimate.points.filter((point) => point.source === "fixture_point").length > 0);
+assert.ok(estimate.points.every((point) => point.source === "virtual_point"));
 
-const villaEstimate = buildHydropowerEstimate(
-  [
-    baseRow({ floor: "一层", spaceName: "一层-卧室", spaceType: "卧室" }),
-    baseRow({ floor: "二层", spaceName: "二层-卧室", spaceType: "卧室" }),
+const firstBathroomDrawing: DrawingGeometry = {
+  ...emptyDrawing,
+  spaces: [
+    { name: "一层-主卫", points: [{ x: 0, y: 0 }, { x: 4, y: 0 }, { x: 4, y: 3 }, { x: 0, y: 3 }] },
+    { name: "一层-公卫", points: [{ x: 5, y: 0 }, { x: 9.5, y: 0 }, { x: 9.5, y: 3 }, { x: 5, y: 3 }] },
   ],
-  {
-    ...emptyDrawing,
-    spaces: [
-      { name: "一层-卧室", points: [{ x: 0, y: 0 }, { x: 4, y: 0 }, { x: 4, y: 3 }, { x: 0, y: 3 }] },
-      { name: "二层-卧室", points: [{ x: 0, y: 5 }, { x: 4, y: 5 }, { x: 4, y: 8 }, { x: 0, y: 8 }] },
-    ],
-    bbox: { min_x: 0, min_y: 0, max_x: 4, max_y: 8 },
-  },
+  toilets: [
+    { x: 8.4, y: 1.6 },
+    { x: 1.3, y: 1.5 },
+  ],
+  bathroom_vanities: [
+    { x: 7.9, y: 0.5 },
+    { x: 0.9, y: 0.5 },
+  ],
+  bbox: { min_x: 0, min_y: 0, max_x: 9.5, max_y: 3 },
+};
+
+const twoBathroomEstimate = buildHydropowerEstimate(
+  [
+    baseRow({ spaceName: "一层-主卫", spaceType: "卫生间", toiletCount: 1, bathroomVanityCount: 1, floorAreaM2: 3.8 }),
+    baseRow({ spaceName: "一层-公卫", spaceType: "卫生间", toiletCount: 1, bathroomVanityCount: 1, floorAreaM2: 4.1 }),
+  ],
+  firstBathroomDrawing,
 );
-assert.equal(villaEstimate.points.filter((point) => point.kind === "bed_end_fan_outlet").length, 2);
+
+const mainToilet = twoBathroomEstimate.points.find(
+  (point) => point.spaceName === "一层-主卫" && point.label === "智能马桶插座",
+);
+const publicToilet = twoBathroomEstimate.points.find(
+  (point) => point.spaceName === "一层-公卫" && point.label === "智能马桶插座",
+);
+const mainVanity = twoBathroomEstimate.points.find(
+  (point) => point.spaceName === "一层-主卫" && point.label === "浴室柜冷水点",
+);
+const publicVanity = twoBathroomEstimate.points.find(
+  (point) => point.spaceName === "一层-公卫" && point.label === "浴室柜冷水点",
+);
+
+assert.ok(mainToilet?.point);
+assert.ok(publicToilet?.point);
+assert.ok(mainVanity?.point);
+assert.ok(publicVanity?.point);
+
+assert.ok((mainToilet?.point?.x ?? 0) < 4);
+assert.ok((publicToilet?.point?.x ?? 0) > 5);
+assert.ok((mainVanity?.point?.x ?? 0) < 4);
+assert.ok((publicVanity?.point?.x ?? 0) > 5);
+assert.equal(twoBathroomEstimate.points.filter((point) => point.source === "fixture_point").length, 0);
