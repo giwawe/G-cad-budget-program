@@ -48,6 +48,7 @@ import {
   updateQuoteRulePricePart,
   withDefaultQuoteRuleCoverage,
 } from "@/lib/quote-mapping";
+import { shouldResetSavedQuoteRules } from "@/lib/quote-rule-storage";
 import { buildReviewSnapshot, parseReviewSnapshot, reviewSnapshotFileName } from "@/lib/review-snapshot";
 import type { CalibrationComparison, CeilingFinishType, CurtainWallWidthSource, DrawingGeometry, QuantityRow, QuantitySummary, ReviewStatus } from "@/lib/types";
 
@@ -55,7 +56,7 @@ const DEFAULT_DOOR_HEIGHT_M = 2.1;
 const FULL_WALL_TILE_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 const DEFAULT_INTEGRATED_CEILING_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 const QUOTE_RULES_STORAGE_KEY = "cad-budget-program.quote-rules.v2";
-const DEFAULT_QUOTE_RULES_STORAGE_VERSION = 3;
+const DEFAULT_QUOTE_RULES_STORAGE_VERSION = 4;
 const QUOTE_RULE_GROUPS_STORAGE_KEY = "cad-budget-program.quote-rule-groups.v1";
 const ALUMINUM_WINDOW_ITEM_NAME = "铝合金封门窗";
 const MANUAL_QUOTE_OPTION_ITEMS = [{ itemName: ALUMINUM_WINDOW_ITEM_NAME, unit: "M2", hint: "按窗户实际面积，默认不计价" }];
@@ -453,7 +454,8 @@ export function UploadWorkbench({
       if (!Array.isArray(parsed.rules)) {
         throw new Error("saved quote rules are invalid");
       }
-      if (parsed.fileName === DEFAULT_QUOTE_RULES_NAME && parsed.defaultVersion !== DEFAULT_QUOTE_RULES_STORAGE_VERSION) {
+      if (shouldResetSavedQuoteRules({ fileName: parsed.fileName, defaultVersion: parsed.defaultVersion, currentVersion: DEFAULT_QUOTE_RULES_STORAGE_VERSION, defaultRuleName: DEFAULT_QUOTE_RULES_NAME })) {
+        window.localStorage.removeItem(QUOTE_RULES_STORAGE_KEY);
         return;
       }
       const restoredRules = withDefaultQuoteRuleCoverage(parseQuoteRules(JSON.stringify(parsed.rules)));
