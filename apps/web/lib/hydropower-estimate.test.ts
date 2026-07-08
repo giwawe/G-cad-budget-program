@@ -62,3 +62,96 @@ assert.deepEqual(summarizeHydropowerEstimate(emptyEstimate), {
   drainPipeLengthM: 0,
   lowConfidencePointCount: 0,
 });
+
+function baseRow(overrides: Partial<QuantityRow>): QuantityRow {
+  return {
+    floor: "一层",
+    spaceName: "一层-客厅",
+    spaceType: "客厅",
+    grossFloorAreaM2: 20,
+    floorAreaM2: 20,
+    ceilingAreaM2: 20,
+    voidAreaM2: 0,
+    wallMeasureLengthM: 18,
+    heightM: 2.8,
+    windowWidthTotalM: 2,
+    windowsillLengthM: 2,
+    curtainWallWidthM: 3,
+    curtainWallWidthSource: "matched_window_wall",
+    windowAreaM2: 3.6,
+    doorWidthTotalM: 0.9,
+    doorDeductAreaM2: 0,
+    wallGrossAreaM2: 50.4,
+    latexPaintAreaM2: 42,
+    wallTileMeasureLengthM: 0,
+    wallTileAreaM2: 0,
+    floorTilePieceCount: 19,
+    electricalScopeAreaM2: 20,
+    plumbingScopeAreaM2: 20,
+    newWallLengthM: 0,
+    newWallAreaM2: 0,
+    demolitionWallLengthM: 0,
+    demolitionWallAreaM2: 0,
+    interiorDoorCount: 0,
+    bathroomDoorCount: 0,
+    slidingDoorAreaM2: 0,
+    slidingDoorCasingLengthM: 0,
+    kitchenBaseCabinetLengthM: 0,
+    kitchenWallCabinetLengthM: 0,
+    customCabinetAreaM2: 0,
+    toiletCount: 0,
+    bathroomVanityCount: 0,
+    waterproofAreaM2: 0,
+    evidence: "",
+    anomalies: [],
+    status: "pending_review",
+    ...overrides,
+  };
+}
+
+const roomDrawing: DrawingGeometry = {
+  ...emptyDrawing,
+  spaces: [
+    { name: "一层-客厅", points: [{ x: 0, y: 0 }, { x: 6, y: 0 }, { x: 6, y: 4 }, { x: 0, y: 4 }] },
+    { name: "一层-厨房", points: [{ x: 7, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 3 }, { x: 7, y: 3 }] },
+    { name: "一层-卫生间", points: [{ x: 11, y: 0 }, { x: 13, y: 0 }, { x: 13, y: 2.2 }, { x: 11, y: 2.2 }] },
+  ],
+  base_cabinets: [{ start: { x: 7.2, y: 0.2 }, end: { x: 9.8, y: 0.2 } }],
+  toilets: [{ x: 12.4, y: 1.6 }],
+  bathroom_vanities: [{ x: 11.3, y: 0.4 }],
+  doors: [{ start: { x: 0.2, y: 0 }, end: { x: 1, y: 0 } }],
+  door_openings: [],
+  bbox: { min_x: 0, min_y: 0, max_x: 13, max_y: 4 },
+};
+
+const hydropowerRows = [
+  baseRow({ spaceName: "一层-客厅", spaceType: "客厅", floorAreaM2: 24 }),
+  baseRow({ spaceName: "一层-厨房", spaceType: "厨房", kitchenBaseCabinetLengthM: 2.6, floorAreaM2: 9 }),
+  baseRow({ spaceName: "一层-卫生间", spaceType: "卫生间", toiletCount: 1, bathroomVanityCount: 1, floorAreaM2: 4.4 }),
+];
+
+const estimate = buildHydropowerEstimate(hydropowerRows, roomDrawing);
+assert.equal(estimate.points.filter((point) => point.kind === "kitchen_counter_outlet").length, 6);
+assert.equal(estimate.points.filter((point) => point.kind === "sofa_charging_outlet").length, 2);
+assert.equal(estimate.points.filter((point) => point.kind === "heating_outlet").length, 1);
+assert.equal(estimate.points.filter((point) => point.kind === "smart_toilet_outlet").length, 1);
+assert.equal(estimate.points.filter((point) => point.kind === "cold_water" && point.spaceType === "卫生间").length, 3);
+assert.ok(estimate.points.every((point) => point.id.includes(point.spaceName)));
+assert.ok(estimate.points.filter((point) => point.source === "virtual_point").length > 0);
+assert.ok(estimate.points.filter((point) => point.source === "fixture_point").length > 0);
+
+const villaEstimate = buildHydropowerEstimate(
+  [
+    baseRow({ floor: "一层", spaceName: "一层-卧室", spaceType: "卧室" }),
+    baseRow({ floor: "二层", spaceName: "二层-卧室", spaceType: "卧室" }),
+  ],
+  {
+    ...emptyDrawing,
+    spaces: [
+      { name: "一层-卧室", points: [{ x: 0, y: 0 }, { x: 4, y: 0 }, { x: 4, y: 3 }, { x: 0, y: 3 }] },
+      { name: "二层-卧室", points: [{ x: 0, y: 5 }, { x: 4, y: 5 }, { x: 4, y: 8 }, { x: 0, y: 8 }] },
+    ],
+    bbox: { min_x: 0, min_y: 0, max_x: 4, max_y: 8 },
+  },
+);
+assert.equal(villaEstimate.points.filter((point) => point.kind === "bed_end_fan_outlet").length, 2);
