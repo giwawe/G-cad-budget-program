@@ -254,8 +254,13 @@ assert.equal(mapping.items[15].amount, 487.63);
 const hydropowerMapping = buildQuoteMapping(rows, defaultQuoteRules(), { building_area_m2: 88.66 }, {
   hydropowerSummary,
 });
-assert.ok(hydropowerMapping.items.some((item) => item.item_name === "普通插座点位" && item.quantity === 20));
-assert.ok(hydropowerMapping.items.some((item) => item.item_name === "强电线管" && item.quantity === 86.5));
+assert.ok(hydropowerMapping.items.some((item) => item.item_name === "强电插座" && item.quantity === 37 && item.unit_price === 72));
+assert.ok(hydropowerMapping.items.some((item) => item.item_name === "设备专线" && item.quantity === 8 && item.unit_price === 180));
+assert.ok(hydropowerMapping.items.some((item) => item.item_name === "排水点" && item.quantity === 8 && item.unit_price === 200));
+assert.ok(hydropowerMapping.items.some((item) => item.item_name === "强电线管" && item.quantity === 86.5 && item.unit_price === 38));
+assert.equal(hydropowerMapping.items.some((item) => item.item_name === "普通插座点位"), false);
+assert.equal(hydropowerMapping.items.some((item) => item.item_name === "空调专线"), false);
+assert.equal(hydropowerMapping.items.some((item) => item.item_name === "冷水点位"), false);
 assert.equal(hydropowerMapping.items.some((item) => item.item_name === "强电布线"), false);
 assert.equal(hydropowerMapping.items.some((item) => item.item_name === "水路布管"), false);
 assert.deepEqual(hydropowerMapping.legacy_hydropower_area_rule_item_names, []);
@@ -592,7 +597,7 @@ assert.equal(dryAreaMapping.summary.total_amount, 600);
 
 const rules = defaultQuoteRules();
 assert.equal(DEFAULT_QUOTE_RULES_NAME, "商品房整装默认规则");
-assert.equal(rules.length, 81);
+assert.equal(rules.length, 74);
 assert.equal(rules[0].item_name, "墙面界面剂处理");
 assert.equal(rules[0].metric, "latex_paint_area_m2");
 assert.equal(rules[0].unit_price, 7);
@@ -763,34 +768,149 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "墙面瓷砖"), {
   labor_price: 0,
   space_types: undefined,
 });
-assert.deepEqual(rules.find((rule) => rule.item_name === "普通插座点位"), {
-  item_name: "普通插座点位",
-  metric: "hydropower_standard_outlet_count",
-  unit: "个",
-  unit_price: 45,
+assert.equal(rules.find((rule) => rule.item_name === "普通插座点位"), undefined);
+assert.equal(rules.find((rule) => rule.item_name === "沙发充电插座"), undefined);
+assert.equal(rules.find((rule) => rule.item_name === "空调专线"), undefined);
+assert.equal(rules.find((rule) => rule.item_name === "冷水点位"), undefined);
+assert.equal(rules.find((rule) => rule.item_name === "地漏点位"), undefined);
+assert.deepEqual(rules.find((rule) => rule.item_name === "强电插座"), {
+  item_name: "强电插座",
+  metric: "hydropower_strong_outlet_count",
+  unit: "位",
+  unit_price: 72,
+  material_price: 5,
+  auxiliary_price: 12,
+  labor_price: 55,
+  space_types: undefined,
+});
+assert.deepEqual(rules.find((rule) => rule.item_name === "开关"), {
+  item_name: "开关",
+  metric: "hydropower_switch_count",
+  unit: "位",
+  unit_price: 68,
+  material_price: 5,
+  auxiliary_price: 10,
+  labor_price: 53,
+  space_types: undefined,
+});
+assert.deepEqual(rules.find((rule) => rule.item_name === "灯位"), {
+  item_name: "灯位",
+  metric: "hydropower_light_count",
+  unit: "位",
+  unit_price: 110,
   material_price: 0,
-  auxiliary_price: 0,
-  labor_price: 45,
+  auxiliary_price: 15,
+  labor_price: 95,
+  space_types: undefined,
+});
+assert.deepEqual(rules.find((rule) => rule.item_name === "筒灯/射灯"), {
+  item_name: "筒灯/射灯",
+  metric: "hydropower_downlight_spotlight_count",
+  unit: "位",
+  unit_price: 95,
+  material_price: 0,
+  auxiliary_price: 15,
+  labor_price: 80,
+  space_types: undefined,
+});
+assert.deepEqual(rules.find((rule) => rule.item_name === "设备专线"), {
+  item_name: "设备专线",
+  metric: "hydropower_equipment_circuit_count",
+  unit: "位",
+  unit_price: 180,
+  material_price: 65,
+  auxiliary_price: 20,
+  labor_price: 95,
+  space_types: undefined,
+});
+assert.deepEqual(rules.find((rule) => rule.item_name === "弱电点位"), {
+  item_name: "弱电点位",
+  metric: "hydropower_weak_point_count",
+  unit: "位",
+  unit_price: 62,
+  material_price: 5,
+  auxiliary_price: 10,
+  labor_price: 47,
   space_types: undefined,
 });
 assert.deepEqual(rules.find((rule) => rule.item_name === "强电线管"), {
   item_name: "强电线管",
   metric: "hydropower_strong_conduit_length_m",
   unit: "M",
-  unit_price: 20,
-  material_price: 8,
-  auxiliary_price: 2,
-  labor_price: 10,
+  unit_price: 38,
+  material_price: 16,
+  auxiliary_price: 5,
+  labor_price: 17,
+  space_types: undefined,
+});
+assert.deepEqual(rules.find((rule) => rule.item_name === "强电箱"), {
+  item_name: "强电箱",
+  metric: "hydropower_strong_box_count",
+  unit: "套",
+  unit_price: 850,
+  material_price: 450,
+  auxiliary_price: 100,
+  labor_price: 300,
+  space_types: undefined,
+});
+assert.deepEqual(rules.find((rule) => rule.item_name === "弱电箱"), {
+  item_name: "弱电箱",
+  metric: "hydropower_weak_box_count",
+  unit: "套",
+  unit_price: 450,
+  material_price: 220,
+  auxiliary_price: 60,
+  labor_price: 170,
+  space_types: undefined,
+});
+assert.deepEqual(rules.find((rule) => rule.item_name === "分配电箱"), {
+  item_name: "分配电箱",
+  metric: "hydropower_distribution_box_count",
+  unit: "套",
+  unit_price: 0,
+  material_price: 0,
+  auxiliary_price: 0,
+  labor_price: 0,
+  space_types: undefined,
+});
+assert.deepEqual(rules.find((rule) => rule.item_name === "给水点"), {
+  item_name: "给水点",
+  metric: "hydropower_water_supply_point_count",
+  unit: "位",
+  unit_price: 160,
+  material_price: 50,
+  auxiliary_price: 25,
+  labor_price: 85,
+  space_types: undefined,
+});
+assert.deepEqual(rules.find((rule) => rule.item_name === "热水点"), {
+  item_name: "热水点",
+  metric: "hydropower_hot_water_point_count",
+  unit: "位",
+  unit_price: 180,
+  material_price: 55,
+  auxiliary_price: 30,
+  labor_price: 95,
+  space_types: undefined,
+});
+assert.deepEqual(rules.find((rule) => rule.item_name === "排水点"), {
+  item_name: "排水点",
+  metric: "hydropower_drainage_point_count",
+  unit: "位",
+  unit_price: 200,
+  material_price: 60,
+  auxiliary_price: 35,
+  labor_price: 105,
   space_types: undefined,
 });
 assert.deepEqual(rules.find((rule) => rule.item_name === "给水管"), {
   item_name: "给水管",
   metric: "hydropower_water_pipe_length_m",
   unit: "M",
-  unit_price: 26,
-  material_price: 10,
-  auxiliary_price: 4,
-  labor_price: 12,
+  unit_price: 55,
+  material_price: 22,
+  auxiliary_price: 10,
+  labor_price: 23,
   space_types: undefined,
 });
 assert.deepEqual(rules.find((rule) => rule.item_name === "全屋灯饰"), {

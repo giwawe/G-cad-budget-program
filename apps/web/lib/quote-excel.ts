@@ -51,6 +51,8 @@ const ROOM_SECTION_ITEM_NAMES = [
 
 const ONE_ITEM_PLACEHOLDER_NAMES = new Set<string>();
 const EXCEL_PLACEHOLDER_ITEM_NAMES = new Set<string>();
+const HYDROPOWER_STRONG_WEAK_ITEM_NAMES = ["强电插座", "开关", "灯位", "筒灯/射灯", "设备专线", "弱电点位", "强电线管", "弱电线管", "强电箱", "弱电箱", "分配电箱"];
+const HYDROPOWER_PLUMBING_ITEM_NAMES = ["给水点", "热水点", "排水点", "给水管", "排水管"];
 
 const FIXED_TEMPLATE_SECTIONS: QuoteTemplateSectionDefinition[] = [
   { title: "全屋拆改工程", itemNames: ["拆改及拆墙", "砌砖墙", "砌120厚砖墙", "砌240厚砖墙", "现浇钢筋混凝土楼板", "外墙批嵌以及修补"] },
@@ -61,27 +63,20 @@ const FIXED_TEMPLATE_SECTIONS: QuoteTemplateSectionDefinition[] = [
   {
     title: "水电工程",
     itemNames: [
-      "开关点位",
-      "普通插座点位",
-      "沙发充电插座",
-      "取暖设备插座",
-      "床尾风扇插座",
-      "厨房台面插座",
-      "灯位点位",
+      "强电插座",
+      "开关",
+      "灯位",
+      "筒灯/射灯",
+      "设备专线",
       "弱电点位",
-      "空调专线",
-      "大功率电器专线",
-      "浴霸/暖风机专线",
-      "智能马桶插座",
-      "洗衣机插座",
-      "烘干机插座",
-      "净水机插座",
-      "冷水点位",
-      "热水点位",
-      "排水点位",
-      "地漏点位",
       "强电线管",
       "弱电线管",
+      "强电箱",
+      "弱电箱",
+      "分配电箱",
+      "给水点",
+      "热水点",
+      "排水点",
       "给水管",
       "排水管",
     ],
@@ -125,29 +120,22 @@ const TEMPLATE_PRICES: Record<string, QuoteTemplatePrice> = {
   墙面瓷砖: { material: 55, auxiliary: 0, labor: 0, note: "600*1200 瓷砖，按墙面贴砖面积和 5% 损耗换算片数。" },
   瓷砖加工费: { material: 6, auxiliary: 0, labor: 0, note: "按当前贴砖面积生成候选，报价员可按实际加工米数调整。" },
   美缝: { material: 0, auxiliary: 10, labor: 0, note: "按当前地面铺砖面积与墙面贴砖面积生成候选。" },
-  开关点位: { material: 0, auxiliary: 0, labor: 35, note: "按水电点位估算生成。" },
-  普通插座点位: { material: 0, auxiliary: 0, labor: 45, note: "按水电点位估算生成。" },
-  沙发充电插座: { material: 0, auxiliary: 0, labor: 45, note: "按水电点位估算生成。" },
-  取暖设备插座: { material: 0, auxiliary: 0, labor: 45, note: "按水电点位估算生成。" },
-  床尾风扇插座: { material: 0, auxiliary: 0, labor: 45, note: "按水电点位估算生成。" },
-  厨房台面插座: { material: 0, auxiliary: 0, labor: 45, note: "按水电点位估算生成。" },
-  灯位点位: { material: 0, auxiliary: 0, labor: 35, note: "按水电点位估算生成。" },
-  弱电点位: { material: 0, auxiliary: 0, labor: 45, note: "按水电点位估算生成。" },
-  空调专线: { material: 0, auxiliary: 0, labor: 120, note: "按水电专线回路估算生成。" },
-  大功率电器专线: { material: 0, auxiliary: 0, labor: 120, note: "按水电专线回路估算生成。" },
-  "浴霸/暖风机专线": { material: 0, auxiliary: 0, labor: 120, note: "按水电专线回路估算生成。" },
-  智能马桶插座: { material: 0, auxiliary: 0, labor: 45, note: "按水电点位估算生成。" },
-  洗衣机插座: { material: 0, auxiliary: 0, labor: 45, note: "按水电点位估算生成。" },
-  烘干机插座: { material: 0, auxiliary: 0, labor: 45, note: "按水电点位估算生成。" },
-  净水机插座: { material: 0, auxiliary: 0, labor: 45, note: "按水电点位估算生成。" },
-  冷水点位: { material: 0, auxiliary: 0, labor: 65, note: "按水路点位估算生成。" },
-  热水点位: { material: 0, auxiliary: 0, labor: 65, note: "按水路点位估算生成。" },
-  排水点位: { material: 0, auxiliary: 0, labor: 65, note: "按水路点位估算生成。" },
-  地漏点位: { material: 0, auxiliary: 0, labor: 65, note: "按水路点位估算生成。" },
-  强电线管: { material: 8, auxiliary: 2, labor: 10, note: "按强电线管长度估算生成。" },
-  弱电线管: { material: 6, auxiliary: 2, labor: 8, note: "按弱电线管长度估算生成。" },
-  给水管: { material: 10, auxiliary: 4, labor: 12, note: "按给水管长度估算生成。" },
-  排水管: { material: 12, auxiliary: 4, labor: 14, note: "按排水管长度估算生成。" },
+  强电插座: { material: 5, auxiliary: 12, labor: 55, note: "不含面板；含底盒、开槽、穿线。" },
+  开关: { material: 5, auxiliary: 10, labor: 53, note: "不含面板；含底盒、开槽、穿线。" },
+  灯位: { material: 0, auxiliary: 15, labor: 95, note: "灯具由业主自购；含灯线预留和接线。" },
+  "筒灯/射灯": { material: 0, auxiliary: 15, labor: 80, note: "灯具由业主自购；数量由设计师复核。" },
+  设备专线: { material: 65, auxiliary: 20, labor: 95, note: "空调及设备专线，含专线、漏保和独立回路。" },
+  弱电点位: { material: 5, auxiliary: 10, labor: 47, note: "不含弱电面板；含底盒和穿线。" },
+  强电线管: { material: 16, auxiliary: 5, labor: 17, note: "含线管、2.5mm2线、开槽和封槽。" },
+  弱电线管: { material: 12, auxiliary: 4, labor: 14, note: "含线管、网线或电视线。" },
+  强电箱: { material: 450, auxiliary: 100, labor: 300, note: "含配电箱、空开和漏保，数量可调整。" },
+  弱电箱: { material: 220, auxiliary: 60, labor: 170, note: "含弱电箱和模块，数量可调整。" },
+  分配电箱: { material: 0, auxiliary: 0, labor: 0, note: "复式楼或别墅可选，默认不计价。" },
+  给水点: { material: 50, auxiliary: 25, labor: 85, note: "含PPR管、阀门和接头。" },
+  热水点: { material: 55, auxiliary: 30, labor: 95, note: "含PPR热水管和保温管。" },
+  排水点: { material: 60, auxiliary: 35, labor: 105, note: "含PVC管、存水弯和地漏。" },
+  给水管: { material: 22, auxiliary: 10, labor: 23, note: "含PPR管、管件和热熔。" },
+  排水管: { material: 25, auxiliary: 12, labor: 28, note: "含PVC管、弯头和胶水。" },
   材料搬运费: { material: 0, auxiliary: 3, labor: 12, note: "按建筑面积计，设计师可按是否含吊机调整单价。" },
   垃圾清运费: { material: 0, auxiliary: 0, labor: 12, note: "按建筑面积计，外运车费另计。" },
   墙地面砖现场保护: { material: 0, auxiliary: 6, labor: 15, note: "墙地面砖成品保护。" },
@@ -246,7 +234,7 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string, 
     .quoteMetaRow td { height: 14pt; }
     .quoteHeaderRow th { height: 28.75pt; }
     .quoteSubHeaderRow th { height: 20.75pt; }
-    .quoteSectionRow td { font-weight: 700; height: 14.75pt; }
+    .quoteSectionRow td, .quoteSubsectionRow td { font-weight: 700; height: 14.75pt; }
     .quoteItemRow td, .quoteSubtotalRow td, .quoteTotalRow td { height: 14.75pt; }
     .quoteSubtotalRow td, .quoteTotalRow td { font-weight: 700; }
     .quoteRiskRow td { color: #8a4b00; }
@@ -315,6 +303,9 @@ function quoteTemplateRowClass(row: string[]): string {
   if (row[0] && row.slice(2).every((cell) => cell === "")) {
     return "quoteSectionRow";
   }
+  if (!row[0] && row[1] && row.slice(2).every((cell) => cell === "")) {
+    return "quoteSubsectionRow";
+  }
   return "";
 }
 
@@ -367,9 +358,15 @@ function quoteTemplateSectionRows(
   const rows: string[][] = [sectionHeaderRow(section)];
   let rowIndex = 1;
   let subtotal = 0;
+  let currentSubsection = "";
   for (const templateItemName of section.itemNames) {
     const matchingItems = sectionItems.filter((item) => itemMatchesTemplate(item.item_name, templateItemName));
     const manualQuantity = manualQuantityForItem(templateItemName, options);
+    const subsection = hydropowerSubsectionForItem(section, templateItemName);
+    if (subsection && subsection !== currentSubsection && hydropowerSubsectionHasRows(subsection, sectionItems, options)) {
+      rows.push(subsectionHeaderRow(subsection));
+      currentSubsection = subsection;
+    }
     if (manualQuantity !== undefined) {
       for (const matchedItem of matchingItems) {
         remainingItems.delete(matchedItem);
@@ -512,6 +509,28 @@ function templateUnitForItem(itemName: string): string {
 
 function sectionHeaderRow(section: Pick<QuoteTemplateSection, "code" | "title">): string[] {
   return [section.code, section.title, "", "", "", "", "", "", ""];
+}
+
+function subsectionHeaderRow(title: string): string[] {
+  return ["", title, "", "", "", "", "", "", ""];
+}
+
+function hydropowerSubsectionForItem(section: QuoteTemplateSection, itemName: string): string {
+  if (section.title !== "水电工程") {
+    return "";
+  }
+  if (HYDROPOWER_STRONG_WEAK_ITEM_NAMES.includes(itemName)) {
+    return "强弱电工程";
+  }
+  if (HYDROPOWER_PLUMBING_ITEM_NAMES.includes(itemName)) {
+    return "给排水工程";
+  }
+  return "";
+}
+
+function hydropowerSubsectionHasRows(subsection: string, sectionItems: QuoteMapping["items"], options: QuoteExcelOptions): boolean {
+  const itemNames = subsection === "强弱电工程" ? HYDROPOWER_STRONG_WEAK_ITEM_NAMES : HYDROPOWER_PLUMBING_ITEM_NAMES;
+  return itemNames.some((itemName) => manualQuantityForItem(itemName, options) !== undefined || sectionItems.some((item) => itemMatchesTemplate(item.item_name, itemName)));
 }
 
 function sectionSubtotalRow(amount: number): string[] {

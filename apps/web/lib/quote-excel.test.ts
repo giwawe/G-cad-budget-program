@@ -244,14 +244,27 @@ const hydropowerSectionHtml = buildQuoteExcelHtml(
         floor: "全屋",
         space_name: "全屋",
         space_type: "全屋",
-        item_name: "开关点位",
-        quantity: 4,
-        unit: "个",
-        unit_price: 35,
-        material_price: 0,
-        auxiliary_price: 0,
-        labor_price: 35,
-        amount: 140,
+        item_name: "强电插座",
+        quantity: 37,
+        unit: "位",
+        unit_price: 72,
+        material_price: 5,
+        auxiliary_price: 12,
+        labor_price: 55,
+        amount: 2664,
+      },
+      {
+        floor: "全屋",
+        space_name: "全屋",
+        space_type: "全屋",
+        item_name: "设备专线",
+        quantity: 8,
+        unit: "位",
+        unit_price: 180,
+        material_price: 65,
+        auxiliary_price: 20,
+        labor_price: 95,
+        amount: 1440,
       },
       {
         floor: "全屋",
@@ -260,11 +273,24 @@ const hydropowerSectionHtml = buildQuoteExcelHtml(
         item_name: "强电线管",
         quantity: 86.5,
         unit: "M",
-        unit_price: 20,
-        material_price: 8,
-        auxiliary_price: 2,
-        labor_price: 10,
-        amount: 1730,
+        unit_price: 38,
+        material_price: 16,
+        auxiliary_price: 5,
+        labor_price: 17,
+        amount: 3287,
+      },
+      {
+        floor: "全屋",
+        space_name: "全屋",
+        space_type: "全屋",
+        item_name: "排水点",
+        quantity: 8,
+        unit: "位",
+        unit_price: 200,
+        material_price: 60,
+        auxiliary_price: 35,
+        labor_price: 105,
+        amount: 1600,
       },
       {
         floor: "全屋",
@@ -273,25 +299,32 @@ const hydropowerSectionHtml = buildQuoteExcelHtml(
         item_name: "给水管",
         quantity: 31.6,
         unit: "M",
-        unit_price: 26,
-        material_price: 10,
-        auxiliary_price: 4,
-        labor_price: 12,
-        amount: 821.6,
+        unit_price: 55,
+        material_price: 22,
+        auxiliary_price: 10,
+        labor_price: 23,
+        amount: 1738,
       },
     ],
     summary: {
       ...mapping.summary,
-      item_count: 3,
-      total_amount: 2691.6,
+      item_count: 5,
+      total_amount: 10729,
     },
   },
   "水电点位项目",
 );
-assert.ok(hydropowerSectionHtml.indexOf("<td>四</td><td>水电工程</td>") < hydropowerSectionHtml.indexOf("<td>开关点位</td>"));
-assert.ok(hydropowerSectionHtml.includes("<td>开关点位</td><td>个</td><td>4</td><td>0.00</td><td>0.00</td><td>35.00</td><td>140.00</td>"));
-assert.ok(hydropowerSectionHtml.includes("<td>强电线管</td><td>M</td><td>86.50</td><td>8.00</td><td>2.00</td><td>10.00</td><td>1730.00</td>"));
-assert.ok(hydropowerSectionHtml.includes("<td>给水管</td><td>M</td><td>31.60</td><td>10.00</td><td>4.00</td><td>12.00</td><td>821.60</td>"));
+assert.ok(hydropowerSectionHtml.indexOf("<td>四</td><td>水电工程</td>") < hydropowerSectionHtml.indexOf("<td>强电插座</td>"));
+assert.ok(hydropowerSectionHtml.indexOf("<td>强弱电工程</td>") < hydropowerSectionHtml.indexOf("<td>强电插座</td>"));
+assert.ok(hydropowerSectionHtml.indexOf("<td>给排水工程</td>") < hydropowerSectionHtml.indexOf("<td>排水点</td>"));
+assert.ok(hydropowerSectionHtml.includes("<td>强电插座</td><td>位</td><td>37</td><td>5.00</td><td>12.00</td><td>55.00</td><td>2664.00</td>"));
+assert.ok(hydropowerSectionHtml.includes("<td>设备专线</td><td>位</td><td>8</td><td>65.00</td><td>20.00</td><td>95.00</td><td>1440.00</td>"));
+assert.ok(hydropowerSectionHtml.includes("<td>排水点</td><td>位</td><td>8</td><td>60.00</td><td>35.00</td><td>105.00</td><td>1600.00</td>"));
+assert.ok(hydropowerSectionHtml.includes("<td>强电线管</td><td>M</td><td>86.50</td><td>16.00</td><td>5.00</td><td>17.00</td><td>3287.00</td>"));
+assert.ok(hydropowerSectionHtml.includes("<td>给水管</td><td>M</td><td>31.60</td><td>22.00</td><td>10.00</td><td>23.00</td><td>1738.00</td>"));
+assert.ok(!hydropowerSectionHtml.includes("<td>开关点位</td>"));
+assert.ok(!hydropowerSectionHtml.includes("<td>普通插座点位</td>"));
+assert.ok(!hydropowerSectionHtml.includes("<td>空调专线</td>"));
 assert.ok(!hydropowerSectionHtml.includes("<td>强电布线</td>"));
 assert.ok(!hydropowerSectionHtml.includes("<td>水路布管</td>"));
 

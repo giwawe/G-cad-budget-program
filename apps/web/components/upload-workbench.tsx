@@ -58,7 +58,7 @@ const DEFAULT_DOOR_HEIGHT_M = 2.1;
 const FULL_WALL_TILE_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 const DEFAULT_INTEGRATED_CEILING_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 const QUOTE_RULES_STORAGE_KEY = "cad-budget-program.quote-rules.v2";
-const DEFAULT_QUOTE_RULES_STORAGE_VERSION = 4;
+const DEFAULT_QUOTE_RULES_STORAGE_VERSION = 5;
 const QUOTE_RULE_GROUPS_STORAGE_KEY = "cad-budget-program.quote-rule-groups.v1";
 const ALUMINUM_WINDOW_ITEM_NAME = "铝合金封门窗";
 const MANUAL_QUOTE_OPTION_ITEMS = [{ itemName: ALUMINUM_WINDOW_ITEM_NAME, unit: "M2", hint: "按窗户实际面积，默认不计价" }];
@@ -103,27 +103,20 @@ const quoteRuleGroups = [
   {
     title: "水电/项目服务",
     itemNames: new Set([
-      "开关点位",
-      "普通插座点位",
-      "沙发充电插座",
-      "取暖设备插座",
-      "床尾风扇插座",
-      "厨房台面插座",
-      "灯位点位",
+      "强电插座",
+      "开关",
+      "灯位",
+      "筒灯/射灯",
+      "设备专线",
       "弱电点位",
-      "空调专线",
-      "大功率电器专线",
-      "浴霸/暖风机专线",
-      "智能马桶插座",
-      "洗衣机插座",
-      "烘干机插座",
-      "净水机插座",
-      "冷水点位",
-      "热水点位",
-      "排水点位",
-      "地漏点位",
       "强电线管",
       "弱电线管",
+      "强电箱",
+      "弱电箱",
+      "分配电箱",
+      "给水点",
+      "热水点",
+      "排水点",
       "给水管",
       "排水管",
       "强电布线",

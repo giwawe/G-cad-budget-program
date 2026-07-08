@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const uploadWorkbenchSource = readFileSync(new URL("./upload-workbench.tsx", import.meta.url), "utf8");
+const hydropowerPanelSource = readFileSync(new URL("./hydropower-review-panel.tsx", import.meta.url), "utf8");
 const drawingReviewSource = readFileSync(new URL("./drawing-review.tsx", import.meta.url), "utf8");
 const hydropowerReviewPanelSource = readFileSync(new URL("./hydropower-review-panel.tsx", import.meta.url), "utf8");
 
@@ -51,6 +52,11 @@ assert.ok(uploadWorkbenchSource.includes("manualQuoteInputsFromBathroomChoices")
 assert.ok(uploadWorkbenchSource.includes("manualBathroomChoices"), "manual quote options should expose per-bathroom choice controls");
 assert.ok(uploadWorkbenchSource.includes('const selectedShower = choice.shower ?? "淋浴隔断"'), "bathroom shower choice should default to shower partition in the UI");
 assert.ok(uploadWorkbenchSource.includes("application/vnd.ms-excel;charset=utf-8"), "Excel draft download should use an Excel-compatible content type");
+assert.ok(hydropowerPanelSource.includes("aggregateHydropowerQuoteSummary"), "hydropower panel should show aggregate quote categories");
+assert.ok(hydropowerPanelSource.includes("强电插座"), "hydropower panel should show strong outlet aggregate");
+assert.ok(hydropowerPanelSource.includes("设备专线"), "hydropower panel should show equipment circuit aggregate");
+assert.ok(hydropowerPanelSource.includes("给水点"), "hydropower panel should show water point aggregate");
+assert.ok(hydropowerPanelSource.includes("groupedPoints.map"), "hydropower panel should keep fine-grained per-space sources");
 assert.ok(drawingReviewSource.includes("hydropowerPoints?: HydropowerPoint[]"), "drawing review should accept hydropower points as an optional overlay prop");
 assert.ok(drawingReviewSource.includes("showHydropowerPoints"), "drawing review should expose a hydropower point layer toggle");
 assert.ok(drawingReviewSource.includes("svgHydropowerPoint"), "drawing review should render hydropower point markers");

@@ -1,5 +1,6 @@
 "use client";
 
+import { aggregateHydropowerQuoteSummary } from "@/lib/hydropower-quote-aggregation";
 import type { HydropowerEstimate, HydropowerPoint, HydropowerPointKind } from "@/lib/types";
 
 type Props = {
@@ -48,11 +49,16 @@ function formatPipeLength(length: number) {
   return `${length.toFixed(2)} M`;
 }
 
+function formatCount(count: number) {
+  return `${count.toFixed(0)} 位`;
+}
+
 export function HydropowerReviewPanel({ estimate, onConfirm, onPointQuantityChange }: Props) {
   if (!estimate) {
     return null;
   }
 
+  const quoteSummary = aggregateHydropowerQuoteSummary(estimate.summary);
   const groupedPoints = groupPoints(estimate.points);
   const reviewStatusLabel =
     estimate.reviewStatus === "confirmed"
@@ -75,6 +81,14 @@ export function HydropowerReviewPanel({ estimate, onConfirm, onPointQuantityChan
       </div>
 
       <div className="summaryCards">
+        <div><span>强电插座</span><strong>{formatCount(quoteSummary.strongOutletCount)}</strong></div>
+        <div><span>开关</span><strong>{formatCount(quoteSummary.switchCount)}</strong></div>
+        <div><span>灯位</span><strong>{formatCount(quoteSummary.lightCount)}</strong></div>
+        <div><span>设备专线</span><strong>{formatCount(quoteSummary.equipmentCircuitCount)}</strong></div>
+        <div><span>弱电点位</span><strong>{formatCount(quoteSummary.weakPointCount)}</strong></div>
+        <div><span>给水点</span><strong>{formatCount(quoteSummary.waterSupplyPointCount)}</strong></div>
+        <div><span>热水点</span><strong>{formatCount(quoteSummary.hotWaterPointCount)}</strong></div>
+        <div><span>排水点</span><strong>{formatCount(quoteSummary.drainagePointCount)}</strong></div>
         <div><span>强电线管</span><strong>{formatPipeLength(estimate.summary.strongConduitLengthM)}</strong></div>
         <div><span>弱电线管</span><strong>{formatPipeLength(estimate.summary.weakConduitLengthM)}</strong></div>
         <div><span>给水管</span><strong>{formatPipeLength(estimate.summary.waterPipeLengthM)}</strong></div>

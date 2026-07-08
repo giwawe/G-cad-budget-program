@@ -77,6 +77,16 @@ export type QuoteMetric =
   | "bathroom_vanity_count"
   | "bathroom_count"
   | "switch_socket_package_count"
+  | "hydropower_strong_outlet_count"
+  | "hydropower_switch_count"
+  | "hydropower_light_count"
+  | "hydropower_downlight_spotlight_count"
+  | "hydropower_equipment_circuit_count"
+  | "hydropower_strong_box_count"
+  | "hydropower_weak_box_count"
+  | "hydropower_distribution_box_count"
+  | "hydropower_water_supply_point_count"
+  | "hydropower_drainage_point_count"
   | "hydropower_switch_point_count"
   | "hydropower_standard_outlet_count"
   | "hydropower_sofa_charging_outlet_count"
@@ -110,6 +120,16 @@ type ProjectQuoteMetric =
   | "kitchen_bathroom_pipe_insulation_length_m"
   | "lighting_package_count"
   | "switch_socket_package_count"
+  | "hydropower_strong_outlet_count"
+  | "hydropower_switch_count"
+  | "hydropower_light_count"
+  | "hydropower_downlight_spotlight_count"
+  | "hydropower_equipment_circuit_count"
+  | "hydropower_strong_box_count"
+  | "hydropower_weak_box_count"
+  | "hydropower_distribution_box_count"
+  | "hydropower_water_supply_point_count"
+  | "hydropower_drainage_point_count"
   | "hydropower_switch_point_count"
   | "hydropower_standard_outlet_count"
   | "hydropower_sofa_charging_outlet_count"
@@ -291,29 +311,22 @@ const DEFAULT_RULES: QuoteRule[] = [
   quoteRule("墙面瓷砖", "wall_tile_piece_count", "片", 55, 0, 0, undefined, 40),
   quoteRule("瓷砖加工费", "tile_area_m2", "M2", 6, 0, 0),
   quoteRule("美缝", "tile_area_m2", "M2", 0, 10, 0),
-  quoteRule("开关点位", "hydropower_switch_point_count", "个", 0, 0, 35),
-  quoteRule("普通插座点位", "hydropower_standard_outlet_count", "个", 0, 0, 45),
-  quoteRule("沙发充电插座", "hydropower_sofa_charging_outlet_count", "个", 0, 0, 45),
-  quoteRule("取暖设备插座", "hydropower_heating_outlet_count", "个", 0, 0, 45),
-  quoteRule("床尾风扇插座", "hydropower_bed_end_fan_outlet_count", "个", 0, 0, 45),
-  quoteRule("厨房台面插座", "hydropower_kitchen_counter_outlet_count", "个", 0, 0, 45),
-  quoteRule("灯位点位", "hydropower_light_point_count", "个", 0, 0, 35),
-  quoteRule("弱电点位", "hydropower_weak_point_count", "个", 0, 0, 45),
-  quoteRule("空调专线", "hydropower_ac_circuit_count", "路", 0, 0, 120),
-  quoteRule("大功率电器专线", "hydropower_high_power_circuit_count", "路", 0, 0, 120),
-  quoteRule("浴霸/暖风机专线", "hydropower_bathroom_heater_circuit_count", "路", 0, 0, 120),
-  quoteRule("智能马桶插座", "hydropower_smart_toilet_outlet_count", "个", 0, 0, 45),
-  quoteRule("洗衣机插座", "hydropower_washing_machine_outlet_count", "个", 0, 0, 45),
-  quoteRule("烘干机插座", "hydropower_dryer_outlet_count", "个", 0, 0, 45),
-  quoteRule("净水机插座", "hydropower_water_purifier_outlet_count", "个", 0, 0, 45),
-  quoteRule("冷水点位", "hydropower_cold_water_point_count", "个", 0, 0, 65),
-  quoteRule("热水点位", "hydropower_hot_water_point_count", "个", 0, 0, 65),
-  quoteRule("排水点位", "hydropower_drain_point_count", "个", 0, 0, 65),
-  quoteRule("地漏点位", "hydropower_floor_drain_point_count", "个", 0, 0, 65),
-  quoteRule("强电线管", "hydropower_strong_conduit_length_m", "M", 8, 2, 10),
-  quoteRule("弱电线管", "hydropower_weak_conduit_length_m", "M", 6, 2, 8),
-  quoteRule("给水管", "hydropower_water_pipe_length_m", "M", 10, 4, 12),
-  quoteRule("排水管", "hydropower_drain_pipe_length_m", "M", 12, 4, 14),
+  quoteRule("强电插座", "hydropower_strong_outlet_count", "位", 5, 12, 55),
+  quoteRule("开关", "hydropower_switch_count", "位", 5, 10, 53),
+  quoteRule("灯位", "hydropower_light_count", "位", 0, 15, 95),
+  quoteRule("筒灯/射灯", "hydropower_downlight_spotlight_count", "位", 0, 15, 80),
+  quoteRule("设备专线", "hydropower_equipment_circuit_count", "位", 65, 20, 95),
+  quoteRule("弱电点位", "hydropower_weak_point_count", "位", 5, 10, 47),
+  quoteRule("强电线管", "hydropower_strong_conduit_length_m", "M", 16, 5, 17),
+  quoteRule("弱电线管", "hydropower_weak_conduit_length_m", "M", 12, 4, 14),
+  quoteRule("强电箱", "hydropower_strong_box_count", "套", 450, 100, 300),
+  quoteRule("弱电箱", "hydropower_weak_box_count", "套", 220, 60, 170),
+  quoteRule("分配电箱", "hydropower_distribution_box_count", "套", 0, 0, 0),
+  quoteRule("给水点", "hydropower_water_supply_point_count", "位", 50, 25, 85),
+  quoteRule("热水点", "hydropower_hot_water_point_count", "位", 55, 30, 95),
+  quoteRule("排水点", "hydropower_drainage_point_count", "位", 60, 35, 105),
+  quoteRule("给水管", "hydropower_water_pipe_length_m", "M", 22, 10, 23),
+  quoteRule("排水管", "hydropower_drain_pipe_length_m", "M", 25, 12, 28),
   quoteRule("材料搬运费", "building_area_m2", "M2", 0, 3, 12),
   quoteRule("垃圾清运费", "building_area_m2", "M2", 0, 0, 12),
   quoteRule("墙地面砖现场保护", "building_area_m2", "M2", 0, 6, 15),
@@ -745,8 +758,49 @@ function quoteRulePriceParts(rule: QuoteRule): Pick<QuoteMappingItem, "material_
   };
 }
 
+function aggregateHydropowerQuoteMetrics(summary: HydropowerSummary) {
+  return {
+    strongOutletCount:
+      summary.standardOutletCount +
+      summary.sofaChargingOutletCount +
+      summary.heatingOutletCount +
+      summary.bedEndFanOutletCount +
+      summary.kitchenCounterOutletCount +
+      summary.smartToiletOutletCount +
+      summary.washingMachineOutletCount +
+      summary.dryerOutletCount +
+      summary.waterPurifierOutletCount,
+    switchCount: summary.switchPointCount,
+    lightCount: summary.lightPointCount,
+    downlightSpotlightCount: 0,
+    equipmentCircuitCount: summary.acCircuitCount + summary.highPowerCircuitCount + summary.bathroomHeaterCircuitCount,
+    weakPointCount: summary.weakPointCount,
+    strongConduitLengthM: round2(summary.strongConduitLengthM),
+    weakConduitLengthM: round2(summary.weakConduitLengthM),
+    strongBoxCount: 1,
+    weakBoxCount: 1,
+    distributionBoxCount: 0,
+    waterSupplyPointCount: summary.coldWaterPointCount,
+    hotWaterPointCount: summary.hotWaterPointCount,
+    drainagePointCount: summary.drainPointCount + summary.floorDrainPointCount,
+    waterPipeLengthM: round2(summary.waterPipeLengthM),
+    drainPipeLengthM: round2(summary.drainPipeLengthM),
+  };
+}
+
 function projectRuleQuantity(billableRows: QuantityRow[], rule: QuoteRule, buildingAreaM2: number, hydropowerSummary?: HydropowerSummary): number {
+  const hydropowerQuoteSummary = hydropowerSummary ? aggregateHydropowerQuoteMetrics(hydropowerSummary) : undefined;
   const hydropowerMetrics: Partial<Record<QuoteMetric, number>> = {
+    hydropower_strong_outlet_count: hydropowerQuoteSummary?.strongOutletCount ?? 0,
+    hydropower_switch_count: hydropowerQuoteSummary?.switchCount ?? 0,
+    hydropower_light_count: hydropowerQuoteSummary?.lightCount ?? 0,
+    hydropower_downlight_spotlight_count: hydropowerQuoteSummary?.downlightSpotlightCount ?? 0,
+    hydropower_equipment_circuit_count: hydropowerQuoteSummary?.equipmentCircuitCount ?? 0,
+    hydropower_strong_box_count: hydropowerQuoteSummary?.strongBoxCount ?? 0,
+    hydropower_weak_box_count: hydropowerQuoteSummary?.weakBoxCount ?? 0,
+    hydropower_distribution_box_count: hydropowerQuoteSummary?.distributionBoxCount ?? 0,
+    hydropower_water_supply_point_count: hydropowerQuoteSummary?.waterSupplyPointCount ?? 0,
+    hydropower_drainage_point_count: hydropowerQuoteSummary?.drainagePointCount ?? 0,
     hydropower_switch_point_count: hydropowerSummary?.switchPointCount ?? 0,
     hydropower_standard_outlet_count: hydropowerSummary?.standardOutletCount ?? 0,
     hydropower_sofa_charging_outlet_count: hydropowerSummary?.sofaChargingOutletCount ?? 0,
@@ -858,6 +912,16 @@ function isProjectMetric(metric: QuoteMetric): metric is ProjectQuoteMetric {
     metric === "kitchen_bathroom_pipe_insulation_length_m" ||
     metric === "lighting_package_count" ||
     metric === "switch_socket_package_count" ||
+    metric === "hydropower_strong_outlet_count" ||
+    metric === "hydropower_switch_count" ||
+    metric === "hydropower_light_count" ||
+    metric === "hydropower_downlight_spotlight_count" ||
+    metric === "hydropower_equipment_circuit_count" ||
+    metric === "hydropower_strong_box_count" ||
+    metric === "hydropower_weak_box_count" ||
+    metric === "hydropower_distribution_box_count" ||
+    metric === "hydropower_water_supply_point_count" ||
+    metric === "hydropower_drainage_point_count" ||
     metric === "hydropower_switch_point_count" ||
     metric === "hydropower_standard_outlet_count" ||
     metric === "hydropower_sofa_charging_outlet_count" ||
@@ -991,6 +1055,16 @@ function isQuoteMetric(metric: unknown): metric is QuoteMetric {
     metric === "bathroom_vanity_count" ||
     metric === "bathroom_count" ||
     metric === "switch_socket_package_count" ||
+    metric === "hydropower_strong_outlet_count" ||
+    metric === "hydropower_switch_count" ||
+    metric === "hydropower_light_count" ||
+    metric === "hydropower_downlight_spotlight_count" ||
+    metric === "hydropower_equipment_circuit_count" ||
+    metric === "hydropower_strong_box_count" ||
+    metric === "hydropower_weak_box_count" ||
+    metric === "hydropower_distribution_box_count" ||
+    metric === "hydropower_water_supply_point_count" ||
+    metric === "hydropower_drainage_point_count" ||
     metric === "hydropower_switch_point_count" ||
     metric === "hydropower_standard_outlet_count" ||
     metric === "hydropower_sofa_charging_outlet_count" ||
