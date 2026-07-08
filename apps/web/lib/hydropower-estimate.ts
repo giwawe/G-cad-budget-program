@@ -116,7 +116,8 @@ export function buildHydropowerEstimate(
 ): HydropowerEstimate {
   const basePoints = rows.flatMap((row) => pointsForRow(row, drawing));
   const points = overrides ? applyHydropowerOverrides(basePoints, overrides) : basePoints;
-  const pipes = estimatePipes(points, drawing);
+  const baseQuantityByPointId = new Map(basePoints.map((point) => [point.id, point.quantity]));
+  const pipes = estimatePipes(points, drawing, overrides ?? undefined, baseQuantityByPointId);
 
   return {
     points,
@@ -127,19 +128,22 @@ export function buildHydropowerEstimate(
 }
 
 function applyHydropowerOverrides(points: HydropowerPoint[], overrides: HydropowerEstimate): HydropowerPoint[] {
-  const quantityByPointId = new Map(
-    overrides.points.map((point) => [
-      point.id,
-      Number.isFinite(point.quantity) && point.quantity >= 0 ? Math.floor(point.quantity) : 0,
-    ]),
-  );
+  const overrideByPointId = new Map(overrides.points.map((point) => [point.id, point]));
 
   return points.map((point) => {
-    const overrideQuantity = quantityByPointId.get(point.id);
-    if (overrideQuantity === undefined) {
+    const overridePoint = overrideByPointId.get(point.id);
+    if (!overridePoint) {
       return point;
     }
-    return { ...point, quantity: overrideQuantity };
+    const quantity = Number.isFinite(overridePoint.quantity) && overridePoint.quantity >= 0 ? Math.floor(overridePoint.quantity) : 0;
+    return {
+      ...point,
+      quantity,
+      point: overridePoint.point,
+      source: overridePoint.source,
+      confidence: overridePoint.confidence,
+      note: overridePoint.note,
+    };
   });
 }
 
@@ -163,22 +167,29 @@ const WEAK_POINT_KINDS = new Set<HydropowerPointKind>(["weak_point"]);
 const WATER_POINT_KINDS = new Set<HydropowerPointKind>(["cold_water", "hot_water"]);
 const DRAIN_POINT_KINDS = new Set<HydropowerPointKind>(["drain", "floor_drain"]);
 
-function estimatePipes(points: HydropowerPoint[], drawing: DrawingGeometry | null): HydropowerPipeEstimate[] {
+function estimatePipes(
+  points: HydropowerPoint[],
+  drawing: DrawingGeometry | null,
+  previousEstimate?: HydropowerEstimate,
+  baseQuantityByPointId = new Map<string, number>(),
+): HydropowerPipeEstimate[] {
+  const previousPipeById = new Map((previousEstimate?.pipes ?? []).map((pipe) => [pipe.id, pipe]));
+  const previousQuantityByPointId = new Map((previousEstimate?.points ?? []).map((point) => [point.id, point.quantity]));
   return points.flatMap((point) => {
     const source = point.point ? "virtual_point_distance" : "fallback_count_factor";
     const confidence = point.point ? point.confidence : "low";
     const baseLength = source === "virtual_point_distance" ? distanceFromRoomCenter(point, drawing) : fallbackLengthForPoint(point);
     if (STRONG_POINT_KINDS.has(point.kind)) {
-      return [pipeForPoint(point, "strong_conduit", "强电线管", baseLength, source, confidence)];
+      return [pipeForPoint(point, "strong_conduit", "强电线管", baseLength, source, confidence, previousPipeById, previousQuantityByPointId, baseQuantityByPointId, drawing)];
     }
     if (WEAK_POINT_KINDS.has(point.kind)) {
-      return [pipeForPoint(point, "weak_conduit", "弱电线管", baseLength, source, confidence)];
+      return [pipeForPoint(point, "weak_conduit", "弱电线管", baseLength, source, confidence, previousPipeById, previousQuantityByPointId, baseQuantityByPointId, drawing)];
     }
     if (WATER_POINT_KINDS.has(point.kind)) {
-      return [pipeForPoint(point, "water_pipe", "给水管", baseLength, source, confidence)];
+      return [pipeForPoint(point, "water_pipe", "给水管", baseLength, source, confidence, previousPipeById, previousQuantityByPointId, baseQuantityByPointId, drawing)];
     }
     if (DRAIN_POINT_KINDS.has(point.kind)) {
-      return [pipeForPoint(point, "drain_pipe", "排水管", baseLength, source, confidence)];
+      return [pipeForPoint(point, "drain_pipe", "排水管", baseLength, source, confidence, previousPipeById, previousQuantityByPointId, baseQuantityByPointId, drawing)];
     }
     return [];
   });
@@ -207,9 +218,23 @@ function pipeForPoint(
   lengthM: number,
   source: HydropowerPipeEstimate["source"],
   confidence: HydropowerPipeEstimate["confidence"],
+  previousPipeById: Map<string, HydropowerPipeEstimate>,
+  previousQuantityByPointId: Map<string, number>,
+  baseQuantityByPointId: Map<string, number>,
+  drawing: DrawingGeometry | null,
 ): HydropowerPipeEstimate {
+  const id = `${point.id}-${kind}`;
+  const previousPipe = previousPipeById.get(id);
+  if (!drawing && previousPipe) {
+    const previousQuantity = baseQuantityByPointId.get(point.id) ?? previousQuantityByPointId.get(point.id);
+    const previousUnitLength = previousPipe.lengthM / Math.max(Number.isFinite(previousQuantity ?? NaN) ? previousQuantity ?? 0 : 0, 1);
+    return {
+      ...previousPipe,
+      lengthM: round2(previousUnitLength * point.quantity),
+    };
+  }
   return {
-    id: `${point.id}-${kind}`,
+    id,
     floor: point.floor,
     spaceName: point.spaceName,
     spaceType: point.spaceType,

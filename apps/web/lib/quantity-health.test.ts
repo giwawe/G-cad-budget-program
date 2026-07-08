@@ -84,6 +84,7 @@ const quoteMapping: QuoteMapping = {
     required_item_names: ["强电布线", "水路布管"],
     missing_item_names: ["强电布线", "水路布管"],
   },
+  legacy_hydropower_area_rule_item_names: [],
   quantity_health_readiness: {
     total: 0,
     warning: 0,
@@ -192,6 +193,24 @@ const zeroPriceIntegratedCeilingChecks = buildQuantityHealthChecks({
 
 assert.deepEqual(zeroPriceIntegratedCeilingChecks.map((check) => check.id), ["integrated-ceiling-price-missing"]);
 assert.equal(zeroPriceIntegratedCeilingChecks[0].message.includes("单价为 0"), true);
+
+const legacyHydropowerAreaRuleChecks = buildQuantityHealthChecks({
+  rows: [baseRow],
+  summary: { ...summary, building_area_m2: 88.66 },
+  quoteMapping: {
+    ...quoteMapping,
+    building_area_quote_readiness: {
+      building_area_m2: 88.66,
+      required_item_names: [],
+      missing_item_names: [],
+    },
+    legacy_hydropower_area_rule_item_names: ["强电布线", "水路布管"],
+  },
+});
+
+assert.deepEqual(legacyHydropowerAreaRuleChecks.map((check) => check.id), ["legacy-hydropower-area-rule"]);
+assert.equal(legacyHydropowerAreaRuleChecks[0].severity, "warning");
+assert.equal(legacyHydropowerAreaRuleChecks[0].message.includes("旧的水电施工面积取数"), true);
 
 const hydropowerInfo = buildQuantityHealthChecks({
   rows: [baseRow],

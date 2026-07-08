@@ -50,11 +50,13 @@ const mapping: QuoteMapping = {
     pending_space_names: [],
   },
   curtain_quote_candidates: [],
+  atrium_curtain_candidates: [],
   building_area_quote_readiness: {
     building_area_m2: 88.66,
     required_item_names: ["材料搬运费"],
     missing_item_names: [],
   },
+  legacy_hydropower_area_rule_item_names: [],
   quantity_health_readiness: {
     total: 0,
     warning: 0,

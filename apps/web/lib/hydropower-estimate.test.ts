@@ -214,6 +214,25 @@ assert.ok(
   "override quantities should recompute conduit totals",
 );
 
+const restoredSnapshotEstimate = buildHydropowerEstimate(hydropowerRows, null, {
+  ...pipeEstimate,
+  points: pipeEstimate.points.map((point) => (point.id === overriddenPoint.id ? { ...point, quantity: 3 } : point)),
+  reviewStatus: "confirmed",
+});
+const restoredOverriddenPoint = restoredSnapshotEstimate.points.find((point) => point.id === overriddenPoint.id);
+const originalOverriddenPipe = pipeEstimate.pipes.find((pipe) => pipe.id === `${overriddenPoint.id}-strong_conduit`);
+const restoredOverriddenPipe = restoredSnapshotEstimate.pipes.find((pipe) => pipe.id === `${overriddenPoint.id}-strong_conduit`);
+
+assert.deepEqual(restoredOverriddenPoint?.point, overriddenPoint.point, "snapshot import should preserve saved virtual coordinates");
+assert.equal(restoredSnapshotEstimate.reviewStatus, "confirmed");
+assert.ok(originalOverriddenPipe);
+assert.ok(restoredOverriddenPipe);
+assert.equal(
+  restoredOverriddenPipe.lengthM,
+  Math.round((originalOverriddenPipe.lengthM / overriddenPoint.quantity) * 3 * 100) / 100,
+  "snapshot import without drawing should reuse saved per-point pipe length and recompute quantity totals",
+);
+
 const fallbackPipeEstimate = buildHydropowerEstimate(
   [baseRow({ spaceName: "无图形卧室", spaceType: "卧室" })],
   emptyDrawing,

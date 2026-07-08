@@ -258,6 +258,18 @@ assert.ok(hydropowerMapping.items.some((item) => item.item_name === "普通插�
 assert.ok(hydropowerMapping.items.some((item) => item.item_name === "强电线管" && item.quantity === 86.5));
 assert.equal(hydropowerMapping.items.some((item) => item.item_name === "强电布线"), false);
 assert.equal(hydropowerMapping.items.some((item) => item.item_name === "水路布管"), false);
+assert.deepEqual(hydropowerMapping.legacy_hydropower_area_rule_item_names, []);
+
+const legacyHydropowerRules = parseQuoteRules(
+  JSON.stringify([
+    { item_name: "????", metric: "electrical_scope_area_m2", unit: "m2", unit_price: 80 },
+    { item_name: "????", metric: "plumbing_scope_area_m2", unit: "m2", unit_price: 70 },
+  ]),
+);
+const legacyHydropowerMapping = buildQuoteMapping(rows, legacyHydropowerRules, { building_area_m2: 88.66 }, {
+  hydropowerSummary,
+});
+assert.deepEqual(legacyHydropowerMapping.legacy_hydropower_area_rule_item_names, ["????", "????"]);
 
 const duplicateSpaceNameMapping = buildQuoteMapping(
   [

@@ -214,6 +214,7 @@ export type QuoteMapping = {
   quantity_health_readiness: QuantityHealthReadiness;
 };
 
+  legacy_hydropower_area_rule_item_names: string[];
 export type CurtainQuoteReadiness = {
   ready_count: number;
   pending_count: number;
@@ -597,6 +598,7 @@ function normalizeBuildQuoteMappingOptions(options?: BuildQuoteMappingOptions | 
   if (isQuantityHealthReadiness(options)) {
     return {
       hydropowerSummary: undefined,
+    legacy_hydropower_area_rule_item_names: legacyHydropowerAreaRuleItemNames(rules),
       quantityHealthReadiness: options,
     };
   }
@@ -688,6 +690,12 @@ function buildProjectQuoteItems(billableRows: QuantityRow[], rules: QuoteRule[],
       space_type: "全屋",
       item_name: rule.item_name,
       quantity,
+function legacyHydropowerAreaRuleItemNames(rules: QuoteRule[]): string[] {
+  return rules
+    .filter((rule) => rule.metric === "electrical_scope_area_m2" || rule.metric === "plumbing_scope_area_m2")
+    .map((rule) => rule.item_name);
+}
+
       unit: rule.unit,
       unit_price: rule.unit_price,
       ...quoteRulePriceParts(rule),

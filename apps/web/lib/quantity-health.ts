@@ -16,6 +16,7 @@ export type QuantityHealthCheck = {
     | "kitchen-cabinet-missing"
     | "kitchen-custom-cabinet-overlap"
     | "bathroom-fixture-missing"
+    | "legacy-hydropower-area-rule"
     | "integrated-ceiling-price-missing"
     | "hydropower-auto-estimated"
     | "hydropower-low-confidence";
@@ -261,6 +262,16 @@ export function buildQuantityHealthChecks({
     });
   }
 
+  const legacyHydropowerAreaRuleItemNames = quoteMapping?.legacy_hydropower_area_rule_item_names ?? [];
+  if (legacyHydropowerAreaRuleItemNames.length > 0) {
+    checks.push({
+      id: "legacy-hydropower-area-rule",
+      severity: "warning",
+      title: "水电旧面积报价规则待替换",
+      detail: `${formatNames(legacyHydropowerAreaRuleItemNames)} 仍按旧的水电施工面积取数，请改用水电点位和管线长度规则后再导出正式报价。`,
+    });
+  }
+
   const zeroPriceIntegratedCeilingNames = uniqueNames(
     (quoteMapping?.items ?? [])
       .filter((item) => item.item_name === "厨房卫生间集成吊顶" && item.quantity > 0 && item.unit_price <= 0)
@@ -407,6 +418,8 @@ function healthFixSuggestion(id: QuantityHealthCheck["id"]): string {
       return "厨房空间优先使用 QUOTE_BASE_CABINET / QUOTE_WALL_CABINET，避免 QUOTE_CUSTOM 重复计价。";
     case "bathroom-fixture-missing":
       return "确认卫生间是否需要默认马桶/浴室柜；若数量特殊，请用点位覆盖。";
+    case "legacy-hydropower-area-rule":
+      return "删除旧的 electrical_scope_area_m2 / plumbing_scope_area_m2 水电规则，改用 hydropower_* 点位和管线长度规则。";
     case "integrated-ceiling-price-missing":
       return "在报价规则 JSON 中为“厨房卫生间集成吊顶”补充真实单价；若实际做石膏板吊顶，请切换顶面类型。";
     case "hydropower-auto-estimated":
