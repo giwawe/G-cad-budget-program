@@ -594,16 +594,25 @@ function normalizeBuildQuoteMappingOptions(options?: BuildQuoteMappingOptions | 
   if (!options) {
     return { hydropowerSummary: undefined, quantityHealthReadiness: defaultQuantityHealthReadiness };
   }
-  if ("hydropowerSummary" in options || "quantityHealthReadiness" in options) {
+  if (isQuantityHealthReadiness(options)) {
     return {
-      hydropowerSummary: options.hydropowerSummary,
-      quantityHealthReadiness: options.quantityHealthReadiness ?? defaultQuantityHealthReadiness,
+      hydropowerSummary: undefined,
+      quantityHealthReadiness: options,
     };
   }
   return {
-    hydropowerSummary: undefined,
-    quantityHealthReadiness: options,
+    hydropowerSummary: options.hydropowerSummary,
+    quantityHealthReadiness: options.quantityHealthReadiness ?? defaultQuantityHealthReadiness,
   };
+}
+
+function isQuantityHealthReadiness(options: BuildQuoteMappingOptions | QuantityHealthReadiness): options is QuantityHealthReadiness {
+  return (
+    typeof (options as QuantityHealthReadiness).total === "number" &&
+    typeof (options as QuantityHealthReadiness).warning === "number" &&
+    typeof (options as QuantityHealthReadiness).info === "number" &&
+    typeof (options as QuantityHealthReadiness).label === "string"
+  );
 }
 
 function displaySpaceNamesByRow(rows: QuantityRow[]): Map<QuantityRow, string> {
