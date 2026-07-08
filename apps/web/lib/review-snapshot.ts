@@ -1,4 +1,4 @@
-import type { CalibrationComparison, CeilingFinishType, QuantityRow, QuantitySummary } from "./types";
+import type { CalibrationComparison, CeilingFinishType, HydropowerEstimate, QuantityRow, QuantitySummary } from "./types";
 
 export type ReviewSnapshot = {
   exported_at: string;
@@ -9,6 +9,7 @@ export type ReviewSnapshot = {
   summary: QuantitySummary | null;
   comparison: CalibrationComparison | null;
   rows: QuantityRow[];
+  hydropower?: HydropowerEstimate;
 };
 
 export function buildReviewSnapshot({
@@ -19,6 +20,7 @@ export function buildReviewSnapshot({
   excelManualItemQuantities = {},
   summary,
   comparison,
+  hydropower,
 }: {
   fileName: string;
   calibrationFileName: string;
@@ -27,6 +29,7 @@ export function buildReviewSnapshot({
   excelManualItemQuantities?: Partial<Record<string, number>>;
   summary: QuantitySummary | null;
   comparison: CalibrationComparison | null;
+  hydropower?: HydropowerEstimate;
 }): ReviewSnapshot {
   return {
     exported_at: new Date().toISOString(),
@@ -37,6 +40,7 @@ export function buildReviewSnapshot({
     summary,
     comparison,
     rows,
+    hydropower,
   };
 }
 
@@ -74,6 +78,7 @@ export function parseReviewSnapshot(content: string): ReviewSnapshot {
     summary: normalizeSnapshotSummary(snapshot.summary ?? null),
     comparison: snapshot.comparison ?? null,
     rows: snapshot.rows.map(normalizeSnapshotRow),
+    hydropower: isHydropowerEstimate(snapshot.hydropower) ? snapshot.hydropower : undefined,
   };
 }
 
@@ -130,6 +135,7 @@ function normalizeSnapshotRow(row: QuantityRow): QuantityRow {
     demolitionWallLengthM: typeof row.demolitionWallLengthM === "number" ? row.demolitionWallLengthM : 0,
     demolitionWallAreaM2: typeof row.demolitionWallAreaM2 === "number" ? row.demolitionWallAreaM2 : 0,
     backgroundWallAreaM2: typeof row.backgroundWallAreaM2 === "number" ? row.backgroundWallAreaM2 : 0,
+    castSlabAreaM2: typeof row.castSlabAreaM2 === "number" ? row.castSlabAreaM2 : 0,
     entryDoorCount: typeof row.entryDoorCount === "number" ? row.entryDoorCount : 0,
     interiorDoorCount: typeof row.interiorDoorCount === "number" ? row.interiorDoorCount : 0,
     bathroomDoorCount: typeof row.bathroomDoorCount === "number" ? row.bathroomDoorCount : 0,
@@ -151,4 +157,20 @@ function normalizeCeilingFinishType(finishType: unknown, spaceType: string): Cei
     return finishType;
   }
   return spaceType === "厨房" || spaceType === "卫生间" ? "integrated" : "gypsum";
+}
+
+function isHydropowerEstimate(value: unknown): value is HydropowerEstimate {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+
+  const candidate = value as Partial<HydropowerEstimate>;
+  if (!Array.isArray(candidate.points) || !Array.isArray(candidate.pipes)) {
+    return false;
+  }
+  if (!candidate.summary || typeof candidate.summary !== "object" || Array.isArray(candidate.summary)) {
+    return false;
+  }
+
+  return candidate.reviewStatus === "auto_estimated" || candidate.reviewStatus === "confirmed" || candidate.reviewStatus === "needs_review";
 }
