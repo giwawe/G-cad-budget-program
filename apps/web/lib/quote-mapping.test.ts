@@ -517,7 +517,7 @@ const kitchenEdgeCeilingMapping = buildQuoteMapping([
   },
 ]);
 assert.ok(kitchenEdgeCeilingMapping.items.some((item) => item.space_name === "厨房" && item.item_name === "轻钢龙骨平顶" && item.quantity === 3.28));
-assert.ok(kitchenEdgeCeilingMapping.items.some((item) => item.space_name === "厨房" && item.item_name === "双眼皮/边吊吊顶" && item.quantity === 5));
+assert.ok(kitchenEdgeCeilingMapping.items.some((item) => item.space_name === "厨房" && item.item_name === "双眼皮/边吊吊顶" && item.quantity === 5 && item.unit_price === 120 && item.amount === 600));
 assert.ok(kitchenEdgeCeilingMapping.items.some((item) => item.space_name === "厨房" && item.item_name === "顶面批嵌" && item.quantity === 4.48));
 assert.ok(kitchenEdgeCeilingMapping.items.some((item) => item.space_name === "厨房" && item.item_name === "顶面乳胶漆" && item.quantity === 4.48));
 
@@ -621,10 +621,10 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "双眼皮/边吊吊顶
   item_name: "双眼皮/边吊吊顶",
   metric: "edge_ceiling_length_m",
   unit: "M",
-  unit_price: 0,
-  material_price: 0,
-  auxiliary_price: 0,
-  labor_price: 0,
+  unit_price: 120,
+  material_price: 60,
+  auxiliary_price: 20,
+  labor_price: 40,
   space_types: ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "衣帽间", "储物间", "厨房", "卫生间"],
 });
 assert.deepEqual(rules.at(-1), {
