@@ -138,6 +138,7 @@ assert.equal(estimate.points.filter((point) => point.kind === "smart_toilet_outl
 assert.equal(estimate.points.filter((point) => point.kind === "cold_water" && point.spaceType === "卫生间").length, 3);
 assert.ok(estimate.points.every((point) => point.id.includes(point.spaceName)));
 assert.ok(estimate.points.every((point) => point.source === "virtual_point"));
+assert.equal(new Set(estimate.points.map((point) => point.id)).size, estimate.points.length);
 
 const firstBathroomDrawing: DrawingGeometry = {
   ...emptyDrawing,
@@ -187,6 +188,7 @@ assert.ok((publicToilet?.point?.x ?? 0) > 5);
 assert.ok((mainVanity?.point?.x ?? 0) < 4);
 assert.ok((publicVanity?.point?.x ?? 0) > 5);
 assert.equal(twoBathroomEstimate.points.filter((point) => point.source === "fixture_point").length, 0);
+assert.equal(new Set(twoBathroomEstimate.points.map((point) => point.id)).size, twoBathroomEstimate.points.length);
 
 const pipeEstimate = buildHydropowerEstimate(hydropowerRows, roomDrawing);
 assert.ok(pipeEstimate.summary.strongConduitLengthM > 0);

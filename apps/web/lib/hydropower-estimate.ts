@@ -114,7 +114,7 @@ export function buildHydropowerEstimate(
   drawing: DrawingGeometry | null,
   overrides?: HydropowerEstimate | null,
 ): HydropowerEstimate {
-  const basePoints = rows.flatMap((row) => pointsForRow(row, drawing));
+  const basePoints = rows.flatMap((row, rowIndex) => pointsForRow(row, drawing, rowIndex));
   const points = overrides ? applyHydropowerOverrides(basePoints, overrides) : basePoints;
   const baseQuantityByPointId = new Map(basePoints.map((point) => [point.id, point.quantity]));
   const pipes = estimatePipes(points, drawing, overrides ?? undefined, baseQuantityByPointId);
@@ -331,13 +331,13 @@ function rulesForSpaceType(spaceType: string): PointSpec[] {
   ];
 }
 
-function pointsForRow(row: QuantityRow, drawing: DrawingGeometry | null): HydropowerPoint[] {
+function pointsForRow(row: QuantityRow, drawing: DrawingGeometry | null, rowIndex: number): HydropowerPoint[] {
   const space = spaceForRow(row, drawing);
   const specs = rulesForSpaceType(row.spaceType);
 
-  return specs.flatMap((spec) => {
+  return specs.flatMap((spec, specIndex) => {
     const quantity = Math.max(0, Math.floor(spec.quantity(row)));
-    return Array.from({ length: quantity }, (_, index) => buildPoint(row, space, drawing, spec, index, quantity));
+    return Array.from({ length: quantity }, (_, index) => buildPoint(row, space, drawing, spec, rowIndex, specIndex, index, quantity));
   });
 }
 
@@ -346,12 +346,14 @@ function buildPoint(
   space: DrawingSpace | null,
   drawing: DrawingGeometry | null,
   spec: PointSpec,
+  rowIndex: number,
+  specIndex: number,
   index: number,
   quantity: number,
 ): HydropowerPoint {
   const anchor = anchorPoint(space, drawing, spec, index, quantity);
   return {
-    id: `${row.floor}-${row.spaceName}-${spec.kind}-${index + 1}`,
+    id: `${row.floor}-${row.spaceName}-${rowIndex + 1}-${spec.kind}-${specIndex + 1}-${index + 1}`,
     floor: row.floor,
     spaceName: row.spaceName,
     spaceType: row.spaceType,
