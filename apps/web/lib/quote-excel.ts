@@ -89,7 +89,7 @@ const TEMPLATE_PRICES: Record<string, QuoteTemplatePrice> = {
   墙面乳胶漆: { material: 10, auxiliary: 0, labor: 10, note: "乳胶漆一底两面。" },
   厨房卫生间集成吊顶: { material: 120, auxiliary: 0, labor: 0, note: "厨房、卫生间集成吊顶，设计师可调整单价。" },
   轻钢龙骨平顶: { material: 60, auxiliary: 30, labor: 90, note: "含龙骨及配件，含辅料。" },
-  "双眼皮/边吊吊顶": { material: 60, auxiliary: 20, labor: 40, note: "按 QUOTE_EDGE_CEILING 单一闭合边界周长计算，禁止画环形带状边吊。" },
+  "双眼皮/边吊吊顶": { material: 35, auxiliary: 15, labor: 30, note: "按 QUOTE_EDGE_CEILING 单一闭合边界周长计算，禁止画环形带状边吊。" },
   顶面批嵌: { material: 0, auxiliary: 15, labor: 10, note: "二底二面基础腻子找平，含打磨。" },
   顶面乳胶漆: { material: 10, auxiliary: 0, labor: 10, note: "乳胶漆一底两面。" },
   地面找平: { material: 0, auxiliary: 25, labor: 30, note: "水泥砂浆找平，厚度≤50mm。" },

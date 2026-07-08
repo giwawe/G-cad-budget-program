@@ -23,11 +23,11 @@ const mapping: QuoteMapping = {
       item_name: "双眼皮/边吊吊顶",
       quantity: 5,
       unit: "M",
-      unit_price: 120,
-      material_price: 60,
-      auxiliary_price: 20,
-      labor_price: 40,
-      amount: 600,
+      unit_price: 80,
+      material_price: 35,
+      auxiliary_price: 15,
+      labor_price: 30,
+      amount: 400,
     },
     {
       floor: "一层",
@@ -54,7 +54,7 @@ const mapping: QuoteMapping = {
     space_count: 3,
     building_area_m2: 88.66,
     item_count: 4,
-    total_amount: 8299.48,
+    total_amount: 8099.48,
   },
   curtain_quote_readiness: {
     ready_count: 1,
@@ -123,18 +123,18 @@ assert.ok(html.indexOf("<td>二</td><td>厨房工程</td>") < html.indexOf("<td>
 assert.ok(html.indexOf("<td>八</td><td>集成吊顶、卫浴、全屋开关灯饰</td>") < html.indexOf("<td>厨房卫生间集成吊顶</td>"));
 assert.ok(html.indexOf("<td>四</td><td>水电工程</td>") < html.indexOf("<td>强电布线 &amp; 水路复核</td>"));
 assert.ok(html.includes("<td>厨房卫生间集成吊顶</td><td>m2</td><td>4.48</td><td>120.00</td><td>0.00</td><td>0.00</td><td>537.60</td>"));
-assert.ok(html.includes("<td>双眼皮/边吊吊顶</td><td>M</td><td>5</td><td>60.00</td><td>20.00</td><td>40.00</td><td>600.00</td>"));
+assert.ok(html.includes("<td>双眼皮/边吊吊顶</td><td>M</td><td>5</td><td>35.00</td><td>15.00</td><td>30.00</td><td>400.00</td>"));
 assert.ok(html.includes("<td>地面找平</td><td>m2</td><td>4.48</td><td>0.00</td><td>25.00</td><td>30.00</td><td>246.40</td>"));
 assert.ok(html.includes("<td>强电布线 &amp; 水路复核</td><td>M2</td><td>88.66</td><td>78.00</td><td>0.00</td><td>0.00</td><td>6915.48</td>"));
-assert.ok(html.includes("<td></td><td>小 计</td><td></td><td></td><td></td><td></td><td></td><td>846.40</td><td></td>"));
+assert.ok(html.includes("<td></td><td>小 计</td><td></td><td></td><td></td><td></td><td></td><td>646.40</td><td></td>"));
 assert.ok(html.includes("<td></td><td>小 计</td><td></td><td></td><td></td><td></td><td></td><td>537.60</td><td></td>"));
 assert.ok(html.includes("<td></td><td>小 计</td><td></td><td></td><td></td><td></td><td></td><td>6915.48</td><td></td>"));
 assert.ok(!html.includes("<td>轻钢龙骨平顶</td>"), "space sections should not show missing fixed room items");
 assert.ok(!html.includes("<td>暗窗帘箱</td><td></td>"), "public curtain section should not contain space-only curtain box placeholders");
-assert.ok(html.includes("<tr class=\"quoteTotalRow\"><td>A</td><td>直接费合计</td><td></td><td></td><td></td><td></td><td></td><td>8299.48</td><td></td></tr>"));
-assert.ok(html.includes("<tr class=\"quoteTotalRow\"><td>B</td><td>工程管理费(D=A* 5%)</td><td></td><td></td><td></td><td></td><td></td><td>414.97</td><td></td></tr>"));
-assert.ok(html.includes("<tr class=\"quoteTotalRow\"><td>C</td><td>税金E=(A+B)* 3%</td><td></td><td></td><td></td><td></td><td></td><td>261.43</td><td></td></tr>"));
-assert.ok(html.includes("<tr class=\"quoteTotalRow\"><td>D</td><td>工程总造价F=(A+B+C)</td><td></td><td></td><td></td><td></td><td></td><td>8975.88</td><td></td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteTotalRow\"><td>A</td><td>直接费合计</td><td></td><td></td><td></td><td></td><td></td><td>8099.48</td><td></td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteTotalRow\"><td>B</td><td>工程管理费(D=A* 5%)</td><td></td><td></td><td></td><td></td><td></td><td>404.97</td><td></td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteTotalRow\"><td>C</td><td>税金E=(A+B)* 3%</td><td></td><td></td><td></td><td></td><td></td><td>255.13</td><td></td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteTotalRow\"><td>D</td><td>工程总造价F=(A+B+C)</td><td></td><td></td><td></td><td></td><td></td><td>8759.58</td><td></td></tr>"));
 assert.equal(EXCEL_FIXED_PLACEHOLDER_ITEMS.length, 5);
 assert.deepEqual(EXCEL_FIXED_PLACEHOLDER_ITEMS.map((item) => item.item_name), [
   "砖墙门窗洞过梁",

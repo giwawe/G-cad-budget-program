@@ -230,7 +230,7 @@ const DEFAULT_RULES: QuoteRule[] = [
   quoteRule("墙面乳胶漆", "latex_paint_area_m2", "m2", 10, 0, 10, DRY_SPACE_TYPES),
   quoteRule("厨房卫生间集成吊顶", "ceiling_area_m2", "m2", 120, 0, 0, KITCHEN_BATHROOM_SPACE_TYPES),
   quoteRule("轻钢龙骨平顶", "gypsum_flat_ceiling_area_m2", "m2", 60, 30, 90, GYPSUM_CEILING_SPACE_TYPES),
-  quoteRule("双眼皮/边吊吊顶", "edge_ceiling_length_m", "M", 60, 20, 40, GYPSUM_CEILING_SPACE_TYPES),
+  quoteRule("双眼皮/边吊吊顶", "edge_ceiling_length_m", "M", 35, 15, 30, GYPSUM_CEILING_SPACE_TYPES),
   quoteRule("顶面批嵌", "ceiling_area_m2", "m2", 0, 15, 10, CEILING_PAINT_SPACE_TYPES),
   quoteRule("顶面乳胶漆", "ceiling_area_m2", "m2", 10, 0, 10, CEILING_PAINT_SPACE_TYPES),
   quoteRule("地面找平", "floor_area_m2", "m2", 0, 25, 30, WET_FLOOR_SPACE_TYPES),
