@@ -20,7 +20,7 @@ import {
   type QuantityHealthCheck,
   type QuantityHealthFilter,
 } from "@/lib/quantity-health";
-import { confirmQuantityRowsBySpaceNames, updateQuantityRowCurtainWallWidth, updateQuantityRowStatus, updateQuantityRowsStatusBySpaceNames } from "@/lib/quantity-row-status";
+import { confirmQuantityRowsBySpaceNames, updateQuantityRowCurtainWallWidth, updateQuantityRowSpaceType, updateQuantityRowStatus, updateQuantityRowsStatusBySpaceNames } from "@/lib/quantity-row-status";
 import { buildQuoteExcelHtml, quoteExcelFileName, type QuoteExcelManualItemQuantities } from "@/lib/quote-excel";
 import {
   aluminumWindowSuggestedAreaFromRows,
@@ -949,6 +949,15 @@ export function UploadWorkbench({
     setMessage(`${spaceName} 状态已更新为 ${statusLabels[status]}`);
   }
 
+  function handleChangeSpaceType(spaceName: string, spaceType: string) {
+    setRows((current) => updateQuantityRowSpaceType(current, spaceName, spaceType));
+    setComparison(null);
+    setGeneratedQuoteMapping(null);
+    setGeneratedHealthFixList(null);
+    setHydropowerOverride(null);
+    setMessage(`${spaceName} 空间类型已调整为 ${spaceType}`);
+  }
+
   function handleMarkHealthCheckNeedsFix(spaceNames: string[]) {
     if (spaceNames.length === 0) {
       return;
@@ -1740,7 +1749,7 @@ export function UploadWorkbench({
             <p>第一期重点验证 DXF 自动算出的空间面积、墙面计量长度、窗洞扣减和计算依据。</p>
           </div>
         </div>
-        <QuantityTable rows={rows} differences={comparison?.differences ?? []} onChangeStatus={handleChangeStatus} onChangeCurtainWallWidth={handleChangeCurtainWallWidth} onChangeCeilingFinishType={handleChangeCeilingFinishType} />
+        <QuantityTable rows={rows} differences={comparison?.differences ?? []} onChangeStatus={handleChangeStatus} onChangeSpaceType={handleChangeSpaceType} onChangeCurtainWallWidth={handleChangeCurtainWallWidth} onChangeCeilingFinishType={handleChangeCeilingFinishType} />
       </section>
     </main>
   );

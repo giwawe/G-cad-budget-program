@@ -102,6 +102,7 @@ const parsed = parseReviewSnapshot(JSON.stringify(snapshot));
 
 assert.equal(parsed.source_file, "test-case.dxf");
 assert.equal(parsed.rows[0].spaceName, "厨房");
+assert.equal(parsed.rows[0].spaceType, "厨房");
 assert.equal(parsed.hydropower?.reviewStatus, "confirmed");
 assert.deepEqual(parsed.accepted_health_check_keys, ["space-type-other:客厅"]);
 assert.deepEqual(parsed.excel_manual_item_quantities, { 入户门: 1, 马桶: 2, 淋浴隔断: 2 });

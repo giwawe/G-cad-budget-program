@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { confirmQuantityRowsBySpaceNames, updateQuantityRowCurtainWallWidth, updateQuantityRowStatus, updateQuantityRowsStatusBySpaceNames } from "./quantity-row-status.ts";
+import { confirmQuantityRowsBySpaceNames, updateQuantityRowCurtainWallWidth, updateQuantityRowSpaceType, updateQuantityRowStatus, updateQuantityRowsStatusBySpaceNames } from "./quantity-row-status.ts";
 import type { QuantityRow } from "./types.ts";
 
 const rows: QuantityRow[] = [
@@ -117,3 +117,20 @@ assert.notEqual(updatedCurtainWidth, rows);
 const clampedCurtainWidth = updateQuantityRowCurtainWallWidth(rows, "客厅", -1);
 
 assert.equal(clampedCurtainWidth[1].curtainWallWidthM, 0);
+
+const changedSpaceType = updateQuantityRowSpaceType(rows, "客厅", "卫生间");
+
+assert.equal(changedSpaceType[0].spaceType, "厨房");
+assert.equal(changedSpaceType[1].spaceType, "卫生间");
+assert.equal(changedSpaceType[1].ceilingFinishType, "integrated");
+assert.equal(changedSpaceType[1].wallTileAreaM2, 43.46);
+assert.equal(changedSpaceType[1].latexPaintAreaM2, 0);
+assert.ok(changedSpaceType[1].evidence.includes("人工调整空间类型为 卫生间"));
+assert.equal(rows[1].spaceType, "客厅");
+
+const changedBackToDry = updateQuantityRowSpaceType(changedSpaceType, "客厅", "卧室");
+
+assert.equal(changedBackToDry[1].spaceType, "卧室");
+assert.equal(changedBackToDry[1].ceilingFinishType, "gypsum");
+assert.equal(changedBackToDry[1].wallTileAreaM2, 0);
+assert.equal(changedBackToDry[1].latexPaintAreaM2, 66.81);
