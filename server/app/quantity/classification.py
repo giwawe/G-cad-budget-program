@@ -1,4 +1,5 @@
-EXCLUDED_SPACE_KEYWORDS = ("电梯井", "设备井", "管井", "风井", "楼板洞口", "楼板开洞", "栏杆", "护栏", "开放边", "开口边")
+EXCLUDED_SERVICE_SHAFT_KEYWORDS = ("电梯井", "设备井", "管井", "风井")
+EXCLUDED_AUXILIARY_BOUNDARY_KEYWORDS = ("楼板洞口", "楼板开洞", "栏杆", "护栏", "开放边", "开口边")
 
 SPACE_TYPE_KEYWORDS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("挑空", ("挑空", "中空")),
@@ -24,7 +25,11 @@ SPACE_TYPE_KEYWORDS: tuple[tuple[str, tuple[str, ...]], ...] = (
 
 
 def is_excluded_space(name: str) -> bool:
-    return any(keyword in name for keyword in EXCLUDED_SPACE_KEYWORDS)
+    if any(keyword in name for keyword in EXCLUDED_AUXILIARY_BOUNDARY_KEYWORDS):
+        return True
+    if any(keyword in name for keyword in EXCLUDED_SERVICE_SHAFT_KEYWORDS):
+        return classify_space_type(name) == "其他"
+    return False
 
 
 def classify_space_type(name: str) -> str:

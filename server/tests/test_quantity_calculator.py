@@ -30,6 +30,8 @@ def test_villa_common_space_names_are_classified_or_excluded():
     assert is_excluded_space("阳台栏杆") is True
     assert is_excluded_space("护栏") is True
     assert is_excluded_space("开放边") is True
+    assert classify_space_type("客厅/电梯井") == "客厅"
+    assert is_excluded_space("客厅/电梯井") is False
 
 
 def test_void_area_deducts_floor_and_ceiling_independently():
