@@ -33,7 +33,13 @@ const ceilingFinishLabels: Record<CeilingFinishType, string> = {
 };
 
 const OPTIONAL_CEILING_FINISH_SPACE_TYPES = new Set(["厨房", "卫生间"]);
-const QUOTE_SPACE_TYPE_OPTIONS = ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "挑空", "厨房", "卫生间", "阳台", "露台", "洗衣房", "衣帽间", "储物间", "外墙", "其他"];
+const QUOTE_SPACE_TYPE_GROUPS = [
+  { label: "普通干区", options: ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "挑空"] },
+  { label: "湿区", options: ["厨房", "卫生间", "阳台", "露台", "洗衣房"] },
+  { label: "楼梯/交通", options: ["楼梯", "楼梯过道"] },
+  { label: "收纳/其他", options: ["衣帽间", "储物间", "外墙", "其他"] },
+];
+const QUOTE_SPACE_TYPE_OPTIONS = QUOTE_SPACE_TYPE_GROUPS.flatMap((group) => group.options);
 
 function DifferenceValue({ difference }: { difference?: CalibrationDifference }) {
   if (!difference) {
@@ -141,15 +147,25 @@ export function QuantityTable({
                     value={row.spaceType}
                     onChange={(event) => onChangeSpaceType(row.spaceName, event.target.value)}
                   >
-                    {spaceTypeOptions.map((spaceType) => (
+                    {spaceTypeOptions.filter((spaceType) => !QUOTE_SPACE_TYPE_OPTIONS.includes(spaceType)).map((spaceType) => (
                       <option key={spaceType} value={spaceType}>
                         {spaceType}
                       </option>
+                    ))}
+                    {QUOTE_SPACE_TYPE_GROUPS.map((group) => (
+                      <optgroup key={group.label} label={group.label}>
+                        {group.options.map((spaceType) => (
+                          <option key={spaceType} value={spaceType}>
+                            {spaceType}
+                          </option>
+                        ))}
+                      </optgroup>
                     ))}
                   </select>
                 ) : (
                   row.spaceType
                 )}
+                {onChangeSpaceType && <small>无法自动分类时按计价口径选择；不报价的空间在状态列选“不计价”。</small>}
               </td>
               <td className={differenceClass(floorAreaDifference)}>
                 {row.floorAreaM2.toFixed(2)} m2

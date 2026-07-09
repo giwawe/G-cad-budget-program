@@ -242,3 +242,11 @@ const fallbackPipeEstimate = buildHydropowerEstimate(
 assert.ok(fallbackPipeEstimate.summary.strongConduitLengthM > 0);
 assert.ok(fallbackPipeEstimate.summary.lowConfidencePointCount > 0);
 assert.ok(fallbackPipeEstimate.pipes.some((pipe) => pipe.source === "fallback_count_factor"));
+
+const unclassifiedEstimate = buildHydropowerEstimate([baseRow({ spaceName: "待分类空间", spaceType: "其他" })], emptyDrawing);
+const manuallyClassifiedEstimate = buildHydropowerEstimate([baseRow({ spaceName: "待分类空间", spaceType: "卧室" })], emptyDrawing);
+
+assert.equal(unclassifiedEstimate.summary.standardOutletCount, 0);
+assert.equal(unclassifiedEstimate.points.some((point) => point.label === "卧室普通插座"), false);
+assert.ok(manuallyClassifiedEstimate.summary.standardOutletCount > unclassifiedEstimate.summary.standardOutletCount);
+assert.ok(manuallyClassifiedEstimate.points.some((point) => point.label === "卧室普通插座"));
