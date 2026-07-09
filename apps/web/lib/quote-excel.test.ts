@@ -197,6 +197,84 @@ assert.ok(duplicateHtml.includes("<td>厨房卫生间集成吊顶</td><td>m2</td
 assert.equal(countOccurrences(duplicateHtml, "<td>室内门</td><td>樘"), 1);
 assert.ok(duplicateHtml.includes("<td>室内门</td><td>樘</td><td>3</td><td>1200.00</td><td>0.00</td><td>0.00</td><td>3600.00</td>"));
 
+const atriumMergeHtml = buildQuoteExcelHtml(
+  {
+    ...mapping,
+    items: [
+      {
+        floor: "一层",
+        space_name: "挑空一",
+        space_type: "挑空",
+        item_name: "地面砖铺贴(750X1500)",
+        quantity: 12,
+        unit: "m2",
+        unit_price: 98,
+        amount: 1176,
+      },
+      {
+        floor: "一层",
+        space_name: "挑空二",
+        space_type: "挑空",
+        item_name: "地面砖铺贴(750X1500)",
+        quantity: 8,
+        unit: "m2",
+        unit_price: 98,
+        amount: 784,
+      },
+      {
+        floor: "二层",
+        space_name: "卧室",
+        space_type: "卧室",
+        item_name: "墙面乳胶漆",
+        quantity: 18,
+        unit: "m2",
+        unit_price: 20,
+        amount: 360,
+      },
+    ],
+    summary: {
+      ...mapping.summary,
+      item_count: 3,
+      total_amount: 2320,
+    },
+  },
+  "挑空合并项目",
+);
+
+assert.equal(countOccurrences(atriumMergeHtml, "<td>一层挑空工程</td>"), 1);
+assert.ok(!atriumMergeHtml.includes("<td>一层挑空工程一</td>"));
+assert.ok(!atriumMergeHtml.includes("<td>一层挑空工程二</td>"));
+assert.equal(countOccurrences(atriumMergeHtml, "<td>地面砖铺贴(750X1500)</td>"), 1);
+assert.ok(atriumMergeHtml.includes("<td>地面砖铺贴(750X1500)</td><td>m2</td><td>20</td><td>40.00</td><td>8.00</td><td>50.00</td><td>1960.00</td>"));
+
+const castSlabNoteHtml = buildQuoteExcelHtml(
+  {
+    ...mapping,
+    items: [
+      {
+        floor: "全屋",
+        space_name: "全屋",
+        space_type: "全屋",
+        item_name: "现浇钢筋混凝土楼板",
+        quantity: 103.33,
+        unit: "m2",
+        unit_price: 320,
+        amount: 33065.6,
+      },
+    ],
+    summary: {
+      ...mapping.summary,
+      item_count: 1,
+      total_amount: 33065.6,
+    },
+  },
+  "现浇楼板项目",
+);
+
+assert.ok(castSlabNoteHtml.includes("钢筋绑扎、模板支设、混凝土浇筑及养护"));
+assert.ok(!castSlabNoteHtml.includes("QUOTE_CAST_SLAB"));
+assert.ok(!castSlabNoteHtml.includes("默认单价待核定"));
+
 const slidingDoorHtml = buildQuoteExcelHtml(
   {
     ...mapping,
