@@ -1135,6 +1135,36 @@ code {
   vector-effect: non-scaling-stroke;
 }
 
+.svgVoidBoundary {
+  fill: rgba(59, 130, 246, 0.1);
+  stroke: #60a5fa;
+  stroke-dasharray: 0.32 0.16;
+  stroke-linejoin: round;
+  stroke-width: 0.46;
+  opacity: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.svgGypsumLineCeiling {
+  fill: rgba(245, 158, 11, 0.14);
+  stroke: #f59e0b;
+  stroke-dasharray: 0.12 0.1;
+  stroke-linejoin: round;
+  stroke-width: 0.42;
+  opacity: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.svgNoCeiling {
+  fill: rgba(148, 163, 184, 0.16);
+  stroke: #94a3b8;
+  stroke-dasharray: 0.1 0.1;
+  stroke-linejoin: round;
+  stroke-width: 0.4;
+  opacity: 1;
+  vector-effect: non-scaling-stroke;
+}
+
 .svgExteriorWall {
   fill: rgba(255, 255, 255, 0.04);
   stroke: #facc15;

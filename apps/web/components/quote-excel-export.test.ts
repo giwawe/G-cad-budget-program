@@ -63,6 +63,12 @@ assert.ok(drawingReviewSource.includes("showHydropowerPoints"), "drawing review 
 assert.ok(drawingReviewSource.includes("svgHydropowerPoint"), "drawing review should render hydropower point markers");
 assert.ok(drawingReviewSource.includes("系统估算点位"), "drawing review toolbar should mark the hydropower overlay as system-estimated");
 assert.ok(drawingReviewSource.includes("系统推荐点位"), "drawing review point tooltip should explain the overlay markers are recommendations");
+assert.ok(drawingReviewSource.includes("showVoids"), "drawing review should expose a void boundary layer toggle");
+assert.ok(drawingReviewSource.includes("showGypsumLineCeilings"), "drawing review should expose a gypsum line ceiling layer toggle");
+assert.ok(drawingReviewSource.includes("showNoCeilings"), "drawing review should expose a no-ceiling layer toggle");
+assert.ok(drawingReviewSource.includes("svgVoidBoundary"), "drawing review should render void boundaries");
+assert.ok(drawingReviewSource.includes("svgGypsumLineCeiling"), "drawing review should render gypsum line ceiling boundaries");
+assert.ok(drawingReviewSource.includes("svgNoCeiling"), "drawing review should render no-ceiling boundaries");
 assert.ok(hydropowerReviewPanelSource.includes("HydropowerEstimate"), "hydropower review panel should type its estimate prop");
 assert.ok(hydropowerReviewPanelSource.includes("HydropowerPointKind"), "hydropower review panel should map point kinds to labels");
 assert.ok(hydropowerReviewPanelSource.includes("水电点位复核"), "hydropower review panel should render the review heading");

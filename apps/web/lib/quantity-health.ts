@@ -6,6 +6,7 @@ export type QuantityHealthSeverity = "warning" | "info";
 export type QuantityHealthCheck = {
   id:
     | "space-type-other"
+    | "space-naming-mixed-use"
     | "building-area-missing"
     | "building-area-quote-missing"
     | "bathroom-door-classification"
@@ -124,6 +125,21 @@ export function buildQuantityHealthChecks({
       title: "空间类型待确认",
       detail: `${formatNames(otherSpaceNames)} 被识别为其他，请在工程量表选择计价空间类型；确实不报价的空间请在状态列标为“不计价”。`,
       spaceNames: otherSpaceNames,
+    });
+  }
+
+  const mixedUseSpaceNames = uniqueNames(
+    billableRows
+      .filter((row) => row.spaceType !== "其他" && isMixedUseSpaceName(row.spaceName))
+      .map((row) => row.spaceName),
+  );
+  if (mixedUseSpaceNames.length > 0) {
+    checks.push({
+      id: "space-naming-mixed-use",
+      severity: "warning",
+      title: "空间命名需拆分",
+      detail: `${formatNames(mixedUseSpaceNames)} 同时包含可计价空间和电梯井/管井/洞口等辅助空间，不同性质的空间不要合并命名或画在同一个房间边界内；请拆分空间边界，或把可计价区域改为独立规范名称。`,
+      spaceNames: mixedUseSpaceNames,
     });
   }
 
@@ -325,6 +341,10 @@ function formatNames(names: string[]): string {
   return names.join("、");
 }
 
+function isMixedUseSpaceName(spaceName: string): boolean {
+  return /[/／、]/.test(spaceName) && /(电梯井|设备井|管井|风井|楼板洞口|楼板开洞|洞口)/.test(spaceName);
+}
+
 function formatHealthSummaryLabel(warning: number, info: number): string {
   if (warning === 0 && info === 0) {
     return "当前无待确认项";
@@ -398,6 +418,8 @@ function healthFixSuggestion(id: QuantityHealthCheck["id"]): string {
   switch (id) {
     case "space-type-other":
       return "在工程量表“类型”列选择普通干区、湿区、楼梯或储物等计价空间类型；确实不报价的空间标为“不计价”。";
+    case "space-naming-mixed-use":
+      return "把不同性质的空间拆成独立 QUOTE_ROOM，例如过道和电梯井分开命名；楼梯洞口用 QUOTE_VOID 表达。";
     case "building-area-missing":
       return "补画闭合 QUOTE_EXT_WALL 外墙轮廓，确保建筑面积可按外墙闭合多段线读取。";
     case "building-area-quote-missing":

@@ -525,6 +525,23 @@ assert.deepEqual(integratedCeilingPriceReminderItems(kitchenGypsumCeilingMapping
 const gypsumLineCeilingMapping = buildQuoteMapping([{ ...rows[0], spaceName: "客厅", spaceType: "客厅", gypsumLineCeilingLengthM: 7.5 }]);
 assert.ok(gypsumLineCeilingMapping.items.some((item) => item.space_name === "客厅" && item.item_name === "石膏线吊顶" && item.quantity === 7.5 && item.unit_price === 35));
 
+const stairVoidCorridorMapping = buildQuoteMapping([
+  {
+    ...rows[0],
+    floor: "负二层",
+    spaceName: "过道/电梯井",
+    spaceType: "过道",
+    floorAreaM2: 16.04,
+    ceilingAreaM2: 7.89,
+    voidAreaM2: 8.15,
+    heightM: 2.8,
+    latexPaintAreaM2: 25,
+    wallTileAreaM2: 0,
+    waterproofAreaM2: 0,
+  },
+]);
+assert.ok(stairVoidCorridorMapping.items.some((item) => item.space_name === "过道/电梯井" && item.item_name === "楼梯踏步铺贴" && item.quantity === 15));
+
 const customMapping = buildQuoteMapping(rows, [{ item_name: "厨房墙面定制漆", metric: "latex_paint_area_m2", unit: "m2", unit_price: 30 }]);
 
 assert.equal(customMapping.items.length, 0);

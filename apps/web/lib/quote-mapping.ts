@@ -1097,6 +1097,9 @@ function isQuoteMetric(metric: unknown): metric is QuoteMetric {
 }
 
 function ruleAppliesToRow(rule: QuoteRule, row: QuantityRow) {
+  if (rule.metric === "stair_tread_count") {
+    return isStairTreadQuoteRow(row);
+  }
   if (rule.metric === "curtain_wall_width_m" && !curtainWallWidthIsQuoteReady(row.curtainWallWidthSource)) {
     return false;
   }
@@ -1113,6 +1116,14 @@ function ruleAppliesToRow(rule: QuoteRule, row: QuantityRow) {
     }
   }
   return !rule.space_types || rule.space_types.length === 0 || rule.space_types.includes(row.spaceType);
+}
+
+function isStairTreadQuoteRow(row: QuantityRow): boolean {
+  if (row.spaceType === "楼梯" || row.spaceType === "楼梯过道") {
+    return true;
+  }
+  const hasVerticalOpening = (row.voidAreaM2 ?? 0) > 0 || row.floorAreaM2 < (row.grossFloorAreaM2 ?? row.floorAreaM2) || row.ceilingAreaM2 < (row.grossFloorAreaM2 ?? row.ceilingAreaM2);
+  return hasVerticalOpening && /楼梯|楼梯洞|楼梯间|电梯井|楼板洞口|楼板开洞/.test(row.spaceName);
 }
 
 function curtainWallWidthIsQuoteReady(source: QuantityRow["curtainWallWidthSource"]) {

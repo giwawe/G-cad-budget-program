@@ -140,6 +140,17 @@ assert.deepEqual(doorChecks.map((check) => check.severity), ["warning", "info"])
 assert.equal(doorChecks[0].message.includes("卫生间门"), true);
 assert.equal(doorChecks[1].message.includes("厨房推拉门"), true);
 
+const namingChecks = buildQuantityHealthChecks({
+  rows: [
+    { ...baseRow, spaceName: "过道/电梯井", spaceType: "过道", grossFloorAreaM2: 16.04, floorAreaM2: 16.04, ceilingAreaM2: 7.89, voidAreaM2: 8.15 },
+    { ...baseRow, spaceName: "客厅/电梯井", spaceType: "客厅", grossFloorAreaM2: 49.95, floorAreaM2: 41.8, ceilingAreaM2: 41.8, voidAreaM2: 8.15 },
+  ],
+  summary: { ...summary, building_area_m2: 88.66 },
+});
+assert.deepEqual(namingChecks.map((check) => check.id), ["space-naming-mixed-use"]);
+assert.equal(namingChecks[0].severity, "warning");
+assert.equal(namingChecks[0].message.includes("不同性质的空间不要合并命名"), true);
+
 const openingAttributionChecks = buildQuantityHealthChecks({
   rows: [
     { ...baseRow, spaceName: "阳台", spaceType: "阳台", doorWidthTotalM: 1.8, slidingDoorAreaM2: 0, slidingDoorCasingLengthM: 0 },
