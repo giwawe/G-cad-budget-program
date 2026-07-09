@@ -261,7 +261,7 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string, 
       <tr class="quoteSubHeaderRow">${summaryRows[3].map((cell) => `<th>${escapeHtml(cell)}</th>`).join("")}</tr>
     </thead>
     <tbody>
-      ${groupedQuoteRows.map((row) => quoteTemplateHtmlRow(row)).join("\n      ")}
+      ${quoteTemplateBodyHtmlRows(groupedQuoteRows)}
       ${riskNoteRows.map((row) => quoteTemplateHtmlRow(row)).join("\n      ")}
       ${quoteTemplateFooterHtmlRows()}
     </tbody>
@@ -277,9 +277,60 @@ function quoteTemplateMetaHtmlRow(mapping: QuoteMapping, projectName: string): s
   return `<tr class="quoteMetaRow"><td colspan="2">地址名称：${escapeHtml(projectName.trim() || "报价映射")}</td><td colspan="4">客户：</td><td colspan="2">装修面积：${escapeHtml(formatQuantity(mapping.summary.building_area_m2))}</td><td>日期：${escapeHtml(dateLabel)}</td></tr>`;
 }
 
-function quoteTemplateHtmlRow(row: string[]): string {
+function quoteTemplateBodyHtmlRows(rows: string[][]): string {
+  const subtotalRows: number[] = [];
+  let currentSectionStartRow = 0;
+  let directTotalRow = 0;
+  let managementFeeRow = 0;
+  let taxRow = 0;
+
+  return rows.map((row, index) => {
+    const excelRow = excelRowNumber(index);
+    const className = quoteTemplateRowClass(row);
+    let amountFormula = "";
+    if (className === "quoteSectionRow") {
+      currentSectionStartRow = excelRow + 1;
+    } else if (isQuoteItemRow(row)) {
+      amountFormula = `=D${excelRow}*(E${excelRow}+F${excelRow}+G${excelRow})`;
+    } else if (className === "quoteSubtotalRow") {
+      amountFormula = currentSectionStartRow > 0 && currentSectionStartRow <= excelRow - 1
+        ? `=SUM(H${currentSectionStartRow}:H${excelRow - 1})`
+        : "=0";
+      subtotalRows.push(excelRow);
+      currentSectionStartRow = 0;
+    } else if (className === "quoteTotalRow") {
+      if (row[0] === "A") {
+        amountFormula = subtotalRows.length > 0 ? `=SUM(${subtotalRows.map((rowNumber) => `H${rowNumber}`).join(",")})` : "=0";
+        directTotalRow = excelRow;
+      } else if (row[0] === "B") {
+        amountFormula = directTotalRow > 0 ? `=H${directTotalRow}*5%` : "=0";
+        managementFeeRow = excelRow;
+      } else if (row[0] === "C") {
+        amountFormula = directTotalRow > 0 && managementFeeRow > 0 ? `=(H${directTotalRow}+H${managementFeeRow})*3%` : "=0";
+        taxRow = excelRow;
+      } else if (row[0] === "D") {
+        amountFormula = directTotalRow > 0 && taxRow > 0 ? `=SUM(H${directTotalRow}:H${taxRow})` : "=0";
+      }
+    }
+    return quoteTemplateHtmlRow(row, amountFormula ? { 7: amountFormula } : undefined);
+  }).join("\n      ");
+}
+
+function quoteTemplateHtmlRow(row: string[], formulas?: Partial<Record<number, string>>): string {
   const className = quoteTemplateRowClass(row);
-  return `<tr${className ? ` class="${className}"` : ""}>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`;
+  return `<tr${className ? ` class="${className}"` : ""}>${row.map((cell, index) => quoteTemplateHtmlCell(cell, formulas?.[index])).join("")}</tr>`;
+}
+
+function quoteTemplateHtmlCell(cell: string, formula?: string): string {
+  return `<td${formula ? ` x:fmla="${escapeHtml(formula)}"` : ""}>${escapeHtml(cell)}</td>`;
+}
+
+function excelRowNumber(bodyRowIndex: number): number {
+  return bodyRowIndex + 5;
+}
+
+function isQuoteItemRow(row: string[]): boolean {
+  return /^\d+$/.test(row[0]) && row[1] !== "";
 }
 
 function quoteTemplateFooterHtmlRows(): string {
