@@ -9,6 +9,7 @@ type QuantityRowMetric =
   | "ceilingAreaM2"
   | "gypsumFlatCeilingAreaM2"
   | "edgeCeilingLengthM"
+  | "gypsumLineCeilingLengthM"
   | "wallTileAreaM2"
   | "waterproofAreaM2"
   | "windowsillLengthM"
@@ -50,6 +51,7 @@ export type QuoteMetric =
   | "ceiling_area_m2"
   | "gypsum_flat_ceiling_area_m2"
   | "edge_ceiling_length_m"
+  | "gypsum_line_ceiling_length_m"
   | "wall_tile_area_m2"
   | "waterproof_area_m2"
   | "windowsill_length_m"
@@ -303,6 +305,7 @@ const DEFAULT_RULES: QuoteRule[] = [
   quoteRule("厨房卫生间集成吊顶", "ceiling_area_m2", "m2", 120, 0, 0, KITCHEN_BATHROOM_SPACE_TYPES),
   quoteRule("轻钢龙骨平顶", "gypsum_flat_ceiling_area_m2", "m2", 60, 30, 90, GYPSUM_CEILING_SPACE_TYPES),
   quoteRule("双眼皮/边吊吊顶", "edge_ceiling_length_m", "M", 35, 15, 30, GYPSUM_CEILING_SPACE_TYPES),
+  quoteRule("石膏线吊顶", "gypsum_line_ceiling_length_m", "M", 12, 5, 18, GYPSUM_CEILING_SPACE_TYPES),
   quoteRule("顶面批嵌", "ceiling_area_m2", "m2", 0, 15, 10, CEILING_PAINT_SPACE_TYPES),
   quoteRule("顶面乳胶漆", "ceiling_area_m2", "m2", 10, 0, 10, CEILING_PAINT_SPACE_TYPES),
   quoteRule("地面找平", "floor_area_m2", "m2", 0, 25, 30, WET_FLOOR_SPACE_TYPES),
@@ -381,6 +384,7 @@ const METRIC_TO_ROW_FIELD: Record<DirectFieldRowQuoteMetric, QuantityRowMetric> 
   ceiling_area_m2: "ceilingAreaM2",
   gypsum_flat_ceiling_area_m2: "gypsumFlatCeilingAreaM2",
   edge_ceiling_length_m: "edgeCeilingLengthM",
+  gypsum_line_ceiling_length_m: "gypsumLineCeilingLengthM",
   wall_tile_area_m2: "wallTileAreaM2",
   waterproof_area_m2: "waterproofAreaM2",
   windowsill_length_m: "windowsillLengthM",
@@ -1028,6 +1032,7 @@ function isQuoteMetric(metric: unknown): metric is QuoteMetric {
     metric === "ceiling_area_m2" ||
     metric === "gypsum_flat_ceiling_area_m2" ||
     metric === "edge_ceiling_length_m" ||
+    metric === "gypsum_line_ceiling_length_m" ||
     metric === "wall_tile_area_m2" ||
     metric === "waterproof_area_m2" ||
     metric === "windowsill_length_m" ||
@@ -1095,15 +1100,15 @@ function ruleAppliesToRow(rule: QuoteRule, row: QuantityRow) {
   if (rule.metric === "curtain_wall_width_m" && !curtainWallWidthIsQuoteReady(row.curtainWallWidthSource)) {
     return false;
   }
-  if ((rule.metric === "ceiling_area_m2" || rule.metric === "gypsum_flat_ceiling_area_m2" || rule.metric === "edge_ceiling_length_m") && row.spaceType === "露台") {
+  if ((rule.metric === "ceiling_area_m2" || rule.metric === "gypsum_flat_ceiling_area_m2" || rule.metric === "edge_ceiling_length_m" || rule.metric === "gypsum_line_ceiling_length_m") && row.spaceType === "露台") {
     return false;
   }
-  if ((rule.metric === "ceiling_area_m2" || rule.metric === "gypsum_flat_ceiling_area_m2" || rule.metric === "edge_ceiling_length_m") && KITCHEN_BATHROOM_SPACE_TYPES.includes(row.spaceType)) {
+  if ((rule.metric === "ceiling_area_m2" || rule.metric === "gypsum_flat_ceiling_area_m2" || rule.metric === "edge_ceiling_length_m" || rule.metric === "gypsum_line_ceiling_length_m") && KITCHEN_BATHROOM_SPACE_TYPES.includes(row.spaceType)) {
     const finishType = row.ceilingFinishType ?? "integrated";
     if (rule.item_name === "厨房卫生间集成吊顶") {
       return finishType === "integrated";
     }
-    if (["轻钢龙骨平顶", "双眼皮/边吊吊顶", "顶面批嵌", "顶面乳胶漆"].includes(rule.item_name)) {
+    if (["轻钢龙骨平顶", "双眼皮/边吊吊顶", "石膏线吊顶", "顶面批嵌", "顶面乳胶漆"].includes(rule.item_name)) {
       return finishType === "gypsum";
     }
   }

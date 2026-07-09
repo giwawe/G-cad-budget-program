@@ -522,6 +522,9 @@ assert.ok(kitchenGypsumCeilingMapping.items.some((item) => item.space_name === "
 assert.ok(kitchenGypsumCeilingMapping.items.some((item) => item.space_name === "厨房" && item.item_name === "顶面乳胶漆" && item.quantity === 4.48));
 assert.deepEqual(integratedCeilingPriceReminderItems(kitchenGypsumCeilingMapping), []);
 
+const gypsumLineCeilingMapping = buildQuoteMapping([{ ...rows[0], spaceName: "客厅", spaceType: "客厅", gypsumLineCeilingLengthM: 7.5 }]);
+assert.ok(gypsumLineCeilingMapping.items.some((item) => item.space_name === "客厅" && item.item_name === "石膏线吊顶" && item.quantity === 7.5 && item.unit_price === 35));
+
 const customMapping = buildQuoteMapping(rows, [{ item_name: "厨房墙面定制漆", metric: "latex_paint_area_m2", unit: "m2", unit_price: 30 }]);
 
 assert.equal(customMapping.items.length, 0);
@@ -599,7 +602,7 @@ assert.equal(dryAreaMapping.summary.total_amount, 600);
 
 const rules = defaultQuoteRules();
 assert.equal(DEFAULT_QUOTE_RULES_NAME, "商品房整装默认规则");
-assert.equal(rules.length, 74);
+assert.equal(rules.length, 75);
 assert.equal(rules[0].item_name, "墙面界面剂处理");
 assert.equal(rules[0].metric, "latex_paint_area_m2");
 assert.equal(rules[0].unit_price, 7);
@@ -616,6 +619,16 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "双眼皮/边吊吊顶
   material_price: 35,
   auxiliary_price: 15,
   labor_price: 30,
+  space_types: ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "挑空", "衣帽间", "储物间", "厨房", "卫生间"],
+});
+assert.deepEqual(rules.find((rule) => rule.item_name === "石膏线吊顶"), {
+  item_name: "石膏线吊顶",
+  metric: "gypsum_line_ceiling_length_m",
+  unit: "M",
+  unit_price: 35,
+  material_price: 12,
+  auxiliary_price: 5,
+  labor_price: 18,
   space_types: ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "挑空", "衣帽间", "储物间", "厨房", "卫生间"],
 });
 assert.deepEqual(rules.at(-1), {

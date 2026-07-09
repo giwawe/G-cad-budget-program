@@ -34,6 +34,7 @@ type OrderedRoomSectionGroup = RoomSectionGroup & { order: number };
 const ROOM_SECTION_ITEM_NAMES = [
   "轻钢龙骨平顶",
   "双眼皮/边吊吊顶",
+  "石膏线吊顶",
   "暗窗帘箱",
   "顶面批嵌",
   "顶面乳胶漆",
@@ -60,27 +61,8 @@ const FIXED_TEMPLATE_SECTIONS: QuoteTemplateSectionDefinition[] = [
     title: "其他工程",
     itemNames: ["砖墙门窗洞过梁", "水泥墙开槽", "打混凝土过梁孔", "厨房、卫生间排污管包隔音棉", "补线、管槽及零星修补", "垃圾清运费", "材料搬运费", "墙地面砖现场保护"],
   },
-  {
-    title: "水电工程",
-    itemNames: [
-      "强电插座",
-      "开关",
-      "灯位",
-      "筒灯/射灯",
-      "设备专线",
-      "弱电点位",
-      "强电线管",
-      "弱电线管",
-      "强电箱",
-      "弱电箱",
-      "分配电箱",
-      "给水点",
-      "热水点",
-      "排水点",
-      "给水管",
-      "排水管",
-    ],
-  },
+  { title: "强弱电工程", itemNames: HYDROPOWER_STRONG_WEAK_ITEM_NAMES },
+  { title: "给排水工程", itemNames: HYDROPOWER_PLUMBING_ITEM_NAMES },
   { title: "主材项目", itemNames: ["地面瓷砖", "墙面瓷砖", "瓷砖加工费"] },
   { title: "全屋定制、衣柜、橱柜、全屋家具", itemNames: ["全屋定制", "橱柜", "背景墙"] },
   { title: "室内门", itemNames: ["入户门", "室内门", "卫生间门", "厨房推拉门", "厨房推拉门双包套", "阳台推拉门", "阳台推拉门双包套", "铝合金封门窗"] },
@@ -112,6 +94,7 @@ const TEMPLATE_PRICES: Record<string, QuoteTemplatePrice> = {
   厨房卫生间集成吊顶: { material: 120, auxiliary: 0, labor: 0, note: "铝扣板或集成吊顶模块，含龙骨、收边条及安装。" },
   轻钢龙骨平顶: { material: 60, auxiliary: 30, labor: 90, note: "兔宝宝双面防潮石膏板，轻钢龙骨基层，含龙骨配件、辅料及灯槽制作。" },
   "双眼皮/边吊吊顶": { material: 35, auxiliary: 15, labor: 30, note: "兔宝宝双面防潮石膏板，轻钢龙骨或木工板基层，含辅材、收口及灯槽制作。" },
+  石膏线吊顶: { material: 12, auxiliary: 5, labor: 18, note: "成品石膏线条或同档线条，含基层处理、粘贴固定及收口。" },
   顶面批嵌: { material: 0, auxiliary: 15, labor: 10, note: "三遍基础腻子找平，立邦腻子粉，含打磨。" },
   顶面乳胶漆: { material: 10, auxiliary: 0, labor: 10, note: "乳胶漆一底两面，立邦金装五合一或同档产品。" },
   地面找平: { material: 0, auxiliary: 25, labor: 30, note: "32.5R普通水泥砂浆找平，厚度不大于50mm。" },
@@ -567,15 +550,6 @@ function subsectionHeaderRow(title: string): string[] {
 }
 
 function hydropowerSubsectionForItem(section: QuoteTemplateSection, itemName: string): string {
-  if (section.title !== "水电工程") {
-    return "";
-  }
-  if (HYDROPOWER_STRONG_WEAK_ITEM_NAMES.includes(itemName)) {
-    return "强弱电工程";
-  }
-  if (HYDROPOWER_PLUMBING_ITEM_NAMES.includes(itemName)) {
-    return "给排水工程";
-  }
   return "";
 }
 

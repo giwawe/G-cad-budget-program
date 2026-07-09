@@ -51,17 +51,26 @@
 | `QUOTE_VOID` | 挑空区域或楼板洞口，推荐用 HATCH 色块，也兼容闭合多段线 | 按所在空间和楼层关系扣减地面/顶面面积 |
 | `QUOTE_CAST_SLAB` | 现浇钢筋混凝土楼板闭合区域，推荐用 HATCH 色块，也兼容闭合多段线 | 按所在空间归属并计算现浇楼板面积 |
 | `QUOTE_EDGE_CEILING` | 边吊/双眼皮吊顶的单一闭合范围，推荐闭合多段线或 HATCH 色块 | 按闭合范围面积扣减轻钢龙骨平顶面积，并按闭合范围周长生成边吊计价长度 |
+| `QUOTE_GYPSUM_LINE_CEILING` | 石膏线吊顶的单一闭合范围，推荐闭合多段线或 HATCH 色块 | 按闭合范围面积扣减轻钢龙骨平顶面积，并按闭合范围周长生成石膏线吊顶计价长度 |
+| `QUOTE_NO_CEILING` | 原顶无吊顶范围，推荐闭合多段线或 HATCH 色块 | 只扣减轻钢龙骨平顶面积，不影响顶面批嵌和顶面乳胶漆 |
 | `QUOTE_RAILING` | 栏杆、护栏、楼梯扶手线 | 位于楼梯/楼梯过道时按楼梯扶手换算斜长，其它空间按栏杆/护栏平面长度 |
 
 > 兼容说明：系统会兼容常见错拼 `QUQTE_*` 到对应 `QUOTE_*`，并把 `QUQTE_WINDOM`、`QUOTE_WINDOM` 按 `QUOTE_WINDOW`，`OUOTE_HEIGHT` 按 `QUOTE_HEIGHT` 读取。规范制图仍必须使用标准 `QUOTE_*` 图层名，错拼兼容仅用于降低旧图纸导入失败风险。
 
-注意：`QUOTE_EXT_WALL` 已参与建筑面积计算，不再作为预留图层处理。`QUOTE_VOID` 每层都应按实际洞口位置绘制，避免跨层挑空或地下室挑空被错误合并。`QUOTE_CAST_SLAB` 是新增现浇楼板计价图层，不参与洞口扣减。`QUOTE_EDGE_CEILING` 只允许画一个表示边吊占用范围的实心闭合区域，不允许用内外两圈或环形带状区域表达边吊。
+注意：`QUOTE_EXT_WALL` 已参与建筑面积计算，不再作为预留图层处理。`QUOTE_VOID` 每层都应按实际洞口位置绘制，避免跨层挑空或地下室挑空被错误合并。`QUOTE_CAST_SLAB` 是新增现浇楼板计价图层，不参与洞口扣减。`QUOTE_EDGE_CEILING`、`QUOTE_GYPSUM_LINE_CEILING` 和 `QUOTE_NO_CEILING` 只允许画表示对应顶面做法范围的实心闭合区域，不允许用内外两圈或环形带状区域表达边吊；三者范围不能相互重叠，重叠会提示修图，避免重复计价。
 
 ## 3. 空间边界画法
 
 每个需要报价或校对的空间，都必须在 `QUOTE_ROOM` 图层画一条闭合多段线。
 
 要求：
+
+- 空间名称建议使用“楼层-空间名”，例如 `负二层-车库`、`一层-客厅`、`三层-主卧`；如果不写楼层前缀，必须用 `QUOTE_FLOOR` 标明每层楼层。
+- 楼层名称统一写为 `负二层`、`负一层`、`一层`、`二层`、`三层`，不要混用 B2、地下二层、2F 等不同写法。
+- 可计价空间尽量用标准名称或明确别名：客厅、餐厅、厨房、卫生间、卧室、书房、茶室、娱乐室、衣帽间、储物间、洗衣房、门厅、过道、楼梯间、楼梯过道、阳台、露台、车库、酒窖、挑空。
+- 不要把不计价井道和可计价空间混在一个空间名里；例如尽量不要写 `过道/电梯井`，应把过道作为可计价空间，电梯井单独画为 `电梯井` 不计价空间或用洞口/开放边图层表达。
+- 同一层多个同类型房间可以用 `卧室一`、`卧室二`、`卫生间一`、`卫生间二`；不要只重复写完全相同名称后再依赖系统猜测。
+- 辅助边界不要作为空间名称表达，楼板洞口用 `QUOTE_VOID`，开放边用 `QUOTE_OPENING`，栏杆/护栏/楼梯扶手用 `QUOTE_RAILING`。
 
 - 一个空间对应一条闭合 `LWPOLYLINE` 或 `POLYLINE`。
 - 多段线必须闭合，不能断开。
@@ -398,7 +407,7 @@
 窗帘墙宽候选 = 客厅/餐厅/卧室/书房有窗时，L 形窗优先按两条非平行长窗边合计；普通窗优先匹配窗户所在 QUOTE_WALL 墙段整宽；匹配不到时回退到空间最长一段 QUOTE_WALL；其它空间为 0
 ```
 
-厨房、卫生间顶面是可校对口径：系统默认按集成吊顶处理，使用 `ceiling_area_m2 = 地面面积` 输出“厨房卫生间集成吊顶”候选项，当前默认单价为 120，报价员可在报价规则单价表中修改；如果现场方案选择石膏板吊顶，前端工程量表可切换为石膏板吊顶。石膏板吊顶口径下，“轻钢龙骨平顶”使用 `gypsum_flat_ceiling_area_m2`，也就是 `ceiling_area_m2` 扣除 `QUOTE_EDGE_CEILING` 闭合范围面积后的结果；“双眼皮/边吊吊顶”使用 `edge_ceiling_length_m`，按闭合范围周长计价，默认 80/M（主材 35、辅材 15、人工 30）；顶面批嵌和顶面乳胶漆仍使用完整 `ceiling_area_m2`。露台默认视为露天空间，不生成顶面吊顶、顶面批嵌和顶面乳胶漆；即使旧本机报价规则仍把露台写入顶面规则，映射时也会硬性排除露台顶面项。少量有顶面的露台后续由设计师补项或校准。
+厨房、卫生间顶面是可校对口径：系统默认按集成吊顶处理，使用 `ceiling_area_m2 = 地面面积` 输出“厨房卫生间集成吊顶”候选项，当前默认单价为 120，报价员可在报价规则单价表中修改；如果现场方案选择石膏板吊顶，前端工程量表可切换为石膏板吊顶。石膏板吊顶口径下，“轻钢龙骨平顶”使用 `gypsum_flat_ceiling_area_m2`，也就是 `ceiling_area_m2` 扣除 `QUOTE_EDGE_CEILING`、`QUOTE_GYPSUM_LINE_CEILING`、`QUOTE_NO_CEILING` 闭合范围面积后的结果；“双眼皮/边吊吊顶”使用 `edge_ceiling_length_m`，按闭合范围周长计价，默认 80/M（主材 35、辅材 15、人工 30）；“石膏线吊顶”使用 `gypsum_line_ceiling_length_m`，按闭合范围周长计价，默认 35/M（主材 12、辅材 5、人工 18）；`QUOTE_NO_CEILING` 只表示原顶不做吊顶，不生成单独报价项。顶面批嵌和顶面乳胶漆仍使用完整 `ceiling_area_m2`。露台默认视为露天空间，不生成顶面吊顶、顶面批嵌和顶面乳胶漆；即使旧本机报价规则仍把露台写入顶面规则，映射时也会硬性排除露台顶面项。少量有顶面的露台后续由设计师补项或校准。
 
 地面瓷砖当前按 750X1500 规格、5% 损耗率从地面面积换算片数，并向上取整；报价映射中按全屋片数汇总生成，不按每个空间拆行。选品规格、拼花、斜铺或特殊损耗仍需要报价规则或校准 JSON 进一步确认。
 
@@ -406,7 +415,7 @@
 
 瓷砖加工费和美缝当前按项目级 `tile_area_m2` 生成“全屋”清单项；`tile_area_m2 = 可计价空间地面铺砖面积 + 墙面贴砖面积`。瓷砖加工费已按用户确认口径挂钩贴砖面积生成候选，报价员仍可按实际加工米数调整。
 
-水电默认报价规则不再按 `building_area_m2` 直接折算，也不在最终报价表中输出每个空间的水电细分来源。水电复核面板保留开关点位、各类插座、灯位、弱电点位、空调/设备专线、冷热水、排水和地漏等来源；报价规则默认汇总为“水电工程”，并在 Excel 草稿中分为“强弱电工程”和“给排水工程”，输出强电插座、开关、灯位、筒灯/射灯、设备专线、弱电点位、强电线管、弱电线管、强电箱、弱电箱、分配电箱、给水点、热水点、排水点、给水管和排水管。空调专线和设备专线合并为“设备专线”，筒灯和射灯合并为“筒灯/射灯”，灯带、回水管、户外给水和户外排水当前不列入默认报价。`electrical_scope_area_m2` 和 `plumbing_scope_area_m2` 仅保留为旧校准字段或自定义规则备用。
+水电默认报价规则不再按 `building_area_m2` 直接折算，也不在最终报价表中输出每个空间的水电细分来源。水电复核面板保留开关点位、各类插座、灯位、弱电点位、空调/设备专线、冷热水、排水和地漏等来源；报价规则默认在 Excel 草稿中作为两个独立大项输出：“强弱电工程”和“给排水工程”，不再额外包一层“水电工程”。强弱电工程输出强电插座、开关、灯位、筒灯/射灯、设备专线、弱电点位、强电线管、弱电线管、强电箱、弱电箱、分配电箱；给排水工程输出给水点、热水点、排水点、给水管和排水管。空调专线和设备专线合并为“设备专线”，筒灯和射灯合并为“筒灯/射灯”，灯带、回水管、户外给水和户外排水当前不列入默认报价。`electrical_scope_area_m2` 和 `plumbing_scope_area_m2` 仅保留为旧校准字段或自定义规则备用。
 
 材料搬运费、垃圾清运费和墙地面砖现场保护在商品房整装默认报价规则中按项目级 `building_area_m2` 生成“全屋”清单项。
 
@@ -441,7 +450,7 @@
 窗帘和窗帘箱不按窗洞宽度计量，应按窗户所在墙面的整面墙宽度计量。厨房、卫生间、过道等空间默认不做窗帘和窗帘箱；一般不做窗帘箱的位置也不生成窗帘。当前系统生成 `curtain_wall_width_m` 候选值：若识别到 L 形、转角窗或异形窗，按同一个窗组内两条非平行长窗边合计或现有窗户长度口径直接计算窗帘候选；若普通窗洞中心线能匹配到邻近且平行的 `QUOTE_WALL`，取该墙段整宽；若匹配不到，回退到空间最长一段 `QUOTE_WALL`。系统同时输出 `curtain_wall_width_source`：`matched_l_shape_window` 表示已按 L 形窗自动取数，`matched_window_wall` 表示已匹配窗户所在墙，`fallback_longest_wall` 表示回退最长墙，`manual_required_l_shape_window` 仅兼容旧快照中的 L 形窗状态，`not_applicable` 表示不适用，前端人工编辑后为 `manual`。该候选值允许在工程量表中人工校准、随校对快照保存/恢复；来源为 `manual`、`matched_window_wall`、`matched_l_shape_window` 或 `fallback_longest_wall` 且长度大于 `0` 时，暗窗帘箱进入空间项金额汇总，公共大项“窗帘”按可报价窗帘箱长度合计 * 2 的展开长度生成，默认主材 50、辅材 20。挑空空间不会混入普通窗帘/暗窗帘箱金额汇总，会单独生成 `atrium_curtain_candidates` 复核候选：宽度沿用窗户所在墙面候选，高度按同一 `QUOTE_VOID` 跨越的楼层数量乘默认层高汇总，并提示非常规尺寸窗帘需设计师复核。
 
 校准模板当前导出为 `{ summary, rows }` 对象格式：`summary.building_area_m2` 用于校准项目级建筑面积，`rows` 中会导出 `gross_floor_area_m2`、`floor_area_m2`、`ceiling_area_m2`、`void_area_m2`、`windowsill_length_m`、`curtain_wall_width_m`、`curtain_wall_width_source`、`atrium_curtain_width_m`、`atrium_curtain_height_m`、`atrium_curtain_area_m2`、`wall_tile_measure_length_m`、`wall_tile_area_m2`、`floor_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`new_wall_length_m`、`new_wall_area_m2`、`new_wall_unclassified_area_m2`、`new_wall_120_area_m2`、`new_wall_240_area_m2`、`demolition_wall_length_m`、`demolition_wall_area_m2`、`background_wall_area_m2`、`cast_slab_area_m2`、`entry_door_count`、`interior_door_count`、`bathroom_door_count`、`sliding_door_area_m2`、`sliding_door_casing_length_m`、`stair_railing_length_m`、`guardrail_length_m`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`custom_cabinet_area_m2`、`toilet_count` 和 `bathroom_vanity_count`。水电推荐点位、坐标、管线长度和复核状态当前保存在校对快照的 `hydropower` 字段中，不写入校准模板；旧版纯数组行格式仍可上传，只是不包含项目级建筑面积校准。
-校准模板当前导出为 `{ summary, rows }` 对象格式：`summary.building_area_m2` 用于校准项目级建筑面积，`rows` 中会导出 `gross_floor_area_m2`、`floor_area_m2`、`ceiling_area_m2`、`gypsum_flat_ceiling_area_m2`、`edge_ceiling_area_m2`、`edge_ceiling_length_m`、`void_area_m2`、`windowsill_length_m`、`curtain_wall_width_m`、`curtain_wall_width_source`、`atrium_curtain_width_m`、`atrium_curtain_height_m`、`atrium_curtain_area_m2`、`wall_tile_measure_length_m`、`wall_tile_area_m2`、`floor_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`new_wall_length_m`、`new_wall_area_m2`、`new_wall_unclassified_area_m2`、`new_wall_120_area_m2`、`new_wall_240_area_m2`、`demolition_wall_length_m`、`demolition_wall_area_m2`、`background_wall_area_m2`、`cast_slab_area_m2`、`entry_door_count`、`interior_door_count`、`bathroom_door_count`、`sliding_door_area_m2`、`sliding_door_casing_length_m`、`stair_railing_length_m`、`guardrail_length_m`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`custom_cabinet_area_m2`、`toilet_count` 和 `bathroom_vanity_count`。水电推荐点位、坐标、管线长度和复核状态当前保存在校对快照的 `hydropower` 字段中，不写入校准模板；旧版纯数组行格式仍可上传，只是不包含项目级建筑面积校准。
+校准模板当前导出为 `{ summary, rows }` 对象格式：`summary.building_area_m2` 用于校准项目级建筑面积，`rows` 中会导出 `gross_floor_area_m2`、`floor_area_m2`、`ceiling_area_m2`、`gypsum_flat_ceiling_area_m2`、`edge_ceiling_area_m2`、`edge_ceiling_length_m`、`gypsum_line_ceiling_area_m2`、`gypsum_line_ceiling_length_m`、`no_ceiling_area_m2`、`void_area_m2`、`windowsill_length_m`、`curtain_wall_width_m`、`curtain_wall_width_source`、`atrium_curtain_width_m`、`atrium_curtain_height_m`、`atrium_curtain_area_m2`、`wall_tile_measure_length_m`、`wall_tile_area_m2`、`floor_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`new_wall_length_m`、`new_wall_area_m2`、`new_wall_unclassified_area_m2`、`new_wall_120_area_m2`、`new_wall_240_area_m2`、`demolition_wall_length_m`、`demolition_wall_area_m2`、`background_wall_area_m2`、`cast_slab_area_m2`、`entry_door_count`、`interior_door_count`、`bathroom_door_count`、`sliding_door_area_m2`、`sliding_door_casing_length_m`、`stair_railing_length_m`、`guardrail_length_m`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`custom_cabinet_area_m2`、`toilet_count` 和 `bathroom_vanity_count`。水电推荐点位、坐标、管线长度和复核状态当前保存在校对快照的 `hydropower` 字段中，不写入校准模板；旧版纯数组行格式仍可上传，只是不包含项目级建筑面积校准。
 
 上传包含 `curtain_wall_width_m` 的校准 JSON 后，若当前行来源是 `manual_required_l_shape_window` 或 `fallback_longest_wall`，工程量表会提供“应用校准”按钮，把校准值写回当前行、将来源标记为 `manual`，并清除该单元格的当前差异。
 

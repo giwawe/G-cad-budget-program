@@ -98,19 +98,20 @@ assert.ok(!html.includes("<h2>人工补项</h2>"));
 assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>一</td><td>全屋拆改工程</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
 assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>二</td><td>厨房工程</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
 assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>三</td><td>其他工程</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
-assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>四</td><td>水电工程</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
-assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>五</td><td>主材项目</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
-assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>六</td><td>全屋定制、衣柜、橱柜、全屋家具</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
-assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>七</td><td>室内门</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
-assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>八</td><td>集成吊顶、卫浴、全屋开关灯饰</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
-assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>九</td><td>其他（窗帘、美缝、窗台石等）</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>四</td><td>强弱电工程</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>五</td><td>给排水工程</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>六</td><td>主材项目</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>七</td><td>全屋定制、衣柜、橱柜、全屋家具</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>八</td><td>室内门</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>九</td><td>集成吊顶、卫浴、全屋开关灯饰</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>十</td><td>其他（窗帘、美缝、窗台石等）</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
 assert.ok(!html.includes("<td>过道工程</td>"));
 assert.ok(!html.includes("<td>主卧工程</td>"));
 assert.ok(!html.includes("<td>次卧工程</td>"));
 assert.ok(!html.includes("<td>露台工程</td>"));
 assert.ok(html.indexOf("<td>二</td><td>厨房工程</td>") < html.indexOf("<td>地面找平</td>"));
 assert.ok(html.indexOf("<td>八</td><td>集成吊顶、卫浴、全屋开关灯饰</td>") < html.indexOf("<td>厨房卫生间集成吊顶</td>"));
-assert.ok(html.indexOf("<td>四</td><td>水电工程</td>") < html.indexOf("<td>强电布线 &amp; 水路复核</td>"));
+assert.ok(!html.includes("<td>水电工程</td>"), "Excel draft should promote hydropower subcategories to top-level sections");
 assertQuoteRow(html, "厨房卫生间集成吊顶", "m2", "4.48", "120.00", "0.00", "0.00", "537.60");
 assertQuoteRow(html, "地面找平", "m2", "4.48", "0.00", "25.00", "30.00", "246.40");
 assertQuoteRow(html, "强电布线 & 水路复核", "M2", "88.66", "78.00", "0.00", "0.00", "6915.48");
@@ -509,7 +510,7 @@ const hydropowerSectionHtml = buildQuoteExcelHtml(
   },
   "水电点位项目",
 );
-assert.ok(hydropowerSectionHtml.indexOf("<td>四</td><td>水电工程</td>") < hydropowerSectionHtml.indexOf("<td>强电插座</td>"));
+assert.ok(!hydropowerSectionHtml.includes("<td>水电工程</td>"), "Excel draft should no longer render a wrapper hydropower section");
 assert.ok(hydropowerSectionHtml.indexOf("<td>强弱电工程</td>") < hydropowerSectionHtml.indexOf("<td>强电插座</td>"));
 assert.ok(hydropowerSectionHtml.indexOf("<td>给排水工程</td>") < hydropowerSectionHtml.indexOf("<td>排水点</td>"));
 assertQuoteRow(hydropowerSectionHtml, "强电插座", "位", "37", "5.00", "12.00", "55.00", "2664.00");
@@ -761,6 +762,16 @@ const villaLikeHtml = buildQuoteExcelHtml(
         floor: "一层",
         space_name: "楼梯间",
         space_type: "楼梯",
+        item_name: "石膏线吊顶",
+        quantity: 5.6,
+        unit: "M",
+        unit_price: 35,
+        amount: 196,
+      },
+      {
+        floor: "一层",
+        space_name: "楼梯间",
+        space_type: "楼梯",
         item_name: "楼梯踏步铺贴",
         quantity: 15,
         unit: "步",
@@ -830,8 +841,8 @@ const villaLikeHtml = buildQuoteExcelHtml(
     ],
     summary: {
       ...mapping.summary,
-      item_count: 9,
-      total_amount: 5048,
+      item_count: 10,
+      total_amount: 5244,
     },
   },
   "别墅口径项目",
@@ -840,6 +851,7 @@ assert.ok(villaLikeHtml.includes("<td>二</td><td>一层楼梯间工程</td>"));
 assertQuoteRow(villaLikeHtml, "楼梯踏步铺贴", "步", "15", "0.00", "45.00", "80.00", "1875.00");
 assertQuoteRow(villaLikeHtml, "墙面乳胶漆", "m2", "18", "10.00", "0.00", "10.00", "360.00");
 assertQuoteRow(villaLikeHtml, "轻钢龙骨平顶", "m2", "6", "60.00", "30.00", "90.00", "1080.00");
+assertQuoteRow(villaLikeHtml, "石膏线吊顶", "M", "5.60", "12.00", "5.00", "18.00", "196.00");
 assert.ok(villaLikeHtml.includes("<td>三</td><td>一层卧室工程一</td>"));
 assert.ok(villaLikeHtml.includes("<td>四</td><td>一层卧室工程二</td>"));
 assert.ok(villaLikeHtml.includes("<td>五</td><td>二层卫生间、盥洗区工程</td>"));

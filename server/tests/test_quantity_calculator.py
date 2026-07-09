@@ -599,6 +599,36 @@ def test_edge_ceiling_can_zero_out_gypsum_flat_ceiling():
     assert row.gypsum_flat_ceiling_area_m2 == 0
 
 
+def test_no_ceiling_area_deducts_gypsum_flat_ceiling_and_keeps_paint_ceiling_area():
+    space = SpaceInput(
+        name="车库",
+        boundary_points_m=[(0, 0), (5, 0), (5, 4), (0, 4)],
+        no_ceiling_areas_m2=[20],
+    )
+
+    row = calculate_quantity_row(space, ProjectDefaults())
+
+    assert row.ceiling_area_m2 == 20
+    assert row.no_ceiling_area_m2 == 20
+    assert row.gypsum_flat_ceiling_area_m2 == 0
+
+
+def test_gypsum_line_ceiling_deducts_flat_ceiling_and_keeps_own_length():
+    space = SpaceInput(
+        name="客厅",
+        boundary_points_m=[(0, 0), (5, 0), (5, 4), (0, 4)],
+        gypsum_line_ceiling_areas_m2=[5],
+        gypsum_line_ceiling_lengths_m=[12],
+    )
+
+    row = calculate_quantity_row(space, ProjectDefaults())
+
+    assert row.ceiling_area_m2 == 20
+    assert row.gypsum_line_ceiling_area_m2 == 5
+    assert row.gypsum_line_ceiling_length_m == 12
+    assert row.gypsum_flat_ceiling_area_m2 == 15
+
+
 def test_suspected_large_door_opening_requires_review_without_default_deduction():
     space = SpaceInput(
         name="客厅",

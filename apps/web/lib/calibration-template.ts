@@ -9,6 +9,9 @@ export type CalibrationTemplateRow = {
   gypsum_flat_ceiling_area_m2: number;
   edge_ceiling_area_m2: number;
   edge_ceiling_length_m: number;
+  gypsum_line_ceiling_area_m2: number;
+  gypsum_line_ceiling_length_m: number;
+  no_ceiling_area_m2: number;
   void_area_m2: number;
   ceiling_finish_type: QuantityRow["ceilingFinishType"];
   wall_measure_length_m: number;
@@ -71,6 +74,9 @@ export function quantityRowsToCalibrationTemplate(rows: QuantityRow[], summary?:
     gypsum_flat_ceiling_area_m2: row.gypsumFlatCeilingAreaM2 ?? row.ceilingAreaM2,
     edge_ceiling_area_m2: row.edgeCeilingAreaM2 ?? 0,
     edge_ceiling_length_m: row.edgeCeilingLengthM ?? 0,
+    gypsum_line_ceiling_area_m2: row.gypsumLineCeilingAreaM2 ?? 0,
+    gypsum_line_ceiling_length_m: row.gypsumLineCeilingLengthM ?? 0,
+    no_ceiling_area_m2: row.noCeilingAreaM2 ?? 0,
     void_area_m2: row.voidAreaM2 ?? 0,
     ceiling_finish_type: row.ceilingFinishType ?? defaultCeilingFinishType(row.spaceType),
     wall_measure_length_m: row.wallMeasureLengthM,

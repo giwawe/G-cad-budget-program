@@ -58,7 +58,7 @@ const DEFAULT_DOOR_HEIGHT_M = 2.1;
 const FULL_WALL_TILE_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 const DEFAULT_INTEGRATED_CEILING_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 const QUOTE_RULES_STORAGE_KEY = "cad-budget-program.quote-rules.v2";
-const DEFAULT_QUOTE_RULES_STORAGE_VERSION = 6;
+const DEFAULT_QUOTE_RULES_STORAGE_VERSION = 7;
 const QUOTE_RULE_GROUPS_STORAGE_KEY = "cad-budget-program.quote-rule-groups.v1";
 const ALUMINUM_WINDOW_ITEM_NAME = "铝合金封门窗";
 const MANUAL_QUOTE_OPTION_ITEMS = [{ itemName: ALUMINUM_WINDOW_ITEM_NAME, unit: "M2", hint: "按窗户实际面积，默认不计价" }];
@@ -71,6 +71,7 @@ const quoteRuleGroups = [
       "墙面乳胶漆",
       "轻钢龙骨平顶",
       "双眼皮/边吊吊顶",
+      "石膏线吊顶",
       "顶面批嵌",
       "顶面乳胶漆",
       "厨房卫生间集成吊顶",
@@ -188,6 +189,9 @@ type ApiQuantityRow = {
   gypsum_flat_ceiling_area_m2?: number;
   edge_ceiling_area_m2?: number;
   edge_ceiling_length_m?: number;
+  gypsum_line_ceiling_area_m2?: number;
+  gypsum_line_ceiling_length_m?: number;
+  no_ceiling_area_m2?: number;
   void_area_m2?: number;
   ceiling_finish_type?: CeilingFinishType;
   wall_measure_length_m: number;
@@ -273,6 +277,9 @@ function toQuantityRow(row: ApiQuantityRow): QuantityRow {
     gypsumFlatCeilingAreaM2: row.gypsum_flat_ceiling_area_m2 ?? row.ceiling_area_m2,
     edgeCeilingAreaM2: row.edge_ceiling_area_m2 ?? 0,
     edgeCeilingLengthM: row.edge_ceiling_length_m ?? 0,
+    gypsumLineCeilingAreaM2: row.gypsum_line_ceiling_area_m2 ?? 0,
+    gypsumLineCeilingLengthM: row.gypsum_line_ceiling_length_m ?? 0,
+    noCeilingAreaM2: row.no_ceiling_area_m2 ?? 0,
     voidAreaM2: row.void_area_m2 ?? 0,
     ceilingFinishType: row.ceiling_finish_type ?? defaultCeilingFinishType(row.space_type),
     wallMeasureLengthM: row.wall_measure_length_m,

@@ -105,6 +105,8 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - `QUOTE_DEMO_WALL`：拆除墙体中心线或墙体线，用于拆墙长度和面积。
 - `QUOTE_CAST_SLAB`：现浇钢筋混凝土楼板闭合区域，推荐 HATCH 色块，也兼容闭合多段线，用于计算现浇楼板面积。
 - `QUOTE_EDGE_CEILING`：边吊/双眼皮吊顶的单一闭合范围，推荐闭合多段线或 HATCH 色块；按闭合范围面积扣减轻钢龙骨平顶面积，并按闭合范围周长生成边吊计价长度。设计师不允许画内外两圈或环形带状边吊。
+- `QUOTE_GYPSUM_LINE_CEILING`：石膏线吊顶的单一闭合范围，推荐闭合多段线或 HATCH 色块；按闭合范围面积扣减轻钢龙骨平顶面积，并按闭合范围周长生成石膏线吊顶计价长度。
+- `QUOTE_NO_CEILING`：原顶无吊顶范围，推荐闭合多段线或 HATCH 色块；只扣减轻钢龙骨平顶面积，不影响顶面批嵌和顶面乳胶漆。`QUOTE_EDGE_CEILING`、`QUOTE_GYPSUM_LINE_CEILING` 和 `QUOTE_NO_CEILING` 不能相互重叠，重叠会提示修图，避免重复计价。
 - `QUOTE_BACKGROUND_WALL`：可选背景墙线，用于背景墙面积；不画时背景墙默认为 0，Excel 草稿保留空行让设计师补填。
 - `QUOTE_BASE_CABINET`：厨房地柜/台面延米线，用于橱柜地柜长度。
 - `QUOTE_WALL_CABINET`：厨房吊柜延米线，用于橱柜吊柜长度。
@@ -129,7 +131,10 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 洞口扣减 = QUOTE_VOID 按楼层关系扣减；同位置跨多层时最底层只扣顶面、最高层只扣地面、中间层地面顶面都扣；单层或无法识别楼层时地面顶面都扣；多层同名楼梯间按楼层序号分组，底层未直接画到洞口时会沿用上一层楼梯洞口扣顶面，顶层保留顶面不扣洞口
 边吊/双眼皮吊顶面积 = QUOTE_EDGE_CEILING 单一闭合范围面积
 边吊/双眼皮吊顶计价长度 = QUOTE_EDGE_CEILING 单一闭合范围周长
-轻钢龙骨平顶面积 = max(顶面面积 - 边吊/双眼皮吊顶面积, 0)
+石膏线吊顶面积 = QUOTE_GYPSUM_LINE_CEILING 单一闭合范围面积
+石膏线吊顶计价长度 = QUOTE_GYPSUM_LINE_CEILING 单一闭合范围周长
+原顶无吊顶面积 = QUOTE_NO_CEILING 单一闭合范围面积
+轻钢龙骨平顶面积 = max(顶面面积 - 边吊/双眼皮吊顶面积 - 石膏线吊顶面积 - 原顶无吊顶面积, 0)
 挑空窗帘候选 = 挑空空间窗户所在墙面候选宽度 * 同一 QUOTE_VOID 跨越楼层数量 * 默认层高；只进复核候选，不混入普通窗帘金额
 楼梯扶手长度 = 楼梯/楼梯过道内 QUOTE_RAILING 线段按 sqrt(平面长度^2 + 层高^2) 换算；其它空间 QUOTE_RAILING 生成栏杆/护栏平面长度
 墙面计量长度 = 与空间关联的 QUOTE_WALL 长度
@@ -160,6 +165,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 空间名包含 `-` 时，`-` 前作为楼层，例如 `一层-客厅`。
 - 空间名没有楼层前缀但图纸有 `QUOTE_FLOOR` 标记时，系统按空间下方最近的楼层标记归属楼层；如果空间名已带楼层前缀，则优先使用空间名前缀；没有 `QUOTE_FLOOR` 时默认显示为 `一层`，不要恢复成 `未分层`。
 - 多楼层项目建议明确使用 `负二层`、`负一层`、`一层`、`二层` 等楼层前缀；`QUOTE_VOID` 的跨层扣减和挑空窗帘高度会依赖这些楼层序号。
+- 空间命名建议使用“楼层-空间名”，例如 `负二层-车库`、`一层-客厅`、`三层-主卧`；不要把不计价井道和可计价空间混在一个名称里，例如尽量不要写 `过道/电梯井`，应拆成可计价过道空间和单独不计价电梯井，或用 `QUOTE_VOID`、`QUOTE_OPENING` 等辅助图层表达。
 
 空间分类：
 
@@ -187,7 +193,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 地面瓷砖：`floor_tile_piece_count = ceil(地面面积 * 1.05 / (0.75 * 1.5))`，按 750X1500 规格、5% 损耗、向上取整；默认报价规则“地面瓷砖”按全屋片数汇总生成金额，不按空间拆行。
 - 墙面瓷砖：`wall_tile_piece_count = ceil(墙面贴砖面积 * 1.05 / (0.6 * 1.2))`，按 600X1200 规格、5% 损耗、向上取整；默认报价规则“墙面瓷砖”按全屋片数汇总生成金额，不按空间拆行。
 - 瓷砖加工费和美缝：默认按项目级 `tile_area_m2` 生成“全屋”清单项；`tile_area_m2 = 可计价空间地面铺砖面积 + 墙面贴砖面积`。瓷砖加工费当前按用户确认口径挂钩贴砖面积生成候选，报价员可按实际加工米数调整。
-- 水电默认计价不再按建筑面积直接取数。系统根据空间类型、空间轮廓、门窗、柜体、洁具和楼层信息生成带坐标的水电推荐点位，并按推荐点位估算强电线管、弱电线管、给水管和排水管长度；最终报价表的“水电工程”只输出客户可读的汇总项，并分为“强弱电工程”和“给排水工程”：强电插座、开关、灯位、筒灯/射灯、设备专线、弱电点位、强电线管、弱电线管、强电箱、弱电箱、分配电箱、给水点、热水点、排水点、给水管、排水管。细分点位来源仍保留在水电复核面板和校对快照中，`electrical_scope_area_m2` 和 `plumbing_scope_area_m2` 仅保留为旧校准字段或自定义规则备用。
+- 水电默认计价不再按建筑面积直接取数。系统根据空间类型、空间轮廓、门窗、柜体、洁具和楼层信息生成带坐标的水电推荐点位，并按推荐点位估算强电线管、弱电线管、给水管和排水管长度；最终报价表不再额外包一层“水电工程”，而是输出两个公共大项“强弱电工程”和“给排水工程”。强弱电工程包含强电插座、开关、灯位、筒灯/射灯、设备专线、弱电点位、强电线管、弱电线管、强电箱、弱电箱、分配电箱；给排水工程包含给水点、热水点、排水点、给水管、排水管。细分点位来源仍保留在水电复核面板和校对快照中，`electrical_scope_area_m2` 和 `plumbing_scope_area_m2` 仅保留为旧校准字段或自定义规则备用。
 - 全屋灯饰：`lighting_package_count` 是项目级套餐 metric，只要报价映射存在至少一个可计价空间，就生成 1 套“全屋灯饰”；默认价格为 0，由设计师输入。
 - 全屋插座开关：`switch_socket_package_count` 是项目级套餐 metric，报价表仍显示 1 套；该项保留为项目级套餐，不再按建筑面积折算，不把开关插座点位数量显示在表格中。
 - 花洒、卫浴五件套：默认按 `bathroom_count` 对每个可计价卫生间生成 1 套候选，不复用 `toilet_count`，避免和马桶/蹲坑选择绑定。
@@ -201,7 +207,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 背景墙：可选画在 `QUOTE_BACKGROUND_WALL`，按背景墙线长 * 标注高度生成 `background_wall_area_m2`，未标注高度时按空间层高；不画时为 0。默认报价规则“背景墙”按全屋汇总生成金额；如果没有自动工程量，Excel 草稿仍保留背景墙空行供设计师补填。
 - 洁具：卫生间默认生成 `toilet_count=1` 和 `bathroom_vanity_count=1`，用于“马桶”和“浴室柜”报价；如果画了 `QUOTE_TOILET` 或 `QUOTE_BATHROOM_VANITY` 点位，则按点位数覆盖默认数量。
 - 建筑面积：`building_area_m2` 从 `QUOTE_EXT_WALL` 闭合多段线读取，closed 标记或首尾点重合都视为闭合；当前合计包含可计价房间的所有闭合外墙轮廓面积，并扣除对应 `QUOTE_VOID` 楼梯/挑空等洞口面积，写入 API summary、图形校对页和报价映射 summary；它不是每个 `QUOTE_ROOM` 面积的简单求和，暂不混入空间工程量行。
-- 顶面吊顶：`ceiling_area_m2` 仍作为顶面批嵌和顶面乳胶漆基数；画了 `QUOTE_EDGE_CEILING` 后，系统生成 `edge_ceiling_area_m2`、`edge_ceiling_length_m` 和 `gypsum_flat_ceiling_area_m2 = max(ceiling_area_m2 - edge_ceiling_area_m2, 0)`。默认报价规则“轻钢龙骨平顶”使用 `gypsum_flat_ceiling_area_m2`，“双眼皮/边吊吊顶”使用 `edge_ceiling_length_m`，默认 80/M（主材 35、辅材 15、人工 30）；厨房、卫生间只有切换为石膏板吊顶时才进入这些石膏板/边吊规则。
+- 顶面吊顶：`ceiling_area_m2` 仍作为顶面批嵌和顶面乳胶漆基数；画了 `QUOTE_EDGE_CEILING`、`QUOTE_GYPSUM_LINE_CEILING`、`QUOTE_NO_CEILING` 后，系统生成 `edge_ceiling_area_m2`、`edge_ceiling_length_m`、`gypsum_line_ceiling_area_m2`、`gypsum_line_ceiling_length_m`、`no_ceiling_area_m2` 和 `gypsum_flat_ceiling_area_m2 = max(ceiling_area_m2 - edge_ceiling_area_m2 - gypsum_line_ceiling_area_m2 - no_ceiling_area_m2, 0)`。默认报价规则“轻钢龙骨平顶”使用 `gypsum_flat_ceiling_area_m2`，“双眼皮/边吊吊顶”使用 `edge_ceiling_length_m`，默认 80/M（主材 35、辅材 15、人工 30），“石膏线吊顶”使用 `gypsum_line_ceiling_length_m`，默认 35/M（主材 12、辅材 5、人工 18）；厨房、卫生间只有切换为石膏板吊顶时才进入这些石膏板/边吊/石膏线规则。
 - 窗台石当前仍自动计算 `windowsill_length_m` 作为校准字段；报价草稿中公共大项“窗台石”按窗户实际长度自动生成材料项，默认主材单价 65/M；空间工程中另按窗户长度自动生成“窗台石铺贴”安装项，厨房、卫生间因瓷砖上墙不生成窗台石和窗台石铺贴，二者不冲突。
 - 窗帘和窗帘箱不能按窗洞宽度计量，应按窗户所在墙面的整面墙宽度；厨房、卫生间、过道等空间默认不做窗帘/窗帘箱。
 - `curtain_wall_width_m` 是窗帘墙宽候选取数：客厅、餐厅、卧室、书房有窗时优先识别 L 形窗并按两条非平行长窗边合计；非 L 形窗按窗洞中心线匹配邻近且平行的 `QUOTE_WALL`，取窗户所在墙面的整面墙宽；匹配不到时回退到空间最长一段 `QUOTE_WALL`；其它空间为 `0`。异形窗户按现有窗户长度口径直接计算窗帘候选。`curtain_wall_width_source` 标记来源：`matched_l_shape_window`、`matched_window_wall`、`fallback_longest_wall`、`manual_required_l_shape_window`、`not_applicable` 或前端人工编辑后的 `manual`。前端工程量表可人工校准并随校对快照保存/恢复；来源为 `manual`、`matched_window_wall`、`matched_l_shape_window` 或 `fallback_longest_wall` 且长度大于 0 时，暗窗帘箱直接进入报价规则和金额汇总，不再作为待确认风险。
@@ -289,7 +295,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 报价规则 JSON 是数组格式，字段为：
 
 - `item_name`：清单项名称。
-- `metric`：取数指标，当前只允许 `building_area_m2`、`building_area_tenth_count`、`manual_count`、`tile_area_m2`、`curtain_box_length_m`、`cleaning_package_count`、`kitchen_bathroom_pipe_insulation_length_m`、`latex_paint_area_m2`、`floor_area_m2`、`floor_tile_piece_count`、`wall_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`lighting_package_count`、`switch_socket_package_count`、`ceiling_area_m2`、`gypsum_flat_ceiling_area_m2`、`edge_ceiling_length_m`、`wall_tile_area_m2`、`waterproof_area_m2`、`windowsill_length_m`、`new_wall_area_m2`、`new_wall_unclassified_area_m2`、`new_wall_120_area_m2`、`new_wall_240_area_m2`、`demolition_wall_area_m2`、`background_wall_area_m2`、`cast_slab_area_m2`、`entry_door_count`、`interior_door_count`、`bathroom_door_count`、`sliding_door_area_m2`、`sliding_door_casing_length_m`、`stair_railing_length_m`、`guardrail_length_m`、`stair_tread_count`、`kitchen_cabinet_length_m`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`custom_cabinet_area_m2`、`toilet_count`、`bathroom_vanity_count`、`bathroom_count`、`curtain_wall_width_m`。另外，水电报价汇总 metric 包括 `hydropower_strong_outlet_count`、`hydropower_switch_count`、`hydropower_light_count`、`hydropower_downlight_spotlight_count`、`hydropower_equipment_circuit_count`、`hydropower_strong_box_count`、`hydropower_weak_box_count`、`hydropower_distribution_box_count`、`hydropower_water_supply_point_count`、`hydropower_drainage_point_count`；水电细分来源 metric 仍兼容 `hydropower_switch_point_count`、`hydropower_standard_outlet_count`、`hydropower_sofa_charging_outlet_count`、`hydropower_heating_outlet_count`、`hydropower_bed_end_fan_outlet_count`、`hydropower_kitchen_counter_outlet_count`、`hydropower_light_point_count`、`hydropower_weak_point_count`、`hydropower_ac_circuit_count`、`hydropower_high_power_circuit_count`、`hydropower_bathroom_heater_circuit_count`、`hydropower_smart_toilet_outlet_count`、`hydropower_washing_machine_outlet_count`、`hydropower_dryer_outlet_count`、`hydropower_water_purifier_outlet_count`、`hydropower_cold_water_point_count`、`hydropower_hot_water_point_count`、`hydropower_drain_point_count`、`hydropower_floor_drain_point_count`、`hydropower_strong_conduit_length_m`、`hydropower_weak_conduit_length_m`、`hydropower_water_pipe_length_m`、`hydropower_drain_pipe_length_m`。
+- `metric`：取数指标，当前只允许 `building_area_m2`、`building_area_tenth_count`、`manual_count`、`tile_area_m2`、`curtain_box_length_m`、`cleaning_package_count`、`kitchen_bathroom_pipe_insulation_length_m`、`latex_paint_area_m2`、`floor_area_m2`、`floor_tile_piece_count`、`wall_tile_piece_count`、`electrical_scope_area_m2`、`plumbing_scope_area_m2`、`lighting_package_count`、`switch_socket_package_count`、`ceiling_area_m2`、`gypsum_flat_ceiling_area_m2`、`edge_ceiling_length_m`、`gypsum_line_ceiling_length_m`、`wall_tile_area_m2`、`waterproof_area_m2`、`windowsill_length_m`、`new_wall_area_m2`、`new_wall_unclassified_area_m2`、`new_wall_120_area_m2`、`new_wall_240_area_m2`、`demolition_wall_area_m2`、`background_wall_area_m2`、`cast_slab_area_m2`、`entry_door_count`、`interior_door_count`、`bathroom_door_count`、`sliding_door_area_m2`、`sliding_door_casing_length_m`、`stair_railing_length_m`、`guardrail_length_m`、`stair_tread_count`、`kitchen_cabinet_length_m`、`kitchen_base_cabinet_length_m`、`kitchen_wall_cabinet_length_m`、`custom_cabinet_area_m2`、`toilet_count`、`bathroom_vanity_count`、`bathroom_count`、`curtain_wall_width_m`。另外，水电报价汇总 metric 包括 `hydropower_strong_outlet_count`、`hydropower_switch_count`、`hydropower_light_count`、`hydropower_downlight_spotlight_count`、`hydropower_equipment_circuit_count`、`hydropower_strong_box_count`、`hydropower_weak_box_count`、`hydropower_distribution_box_count`、`hydropower_water_supply_point_count`、`hydropower_drainage_point_count`；水电细分来源 metric 仍兼容 `hydropower_switch_point_count`、`hydropower_standard_outlet_count`、`hydropower_sofa_charging_outlet_count`、`hydropower_heating_outlet_count`、`hydropower_bed_end_fan_outlet_count`、`hydropower_kitchen_counter_outlet_count`、`hydropower_light_point_count`、`hydropower_weak_point_count`、`hydropower_ac_circuit_count`、`hydropower_high_power_circuit_count`、`hydropower_bathroom_heater_circuit_count`、`hydropower_smart_toilet_outlet_count`、`hydropower_washing_machine_outlet_count`、`hydropower_dryer_outlet_count`、`hydropower_water_purifier_outlet_count`、`hydropower_cold_water_point_count`、`hydropower_hot_water_point_count`、`hydropower_drain_point_count`、`hydropower_floor_drain_point_count`、`hydropower_strong_conduit_length_m`、`hydropower_weak_conduit_length_m`、`hydropower_water_pipe_length_m`、`hydropower_drain_pipe_length_m`。
 - `unit`：单位。
 - `unit_price`：汇总单价，必须是非负数字；默认规则中等于主材、辅材、人工三段单价合计。
 - `material_price` / `auxiliary_price` / `labor_price`：可选三段单价，用于报价规则面板编辑和真实 Excel 模板展示；`unit_price` 仍作为三段单价合计，并用于报价映射金额计算。

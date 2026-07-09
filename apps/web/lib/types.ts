@@ -12,6 +12,9 @@ export type QuantityRow = {
   gypsumFlatCeilingAreaM2?: number;
   edgeCeilingAreaM2?: number;
   edgeCeilingLengthM?: number;
+  gypsumLineCeilingAreaM2?: number;
+  gypsumLineCeilingLengthM?: number;
+  noCeilingAreaM2?: number;
   voidAreaM2?: number;
   ceilingFinishType?: CeilingFinishType;
   wallMeasureLengthM: number;
@@ -111,6 +114,8 @@ export type DrawingGeometry = {
   opening_edges?: DrawingSegment[];
   void_boundaries?: DrawingPoint[][];
   edge_ceiling_boundaries?: DrawingPoint[][];
+  gypsum_line_ceiling_boundaries?: DrawingPoint[][];
+  no_ceiling_boundaries?: DrawingPoint[][];
   railings?: DrawingSegment[];
   tile_walls: DrawingSegment[];
   new_walls: DrawingSegment[];
