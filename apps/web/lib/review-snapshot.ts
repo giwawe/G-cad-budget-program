@@ -1,4 +1,5 @@
 import type { CalibrationComparison, CeilingFinishType, HydropowerEstimate, QuantityRow, QuantitySummary } from "./types";
+import type { QuoteMode, QuotePackageId } from "./quote-mapping";
 
 export type ReviewSnapshot = {
   exported_at: string;
@@ -6,6 +7,8 @@ export type ReviewSnapshot = {
   calibration_file: string | null;
   accepted_health_check_keys: string[];
   excel_manual_item_quantities: Record<string, number>;
+  quote_mode: QuoteMode;
+  selected_quote_package_ids: QuotePackageId[];
   summary: QuantitySummary | null;
   comparison: CalibrationComparison | null;
   rows: QuantityRow[];
@@ -18,6 +21,8 @@ export function buildReviewSnapshot({
   rows,
   acceptedHealthCheckKeys = [],
   excelManualItemQuantities = {},
+  quoteMode = "full",
+  selectedQuotePackageIds = [],
   summary,
   comparison,
   hydropower,
@@ -27,6 +32,8 @@ export function buildReviewSnapshot({
   rows: QuantityRow[];
   acceptedHealthCheckKeys?: string[];
   excelManualItemQuantities?: Partial<Record<string, number>>;
+  quoteMode?: QuoteMode;
+  selectedQuotePackageIds?: QuotePackageId[];
   summary: QuantitySummary | null;
   comparison: CalibrationComparison | null;
   hydropower?: HydropowerEstimate;
@@ -37,6 +44,8 @@ export function buildReviewSnapshot({
     calibration_file: calibrationFileName || null,
     accepted_health_check_keys: acceptedHealthCheckKeys,
     excel_manual_item_quantities: normalizeExcelManualItemQuantities(excelManualItemQuantities),
+    quote_mode: normalizeSnapshotQuoteMode(quoteMode),
+    selected_quote_package_ids: normalizeSnapshotQuotePackageIds(selectedQuotePackageIds),
     summary,
     comparison,
     rows,
@@ -75,6 +84,8 @@ export function parseReviewSnapshot(content: string): ReviewSnapshot {
     calibration_file: typeof snapshot.calibration_file === "string" ? snapshot.calibration_file : null,
     accepted_health_check_keys: normalizeAcceptedHealthCheckKeys(snapshot.accepted_health_check_keys),
     excel_manual_item_quantities: normalizeExcelManualItemQuantities(snapshot.excel_manual_item_quantities),
+    quote_mode: normalizeSnapshotQuoteMode(snapshot.quote_mode),
+    selected_quote_package_ids: normalizeSnapshotQuotePackageIds(snapshot.selected_quote_package_ids),
     summary: normalizeSnapshotSummary(snapshot.summary ?? null),
     comparison: snapshot.comparison ?? null,
     rows: snapshot.rows.map(normalizeSnapshotRow),
@@ -98,6 +109,18 @@ function normalizeExcelManualItemQuantities(quantities: unknown): Record<string,
       .filter((entry): entry is [string, number] => typeof entry[0] === "string" && entry[0].trim().length > 0 && typeof entry[1] === "number" && Number.isFinite(entry[1]) && entry[1] >= 0)
       .map(([itemName, quantity]) => [itemName, Math.round(quantity * 100) / 100]),
   );
+}
+
+function normalizeSnapshotQuoteMode(mode: unknown): QuoteMode {
+  return mode === "hard" || mode === "hard_plus" || mode === "full" ? mode : "full";
+}
+
+function normalizeSnapshotQuotePackageIds(packageIds: unknown): QuotePackageId[] {
+  if (!Array.isArray(packageIds)) {
+    return [];
+  }
+  const validPackageIds = new Set<QuotePackageId>(["tile_materials", "doors_windows", "custom_cabinet", "bath_fixtures", "lighting_switches", "curtains_windowsills", "cleaning"]);
+  return Array.from(new Set(packageIds.filter((item): item is QuotePackageId => typeof item === "string" && validPackageIds.has(item as QuotePackageId))));
 }
 
 function normalizeSnapshotSummary(summary: QuantitySummary | null): QuantitySummary | null {

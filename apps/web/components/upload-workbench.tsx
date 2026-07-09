@@ -43,9 +43,12 @@ import {
   integratedCeilingPriceReminderItems,
   parseQuoteRules,
   projectSummaryQuoteItems,
+  QUOTE_PACKAGE_DEFINITIONS,
   quoteMappingFileName,
   quoteRulesTemplateFileName,
   type QuoteMapping,
+  type QuoteMode,
+  type QuotePackageId,
   type QuoteRule,
   updateQuoteRulePricePart,
   withDefaultQuoteRuleCoverage,
@@ -63,6 +66,11 @@ const DEFAULT_QUOTE_RULES_STORAGE_VERSION = 8;
 const QUOTE_RULE_GROUPS_STORAGE_KEY = "cad-budget-program.quote-rule-groups.v1";
 const ALUMINUM_WINDOW_ITEM_NAME = "铝合金封门窗";
 const MANUAL_QUOTE_OPTION_ITEMS = [{ itemName: ALUMINUM_WINDOW_ITEM_NAME, unit: "M2", hint: "按窗户实际面积，默认不计价" }];
+const QUOTE_MODE_OPTIONS: { value: QuoteMode; label: string; hint: string }[] = [
+  { value: "hard", label: "硬装（半包）", hint: "只输出施工和硬装基础项" },
+  { value: "full", label: "整装（全包）", hint: "输出全部已接入报价项" },
+  { value: "hard_plus", label: "硬装 + 自选增项", hint: "半包基础上叠加选中的整装包" },
+];
 const quoteRuleGroups = [
   {
     title: "墙顶地/湿区",
@@ -430,6 +438,8 @@ export function UploadWorkbench({
   const [manualQuoteItemInputs, setManualQuoteItemInputs] = useState<Record<string, string>>({});
   const [bathroomManualChoices, setBathroomManualChoices] = useState<Record<string, BathroomManualChoice>>({});
   const [hydropowerOverride, setHydropowerOverride] = useState<HydropowerEstimate | null>(null);
+  const [quoteMode, setQuoteMode] = useState<QuoteMode>("full");
+  const [selectedQuotePackageIds, setSelectedQuotePackageIds] = useState<QuotePackageId[]>([]);
 
   const excludedCount = useMemo(() => rows.filter((row) => row.status === "excluded").length, [rows]);
   const pendingQuoteMetrics = useMemo(() => apartmentPendingQuoteMetrics(), []);
@@ -648,6 +658,8 @@ export function UploadWorkbench({
       setAcceptedHealthCheckKeys(snapshot.accepted_health_check_keys);
       setManualQuoteItemInputs(manualQuoteInputsFromQuantities(snapshot.excel_manual_item_quantities));
       setBathroomManualChoices(bathroomManualChoicesFromQuantities(snapshot.excel_manual_item_quantities, snapshot.rows));
+      setQuoteMode(snapshot.quote_mode);
+      setSelectedQuotePackageIds(snapshot.selected_quote_package_ids);
       setGeneratedSnapshot({ fileName: snapshotFile.name, content: `${JSON.stringify(snapshot, null, 2)}\n` });
       setError("");
       setMessage(`已恢复校对快照：${snapshotFile.name}`);
@@ -685,7 +697,7 @@ export function UploadWorkbench({
 
   function handleDownloadReviewSnapshot() {
     const downloadName = reviewSnapshotFileName(fileName);
-    const content = `${JSON.stringify(buildReviewSnapshot({ fileName, calibrationFileName, rows, acceptedHealthCheckKeys, excelManualItemQuantities: manualQuoteItemQuantities, summary, comparison, hydropower: hydropowerEstimate }), null, 2)}\n`;
+    const content = `${JSON.stringify(buildReviewSnapshot({ fileName, calibrationFileName, rows, acceptedHealthCheckKeys, excelManualItemQuantities: manualQuoteItemQuantities, quoteMode, selectedQuotePackageIds, summary, comparison, hydropower: hydropowerEstimate }), null, 2)}\n`;
     const blob = new Blob([content], { type: "application/json;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -741,12 +753,18 @@ export function UploadWorkbench({
   }
 
   function buildCurrentQuoteMapping() {
-    const baseMapping = buildQuoteMapping(rows, quoteRules, summary ?? undefined, { hydropowerSummary: hydropowerEstimate.summary });
+    const baseMapping = buildQuoteMapping(rows, quoteRules, summary ?? undefined, {
+      hydropowerSummary: hydropowerEstimate.summary,
+      quoteMode,
+      selectedQuotePackageIds,
+    });
     const quoteHealthChecks = filterAcceptedHealthChecks(buildQuantityHealthChecks({ rows, summary, quoteMapping: baseMapping, hydropower: hydropowerEstimate }), acceptedHealthCheckKeys);
     const quoteHealthSummary = summarizeQuantityHealthChecks(quoteHealthChecks);
     const mapping = buildQuoteMapping(rows, quoteRules, summary ?? undefined, {
       hydropowerSummary: hydropowerEstimate.summary,
       quantityHealthReadiness: quoteHealthSummary,
+      quoteMode,
+      selectedQuotePackageIds,
     });
     const confirmationMessages = exportQuoteMappingConfirmationMessages(mapping);
     if (confirmationMessages.length > 0) {
@@ -953,6 +971,19 @@ export function UploadWorkbench({
     setManualQuoteItemInputs({});
     setBathroomManualChoices({});
     setMessage("Excel 可选补项已恢复默认");
+  }
+
+  function handleChangeQuoteMode(nextMode: QuoteMode) {
+    setQuoteMode(nextMode);
+    setGeneratedQuoteMapping(null);
+    setMessage(`报价模式已切换为：${QUOTE_MODE_OPTIONS.find((option) => option.value === nextMode)?.label ?? nextMode}`);
+  }
+
+  function handleToggleQuotePackage(packageId: QuotePackageId) {
+    setSelectedQuotePackageIds((current) =>
+      current.includes(packageId) ? current.filter((item) => item !== packageId) : [...current, packageId],
+    );
+    setGeneratedQuoteMapping(null);
   }
 
   function handleChangeBathroomManualChoice(row: QuantityRow, rowIndex: number, part: keyof BathroomManualChoice, itemName: NonNullable<BathroomManualChoice[keyof BathroomManualChoice]>) {
@@ -1257,6 +1288,44 @@ export function UploadWorkbench({
           <small className="infoText">
             {pendingQuoteMetrics.length > 0 ? `待补取数口径：${pendingQuoteMetrics.length} 项不参与当前金额` : "待补取数口径：已全部接入当前规则"}
           </small>
+        </div>
+      </section>
+
+      <section className="quoteModePanel">
+        <div className="templateHeader">
+          <div>
+            <strong>报价输出模式</strong>
+            <span>导出报价映射和 Excel 草稿时生效；报价规则单价仍统一维护。</span>
+          </div>
+        </div>
+        <div className="quoteModeChoices">
+          {QUOTE_MODE_OPTIONS.map((option) => (
+            <button
+              type="button"
+              key={option.value}
+              className={quoteMode === option.value ? "active" : ""}
+              onClick={() => handleChangeQuoteMode(option.value)}
+            >
+              <strong>{option.label}</strong>
+              <span>{option.hint}</span>
+            </button>
+          ))}
+        </div>
+        <div className="quotePackageChoices" aria-disabled={quoteMode !== "hard_plus"}>
+          {QUOTE_PACKAGE_DEFINITIONS.map((item) => (
+            <label className={quoteMode === "hard_plus" ? "" : "disabled"} key={item.id}>
+              <input
+                type="checkbox"
+                disabled={quoteMode !== "hard_plus"}
+                checked={selectedQuotePackageIds.includes(item.id)}
+                onChange={() => handleToggleQuotePackage(item.id)}
+              />
+              <span>
+                <strong>{item.label}</strong>
+                <small>{item.description}</small>
+              </span>
+            </label>
+          ))}
         </div>
       </section>
 

@@ -249,7 +249,9 @@
     "unit_price": 80,
     "material_price": 80,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "tile_materials"
   },
   {
     "item_name": "墙面瓷砖",
@@ -258,7 +260,9 @@
     "unit_price": 55,
     "material_price": 55,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "tile_materials"
   },
   {
     "item_name": "瓷砖加工费",
@@ -267,7 +271,9 @@
     "unit_price": 6,
     "material_price": 6,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "tile_materials"
   },
   {
     "item_name": "美缝",
@@ -276,7 +282,9 @@
     "unit_price": 10,
     "material_price": 0,
     "auxiliary_price": 10,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "tile_materials"
   },
   {
     "item_name": "强电插座",
@@ -607,7 +615,9 @@
     "unit_price": 280,
     "material_price": 280,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "custom_cabinet"
   },
   {
     "item_name": "入户门",
@@ -616,7 +626,9 @@
     "unit_price": 2500,
     "material_price": 2500,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "doors_windows"
   },
   {
     "item_name": "室内门",
@@ -625,7 +637,9 @@
     "unit_price": 1200,
     "material_price": 1200,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "doors_windows"
   },
   {
     "item_name": "卫生间门",
@@ -637,7 +651,9 @@
     "labor_price": 0,
     "space_types": [
       "卫生间"
-    ]
+    ],
+    "scope": "addon",
+    "package_id": "doors_windows"
   },
   {
     "item_name": "厨房推拉门",
@@ -649,7 +665,9 @@
     "labor_price": 0,
     "space_types": [
       "厨房"
-    ]
+    ],
+    "scope": "addon",
+    "package_id": "doors_windows"
   },
   {
     "item_name": "厨房推拉门双包套",
@@ -661,7 +679,9 @@
     "labor_price": 0,
     "space_types": [
       "厨房"
-    ]
+    ],
+    "scope": "addon",
+    "package_id": "doors_windows"
   },
   {
     "item_name": "阳台推拉门",
@@ -674,7 +694,9 @@
     "space_types": [
       "阳台",
       "露台"
-    ]
+    ],
+    "scope": "addon",
+    "package_id": "doors_windows"
   },
   {
     "item_name": "阳台推拉门双包套",
@@ -687,7 +709,9 @@
     "space_types": [
       "阳台",
       "露台"
-    ]
+    ],
+    "scope": "addon",
+    "package_id": "doors_windows"
   },
   {
     "item_name": "楼梯扶手",
@@ -727,7 +751,9 @@
     "unit_price": 600,
     "material_price": 600,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "doors_windows"
   },
   {
     "item_name": "橱柜",
@@ -739,7 +765,9 @@
     "labor_price": 0,
     "space_types": [
       "厨房"
-    ]
+    ],
+    "scope": "addon",
+    "package_id": "custom_cabinet"
   },
   {
     "item_name": "全屋定制",
@@ -748,7 +776,9 @@
     "unit_price": 699,
     "material_price": 699,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "custom_cabinet"
   },
   {
     "item_name": "马桶",
@@ -760,7 +790,9 @@
     "labor_price": 0,
     "space_types": [
       "卫生间"
-    ]
+    ],
+    "scope": "addon",
+    "package_id": "bath_fixtures"
   },
   {
     "item_name": "蹲坑",
@@ -769,7 +801,9 @@
     "unit_price": 500,
     "material_price": 500,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "bath_fixtures"
   },
   {
     "item_name": "浴室柜",
@@ -781,7 +815,9 @@
     "labor_price": 0,
     "space_types": [
       "卫生间"
-    ]
+    ],
+    "scope": "addon",
+    "package_id": "bath_fixtures"
   },
   {
     "item_name": "淋浴隔断",
@@ -790,7 +826,9 @@
     "unit_price": 800,
     "material_price": 800,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "bath_fixtures"
   },
   {
     "item_name": "玻璃淋浴房",
@@ -799,7 +837,9 @@
     "unit_price": 1200,
     "material_price": 1200,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "bath_fixtures"
   },
   {
     "item_name": "花洒",
@@ -811,7 +851,9 @@
     "labor_price": 0,
     "space_types": [
       "卫生间"
-    ]
+    ],
+    "scope": "addon",
+    "package_id": "bath_fixtures"
   },
   {
     "item_name": "卫浴五件套",
@@ -823,7 +865,9 @@
     "labor_price": 0,
     "space_types": [
       "卫生间"
-    ]
+    ],
+    "scope": "addon",
+    "package_id": "bath_fixtures"
   },
   {
     "item_name": "全屋插座开关",
@@ -832,7 +876,9 @@
     "unit_price": 20,
     "material_price": 20,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "lighting_switches"
   },
   {
     "item_name": "全屋灯饰",
@@ -841,7 +887,9 @@
     "unit_price": 0,
     "material_price": 0,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "lighting_switches"
   },
   {
     "item_name": "窗帘",
@@ -850,7 +898,9 @@
     "unit_price": 70,
     "material_price": 50,
     "auxiliary_price": 20,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "curtains_windowsills"
   },
   {
     "item_name": "窗台石",
@@ -877,7 +927,9 @@
       "阳台",
       "露台",
       "洗衣房"
-    ]
+    ],
+    "scope": "addon",
+    "package_id": "curtains_windowsills"
   },
   {
     "item_name": "全屋保洁",
@@ -886,7 +938,9 @@
     "unit_price": 0,
     "material_price": 0,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "cleaning"
   },
   {
     "item_name": "暗窗帘箱",

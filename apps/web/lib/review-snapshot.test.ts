@@ -58,6 +58,8 @@ const snapshot = buildReviewSnapshot({
     马桶: 2,
     淋浴隔断: 2,
   },
+  quoteMode: "hard_plus",
+  selectedQuotePackageIds: ["tile_materials", "custom_cabinet"],
   summary: {
     space_count: 1,
     building_area_m2: 20,
@@ -95,6 +97,8 @@ assert.equal(snapshot.rows[0].status, "confirmed");
 assert.equal(snapshot.hydropower?.reviewStatus, "confirmed");
 assert.deepEqual(snapshot.accepted_health_check_keys, ["space-type-other:客厅"]);
 assert.deepEqual(snapshot.excel_manual_item_quantities, { 入户门: 1, 马桶: 2, 淋浴隔断: 2 });
+assert.equal(snapshot.quote_mode, "hard_plus");
+assert.deepEqual(snapshot.selected_quote_package_ids, ["tile_materials", "custom_cabinet"]);
 assert.equal(snapshot.summary.space_count, 1);
 assert.equal(snapshot.summary.building_area_m2, 20);
 assert.equal(reviewSnapshotFileName("test-case.dxf"), "test-case.review-snapshot.json");
@@ -108,6 +112,8 @@ assert.equal(parsed.rows[0].spaceType, "厨房");
 assert.equal(parsed.hydropower?.reviewStatus, "confirmed");
 assert.deepEqual(parsed.accepted_health_check_keys, ["space-type-other:客厅"]);
 assert.deepEqual(parsed.excel_manual_item_quantities, { 入户门: 1, 马桶: 2, 淋浴隔断: 2 });
+assert.equal(parsed.quote_mode, "hard_plus");
+assert.deepEqual(parsed.selected_quote_package_ids, ["tile_materials", "custom_cabinet"]);
 
 const manualSpaceTypeSnapshot = buildReviewSnapshot({
   fileName: "manual-space-type.dxf",
@@ -222,9 +228,13 @@ const olderSnapshot = {
   ...snapshot,
   accepted_health_check_keys: undefined,
   excel_manual_item_quantities: undefined,
+  quote_mode: undefined,
+  selected_quote_package_ids: undefined,
 };
 assert.deepEqual(parseReviewSnapshot(JSON.stringify(olderSnapshot)).accepted_health_check_keys, []);
 assert.deepEqual(parseReviewSnapshot(JSON.stringify(olderSnapshot)).excel_manual_item_quantities, {});
+assert.equal(parseReviewSnapshot(JSON.stringify(olderSnapshot)).quote_mode, "full");
+assert.deepEqual(parseReviewSnapshot(JSON.stringify(olderSnapshot)).selected_quote_package_ids, []);
 
 const snapshotWithInvalidManualQuantities = {
   ...snapshot,

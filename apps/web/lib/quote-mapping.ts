@@ -180,6 +180,25 @@ export type QuoteRule = {
   auxiliary_price?: number;
   labor_price?: number;
   space_types?: string[];
+  scope?: QuoteRuleScope;
+  package_id?: QuotePackageId;
+};
+
+export type QuoteMode = "hard" | "full" | "hard_plus";
+export type QuoteRuleScope = "hard" | "addon";
+export type QuotePackageId =
+  | "tile_materials"
+  | "doors_windows"
+  | "custom_cabinet"
+  | "bath_fixtures"
+  | "lighting_switches"
+  | "curtains_windowsills"
+  | "cleaning";
+
+export type QuotePackageDefinition = {
+  id: QuotePackageId;
+  label: string;
+  description: string;
 };
 
 export type PendingQuoteMetric = {
@@ -229,6 +248,8 @@ export type AtriumCurtainCandidate = {
 };
 
 export type QuoteMapping = {
+  quote_mode: QuoteMode;
+  selected_quote_package_ids: QuotePackageId[];
   items: QuoteMappingItem[];
   summary: {
     space_count: number;
@@ -267,6 +288,8 @@ export type QuantityHealthReadiness = {
 type BuildQuoteMappingOptions = {
   hydropowerSummary?: HydropowerSummary;
   quantityHealthReadiness?: QuantityHealthReadiness;
+  quoteMode?: QuoteMode;
+  selectedQuotePackageIds?: QuotePackageId[];
 };
 
 export const DEFAULT_QUOTE_RULES_NAME = "商品房整装默认规则";
@@ -284,6 +307,44 @@ const BATHROOM_FIXTURE_SPACE_TYPES = ["卫生间"];
 const WINDOWSILL_PAVING_SPACE_TYPES = ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "挑空", "衣帽间", "储物间", "阳台", "露台", "洗衣房"];
 const SWITCH_SOCKET_COUNT_PER_M2 = 0.8;
 const DUPLICATE_MANUAL_PLACEHOLDER_ITEM_NAMES = new Set(["砌砖墙", "砌120厚砖墙", "砌240厚砖墙", "入户门", "阳台推拉门", "阳台推拉门双包套"]);
+export const QUOTE_PACKAGE_DEFINITIONS: QuotePackageDefinition[] = [
+  { id: "tile_materials", label: "瓷砖主材/美缝", description: "地砖、墙砖、瓷砖加工费、美缝" },
+  { id: "doors_windows", label: "门窗定制", description: "入户门、室内门、推拉门、门套、封窗" },
+  { id: "custom_cabinet", label: "定制/橱柜", description: "橱柜、全屋定制、背景墙" },
+  { id: "bath_fixtures", label: "卫浴洁具", description: "马桶、蹲坑、浴室柜、花洒、淋浴房" },
+  { id: "lighting_switches", label: "开关灯饰", description: "全屋开关插座、全屋灯饰" },
+  { id: "curtains_windowsills", label: "窗帘窗台石", description: "窗帘、窗台石材料" },
+  { id: "cleaning", label: "保洁", description: "全屋保洁" },
+];
+const QUOTE_RULE_PACKAGE_BY_ITEM_NAME = new Map<string, QuotePackageId>([
+  ["地面瓷砖", "tile_materials"],
+  ["墙面瓷砖", "tile_materials"],
+  ["瓷砖加工费", "tile_materials"],
+  ["美缝", "tile_materials"],
+  ["入户门", "doors_windows"],
+  ["室内门", "doors_windows"],
+  ["卫生间门", "doors_windows"],
+  ["厨房推拉门", "doors_windows"],
+  ["厨房推拉门双包套", "doors_windows"],
+  ["阳台推拉门", "doors_windows"],
+  ["阳台推拉门双包套", "doors_windows"],
+  ["铝合金封门窗", "doors_windows"],
+  ["橱柜", "custom_cabinet"],
+  ["全屋定制", "custom_cabinet"],
+  ["背景墙", "custom_cabinet"],
+  ["马桶", "bath_fixtures"],
+  ["蹲坑", "bath_fixtures"],
+  ["浴室柜", "bath_fixtures"],
+  ["淋浴隔断", "bath_fixtures"],
+  ["玻璃淋浴房", "bath_fixtures"],
+  ["花洒", "bath_fixtures"],
+  ["卫浴五件套", "bath_fixtures"],
+  ["全屋插座开关", "lighting_switches"],
+  ["全屋灯饰", "lighting_switches"],
+  ["窗帘", "curtains_windowsills"],
+  ["窗台石", "curtains_windowsills"],
+  ["全屋保洁", "cleaning"],
+]);
 const SUMMED_PROJECT_METRICS = new Set<QuoteMetric>([
   "floor_tile_piece_count",
   "wall_tile_piece_count",
@@ -374,7 +435,7 @@ const DEFAULT_RULES: QuoteRule[] = [
   quoteRule("窗台石", "windowsill_length_m", "M", 65, 0, 0, WINDOWSILL_PAVING_SPACE_TYPES),
   quoteRule("全屋保洁", "cleaning_package_count", "套", 0, 0, 0),
   quoteRule("暗窗帘箱", "curtain_wall_width_m", "M", 35, 10, 45, CURTAIN_SPACE_TYPES),
-];
+].map(withDefaultQuoteRuleScope);
 
 const APARTMENT_PENDING_METRICS: PendingQuoteMetric[] = [];
 
@@ -446,6 +507,14 @@ export function withDefaultQuoteRuleCoverage(rules: QuoteRule[]): QuoteRule[] {
 
 function cloneQuoteRule(rule: QuoteRule): QuoteRule {
   return { ...rule, space_types: rule.space_types ? [...rule.space_types] : undefined };
+}
+
+function withDefaultQuoteRuleScope(rule: QuoteRule): QuoteRule {
+  const packageId = QUOTE_RULE_PACKAGE_BY_ITEM_NAME.get(rule.item_name);
+  if (!packageId) {
+    return rule;
+  }
+  return { ...rule, scope: "addon", package_id: packageId };
 }
 
 function mergeSpaceTypes(existingSpaceTypes: string[] | undefined, defaultSpaceTypes: string[] | undefined): string[] | undefined {
@@ -588,8 +657,9 @@ export function buildQuoteMapping(
   const billableRows = rows.filter((row) => row.status !== "excluded");
   const buildingAreaM2 = round2(summary?.building_area_m2 ?? 0);
   const normalizedOptions = normalizeBuildQuoteMappingOptions(options);
-  const rowRules = rules.filter((rule): rule is QuoteRule & { metric: RowQuoteMetric } => !isProjectMetric(rule.metric) && !SUMMED_PROJECT_METRICS.has(rule.metric));
-  const projectRules = rules.filter((rule) => isProjectMetric(rule.metric) || SUMMED_PROJECT_METRICS.has(rule.metric));
+  const scopedRules = quoteRulesForMode(rules, normalizedOptions.quoteMode, normalizedOptions.selectedQuotePackageIds);
+  const rowRules = scopedRules.filter((rule): rule is QuoteRule & { metric: RowQuoteMetric } => !isProjectMetric(rule.metric) && !SUMMED_PROJECT_METRICS.has(rule.metric));
+  const projectRules = scopedRules.filter((rule) => isProjectMetric(rule.metric) || SUMMED_PROJECT_METRICS.has(rule.metric));
   const rowSpaceNames = displaySpaceNamesByRow(billableRows);
   const rowItems = billableRows.flatMap((row) =>
     rowRules.filter((rule) => ruleAppliesToRow(rule, row)).map((rule) => {
@@ -611,6 +681,8 @@ export function buildQuoteMapping(
   const items = [...rowItems, ...projectItems];
 
   return {
+    quote_mode: normalizedOptions.quoteMode,
+    selected_quote_package_ids: normalizedOptions.selectedQuotePackageIds,
     items,
     summary: {
       space_count: billableRows.length,
@@ -621,27 +693,64 @@ export function buildQuoteMapping(
     curtain_quote_readiness: curtainQuoteReadiness(rows),
     curtain_quote_candidates: curtainQuoteCandidates(rows),
     atrium_curtain_candidates: atriumCurtainCandidates(rows),
-    building_area_quote_readiness: buildingAreaQuoteReadiness(rules, buildingAreaM2),
-    legacy_hydropower_area_rule_item_names: legacyHydropowerAreaRuleItemNames(rules),
+    building_area_quote_readiness: buildingAreaQuoteReadiness(scopedRules, buildingAreaM2),
+    legacy_hydropower_area_rule_item_names: legacyHydropowerAreaRuleItemNames(scopedRules),
     quantity_health_readiness: normalizedOptions.quantityHealthReadiness,
   };
 }
 
-function normalizeBuildQuoteMappingOptions(options?: BuildQuoteMappingOptions | QuantityHealthReadiness): Required<Pick<BuildQuoteMappingOptions, "quantityHealthReadiness">> & Pick<BuildQuoteMappingOptions, "hydropowerSummary"> {
+function normalizeBuildQuoteMappingOptions(options?: BuildQuoteMappingOptions | QuantityHealthReadiness): Required<Pick<BuildQuoteMappingOptions, "quantityHealthReadiness" | "quoteMode" | "selectedQuotePackageIds">> & Pick<BuildQuoteMappingOptions, "hydropowerSummary"> {
   const defaultQuantityHealthReadiness: QuantityHealthReadiness = { total: 0, warning: 0, info: 0, label: "当前无待确认项" };
   if (!options) {
-    return { hydropowerSummary: undefined, quantityHealthReadiness: defaultQuantityHealthReadiness };
+    return { hydropowerSummary: undefined, quantityHealthReadiness: defaultQuantityHealthReadiness, quoteMode: "full", selectedQuotePackageIds: [] };
   }
   if (isQuantityHealthReadiness(options)) {
     return {
       hydropowerSummary: undefined,
       quantityHealthReadiness: options,
+      quoteMode: "full",
+      selectedQuotePackageIds: [],
     };
   }
   return {
     hydropowerSummary: options.hydropowerSummary,
     quantityHealthReadiness: options.quantityHealthReadiness ?? defaultQuantityHealthReadiness,
+    quoteMode: normalizeQuoteMode(options.quoteMode),
+    selectedQuotePackageIds: normalizeQuotePackageIds(options.selectedQuotePackageIds),
   };
+}
+
+function quoteRulesForMode(rules: QuoteRule[], quoteMode: QuoteMode, selectedPackageIds: QuotePackageId[]): QuoteRule[] {
+  if (quoteMode === "full") {
+    return rules;
+  }
+  const selectedPackages = new Set(selectedPackageIds);
+  return rules.filter((rule) => {
+    const scope = quoteRuleScope(rule);
+    if (scope === "hard") {
+      return true;
+    }
+    return quoteMode === "hard_plus" && rule.package_id !== undefined && selectedPackages.has(rule.package_id);
+  });
+}
+
+function quoteRuleScope(rule: QuoteRule): QuoteRuleScope {
+  if (rule.scope === "hard" || rule.scope === "addon") {
+    return rule.scope;
+  }
+  return QUOTE_RULE_PACKAGE_BY_ITEM_NAME.has(rule.item_name) ? "addon" : "hard";
+}
+
+export function normalizeQuoteMode(mode: unknown): QuoteMode {
+  return mode === "hard" || mode === "hard_plus" || mode === "full" ? mode : "full";
+}
+
+export function normalizeQuotePackageIds(packageIds: unknown): QuotePackageId[] {
+  if (!Array.isArray(packageIds)) {
+    return [];
+  }
+  const validPackageIds = new Set(QUOTE_PACKAGE_DEFINITIONS.map((item) => item.id));
+  return Array.from(new Set(packageIds.filter((item): item is QuotePackageId => typeof item === "string" && validPackageIds.has(item as QuotePackageId))));
 }
 
 function isQuantityHealthReadiness(options: BuildQuoteMappingOptions | QuantityHealthReadiness): options is QuantityHealthReadiness {
@@ -1010,7 +1119,18 @@ function normalizeQuoteRule(rule: unknown, index: number): QuoteRule {
     unit_price: round2(candidate.unit_price),
     ...priceParts,
     space_types: normalizeSpaceTypes(candidate.space_types),
+    ...normalizeQuoteRuleScope(candidate),
   };
+}
+
+function normalizeQuoteRuleScope(rule: Partial<QuoteRule>): Partial<Pick<QuoteRule, "scope" | "package_id">> {
+  const inferredPackageId = QUOTE_RULE_PACKAGE_BY_ITEM_NAME.get(typeof rule.item_name === "string" ? rule.item_name.trim() : "");
+  const scope = rule.scope === "hard" || rule.scope === "addon" ? rule.scope : inferredPackageId ? "addon" : "hard";
+  if (scope === "hard") {
+    return rule.scope === "hard" ? { scope: "hard" } : {};
+  }
+  const packageId = normalizeQuotePackageIds([rule.package_id])[0] ?? inferredPackageId;
+  return packageId ? { scope: "addon", package_id: packageId } : {};
 }
 
 function isQuoteMetric(metric: unknown): metric is QuoteMetric {
