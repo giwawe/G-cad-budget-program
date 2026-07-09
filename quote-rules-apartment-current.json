@@ -85,7 +85,9 @@
     "space_types": [
       "厨房",
       "卫生间"
-    ]
+    ],
+    "scope": "addon",
+    "package_id": "lighting_switches"
   },
   {
     "item_name": "轻钢龙骨平顶",
@@ -720,7 +722,9 @@
     "unit_price": 480,
     "material_price": 480,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "curtains_windowsills"
   },
   {
     "item_name": "楼梯踏步铺贴",
@@ -742,7 +746,9 @@
     "unit_price": 450,
     "material_price": 450,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "curtains_windowsills"
   },
   {
     "item_name": "铝合金封门窗",

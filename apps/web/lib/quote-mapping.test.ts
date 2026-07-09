@@ -525,6 +525,7 @@ const hardQuoteMapping = buildQuoteMapping(rows, defaultQuoteRules(), { building
 });
 assert.ok(hardQuoteMapping.items.some((item) => item.item_name === "墙面贴瓷砖(600X1200)"));
 assert.ok(hardQuoteMapping.items.some((item) => item.item_name === "强电插座"));
+assert.equal(hardQuoteMapping.items.some((item) => item.item_name === "厨房卫生间集成吊顶"), false);
 assert.equal(hardQuoteMapping.items.some((item) => item.item_name === "地面瓷砖"), false);
 assert.equal(hardQuoteMapping.items.some((item) => item.item_name === "墙面瓷砖"), false);
 assert.equal(hardQuoteMapping.items.some((item) => item.item_name === "橱柜"), false);
@@ -726,6 +727,8 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "楼梯扶手"), {
   auxiliary_price: 0,
   labor_price: 0,
   space_types: undefined,
+  scope: "addon",
+  package_id: "curtains_windowsills",
 });
 assert.deepEqual(rules.find((rule) => rule.item_name === "栏杆/护栏"), {
   item_name: "栏杆/护栏",
@@ -736,6 +739,8 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "栏杆/护栏"), {
   auxiliary_price: 0,
   labor_price: 0,
   space_types: undefined,
+  scope: "addon",
+  package_id: "curtains_windowsills",
 });
 assert.deepEqual(rules.find((rule) => rule.item_name === "水泥墙开槽"), {
   item_name: "水泥墙开槽",

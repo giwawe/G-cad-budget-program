@@ -148,6 +148,64 @@ assert.ok(!html.includes("<td>窗帘</td><td>项</td><td>1</td>"));
 assert.ok(html.includes("<td>强电布线 &amp; 水路复核</td>"), "item names should be escaped");
 assert.ok(!html.includes("强电布线 & 水路复核</td>"), "raw ampersands should not leak into HTML");
 
+const hardQuoteHtml = buildQuoteExcelHtml(
+  {
+    ...mapping,
+    quote_mode: "hard",
+    selected_quote_package_ids: [],
+    items: mapping.items.filter((item) => item.item_name !== "厨房卫生间集成吊顶"),
+  },
+  "硬装测试",
+);
+assert.ok(hardQuoteHtml.includes("<td>全屋拆改工程</td>"));
+assert.ok(hardQuoteHtml.includes("<td>厨房工程</td>"));
+assert.ok(hardQuoteHtml.includes("<td>其他工程</td>"));
+assert.ok(hardQuoteHtml.includes("<td>强弱电工程</td>"));
+assert.ok(hardQuoteHtml.includes("<td>给排水工程</td>"));
+assert.ok(!hardQuoteHtml.includes("<td>主材项目</td>"));
+assert.ok(!hardQuoteHtml.includes("<td>全屋定制、衣柜、橱柜、全屋家具</td>"));
+assert.ok(!hardQuoteHtml.includes("<td>室内门</td>"));
+assert.ok(!hardQuoteHtml.includes("<td>集成吊顶、卫浴、全屋开关灯饰</td>"));
+assert.ok(!hardQuoteHtml.includes("<td>其他（窗帘、美缝、窗台石等）</td>"));
+assert.ok(!hardQuoteHtml.includes("<td>厨房卫生间集成吊顶</td>"));
+
+const hardPlusTileQuoteHtml = buildQuoteExcelHtml(
+  {
+    ...mapping,
+    quote_mode: "hard_plus",
+    selected_quote_package_ids: ["tile_materials"],
+    items: [
+      ...mapping.items.filter((item) => item.item_name !== "厨房卫生间集成吊顶"),
+      {
+        floor: "全屋",
+        space_name: "全屋",
+        space_type: "全屋",
+        item_name: "地面瓷砖",
+        quantity: 5,
+        unit: "片",
+        unit_price: 80,
+        amount: 400,
+      },
+      {
+        floor: "全屋",
+        space_name: "全屋",
+        space_type: "全屋",
+        item_name: "美缝",
+        quantity: 12,
+        unit: "M2",
+        unit_price: 10,
+        amount: 120,
+      },
+    ],
+  },
+  "半包加瓷砖",
+);
+assert.ok(hardPlusTileQuoteHtml.includes("<td>主材项目</td>"));
+assert.ok(hardPlusTileQuoteHtml.includes("<td>其他（窗帘、美缝、窗台石等）</td>"));
+assert.ok(!hardPlusTileQuoteHtml.includes("<td>全屋定制、衣柜、橱柜、全屋家具</td>"));
+assert.ok(!hardPlusTileQuoteHtml.includes("<td>室内门</td>"));
+assert.ok(!hardPlusTileQuoteHtml.includes("<td>集成吊顶、卫浴、全屋开关灯饰</td>"));
+
 const duplicateHtml = buildQuoteExcelHtml(
   {
     ...mapping,

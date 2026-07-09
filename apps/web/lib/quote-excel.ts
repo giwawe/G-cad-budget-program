@@ -1,4 +1,4 @@
-import type { QuoteMapping } from "./quote-mapping";
+import type { QuoteMapping, QuotePackageId } from "./quote-mapping";
 import type { BathroomManualChoice } from "./manual-quote-options";
 import type { QuantityRow } from "./types";
 
@@ -23,7 +23,9 @@ type QuoteTemplateSection = {
   itemNames: string[];
 };
 
-type QuoteTemplateSectionDefinition = Omit<QuoteTemplateSection, "code">;
+type QuoteTemplateSectionDefinition = Omit<QuoteTemplateSection, "code"> & {
+  quotePackageIds?: QuotePackageId[];
+};
 type RoomSectionGroup = {
   key: string;
   title: string;
@@ -63,11 +65,11 @@ const FIXED_TEMPLATE_SECTIONS: QuoteTemplateSectionDefinition[] = [
   },
   { title: "强弱电工程", itemNames: HYDROPOWER_STRONG_WEAK_ITEM_NAMES },
   { title: "给排水工程", itemNames: HYDROPOWER_PLUMBING_ITEM_NAMES },
-  { title: "主材项目", itemNames: ["地面瓷砖", "墙面瓷砖", "瓷砖加工费"] },
-  { title: "全屋定制、衣柜、橱柜、全屋家具", itemNames: ["全屋定制", "橱柜", "背景墙"] },
-  { title: "室内门", itemNames: ["入户门", "室内门", "卫生间门", "厨房推拉门", "厨房推拉门双包套", "阳台推拉门", "阳台推拉门双包套", "铝合金封门窗"] },
-  { title: "集成吊顶、卫浴、全屋开关灯饰", itemNames: ["厨房卫生间集成吊顶", "浴室柜", "马桶", "蹲坑", "淋浴隔断", "玻璃淋浴房", "花洒", "卫浴五件套", "全屋插座开关", "全屋灯饰"] },
-  { title: "其他（窗帘、美缝、窗台石等）", itemNames: ["美缝", "窗帘", "窗台石", "楼梯扶手", "栏杆/护栏", "全屋保洁"] },
+  { title: "主材项目", itemNames: ["地面瓷砖", "墙面瓷砖", "瓷砖加工费"], quotePackageIds: ["tile_materials"] },
+  { title: "全屋定制、衣柜、橱柜、全屋家具", itemNames: ["全屋定制", "橱柜", "背景墙"], quotePackageIds: ["custom_cabinet"] },
+  { title: "室内门", itemNames: ["入户门", "室内门", "卫生间门", "厨房推拉门", "厨房推拉门双包套", "阳台推拉门", "阳台推拉门双包套", "铝合金封门窗"], quotePackageIds: ["doors_windows"] },
+  { title: "集成吊顶、卫浴、全屋开关灯饰", itemNames: ["厨房卫生间集成吊顶", "浴室柜", "马桶", "蹲坑", "淋浴隔断", "玻璃淋浴房", "花洒", "卫浴五件套", "全屋插座开关", "全屋灯饰"], quotePackageIds: ["lighting_switches", "bath_fixtures"] },
+  { title: "其他（窗帘、美缝、窗台石等）", itemNames: ["美缝", "窗帘", "窗台石", "楼梯扶手", "栏杆/护栏", "全屋保洁"], quotePackageIds: ["tile_materials", "curtains_windowsills", "cleaning"] },
 ];
 const TEMPLATE_ITEM_NAME_SET = new Set([...ROOM_SECTION_ITEM_NAMES, ...FIXED_TEMPLATE_SECTIONS.flatMap((section) => section.itemNames)]);
 
@@ -363,6 +365,9 @@ function quoteTemplateRows(mapping: QuoteMapping, options: QuoteExcelOptions): s
   }
 
   for (const sectionDefinition of FIXED_TEMPLATE_SECTIONS.slice(1)) {
+    if (!shouldRenderFixedSectionForQuoteMode(sectionDefinition, mapping)) {
+      continue;
+    }
     const section = templateSectionWithCode(sectionDefinition, sectionIndex++);
     const sectionRows = quoteTemplateSectionRows(section, fixedSectionItems(mapping.items, remainingItems, section), remainingItems, true, options);
     rows.push(...sectionRows.rows);
@@ -380,6 +385,20 @@ function quoteTemplateRows(mapping: QuoteMapping, options: QuoteExcelOptions): s
 
   rows.push(...quoteTemplateTotalRows(directTotal));
   return rows;
+}
+
+function shouldRenderFixedSectionForQuoteMode(section: QuoteTemplateSectionDefinition, mapping: QuoteMapping): boolean {
+  if (!section.quotePackageIds || section.quotePackageIds.length === 0) {
+    return true;
+  }
+  if (mapping.quote_mode === "full" || mapping.quote_mode === undefined) {
+    return true;
+  }
+  if (mapping.quote_mode === "hard") {
+    return false;
+  }
+  const selectedPackageIds = new Set(mapping.selected_quote_package_ids ?? []);
+  return section.quotePackageIds.some((packageId) => selectedPackageIds.has(packageId));
 }
 
 function quoteTemplateSectionRows(

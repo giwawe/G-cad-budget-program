@@ -312,8 +312,8 @@ export const QUOTE_PACKAGE_DEFINITIONS: QuotePackageDefinition[] = [
   { id: "doors_windows", label: "门窗定制", description: "入户门、室内门、推拉门、门套、封窗" },
   { id: "custom_cabinet", label: "定制/橱柜", description: "橱柜、全屋定制、背景墙" },
   { id: "bath_fixtures", label: "卫浴洁具", description: "马桶、蹲坑、浴室柜、花洒、淋浴房" },
-  { id: "lighting_switches", label: "开关灯饰", description: "全屋开关插座、全屋灯饰" },
-  { id: "curtains_windowsills", label: "窗帘窗台石", description: "窗帘、窗台石材料" },
+  { id: "lighting_switches", label: "集成吊顶/开关灯饰", description: "厨房卫生间集成吊顶、全屋开关插座、全屋灯饰" },
+  { id: "curtains_windowsills", label: "窗帘窗台石/其他", description: "窗帘、窗台石材料、楼梯扶手、栏杆护栏" },
   { id: "cleaning", label: "保洁", description: "全屋保洁" },
 ];
 const QUOTE_RULE_PACKAGE_BY_ITEM_NAME = new Map<string, QuotePackageId>([
@@ -321,6 +321,7 @@ const QUOTE_RULE_PACKAGE_BY_ITEM_NAME = new Map<string, QuotePackageId>([
   ["墙面瓷砖", "tile_materials"],
   ["瓷砖加工费", "tile_materials"],
   ["美缝", "tile_materials"],
+  ["厨房卫生间集成吊顶", "lighting_switches"],
   ["入户门", "doors_windows"],
   ["室内门", "doors_windows"],
   ["卫生间门", "doors_windows"],
@@ -329,6 +330,8 @@ const QUOTE_RULE_PACKAGE_BY_ITEM_NAME = new Map<string, QuotePackageId>([
   ["阳台推拉门", "doors_windows"],
   ["阳台推拉门双包套", "doors_windows"],
   ["铝合金封门窗", "doors_windows"],
+  ["楼梯扶手", "curtains_windowsills"],
+  ["栏杆/护栏", "curtains_windowsills"],
   ["橱柜", "custom_cabinet"],
   ["全屋定制", "custom_cabinet"],
   ["背景墙", "custom_cabinet"],
