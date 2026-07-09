@@ -125,6 +125,7 @@ assert.equal(changedSpaceType[1].spaceType, "卫生间");
 assert.equal(changedSpaceType[1].ceilingFinishType, "integrated");
 assert.equal(changedSpaceType[1].wallTileAreaM2, 43.46);
 assert.equal(changedSpaceType[1].latexPaintAreaM2, 0);
+assert.equal(changedSpaceType[1].waterproofAreaM2, 73.13);
 assert.ok(changedSpaceType[1].evidence.includes("人工调整空间类型为 卫生间"));
 assert.equal(rows[1].spaceType, "客厅");
 
@@ -134,3 +135,10 @@ assert.equal(changedBackToDry[1].spaceType, "卧室");
 assert.equal(changedBackToDry[1].ceilingFinishType, "gypsum");
 assert.equal(changedBackToDry[1].wallTileAreaM2, 0);
 assert.equal(changedBackToDry[1].latexPaintAreaM2, 66.81);
+assert.equal(changedBackToDry[1].waterproofAreaM2, 0);
+
+const changedToBalcony = updateQuantityRowSpaceType(rows, "客厅", "阳台");
+
+assert.equal(changedToBalcony[1].spaceType, "阳台");
+assert.equal(changedToBalcony[1].ceilingFinishType, "gypsum");
+assert.equal(changedToBalcony[1].waterproofAreaM2, 42.62);

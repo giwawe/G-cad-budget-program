@@ -1,6 +1,7 @@
 import type { QuantityRow, ReviewStatus } from "./types";
 
 const FULL_WALL_TILE_SPACE_TYPES = new Set(["厨房", "卫生间"]);
+const WET_WATERPROOF_SPACE_TYPES = new Set(["厨房", "卫生间", "阳台", "露台", "洗衣房"]);
 const DEFAULT_DOOR_HEIGHT_M = 2.1;
 
 export function updateQuantityRowStatus(rows: QuantityRow[], spaceName: string, status: ReviewStatus): QuantityRow[] {
@@ -33,12 +34,14 @@ function recalculateRowForSpaceType(row: QuantityRow, spaceType: string): Quanti
   const wallTileAreaM2 = calculateWallTileArea({ ...row, spaceType });
   const latexPaintBaseAreaM2 = round2((row.wallMeasureLengthM + row.doorWidthTotalM) * row.heightM);
   const latexPaintAreaM2 = calculateLatexPaintArea(spaceType, latexPaintBaseAreaM2, row.windowAreaM2, row.doorDeductAreaM2, wallTileAreaM2);
+  const waterproofAreaM2 = calculateWaterproofArea({ ...row, spaceType });
   return {
     ...row,
     spaceType,
     ceilingFinishType: defaultCeilingFinishType(spaceType),
     wallTileAreaM2,
     latexPaintAreaM2,
+    waterproofAreaM2,
     evidence: appendEvidence(row.evidence, `人工调整空间类型为 ${spaceType}`),
   };
 }
@@ -62,6 +65,14 @@ function calculateLatexPaintArea(spaceType: string, latexPaintBaseAreaM2: number
 
 function defaultCeilingFinishType(spaceType: string): QuantityRow["ceilingFinishType"] {
   return FULL_WALL_TILE_SPACE_TYPES.has(spaceType) ? "integrated" : "gypsum";
+}
+
+function calculateWaterproofArea(row: QuantityRow): number {
+  if (!WET_WATERPROOF_SPACE_TYPES.has(row.spaceType)) {
+    return 0;
+  }
+  const waterproofHeightM = row.spaceType === "卫生间" ? 1.8 : 0.3;
+  return round2(row.floorAreaM2 + row.wallMeasureLengthM * waterproofHeightM);
 }
 
 function appendEvidence(evidence: string, note: string) {

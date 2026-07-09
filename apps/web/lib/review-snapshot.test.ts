@@ -107,6 +107,18 @@ assert.equal(parsed.hydropower?.reviewStatus, "confirmed");
 assert.deepEqual(parsed.accepted_health_check_keys, ["space-type-other:客厅"]);
 assert.deepEqual(parsed.excel_manual_item_quantities, { 入户门: 1, 马桶: 2, 淋浴隔断: 2 });
 
+const manualSpaceTypeSnapshot = buildReviewSnapshot({
+  fileName: "manual-space-type.dxf",
+  calibrationFileName: "",
+  rows: [{ ...rows[0], spaceName: "麻将室", spaceType: "娱乐室" }],
+  summary: null,
+  comparison: null,
+});
+const parsedManualSpaceTypeSnapshot = parseReviewSnapshot(JSON.stringify(manualSpaceTypeSnapshot));
+
+assert.equal(parsedManualSpaceTypeSnapshot.rows[0].spaceName, "麻将室");
+assert.equal(parsedManualSpaceTypeSnapshot.rows[0].spaceType, "娱乐室");
+
 const legacySnapshot = {
   ...snapshot,
   summary: {

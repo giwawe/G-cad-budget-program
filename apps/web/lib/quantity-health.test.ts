@@ -96,7 +96,8 @@ const quoteMapping: QuoteMapping = {
 const checks = buildQuantityHealthChecks({
   rows: [
     baseRow,
-    { ...baseRow, spaceName: "客厅", spaceType: "其他", status: "confirmed" },
+    { ...baseRow, spaceName: "客厅", spaceType: "其他", status: "pending_review" },
+    { ...baseRow, spaceName: "茶室", spaceType: "其他", status: "confirmed" },
     { ...baseRow, spaceName: "电梯井", spaceType: "其他", status: "excluded" },
     { ...baseRow, spaceName: "主卧", spaceType: "卧室", curtainWallWidthSource: "manual_required_l_shape_window" },
   ],
@@ -106,7 +107,8 @@ const checks = buildQuantityHealthChecks({
 
 assert.deepEqual(checks.map((check) => check.id), ["space-type-other", "building-area-missing", "building-area-quote-missing"]);
 assert.equal(checks[0].message, checks[0].detail);
-assert.equal(checks[0].message.includes("被识别为其他"), true);
+assert.equal(checks[0].message.includes("在工程量表选择计价空间类型"), true);
+assert.deepEqual(checks[0].spaceNames, ["客厅"]);
 assert.equal(checks[1].message, "当前建筑面积为 0，请检查是否绘制了闭合 QUOTE_EXT_WALL 外墙轮廓。");
 assert.equal(checks[2].message.includes("强电布线、水路布管"), true);
 assert.deepEqual(summarizeQuantityHealthChecks(checks), {

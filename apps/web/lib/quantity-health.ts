@@ -116,13 +116,13 @@ export function buildQuantityHealthChecks({
   const checks: QuantityHealthCheck[] = [];
   const billableRows = rows.filter((row) => row.status !== "excluded");
 
-  const otherSpaceNames = uniqueNames(billableRows.filter((row) => row.spaceType === "其他").map((row) => row.spaceName));
+  const otherSpaceNames = uniqueNames(billableRows.filter((row) => row.spaceType === "其他" && row.status === "pending_review").map((row) => row.spaceName));
   if (otherSpaceNames.length > 0) {
     checks.push({
       id: "space-type-other",
       severity: "warning",
       title: "空间类型待确认",
-      detail: `${formatNames(otherSpaceNames)} 被识别为其他，需改名或补充关键词，避免报价项目缺失。`,
+      detail: `${formatNames(otherSpaceNames)} 被识别为其他，请在工程量表选择计价空间类型；确实不报价的空间请在状态列标为“不计价”。`,
       spaceNames: otherSpaceNames,
     });
   }
@@ -397,7 +397,7 @@ function reviewStatusLabel(status?: ReviewStatus): string {
 function healthFixSuggestion(id: QuantityHealthCheck["id"]): string {
   switch (id) {
     case "space-type-other":
-      return "检查空间名称和 QUOTE_TEXT，必要时改名或补充空间分类关键词。";
+      return "在工程量表“类型”列选择普通干区、湿区、楼梯或储物等计价空间类型；确实不报价的空间标为“不计价”。";
     case "building-area-missing":
       return "补画闭合 QUOTE_EXT_WALL 外墙轮廓，确保建筑面积可按外墙闭合多段线读取。";
     case "building-area-quote-missing":
