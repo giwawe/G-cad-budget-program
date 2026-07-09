@@ -52,13 +52,14 @@ import {
 } from "@/lib/quote-mapping";
 import { shouldResetSavedQuoteRules } from "@/lib/quote-rule-storage";
 import { buildReviewSnapshot, parseReviewSnapshot, reviewSnapshotFileName } from "@/lib/review-snapshot";
+import { buildSpaceNamingGuideMarkdown, spaceNamingGuideFileName } from "@/lib/space-naming-guide";
 import type { CalibrationComparison, CeilingFinishType, CurtainWallWidthSource, DrawingGeometry, HydropowerEstimate, QuantityRow, QuantitySummary, ReviewStatus } from "@/lib/types";
 
 const DEFAULT_DOOR_HEIGHT_M = 2.1;
 const FULL_WALL_TILE_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 const DEFAULT_INTEGRATED_CEILING_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 const QUOTE_RULES_STORAGE_KEY = "cad-budget-program.quote-rules.v2";
-const DEFAULT_QUOTE_RULES_STORAGE_VERSION = 7;
+const DEFAULT_QUOTE_RULES_STORAGE_VERSION = 8;
 const QUOTE_RULE_GROUPS_STORAGE_KEY = "cad-budget-program.quote-rule-groups.v1";
 const ALUMINUM_WINDOW_ITEM_NAME = "铝合金封门窗";
 const MANUAL_QUOTE_OPTION_ITEMS = [{ itemName: ALUMINUM_WINDOW_ITEM_NAME, unit: "M2", hint: "按窗户实际面积，默认不计价" }];
@@ -832,6 +833,21 @@ export function UploadWorkbench({
     setMessage(`已生成报价规则模板：${downloadName}`);
   }
 
+  function handleDownloadSpaceNamingGuide() {
+    const downloadName = spaceNamingGuideFileName(fileName);
+    const content = buildSpaceNamingGuideMarkdown();
+    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = downloadName;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setMessage(`已生成空间命名规范：${downloadName}`);
+  }
+
   function handleHydropowerConfirm() {
     setHydropowerOverride({ ...hydropowerEstimate, reviewStatus: "confirmed" });
     setGeneratedQuoteMapping(null);
@@ -1192,6 +1208,10 @@ export function UploadWorkbench({
           <button type="button" disabled={isUploading || isComparing} onClick={handleDownloadQuoteRulesTemplate}>
             <Download aria-hidden="true" size={18} />
             下载报价规则
+          </button>
+          <button type="button" disabled={isUploading || isComparing} onClick={handleDownloadSpaceNamingGuide}>
+            <Download aria-hidden="true" size={18} />
+            下载命名规范
           </button>
           <button type="button" disabled={isUploading || isComparing} onClick={() => quoteRulesInputRef.current?.click()}>
             <FileUp aria-hidden="true" size={18} />

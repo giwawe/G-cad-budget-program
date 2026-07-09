@@ -246,7 +246,7 @@
     "item_name": "地面瓷砖",
     "metric": "floor_tile_piece_count",
     "unit": "片",
-    "unit_price": 90,
+    "unit_price": 80,
     "material_price": 80,
     "auxiliary_price": 0,
     "labor_price": 0
@@ -255,7 +255,7 @@
     "item_name": "墙面瓷砖",
     "metric": "wall_tile_piece_count",
     "unit": "片",
-    "unit_price": 40,
+    "unit_price": 55,
     "material_price": 55,
     "auxiliary_price": 0,
     "labor_price": 0

@@ -10,6 +10,8 @@ assert.ok(uploadWorkbenchSource.includes("buildQuoteExcelHtml"), "workbench shou
 assert.ok(uploadWorkbenchSource.includes("quoteExcelFileName"), "workbench should use the Excel draft filename helper");
 assert.ok(uploadWorkbenchSource.includes("下载 Excel 草稿"), "quote mapping panel should expose an Excel draft download button");
 assert.ok(uploadWorkbenchSource.includes("导出 Excel 草稿"), "top toolbar should expose a visible Excel draft export button");
+assert.ok(uploadWorkbenchSource.includes("下载命名规范"), "top toolbar should expose a designer space naming guide download");
+assert.ok(uploadWorkbenchSource.includes("handleDownloadSpaceNamingGuide"), "space naming guide should be downloadable from the workbench");
 assert.ok(uploadWorkbenchSource.includes("handleDownloadQuoteExcelDraft"), "Excel draft export should be available before the quote mapping panel is shown");
 assert.ok(uploadWorkbenchSource.includes("Excel 可选补项"), "quote mapping panel should explain that manual quote items are included in Excel drafts");
 assert.ok(uploadWorkbenchSource.includes("quoteRuleSearch"), "quote rule panel should keep a search state for fast price edits");
@@ -25,7 +27,7 @@ assert.ok(uploadWorkbenchSource.includes("handleToggleQuoteRuleGroup"), "quote r
 assert.ok(uploadWorkbenchSource.includes("quoteRuleGroupCount"), "quote rule group headers should show matched rule counts");
 assert.ok(uploadWorkbenchSource.includes("没有匹配的报价规则"), "quote rule search should show an empty state");
 assert.ok(uploadWorkbenchSource.includes("QUOTE_RULE_GROUPS_STORAGE_KEY"), "quote rule group collapsed state should be stored locally");
-assert.ok(uploadWorkbenchSource.includes("const DEFAULT_QUOTE_RULES_STORAGE_VERSION = 7"), "default quote rule storage version should reset stale local edited defaults after price table updates");
+assert.ok(uploadWorkbenchSource.includes("const DEFAULT_QUOTE_RULES_STORAGE_VERSION = 8"), "default quote rule storage version should reset stale local edited defaults after price table updates");
 assert.ok(uploadWorkbenchSource.includes("handleCollapseAllQuoteRuleGroups"), "quote rule panel should collapse all groups at once");
 assert.ok(uploadWorkbenchSource.includes("handleExpandAllQuoteRuleGroups"), "quote rule panel should expand all groups at once");
 assert.ok(uploadWorkbenchSource.includes("全部收起"), "quote rule panel should expose collapse all action");

@@ -229,9 +229,9 @@ assert.deepEqual(mapping.items.slice(5, 20).map((item) => item.space_name), [
   "全屋",
 ]);
 assert.equal(mapping.items[5].quantity, 5);
-assert.equal(mapping.items[5].amount, 450);
+assert.equal(mapping.items[5].amount, 400);
 assert.equal(mapping.items[6].quantity, 31);
-assert.equal(mapping.items[6].amount, 1240);
+assert.equal(mapping.items[6].amount, 1705);
 assert.equal(mapping.items[7].quantity, 25.18);
 assert.equal(mapping.items[7].amount, 151.08);
 assert.equal(mapping.items[8].quantity, 25.18);
@@ -375,7 +375,7 @@ assert.deepEqual(projectSummaryQuoteItems(mapping), [
 ]);
 assert.equal(mapping.summary.item_count, 20);
 assert.equal(mapping.summary.space_count, 1);
-assert.equal(mapping.summary.total_amount, 18628.1);
+assert.equal(mapping.summary.total_amount, 19043.1);
 
 const excludedOnlyMapping = buildQuoteMapping([rows[1]]);
 
@@ -784,7 +784,7 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "地面瓷砖"), {
   item_name: "地面瓷砖",
   metric: "floor_tile_piece_count",
   unit: "片",
-  unit_price: 90,
+  unit_price: 80,
   material_price: 80,
   auxiliary_price: 0,
   labor_price: 0,
@@ -794,7 +794,7 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "墙面瓷砖"), {
   item_name: "墙面瓷砖",
   metric: "wall_tile_piece_count",
   unit: "片",
-  unit_price: 40,
+  unit_price: 55,
   material_price: 55,
   auxiliary_price: 0,
   labor_price: 0,

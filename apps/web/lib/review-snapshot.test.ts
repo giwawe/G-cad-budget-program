@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import { EMPTY_HYDROPOWER_SUMMARY } from "./hydropower-estimate.ts";
+import { buildQuoteMapping } from "./quote-mapping.ts";
+import { updateQuantityRowSpaceType } from "./quantity-row-status.ts";
 import { buildReviewSnapshot, parseReviewSnapshot, reviewSnapshotFileName } from "./review-snapshot.ts";
 import type { QuantityRow } from "./types.ts";
 
@@ -118,6 +120,43 @@ const parsedManualSpaceTypeSnapshot = parseReviewSnapshot(JSON.stringify(manualS
 
 assert.equal(parsedManualSpaceTypeSnapshot.rows[0].spaceName, "麻将室");
 assert.equal(parsedManualSpaceTypeSnapshot.rows[0].spaceType, "娱乐室");
+
+const manuallyClassifiedRows = updateQuantityRowSpaceType(
+  [
+    {
+      ...rows[0],
+      spaceName: "待分类房间",
+      spaceType: "其他",
+      wallTileMeasureLengthM: 0,
+      wallTileAreaM2: 0,
+      latexPaintAreaM2: 0,
+      waterproofAreaM2: 0,
+      windowAreaM2: 1.2,
+      doorWidthTotalM: 0.9,
+      doorDeductAreaM2: 0,
+      wallMeasureLengthM: 12,
+      heightM: 2.8,
+    },
+  ],
+  "待分类房间",
+  "卧室",
+);
+const parsedManuallyClassifiedSnapshot = parseReviewSnapshot(
+  JSON.stringify(
+    buildReviewSnapshot({
+      fileName: "manual-classified.dxf",
+      calibrationFileName: "",
+      rows: manuallyClassifiedRows,
+      summary: null,
+      comparison: null,
+    }),
+  ),
+);
+const manuallyClassifiedMapping = buildQuoteMapping(parsedManuallyClassifiedSnapshot.rows);
+
+assert.equal(parsedManuallyClassifiedSnapshot.rows[0].spaceType, "卧室");
+assert.ok(parsedManuallyClassifiedSnapshot.rows[0].evidence.includes("人工调整空间类型为 卧室"));
+assert.ok(manuallyClassifiedMapping.items.some((item) => item.space_name === "待分类房间" && item.item_name === "墙面乳胶漆"));
 
 const legacySnapshot = {
   ...snapshot,
