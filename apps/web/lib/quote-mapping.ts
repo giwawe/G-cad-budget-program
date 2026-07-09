@@ -269,8 +269,8 @@ type BuildQuoteMappingOptions = {
 
 export const DEFAULT_QUOTE_RULES_NAME = "商品房整装默认规则";
 
-const DRY_SPACE_TYPES = ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "衣帽间", "储物间", "露台"];
-const CEILING_SPACE_TYPES = ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "衣帽间", "储物间"];
+const DRY_SPACE_TYPES = ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "挑空", "衣帽间", "储物间", "露台"];
+const CEILING_SPACE_TYPES = ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "挑空", "衣帽间", "储物间"];
 const KITCHEN_BATHROOM_SPACE_TYPES = ["厨房", "卫生间"];
 const GYPSUM_CEILING_SPACE_TYPES = [...CEILING_SPACE_TYPES, ...KITCHEN_BATHROOM_SPACE_TYPES];
 const CEILING_PAINT_SPACE_TYPES = [...CEILING_SPACE_TYPES, ...KITCHEN_BATHROOM_SPACE_TYPES];
@@ -279,7 +279,7 @@ const CURTAIN_SPACE_TYPES = ["客厅", "餐厅", "卧室", "书房", "茶室", "
 const KITCHEN_CABINET_SPACE_TYPES = ["厨房"];
 const BALCONY_SLIDING_DOOR_SPACE_TYPES = ["阳台", "露台"];
 const BATHROOM_FIXTURE_SPACE_TYPES = ["卫生间"];
-const WINDOWSILL_PAVING_SPACE_TYPES = ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "衣帽间", "储物间", "阳台", "露台", "洗衣房"];
+const WINDOWSILL_PAVING_SPACE_TYPES = ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "挑空", "衣帽间", "储物间", "阳台", "露台", "洗衣房"];
 const SWITCH_SOCKET_COUNT_PER_M2 = 0.8;
 const DUPLICATE_MANUAL_PLACEHOLDER_ITEM_NAMES = new Set(["砌砖墙", "砌120厚砖墙", "砌240厚砖墙", "入户门", "阳台推拉门", "阳台推拉门双包套"]);
 const SUMMED_PROJECT_METRICS = new Set<QuoteMetric>([

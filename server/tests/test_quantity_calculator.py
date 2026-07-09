@@ -15,6 +15,7 @@ def test_polygon_area_and_closed_length():
 
 def test_villa_common_space_names_are_classified_or_excluded():
     assert classify_space_type("麻将房") == "娱乐室"
+    assert classify_space_type("麻将室") == "娱乐室"
     assert classify_space_type("电竞房") == "娱乐室"
     assert classify_space_type("游戏房") == "娱乐室"
     assert classify_space_type("多功能房") == "娱乐室"
@@ -25,6 +26,11 @@ def test_villa_common_space_names_are_classified_or_excluded():
     assert classify_space_type("会客厅") == "客厅"
     assert classify_space_type("家庭厅") == "客厅"
     assert classify_space_type("设备间") == "储物间"
+    assert classify_space_type("酒窖") == "储物间"
+    assert classify_space_type("车库") == "储物间"
+    assert classify_space_type("前院") == "露台"
+    assert classify_space_type("后院") == "露台"
+    assert classify_space_type("下沉庭院") == "露台"
     assert classify_space_type("楼梯过道") == "楼梯过道"
     assert classify_space_type("露台") == "露台"
     assert classify_space_type("上层楼板洞口") == "其他"

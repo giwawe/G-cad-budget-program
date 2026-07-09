@@ -470,6 +470,7 @@ const villaSpecialSpaceMapping = buildQuoteMapping(
       spaceType: "挑空",
       floorAreaM2: 20,
       ceilingAreaM2: 0,
+      latexPaintAreaM2: 35,
       wallTileAreaM2: 0,
       waterproofAreaM2: 0,
       curtainWallWidthM: 0,
@@ -485,6 +486,7 @@ const villaSpecialSpaceMapping = buildQuoteMapping(
 
 assert.ok(villaSpecialSpaceMapping.items.some((item) => item.space_name === "一层-楼梯间" && item.item_name === "楼梯扶手" && item.quantity === 4.1));
 assert.ok(villaSpecialSpaceMapping.items.some((item) => item.space_name === "一层-露台" && item.item_name === "栏杆/护栏" && item.quantity === 6));
+assert.ok(villaSpecialSpaceMapping.items.some((item) => item.space_name === "一层-挑空" && item.item_name === "墙面乳胶漆" && item.quantity === 35));
 assert.deepEqual(villaSpecialSpaceMapping.atrium_curtain_candidates, [
   {
     floor: "一层",
@@ -614,7 +616,7 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "双眼皮/边吊吊顶
   material_price: 35,
   auxiliary_price: 15,
   labor_price: 30,
-  space_types: ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "衣帽间", "储物间", "厨房", "卫生间"],
+  space_types: ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "挑空", "衣帽间", "储物间", "厨房", "卫生间"],
 });
 assert.deepEqual(rules.at(-1), {
   item_name: "暗窗帘箱",
@@ -1033,11 +1035,11 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "卫浴五件套"), {
   labor_price: 0,
   space_types: ["卫生间"],
 });
-assert.deepEqual(rules[0].space_types, ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "衣帽间", "储物间", "露台"]);
+assert.deepEqual(rules[0].space_types, ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "挑空", "衣帽间", "储物间", "露台"]);
 rules[0].unit_price = 99;
 rules[0].space_types?.push("厨房");
 assert.equal(defaultQuoteRules()[0].unit_price, 7);
-assert.deepEqual(defaultQuoteRules()[0].space_types, ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "衣帽间", "储物间", "露台"]);
+assert.deepEqual(defaultQuoteRules()[0].space_types, ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "挑空", "衣帽间", "储物间", "露台"]);
 
 const editedRules = updateQuoteRuleUnitPrice(defaultQuoteRules(), 3, 128.456);
 assert.equal(editedRules[3].item_name, "厨房卫生间集成吊顶");
