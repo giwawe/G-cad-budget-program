@@ -775,6 +775,9 @@ assert.equal(rules.find((rule) => rule.item_name === "沙发充电插座"), unde
 assert.equal(rules.find((rule) => rule.item_name === "空调专线"), undefined);
 assert.equal(rules.find((rule) => rule.item_name === "冷水点位"), undefined);
 assert.equal(rules.find((rule) => rule.item_name === "地漏点位"), undefined);
+assert.equal(rules.find((rule) => rule.item_name === "强电布线"), undefined);
+assert.equal(rules.find((rule) => rule.item_name === "弱电布线"), undefined);
+assert.equal(rules.find((rule) => rule.item_name === "水路布管"), undefined);
 assert.deepEqual(rules.find((rule) => rule.item_name === "强电插座"), {
   item_name: "强电插座",
   metric: "hydropower_strong_outlet_count",
@@ -845,6 +848,16 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "强电线管"), {
   labor_price: 17,
   space_types: undefined,
 });
+assert.deepEqual(rules.find((rule) => rule.item_name === "弱电线管"), {
+  item_name: "弱电线管",
+  metric: "hydropower_weak_conduit_length_m",
+  unit: "M",
+  unit_price: 30,
+  material_price: 12,
+  auxiliary_price: 4,
+  labor_price: 14,
+  space_types: undefined,
+});
 assert.deepEqual(rules.find((rule) => rule.item_name === "强电箱"), {
   item_name: "强电箱",
   metric: "hydropower_strong_box_count",
@@ -913,6 +926,16 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "给水管"), {
   material_price: 22,
   auxiliary_price: 10,
   labor_price: 23,
+  space_types: undefined,
+});
+assert.deepEqual(rules.find((rule) => rule.item_name === "排水管"), {
+  item_name: "排水管",
+  metric: "hydropower_drain_pipe_length_m",
+  unit: "M",
+  unit_price: 65,
+  material_price: 25,
+  auxiliary_price: 12,
+  labor_price: 28,
   space_types: undefined,
 });
 assert.deepEqual(rules.find((rule) => rule.item_name === "全屋灯饰"), {
