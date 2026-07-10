@@ -450,6 +450,7 @@ export function UploadWorkbench({
   const [quoteMode, setQuoteMode] = useState<QuoteMode>("full");
   const [selectedQuotePackageIds, setSelectedQuotePackageIds] = useState<QuotePackageId[]>([]);
   const [selectedQuoteItemNames, setSelectedQuoteItemNames] = useState<string[]>([]);
+  const [expandedQuotePackageIds, setExpandedQuotePackageIds] = useState<QuotePackageId[]>([]);
   const [collapsedWorkbenchPanels, setCollapsedWorkbenchPanels] = useState<Record<WorkbenchPanelKey, boolean>>(DEFAULT_COLLAPSED_WORKBENCH_PANELS);
 
   const excludedCount = useMemo(() => rows.filter((row) => row.status === "excluded").length, [rows]);
@@ -1030,6 +1031,12 @@ export function UploadWorkbench({
     setGeneratedQuoteMapping(null);
   }
 
+  function handleToggleQuotePackageDetails(packageId: QuotePackageId) {
+    setExpandedQuotePackageIds((current) =>
+      current.includes(packageId) ? current.filter((item) => item !== packageId) : [...current, packageId],
+    );
+  }
+
   function handleChangeBathroomManualChoice(row: QuantityRow, rowIndex: number, part: keyof BathroomManualChoice, itemName: NonNullable<BathroomManualChoice[keyof BathroomManualChoice]>) {
     setBathroomManualChoices((current) => {
       const key = bathroomChoiceKey(row, rowIndex);
@@ -1366,35 +1373,59 @@ export function UploadWorkbench({
         </div>
         {quoteMode === "hard_plus" && <div className="quotePackageChoices">
           {quotePackageChoices.map((item) => (
-            <div className="quotePackageCard" key={item.id}>
-              <label className="quotePackageHeader">
-                <input
-                  type="checkbox"
-                  checked={selectedQuotePackageIds.includes(item.id)}
-                  onChange={() => handleToggleQuotePackage(item.id)}
-                />
-                <span>
-                  <strong>{item.label}</strong>
-                  <small>{item.description}</small>
-                </span>
-              </label>
-              <div className="quotePackageItems">
-                {item.itemNames.map((itemName) => {
-                  const packageSelected = selectedQuotePackageIds.includes(item.id);
-                  const itemSelected = packageSelected || selectedQuoteItemNames.includes(itemName);
-                  return (
-                    <label key={itemName}>
+            (() => {
+              const packageSelected = selectedQuotePackageIds.includes(item.id);
+              const selectedItemCount = packageSelected
+                ? item.itemNames.length
+                : item.itemNames.filter((itemName) => selectedQuoteItemNames.includes(itemName)).length;
+              const detailsExpanded = expandedQuotePackageIds.includes(item.id);
+              const cardClassName = [
+                "quotePackageCard",
+                packageSelected ? "selected" : "",
+                !packageSelected && selectedItemCount > 0 ? "partial" : "",
+              ].filter(Boolean).join(" ");
+              return (
+                <div className={cardClassName} key={item.id}>
+                  <div className="quotePackageHeader">
+                    <label className="quotePackageToggle">
                       <input
                         type="checkbox"
-                        checked={itemSelected}
-                        onChange={() => handleToggleQuotePackageItem(item.id, itemName)}
+                        checked={packageSelected}
+                        onChange={() => handleToggleQuotePackage(item.id)}
                       />
-                      <span>{itemName}</span>
+                      <span>
+                        <strong>{item.label}</strong>
+                        <small>{item.description}</small>
+                      </span>
                     </label>
-                  );
-                })}
-              </div>
-            </div>
+                    <button type="button" className="quotePackageDetailButton" onClick={() => handleToggleQuotePackageDetails(item.id)}>
+                      {detailsExpanded ? "收起" : "明细"}
+                    </button>
+                  </div>
+                  <div className="quotePackageSummary">
+                    {packageSelected ? "已全选" : selectedItemCount > 0 ? `已选 ${selectedItemCount} 项` : "未选择"}
+                    <span>{item.itemNames.length} 项</span>
+                  </div>
+                  {detailsExpanded && (
+                    <div className="quotePackageItems">
+                      {item.itemNames.map((itemName) => {
+                        const itemSelected = packageSelected || selectedQuoteItemNames.includes(itemName);
+                        return (
+                          <label key={itemName}>
+                            <input
+                              type="checkbox"
+                              checked={itemSelected}
+                              onChange={() => handleToggleQuotePackageItem(item.id, itemName)}
+                            />
+                            <span>{itemName}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })()
           ))}
         </div>}
       </section>

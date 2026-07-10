@@ -84,6 +84,32 @@ node --experimental-strip-types apps\web\components\quote-export-risk-details.te
 
 这些 Node 测试会打印 `MODULE_TYPELESS_PACKAGE_JSON` warning，当前可忽略，不要为了消 warning 贸然改 package type。
 
+## GitHub 推送注意
+
+本机 PowerShell/Git 直连 GitHub 经常失败，浏览器可访问通常是因为走了系统代理 `127.0.0.1:7888`。本仓库已在 `.git/config` 配置本地代理：
+
+```powershell
+git config --local http.proxy http://127.0.0.1:7888
+git config --local https.proxy http://127.0.0.1:7888
+```
+
+如果普通 `git push origin main` 或 `gh auth git-credential` 静默失败，先清理残留 Git 进程，再用 GitHub CLI token 生成一次性 Basic Authorization header 推送；不要把 token 写入配置文件：
+
+```powershell
+Get-Process git,git-remote-https -ErrorAction SilentlyContinue | Stop-Process
+$token = gh auth token
+$basic = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("giwawe:$token"))
+$header = "AUTHORIZATION: Basic $basic"
+git -c credential.helper= -c http.extraHeader="$header" push origin main
+```
+
+推送前后用下面命令核对远端：
+
+```powershell
+git ls-remote origin refs/heads/main
+gh api repos/giwawe/G-cad-budget-program/git/ref/heads/main --jq '.object.sha'
+```
+
 ## API 表面
 
 - `GET /health`：健康检查。

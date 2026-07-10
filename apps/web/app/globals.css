@@ -381,12 +381,29 @@ code {
   padding: 10px;
 }
 
+.quotePackageCard.selected {
+  border-color: color-mix(in srgb, var(--accent) 55%, #d8e1eb);
+  background: #f0fbf8;
+}
+
+.quotePackageCard.partial {
+  border-color: #b9c8d8;
+  background: #f8fbff;
+}
+
 .quotePackageCard.disabled {
   background: #f7f9fb;
   color: var(--muted);
 }
 
-.quotePackageHeader,
+.quotePackageHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 8px;
+}
+
+.quotePackageToggle,
 .quotePackageItems label {
   min-width: 0;
   display: grid;
@@ -399,20 +416,47 @@ code {
   margin-top: 2px;
 }
 
-.quotePackageHeader strong,
-.quotePackageHeader small {
+.quotePackageToggle strong,
+.quotePackageToggle small {
   display: block;
 }
 
-.quotePackageHeader strong {
+.quotePackageToggle strong {
   font-size: 13px;
 }
 
-.quotePackageHeader small {
+.quotePackageToggle small {
   margin-top: 3px;
   color: var(--muted);
   font-size: 11px;
   line-height: 1.35;
+}
+
+.quotePackageDetailButton {
+  min-height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0 9px;
+  white-space: nowrap;
+}
+
+.quotePackageSummary {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.quotePackageSummary span {
+  color: var(--muted);
+  font-weight: 500;
 }
 
 .quotePackageItems {
