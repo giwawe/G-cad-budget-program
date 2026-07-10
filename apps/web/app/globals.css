@@ -294,37 +294,46 @@ code {
   padding: 3px 9px;
 }
 
-.quoteRulesPanel {
-  min-width: 0;
-  display: grid;
-  gap: 12px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--panel);
-  margin-bottom: 18px;
-  padding: 14px 16px;
-}
-
+.quoteModePanel,
+.quoteRulesPanel,
 .manualQuotePanel {
   min-width: 0;
   display: grid;
-  gap: 12px;
+  gap: 14px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--panel);
   margin-bottom: 18px;
-  padding: 14px 16px;
+  padding: 16px;
 }
 
 .quoteModePanel {
-  min-width: 0;
+  border-color: color-mix(in srgb, var(--accent) 18%, var(--line));
+  background: linear-gradient(180deg, #fbfefd 0%, #ffffff 58%);
+}
+
+.quoteModeStatus {
   display: grid;
-  gap: 12px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--panel);
-  margin-bottom: 18px;
-  padding: 14px 16px;
+  grid-auto-flow: column;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--line));
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--muted);
+  font-size: 12px;
+  padding: 7px 11px;
+  white-space: nowrap;
+}
+
+.quoteModeStatus strong {
+  color: var(--accent);
+  font-size: 13px;
+}
+
+.quoteModeStatus em {
+  color: #516170;
+  font-style: normal;
 }
 
 .quoteModeChoices {
@@ -335,19 +344,25 @@ code {
 
 .quoteModeChoices button {
   min-width: 0;
-  min-height: 62px;
+  min-height: 70px;
   border: 1px solid #d8e1eb;
   border-radius: 8px;
   background: #ffffff;
   color: #26323f;
   cursor: pointer;
   text-align: left;
-  padding: 10px 12px;
+  padding: 12px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 
 .quoteModeChoices button.active {
   border-color: var(--accent);
   background: #e9f7f3;
+  box-shadow: 0 8px 20px rgba(23, 119, 99, 0.12);
+}
+
+.quoteModeChoices button:hover {
+  border-color: color-mix(in srgb, var(--accent) 42%, #d8e1eb);
 }
 
 .quoteModeChoices strong,
@@ -378,17 +393,19 @@ code {
   border-radius: 8px;
   background: #ffffff;
   color: #26323f;
-  padding: 10px;
+  padding: 11px;
 }
 
 .quotePackageCard.selected {
   border-color: color-mix(in srgb, var(--accent) 55%, #d8e1eb);
   background: #f0fbf8;
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 
 .quotePackageCard.partial {
   border-color: #b9c8d8;
   background: #f8fbff;
+  box-shadow: inset 3px 0 0 #7b8fa5;
 }
 
 .quotePackageCard.disabled {
@@ -469,9 +486,13 @@ code {
 }
 
 .quotePackageItems label {
+  border: 1px solid #e4ebf3;
+  border-radius: 999px;
+  background: #ffffff;
   align-items: center;
   font-size: 11px;
   color: #4d5d6c;
+  padding: 4px 8px;
 }
 
 .quotePackageItems input {
@@ -597,6 +618,7 @@ code {
 
 .quoteRulesActions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   justify-content: flex-end;
 }
@@ -622,9 +644,13 @@ code {
   grid-template-columns: auto minmax(220px, 420px);
   align-items: center;
   gap: 10px;
-  margin: 12px 0 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
   color: var(--muted);
   font-size: 13px;
+  margin: 2px 0 4px;
+  padding: 10px;
 }
 
 .quoteRuleSearch input {

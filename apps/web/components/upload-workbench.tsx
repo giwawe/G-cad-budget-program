@@ -503,6 +503,12 @@ export function UploadWorkbench({
       }).filter((definition) => definition.itemNames.length > 0),
     [quoteRules],
   );
+  const activeQuoteModeOption = QUOTE_MODE_OPTIONS.find((option) => option.value === quoteMode) ?? QUOTE_MODE_OPTIONS[0];
+  const selectedQuotePackageItemCount = quotePackageChoices.reduce(
+    (sum, item) =>
+      sum + (selectedQuotePackageIds.includes(item.id) ? item.itemNames.length : item.itemNames.filter((itemName) => selectedQuoteItemNames.includes(itemName)).length),
+    0,
+  );
   const projectSummaryItems = generatedQuoteMapping ? projectSummaryQuoteItems(generatedQuoteMapping.mapping) : [];
   const integratedCeilingPriceReminderItemsForMapping = generatedQuoteMapping ? integratedCeilingPriceReminderItems(generatedQuoteMapping.mapping) : [];
   const quoteExportRisks = generatedQuoteMapping ? exportQuoteMappingConfirmationMessages(generatedQuoteMapping.mapping) : [];
@@ -1356,6 +1362,11 @@ export function UploadWorkbench({
           <div>
             <strong>报价输出模式</strong>
             <span>导出报价映射和 Excel 草稿时生效；报价规则单价仍统一维护。</span>
+          </div>
+          <div className="quoteModeStatus" aria-label="当前报价输出模式">
+            <span>当前</span>
+            <strong>{activeQuoteModeOption.label}</strong>
+            {quoteMode === "hard_plus" && <em>{selectedQuotePackageItemCount > 0 ? `已选 ${selectedQuotePackageItemCount} 个增项` : "未选择增项"}</em>}
           </div>
         </div>
         <div className="quoteModeChoices">
