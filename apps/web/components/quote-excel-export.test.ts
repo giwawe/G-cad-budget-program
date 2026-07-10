@@ -42,6 +42,17 @@ assert.ok(uploadWorkbenchSource.includes("暂不接入"), "quote integration sta
 assert.ok(uploadWorkbenchSource.includes("manualItems: manualQuoteItemQuantities"), "Excel draft export should apply manual quote item quantities");
 assert.ok(uploadWorkbenchSource.includes("excelManualItemQuantities: manualQuoteItemQuantities"), "review snapshots should persist manual quote item quantities");
 assert.ok(uploadWorkbenchSource.includes("manualQuoteInputsFromQuantities(snapshot.excel_manual_item_quantities)"), "review snapshot import should restore manual quote item inputs");
+assert.ok(uploadWorkbenchSource.includes("QuoteExcelProjectInfo"), "workbench should type quote project header information");
+assert.ok(uploadWorkbenchSource.includes("const [quoteProjectInfo, setQuoteProjectInfo]"), "workbench should keep quote project header state");
+assert.ok(uploadWorkbenchSource.includes("报价抬头信息"), "workbench should expose quote project header fields");
+assert.ok(uploadWorkbenchSource.includes("地址名称"), "quote header fields should include address name");
+assert.ok(uploadWorkbenchSource.includes("客户姓名"), "quote header fields should include customer name");
+assert.ok(uploadWorkbenchSource.includes("设计师"), "quote header fields should include designer name");
+assert.ok(uploadWorkbenchSource.includes("报价员"), "quote header fields should include estimator name");
+assert.ok(uploadWorkbenchSource.includes("报价日期"), "quote header fields should include quote date");
+assert.ok(uploadWorkbenchSource.includes("projectInfo: quoteProjectInfo"), "review snapshots should persist quote project header information");
+assert.ok(uploadWorkbenchSource.includes("setQuoteProjectInfo({"), "review snapshot import should restore quote project header information");
+assert.ok(uploadWorkbenchSource.includes("decorationAreaM2: summary?.building_area_m2 ?? mapping.summary.building_area_m2"), "Excel draft export should fill decoration area from parsed summary");
 assert.ok(uploadWorkbenchSource.includes('buildHydropowerEstimate'), "workbench should build a hydropower estimate from rows and drawing");
 assert.ok(uploadWorkbenchSource.includes("HydropowerReviewPanel"), "workbench should render the hydropower review panel");
 assert.ok(uploadWorkbenchSource.includes("const [hydropowerOverride, setHydropowerOverride]"), "workbench should keep hydropower override state");

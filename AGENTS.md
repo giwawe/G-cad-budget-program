@@ -267,6 +267,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 下载/导入报价规则 JSON；导入后报价映射会使用当前规则重新计算金额。
 - 工作台会展示当前报价规则单价表，报价员可按真实模板分别编辑主材单价、辅材单价和人工单价；页面会自动汇总为 `unit_price`。报价规则面板按墙顶地/湿区、全屋拆改/其他工程、水电/项目服务、门窗/定制、洁具/灯饰、窗帘/收口分组，分组可展开/收起，也可一键全部展开/收起；折叠状态保存到浏览器本机存储。规则表支持按清单项、取数指标、单位和适用空间筛选，方便在较长规则表中快速改价。编辑后会清空已生成的报价映射和规则 JSON 预览，并自动保存到浏览器本机存储，刷新页面后恢复；重新导出报价映射或 Excel 草稿后使用新的三段价格和汇总单价。报价规则面板可一键恢复默认规则。
 - `tools/export_quote_rule_check_xlsx.py` 可从 `quote-rules-apartment-current.json` 导出桌面 `报价规则单价核对表.xlsx`；`tools/sync_quote_rule_prices_from_xlsx.py` 可把核对表里的主材/辅材/人工同步回默认规则 JSON 和 `apps/web/lib/quote-mapping.ts`。同步后需提高 `DEFAULT_QUOTE_RULES_STORAGE_VERSION`，避免浏览器继续使用旧本机缓存。
+- `tools/real-drawing-regression.mjs` 可批量回归桌面 5 张真实 DXF，复用后端解析、前端水电估算、报价映射和 Excel 模板，输出三种报价模式 Excel、`real-drawing-regression-report.md` 和每张图纸的修图清单。运行命令：`node --experimental-strip-types tools\real-drawing-regression.mjs`；详细参数见 `docs/real-drawing-regression.md`。
 - 首页默认空白，不自动加载任何示例方案；`apps/web/lib/default-project.ts` 仅保留为测试和开发夹具，源 DXF 保存在 `server/tests/fixtures/10.dxf`。
 - 页面会提示商品房整装待补取数口径清单，这些项目暂不参与金额汇总。
 - 导出报价映射后会显示窗帘/窗帘箱可报价候选空间数；导出的报价映射 JSON 会附带 `curtain_quote_readiness` 摘要，并把自动候选或人工校准后的暗窗帘箱写入 `curtain_quote_candidates` 候选清单和 `items` 金额汇总。挑空空间另附 `atrium_curtain_candidates` 复核候选，不混入普通窗帘金额。
