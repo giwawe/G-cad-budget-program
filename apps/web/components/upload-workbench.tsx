@@ -166,6 +166,12 @@ const quoteRuleGroups = [
   },
 ];
 const DEFAULT_COLLAPSED_QUOTE_RULE_GROUPS = [...quoteRuleGroups.map((group) => group.title), "其他规则"];
+type WorkbenchPanelKey = "quoteRules" | "manualQuote" | "health";
+const DEFAULT_COLLAPSED_WORKBENCH_PANELS: Record<WorkbenchPanelKey, boolean> = {
+  quoteRules: true,
+  manualQuote: true,
+  health: false,
+};
 
 const QUOTE_INTEGRATION_STATUS_GROUPS = [
   {
@@ -444,6 +450,7 @@ export function UploadWorkbench({
   const [quoteMode, setQuoteMode] = useState<QuoteMode>("full");
   const [selectedQuotePackageIds, setSelectedQuotePackageIds] = useState<QuotePackageId[]>([]);
   const [selectedQuoteItemNames, setSelectedQuoteItemNames] = useState<string[]>([]);
+  const [collapsedWorkbenchPanels, setCollapsedWorkbenchPanels] = useState<Record<WorkbenchPanelKey, boolean>>(DEFAULT_COLLAPSED_WORKBENCH_PANELS);
 
   const excludedCount = useMemo(() => rows.filter((row) => row.status === "excluded").length, [rows]);
   const pendingQuoteMetrics = useMemo(() => apartmentPendingQuoteMetrics(), []);
@@ -972,6 +979,10 @@ export function UploadWorkbench({
     setCollapsedQuoteRuleGroups([]);
   }
 
+  function handleToggleWorkbenchPanel(panelKey: WorkbenchPanelKey) {
+    setCollapsedWorkbenchPanels((current) => ({ ...current, [panelKey]: !current[panelKey] }));
+  }
+
   function handleChangeManualQuoteItem(itemName: string, value: string) {
     setManualQuoteItemInputs((current) => ({ ...current, [itemName]: value }));
     setMessage(value.trim() ? `${itemName} Excel 补项数量已更新` : `${itemName} Excel 补项已恢复默认`);
@@ -1395,96 +1406,107 @@ export function UploadWorkbench({
             <span>{quoteRulesFileName} · 本机自动保存 · 显示 {filteredQuoteRules.length}/{quoteRules.length} 项</span>
           </div>
           <div className="quoteRulesActions">
-            <button type="button" onClick={handleExpandAllQuoteRuleGroups}>全部展开</button>
-            <button type="button" onClick={handleCollapseAllQuoteRuleGroups}>全部收起</button>
-            <button type="button" onClick={handleResetQuoteRules}>恢复默认规则</button>
+            <button className="panelToggleButton" type="button" onClick={() => handleToggleWorkbenchPanel("quoteRules")}>
+              {collapsedWorkbenchPanels.quoteRules ? "展开面板" : "收起面板"}
+            </button>
+            {!collapsedWorkbenchPanels.quoteRules && (
+              <>
+                <button type="button" onClick={handleExpandAllQuoteRuleGroups}>全部展开</button>
+                <button type="button" onClick={handleCollapseAllQuoteRuleGroups}>全部收起</button>
+                <button type="button" onClick={handleResetQuoteRules}>恢复默认规则</button>
+              </>
+            )}
           </div>
         </div>
-        <label className="quoteRuleSearch">
-          <span>筛选规则</span>
-          <input
-            aria-label="筛选报价规则"
-            type="search"
-            placeholder="按清单项、取数指标、适用空间搜索"
-            value={quoteRuleSearch}
-            onChange={(event) => setQuoteRuleSearch(event.target.value)}
-          />
-        </label>
-        <div className="quoteRulesTable">
-          <table>
-            <thead>
-              <tr>
-                <th>清单项</th>
-                <th>取数指标</th>
-                <th>适用空间</th>
-                <th>单位</th>
-                <th>主材</th>
-                <th>辅材</th>
-                <th>人工</th>
-                <th>汇总单价</th>
-              </tr>
-            </thead>
-            <tbody>
-              {groupedQuoteRules.length === 0 && (
-                <tr>
-                  <td className="quoteRuleEmptyState" colSpan={8}>没有匹配的报价规则</td>
-                </tr>
-              )}
-              {groupedQuoteRules.map((group) => (
-                <Fragment key={group.title}>
-                  <tr className="quoteRuleGroupTitle">
-                    <td colSpan={8}>
-                      <button type="button" onClick={() => handleToggleQuoteRuleGroup(group.title)}>
-                        <span>{collapsedQuoteRuleGroups.includes(group.title) ? "展开" : "收起"}</span>
-                        <strong>{group.title}</strong>
-                        <span className="quoteRuleGroupCount">{group.rules.length} 项</span>
-                      </button>
-                    </td>
+        {!collapsedWorkbenchPanels.quoteRules && (
+          <>
+            <label className="quoteRuleSearch">
+              <span>筛选规则</span>
+              <input
+                aria-label="筛选报价规则"
+                type="search"
+                placeholder="按清单项、取数指标、适用空间搜索"
+                value={quoteRuleSearch}
+                onChange={(event) => setQuoteRuleSearch(event.target.value)}
+              />
+            </label>
+            <div className="quoteRulesTable">
+              <table>
+                <thead>
+                  <tr>
+                    <th>清单项</th>
+                    <th>取数指标</th>
+                    <th>适用空间</th>
+                    <th>单位</th>
+                    <th>主材</th>
+                    <th>辅材</th>
+                    <th>人工</th>
+                    <th>汇总单价</th>
                   </tr>
-                  {!collapsedQuoteRuleGroups.includes(group.title) && group.rules.map(({ rule, index }) => (
-                    <tr key={`${rule.item_name}-${rule.metric}-${index}`}>
-                      <td>{rule.item_name}</td>
-                      <td><code>{rule.metric}</code></td>
-                      <td>{rule.space_types?.join("、") ?? "全部"}</td>
-                      <td>{rule.unit}</td>
-                      <td>
-                        <input
-                          aria-label={`${rule.item_name} 主材单价`}
-                          min="0"
-                          step="0.01"
-                          type="number"
-                          value={rule.material_price ?? rule.unit_price}
-                          onChange={(event) => handleChangeQuoteRulePricePart(index, "material_price", event.target.value)}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          aria-label={`${rule.item_name} 辅材单价`}
-                          min="0"
-                          step="0.01"
-                          type="number"
-                          value={rule.auxiliary_price ?? 0}
-                          onChange={(event) => handleChangeQuoteRulePricePart(index, "auxiliary_price", event.target.value)}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          aria-label={`${rule.item_name} 人工单价`}
-                          min="0"
-                          step="0.01"
-                          type="number"
-                          value={rule.labor_price ?? 0}
-                          onChange={(event) => handleChangeQuoteRulePricePart(index, "labor_price", event.target.value)}
-                        />
-                      </td>
-                      <td>{rule.unit_price.toFixed(2)}</td>
+                </thead>
+                <tbody>
+                  {groupedQuoteRules.length === 0 && (
+                    <tr>
+                      <td className="quoteRuleEmptyState" colSpan={8}>没有匹配的报价规则</td>
                     </tr>
+                  )}
+                  {groupedQuoteRules.map((group) => (
+                    <Fragment key={group.title}>
+                      <tr className="quoteRuleGroupTitle">
+                        <td colSpan={8}>
+                          <button type="button" onClick={() => handleToggleQuoteRuleGroup(group.title)}>
+                            <span>{collapsedQuoteRuleGroups.includes(group.title) ? "展开" : "收起"}</span>
+                            <strong>{group.title}</strong>
+                            <span className="quoteRuleGroupCount">{group.rules.length} 项</span>
+                          </button>
+                        </td>
+                      </tr>
+                      {!collapsedQuoteRuleGroups.includes(group.title) && group.rules.map(({ rule, index }) => (
+                        <tr key={`${rule.item_name}-${rule.metric}-${index}`}>
+                          <td>{rule.item_name}</td>
+                          <td><code>{rule.metric}</code></td>
+                          <td>{rule.space_types?.join("、") ?? "全部"}</td>
+                          <td>{rule.unit}</td>
+                          <td>
+                            <input
+                              aria-label={`${rule.item_name} 主材单价`}
+                              min="0"
+                              step="0.01"
+                              type="number"
+                              value={rule.material_price ?? rule.unit_price}
+                              onChange={(event) => handleChangeQuoteRulePricePart(index, "material_price", event.target.value)}
+                            />
+                          </td>
+                          <td>
+                            <input
+                              aria-label={`${rule.item_name} 辅材单价`}
+                              min="0"
+                              step="0.01"
+                              type="number"
+                              value={rule.auxiliary_price ?? 0}
+                              onChange={(event) => handleChangeQuoteRulePricePart(index, "auxiliary_price", event.target.value)}
+                            />
+                          </td>
+                          <td>
+                            <input
+                              aria-label={`${rule.item_name} 人工单价`}
+                              min="0"
+                              step="0.01"
+                              type="number"
+                              value={rule.labor_price ?? 0}
+                              onChange={(event) => handleChangeQuoteRulePricePart(index, "labor_price", event.target.value)}
+                            />
+                          </td>
+                          <td>{rule.unit_price.toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </Fragment>
                   ))}
-                </Fragment>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
       </section>
 
       <section className="manualQuotePanel">
@@ -1494,74 +1516,83 @@ export function UploadWorkbench({
             <span>数量留空时沿用自动识别或默认占位；填写后只影响 Excel 草稿。入户门、阳台推拉门和窗台石由自动识别结果处理。</span>
           </div>
           <div className="quoteRulesActions">
-            <button type="button" disabled={manualQuoteEditedCount === 0} onClick={handleResetManualQuoteItems}>恢复默认</button>
+            <button className="panelToggleButton" type="button" onClick={() => handleToggleWorkbenchPanel("manualQuote")}>
+              {collapsedWorkbenchPanels.manualQuote ? "展开面板" : "收起面板"}
+            </button>
+            {!collapsedWorkbenchPanels.manualQuote && (
+              <button type="button" disabled={manualQuoteEditedCount === 0} onClick={handleResetManualQuoteItems}>恢复默认</button>
+            )}
           </div>
         </div>
-        <div className="manualQuoteGrid">
-          {MANUAL_QUOTE_OPTION_ITEMS.map((item) => (
-            <label className="manualQuoteItem" key={item.itemName}>
-              <span>
-                <strong>{item.itemName}</strong>
-                <small>{item.hint} · {item.unit}</small>
-                {item.itemName === ALUMINUM_WINDOW_ITEM_NAME && <small>建议 {aluminumWindowSuggestedArea.toFixed(2)} {item.unit}</small>}
-              </span>
-              <input
-                aria-label={`${item.itemName} Excel 补项数量`}
-                min="0"
-                step="0.01"
-                type="number"
-                placeholder="默认"
-                value={manualQuoteItemInputs[item.itemName] ?? ""}
-                onChange={(event) => handleChangeManualQuoteItem(item.itemName, event.target.value)}
-              />
-              {item.itemName === ALUMINUM_WINDOW_ITEM_NAME && (
-                <button type="button" disabled={aluminumWindowSuggestedArea <= 0} onClick={() => handleUseManualQuoteSuggestion(item.itemName, aluminumWindowSuggestedArea)}>
-                  使用建议
-                </button>
-              )}
-            </label>
-          ))}
-        </div>
-        <div className="manualBathroomChoices">
-          {bathroomRows.map((row, rowIndex) => {
-            const choiceKey = bathroomChoiceKey(row, rowIndex);
-            const choice = bathroomManualChoices[choiceKey] ?? {};
-            const selectedFixture = choice.fixture ?? "马桶";
-            const selectedShower = choice.shower ?? "淋浴隔断";
-            return (
-              <div className="manualBathroomChoice" key={choiceKey}>
-                <strong>{row.spaceName}</strong>
-                <div>
-                  <span>洁具</span>
-                  {(["马桶", "蹲坑"] as const).map((itemName) => (
-                    <button
-                      type="button"
-                      className={selectedFixture === itemName ? "active" : ""}
-                      onClick={() => handleChangeBathroomManualChoice(row, rowIndex, "fixture", itemName)}
-                      key={itemName}
-                    >
-                      {itemName}
+        {!collapsedWorkbenchPanels.manualQuote && (
+          <>
+            <div className="manualQuoteGrid">
+              {MANUAL_QUOTE_OPTION_ITEMS.map((item) => (
+                <label className="manualQuoteItem" key={item.itemName}>
+                  <span>
+                    <strong>{item.itemName}</strong>
+                    <small>{item.hint} · {item.unit}</small>
+                    {item.itemName === ALUMINUM_WINDOW_ITEM_NAME && <small>建议 {aluminumWindowSuggestedArea.toFixed(2)} {item.unit}</small>}
+                  </span>
+                  <input
+                    aria-label={`${item.itemName} Excel 补项数量`}
+                    min="0"
+                    step="0.01"
+                    type="number"
+                    placeholder="默认"
+                    value={manualQuoteItemInputs[item.itemName] ?? ""}
+                    onChange={(event) => handleChangeManualQuoteItem(item.itemName, event.target.value)}
+                  />
+                  {item.itemName === ALUMINUM_WINDOW_ITEM_NAME && (
+                    <button type="button" disabled={aluminumWindowSuggestedArea <= 0} onClick={() => handleUseManualQuoteSuggestion(item.itemName, aluminumWindowSuggestedArea)}>
+                      使用建议
                     </button>
-                  ))}
-                </div>
-                <div>
-                  <span>淋浴</span>
-                  {(["淋浴隔断", "玻璃淋浴房"] as const).map((itemName) => (
-                    <button
-                      type="button"
-                      className={selectedShower === itemName ? "active" : ""}
-                      onClick={() => handleChangeBathroomManualChoice(row, rowIndex, "shower", itemName)}
-                      key={itemName}
-                    >
-                      {itemName}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-          {bathroomRows.length === 0 && <p>当前没有可计价卫生间。</p>}
-        </div>
+                  )}
+                </label>
+              ))}
+            </div>
+            <div className="manualBathroomChoices">
+              {bathroomRows.map((row, rowIndex) => {
+                const choiceKey = bathroomChoiceKey(row, rowIndex);
+                const choice = bathroomManualChoices[choiceKey] ?? {};
+                const selectedFixture = choice.fixture ?? "马桶";
+                const selectedShower = choice.shower ?? "淋浴隔断";
+                return (
+                  <div className="manualBathroomChoice" key={choiceKey}>
+                    <strong>{row.spaceName}</strong>
+                    <div>
+                      <span>洁具</span>
+                      {(["马桶", "蹲坑"] as const).map((itemName) => (
+                        <button
+                          type="button"
+                          className={selectedFixture === itemName ? "active" : ""}
+                          onClick={() => handleChangeBathroomManualChoice(row, rowIndex, "fixture", itemName)}
+                          key={itemName}
+                        >
+                          {itemName}
+                        </button>
+                      ))}
+                    </div>
+                    <div>
+                      <span>淋浴</span>
+                      {(["淋浴隔断", "玻璃淋浴房"] as const).map((itemName) => (
+                        <button
+                          type="button"
+                          className={selectedShower === itemName ? "active" : ""}
+                          onClick={() => handleChangeBathroomManualChoice(row, rowIndex, "shower", itemName)}
+                          key={itemName}
+                        >
+                          {itemName}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+              {bathroomRows.length === 0 && <p>当前没有可计价卫生间。</p>}
+            </div>
+          </>
+        )}
       </section>
 
       <section className="healthPanel">
@@ -1570,57 +1601,68 @@ export function UploadWorkbench({
             <strong>算量健康检查</strong>
             <span>{healthSummary.label}</span>
           </div>
-          <button type="button" disabled={healthChecks.length === 0} onClick={handleDownloadHealthFixList}>
-            <Download aria-hidden="true" size={18} />
-            导出修图清单
-          </button>
-        </div>
-        {acceptedHealthCheckKeys.length > 0 && (
-          <p>
-            已接受 {acceptedHealthCheckKeys.length} 项检查，不再进入当前健康提示、修图清单和报价风险摘要。
-            <button type="button" onClick={handleRestoreAcceptedHealthChecks}>恢复已接受</button>
-          </p>
-        )}
-        <div className="healthFilter" role="group" aria-label="健康检查筛选">
-          {healthFilterOptions.map((option) => (
-            <button
-              type="button"
-              className={healthFilter === option.value ? "active" : ""}
-              onClick={() => setHealthFilter(option.value)}
-              key={option.value}
-            >
-              {option.label}
+          <div className="quoteRulesActions">
+            <button className="panelToggleButton" type="button" onClick={() => handleToggleWorkbenchPanel("health")}>
+              {collapsedWorkbenchPanels.health ? "展开面板" : "收起面板"}
             </button>
-          ))}
+            {!collapsedWorkbenchPanels.health && (
+              <button type="button" disabled={healthChecks.length === 0} onClick={handleDownloadHealthFixList}>
+                <Download aria-hidden="true" size={18} />
+                导出修图清单
+              </button>
+            )}
+          </div>
         </div>
-        {healthChecks.length > 0 ? (
-          <div className="healthList">
-            {filteredHealthChecks.map((check) => (
-              <div className={`healthCard ${check.severity}`} key={check.id}>
-                <strong>{check.title}</strong>
-                <span>{check.detail}</span>
-                {check.spaceNames && (
-                  <div>
-                    {check.spaceNames.map((spaceName, index) => (
-                      <a href={quantityRowAnchorHref(spaceName)} key={`${spaceName}-${index}`}>{spaceName}</a>
-                    ))}
-                    <button type="button" onClick={() => handleMarkHealthCheckNeedsFix(check.spaceNames ?? [])}>
-                      标记需修图
-                    </button>
-                    <button type="button" onClick={() => handleConfirmHealthCheckSpaces(check)}>
-                      标记已确认
+        {!collapsedWorkbenchPanels.health && (
+          <>
+            {acceptedHealthCheckKeys.length > 0 && (
+              <p>
+                已接受 {acceptedHealthCheckKeys.length} 项检查，不再进入当前健康提示、修图清单和报价风险摘要。
+                <button type="button" onClick={handleRestoreAcceptedHealthChecks}>恢复已接受</button>
+              </p>
+            )}
+            <div className="healthFilter" role="group" aria-label="健康检查筛选">
+              {healthFilterOptions.map((option) => (
+                <button
+                  type="button"
+                  className={healthFilter === option.value ? "active" : ""}
+                  onClick={() => setHealthFilter(option.value)}
+                  key={option.value}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+            {healthChecks.length > 0 ? (
+              <div className="healthList">
+                {filteredHealthChecks.map((check) => (
+                  <div className={`healthCard ${check.severity}`} key={check.id}>
+                    <strong>{check.title}</strong>
+                    <span>{check.detail}</span>
+                    {check.spaceNames && (
+                      <div>
+                        {check.spaceNames.map((spaceName, index) => (
+                          <a href={quantityRowAnchorHref(spaceName)} key={`${spaceName}-${index}`}>{spaceName}</a>
+                        ))}
+                        <button type="button" onClick={() => handleMarkHealthCheckNeedsFix(check.spaceNames ?? [])}>
+                          标记需修图
+                        </button>
+                        <button type="button" onClick={() => handleConfirmHealthCheckSpaces(check)}>
+                          标记已确认
+                        </button>
+                      </div>
+                    )}
+                    <button type="button" onClick={() => handleAcceptHealthCheck(check)}>
+                      接受此项
                     </button>
                   </div>
-                )}
-                <button type="button" onClick={() => handleAcceptHealthCheck(check)}>
-                  接受此项
-                </button>
+                ))}
+                {filteredHealthChecks.length === 0 && <p>当前筛选下暂无检查项。</p>}
               </div>
-            ))}
-            {filteredHealthChecks.length === 0 && <p>当前筛选下暂无检查项。</p>}
-          </div>
-        ) : (
-          <p>空间类型、建筑面积、窗帘确认和报价规则缺失项目前看起来正常。</p>
+            ) : (
+              <p>空间类型、建筑面积、窗帘确认和报价规则缺失项目前看起来正常。</p>
+            )}
+          </>
         )}
       </section>
 
@@ -1631,9 +1673,7 @@ export function UploadWorkbench({
               <strong>CAD 修图清单已生成</strong>
               <span>{generatedHealthFixList.fileName}</span>
             </div>
-            <button type="button" onClick={handleCopyHealthFixList}>
-              复制 Markdown
-            </button>
+            <button type="button" onClick={handleCopyHealthFixList}>复制 Markdown</button>
           </div>
           <textarea readOnly value={generatedHealthFixList.content} aria-label="CAD 修图清单 Markdown" />
         </section>

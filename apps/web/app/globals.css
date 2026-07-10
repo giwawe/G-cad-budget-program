@@ -553,6 +553,7 @@ code {
 
 .quoteRulesActions {
   display: flex;
+  gap: 8px;
   justify-content: flex-end;
 }
 
@@ -564,6 +565,12 @@ code {
   cursor: pointer;
   font-size: 13px;
   padding: 7px 11px;
+}
+
+.quoteRulesActions .panelToggleButton {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  color: var(--accent);
+  font-weight: 700;
 }
 
 .quoteRuleSearch {
