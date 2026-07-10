@@ -49,6 +49,33 @@ input {
   justify-content: flex-end;
 }
 
+.topbarActionGroup {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 8px;
+}
+
+.topbarActionGroup > span {
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.topbarActionGroup button {
+  min-height: 36px;
+  padding: 0 11px;
+}
+
 .topbar p,
 .reviewSection p {
   margin: 0;
@@ -289,6 +316,124 @@ code {
   padding: 14px 16px;
 }
 
+.quoteModePanel {
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  margin-bottom: 18px;
+  padding: 14px 16px;
+}
+
+.quoteModeChoices {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.quoteModeChoices button {
+  min-width: 0;
+  min-height: 62px;
+  border: 1px solid #d8e1eb;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #26323f;
+  cursor: pointer;
+  text-align: left;
+  padding: 10px 12px;
+}
+
+.quoteModeChoices button.active {
+  border-color: var(--accent);
+  background: #e9f7f3;
+}
+
+.quoteModeChoices strong,
+.quoteModeChoices span {
+  display: block;
+}
+
+.quoteModeChoices strong {
+  font-size: 14px;
+}
+
+.quoteModeChoices span {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.quotePackageChoices {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.quotePackageCard {
+  min-width: 0;
+  border: 1px solid #d8e1eb;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #26323f;
+  padding: 10px;
+}
+
+.quotePackageCard.disabled {
+  background: #f7f9fb;
+  color: var(--muted);
+}
+
+.quotePackageHeader,
+.quotePackageItems label {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+}
+
+.quotePackageChoices input {
+  margin-top: 2px;
+}
+
+.quotePackageHeader strong,
+.quotePackageHeader small {
+  display: block;
+}
+
+.quotePackageHeader strong {
+  font-size: 13px;
+}
+
+.quotePackageHeader small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.quotePackageItems {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin-top: 9px;
+  padding-top: 8px;
+  border-top: 1px solid #edf2f7;
+}
+
+.quotePackageItems label {
+  align-items: center;
+  font-size: 11px;
+  color: #4d5d6c;
+}
+
+.quotePackageItems input {
+  margin-top: 0;
+}
+
 .manualQuoteGrid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -408,6 +553,7 @@ code {
 
 .quoteRulesActions {
   display: flex;
+  gap: 8px;
   justify-content: flex-end;
 }
 
@@ -419,6 +565,12 @@ code {
   cursor: pointer;
   font-size: 13px;
   padding: 7px 11px;
+}
+
+.quoteRulesActions .panelToggleButton {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  color: var(--accent);
+  font-weight: 700;
 }
 
 .quoteRuleSearch {
@@ -1125,6 +1277,46 @@ code {
   vector-effect: non-scaling-stroke;
 }
 
+.svgEdgeCeiling {
+  fill: rgba(251, 113, 133, 0.16);
+  stroke: #fb7185;
+  stroke-dasharray: 0.18 0.12;
+  stroke-linejoin: round;
+  stroke-width: 0.42;
+  opacity: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.svgVoidBoundary {
+  fill: rgba(59, 130, 246, 0.1);
+  stroke: #60a5fa;
+  stroke-dasharray: 0.32 0.16;
+  stroke-linejoin: round;
+  stroke-width: 0.46;
+  opacity: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.svgGypsumLineCeiling {
+  fill: rgba(245, 158, 11, 0.14);
+  stroke: #f59e0b;
+  stroke-dasharray: 0.12 0.1;
+  stroke-linejoin: round;
+  stroke-width: 0.42;
+  opacity: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.svgNoCeiling {
+  fill: rgba(148, 163, 184, 0.16);
+  stroke: #94a3b8;
+  stroke-dasharray: 0.1 0.1;
+  stroke-linejoin: round;
+  stroke-width: 0.4;
+  opacity: 1;
+  vector-effect: non-scaling-stroke;
+}
+
 .svgExteriorWall {
   fill: rgba(255, 255, 255, 0.04);
   stroke: #facc15;
@@ -1466,7 +1658,11 @@ td .curtainWallHelp {
     justify-content: flex-start;
   }
 
-  .topbarActions button {
+  .topbarActionGroup {
+    width: 100%;
+  }
+
+  .topbarActionGroup button {
     flex: 1 1 150px;
     justify-content: center;
     min-width: 0;
@@ -1478,6 +1674,7 @@ td .curtainWallHelp {
   }
 
   .quoteRulesPanel,
+  .quoteModePanel,
   .manualQuotePanel,
   .healthPanel,
   .quotePanel,
@@ -1517,6 +1714,11 @@ td .curtainWallHelp {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .quoteModeChoices,
+  .quotePackageChoices {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .manualBathroomChoices {
     grid-template-columns: 1fr;
   }
@@ -1535,11 +1737,20 @@ td .curtainWallHelp {
 
   .topbarActions {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
   }
 
-  .topbarActions button {
+  .topbarActionGroup {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .topbarActionGroup > span {
+    grid-column: 1 / -1;
+    min-height: 18px;
+  }
+
+  .topbarActionGroup button {
     width: 100%;
     min-height: 36px;
     padding: 0 8px;
@@ -1572,6 +1783,11 @@ td .curtainWallHelp {
   }
 
   .manualQuoteGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .quoteModeChoices,
+  .quotePackageChoices {
     grid-template-columns: 1fr;
   }
 

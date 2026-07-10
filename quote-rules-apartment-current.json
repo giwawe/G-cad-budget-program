@@ -7,7 +7,22 @@
     "material_price": 0,
     "auxiliary_price": 4,
     "labor_price": 3,
-    "space_types": ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "衣帽间", "储物间", "露台"]
+    "space_types": [
+      "客厅",
+      "餐厅",
+      "卧室",
+      "书房",
+      "茶室",
+      "娱乐室",
+      "过道",
+      "门厅",
+      "楼梯",
+      "楼梯过道",
+      "挑空",
+      "衣帽间",
+      "储物间",
+      "露台"
+    ]
   },
   {
     "item_name": "墙面批嵌",
@@ -17,7 +32,22 @@
     "material_price": 0,
     "auxiliary_price": 15,
     "labor_price": 10,
-    "space_types": ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "衣帽间", "储物间", "露台"]
+    "space_types": [
+      "客厅",
+      "餐厅",
+      "卧室",
+      "书房",
+      "茶室",
+      "娱乐室",
+      "过道",
+      "门厅",
+      "楼梯",
+      "楼梯过道",
+      "挑空",
+      "衣帽间",
+      "储物间",
+      "露台"
+    ]
   },
   {
     "item_name": "墙面乳胶漆",
@@ -27,27 +57,115 @@
     "material_price": 10,
     "auxiliary_price": 0,
     "labor_price": 10,
-    "space_types": ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "衣帽间", "储物间", "露台"]
+    "space_types": [
+      "客厅",
+      "餐厅",
+      "卧室",
+      "书房",
+      "茶室",
+      "娱乐室",
+      "过道",
+      "门厅",
+      "楼梯",
+      "楼梯过道",
+      "挑空",
+      "衣帽间",
+      "储物间",
+      "露台"
+    ]
   },
   {
     "item_name": "厨房卫生间集成吊顶",
     "metric": "ceiling_area_m2",
     "unit": "m2",
-    "unit_price": 180,
-    "material_price": 180,
+    "unit_price": 120,
+    "material_price": 120,
     "auxiliary_price": 0,
     "labor_price": 0,
-    "space_types": ["厨房", "卫生间"]
+    "space_types": [
+      "厨房",
+      "卫生间"
+    ],
+    "scope": "addon",
+    "package_id": "lighting_switches"
   },
   {
     "item_name": "轻钢龙骨平顶",
-    "metric": "ceiling_area_m2",
+    "metric": "gypsum_flat_ceiling_area_m2",
     "unit": "m2",
     "unit_price": 180,
-    "material_price": 110,
-    "auxiliary_price": 10,
-    "labor_price": 60,
-    "space_types": ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "衣帽间", "储物间", "厨房", "卫生间"]
+    "material_price": 60,
+    "auxiliary_price": 30,
+    "labor_price": 90,
+    "space_types": [
+      "客厅",
+      "餐厅",
+      "卧室",
+      "书房",
+      "茶室",
+      "娱乐室",
+      "过道",
+      "门厅",
+      "楼梯",
+      "楼梯过道",
+      "挑空",
+      "衣帽间",
+      "储物间",
+      "厨房",
+      "卫生间"
+    ]
+  },
+  {
+    "item_name": "双眼皮/边吊吊顶",
+    "metric": "edge_ceiling_length_m",
+    "unit": "M",
+    "unit_price": 80,
+    "material_price": 35,
+    "auxiliary_price": 15,
+    "labor_price": 30,
+    "space_types": [
+      "客厅",
+      "餐厅",
+      "卧室",
+      "书房",
+      "茶室",
+      "娱乐室",
+      "过道",
+      "门厅",
+      "楼梯",
+      "楼梯过道",
+      "挑空",
+      "衣帽间",
+      "储物间",
+      "厨房",
+      "卫生间"
+    ]
+  },
+  {
+    "item_name": "石膏线吊顶",
+    "metric": "gypsum_line_ceiling_length_m",
+    "unit": "M",
+    "unit_price": 35,
+    "material_price": 12,
+    "auxiliary_price": 5,
+    "labor_price": 18,
+    "space_types": [
+      "客厅",
+      "餐厅",
+      "卧室",
+      "书房",
+      "茶室",
+      "娱乐室",
+      "过道",
+      "门厅",
+      "楼梯",
+      "楼梯过道",
+      "挑空",
+      "衣帽间",
+      "储物间",
+      "厨房",
+      "卫生间"
+    ]
   },
   {
     "item_name": "顶面批嵌",
@@ -57,7 +175,23 @@
     "material_price": 0,
     "auxiliary_price": 15,
     "labor_price": 10,
-    "space_types": ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "衣帽间", "储物间", "厨房", "卫生间"]
+    "space_types": [
+      "客厅",
+      "餐厅",
+      "卧室",
+      "书房",
+      "茶室",
+      "娱乐室",
+      "过道",
+      "门厅",
+      "楼梯",
+      "楼梯过道",
+      "挑空",
+      "衣帽间",
+      "储物间",
+      "厨房",
+      "卫生间"
+    ]
   },
   {
     "item_name": "顶面乳胶漆",
@@ -67,135 +201,288 @@
     "material_price": 10,
     "auxiliary_price": 0,
     "labor_price": 10,
-    "space_types": ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "衣帽间", "储物间", "厨房", "卫生间"]
+    "space_types": [
+      "客厅",
+      "餐厅",
+      "卧室",
+      "书房",
+      "茶室",
+      "娱乐室",
+      "过道",
+      "门厅",
+      "楼梯",
+      "楼梯过道",
+      "挑空",
+      "衣帽间",
+      "储物间",
+      "厨房",
+      "卫生间"
+    ]
   },
   {
     "item_name": "地面找平",
     "metric": "floor_area_m2",
     "unit": "m2",
-    "unit_price": 55,
+    "unit_price": 45,
     "material_price": 0,
-    "auxiliary_price": 25,
-    "labor_price": 30,
-    "space_types": ["厨房", "卫生间", "阳台", "露台", "洗衣房"]
+    "auxiliary_price": 20,
+    "labor_price": 25,
+    "space_types": [
+      "厨房",
+      "卫生间",
+      "阳台",
+      "露台",
+      "洗衣房"
+    ]
   },
   {
     "item_name": "地面砖铺贴(750X1500)",
     "metric": "floor_area_m2",
     "unit": "m2",
-    "unit_price": 90,
-    "material_price": 0,
-    "auxiliary_price": 35,
-    "labor_price": 55
+    "unit_price": 98,
+    "material_price": 40,
+    "auxiliary_price": 8,
+    "labor_price": 50
   },
   {
     "item_name": "地面瓷砖",
     "metric": "floor_tile_piece_count",
     "unit": "片",
-    "unit_price": 90,
-    "material_price": 90,
+    "unit_price": 80,
+    "material_price": 80,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "tile_materials"
   },
   {
     "item_name": "墙面瓷砖",
     "metric": "wall_tile_piece_count",
     "unit": "片",
-    "unit_price": 40,
-    "material_price": 40,
+    "unit_price": 55,
+    "material_price": 55,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "tile_materials"
   },
   {
     "item_name": "瓷砖加工费",
     "metric": "tile_area_m2",
     "unit": "M2",
-    "unit_price": 5,
-    "material_price": 5,
+    "unit_price": 6,
+    "material_price": 6,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "tile_materials"
   },
   {
     "item_name": "美缝",
     "metric": "tile_area_m2",
     "unit": "M2",
-    "unit_price": 12,
+    "unit_price": 10,
     "material_price": 0,
+    "auxiliary_price": 10,
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "tile_materials"
+  },
+  {
+    "item_name": "强电插座",
+    "metric": "hydropower_strong_outlet_count",
+    "unit": "位",
+    "unit_price": 72,
+    "material_price": 5,
     "auxiliary_price": 12,
-    "labor_price": 0
+    "labor_price": 55
   },
   {
-    "item_name": "强电布线",
-    "metric": "building_area_m2",
-    "unit": "M2",
-    "unit_price": 78,
-    "material_price": 40,
-    "auxiliary_price": 0,
-    "labor_price": 38
+    "item_name": "开关",
+    "metric": "hydropower_switch_count",
+    "unit": "位",
+    "unit_price": 68,
+    "material_price": 5,
+    "auxiliary_price": 10,
+    "labor_price": 53
   },
   {
-    "item_name": "弱电布线",
-    "metric": "building_area_m2",
-    "unit": "M2",
-    "unit_price": 25,
-    "material_price": 15,
-    "auxiliary_price": 0,
-    "labor_price": 10
+    "item_name": "灯位",
+    "metric": "hydropower_light_count",
+    "unit": "位",
+    "unit_price": 110,
+    "material_price": 0,
+    "auxiliary_price": 15,
+    "labor_price": 95
   },
   {
-    "item_name": "水路布管",
-    "metric": "building_area_m2",
-    "unit": "M2",
-    "unit_price": 29.5,
-    "material_price": 17.5,
-    "auxiliary_price": 0,
-    "labor_price": 12
+    "item_name": "筒灯/射灯",
+    "metric": "hydropower_downlight_spotlight_count",
+    "unit": "位",
+    "unit_price": 95,
+    "material_price": 0,
+    "auxiliary_price": 15,
+    "labor_price": 80
+  },
+  {
+    "item_name": "设备专线",
+    "metric": "hydropower_equipment_circuit_count",
+    "unit": "位",
+    "unit_price": 180,
+    "material_price": 65,
+    "auxiliary_price": 20,
+    "labor_price": 95
+  },
+  {
+    "item_name": "弱电点位",
+    "metric": "hydropower_weak_point_count",
+    "unit": "位",
+    "unit_price": 62,
+    "material_price": 5,
+    "auxiliary_price": 10,
+    "labor_price": 47
+  },
+  {
+    "item_name": "强电线管",
+    "metric": "hydropower_strong_conduit_length_m",
+    "unit": "M",
+    "unit_price": 38,
+    "material_price": 16,
+    "auxiliary_price": 5,
+    "labor_price": 17
+  },
+  {
+    "item_name": "弱电线管",
+    "metric": "hydropower_weak_conduit_length_m",
+    "unit": "M",
+    "unit_price": 30,
+    "material_price": 12,
+    "auxiliary_price": 4,
+    "labor_price": 14
+  },
+  {
+    "item_name": "强电箱",
+    "metric": "hydropower_strong_box_count",
+    "unit": "套",
+    "unit_price": 850,
+    "material_price": 450,
+    "auxiliary_price": 100,
+    "labor_price": 300
+  },
+  {
+    "item_name": "弱电箱",
+    "metric": "hydropower_weak_box_count",
+    "unit": "套",
+    "unit_price": 450,
+    "material_price": 220,
+    "auxiliary_price": 60,
+    "labor_price": 170
+  },
+  {
+    "item_name": "分配电箱",
+    "metric": "hydropower_distribution_box_count",
+    "unit": "套",
+    "unit_price": 400,
+    "material_price": 230,
+    "auxiliary_price": 60,
+    "labor_price": 110
+  },
+  {
+    "item_name": "给水点",
+    "metric": "hydropower_water_supply_point_count",
+    "unit": "位",
+    "unit_price": 160,
+    "material_price": 50,
+    "auxiliary_price": 25,
+    "labor_price": 85
+  },
+  {
+    "item_name": "热水点",
+    "metric": "hydropower_hot_water_point_count",
+    "unit": "位",
+    "unit_price": 180,
+    "material_price": 55,
+    "auxiliary_price": 30,
+    "labor_price": 95
+  },
+  {
+    "item_name": "排水点",
+    "metric": "hydropower_drainage_point_count",
+    "unit": "位",
+    "unit_price": 200,
+    "material_price": 60,
+    "auxiliary_price": 35,
+    "labor_price": 105
+  },
+  {
+    "item_name": "给水管",
+    "metric": "hydropower_water_pipe_length_m",
+    "unit": "M",
+    "unit_price": 44,
+    "material_price": 16,
+    "auxiliary_price": 10,
+    "labor_price": 18
+  },
+  {
+    "item_name": "排水管",
+    "metric": "hydropower_drain_pipe_length_m",
+    "unit": "M",
+    "unit_price": 65,
+    "material_price": 25,
+    "auxiliary_price": 12,
+    "labor_price": 28
   },
   {
     "item_name": "材料搬运费",
     "metric": "building_area_m2",
     "unit": "M2",
-    "unit_price": 8,
+    "unit_price": 12,
     "material_price": 0,
     "auxiliary_price": 0,
-    "labor_price": 8
+    "labor_price": 12
   },
   {
     "item_name": "垃圾清运费",
     "metric": "building_area_m2",
     "unit": "M2",
-    "unit_price": 10,
+    "unit_price": 12,
     "material_price": 0,
     "auxiliary_price": 0,
-    "labor_price": 10
+    "labor_price": 12
   },
   {
-    "item_name": "地面砖现场维护费",
+    "item_name": "墙地面现场保护",
     "metric": "building_area_m2",
     "unit": "M2",
-    "unit_price": 8,
+    "unit_price": 18,
     "material_price": 0,
-    "auxiliary_price": 3,
-    "labor_price": 5
+    "auxiliary_price": 6,
+    "labor_price": 12
   },
   {
     "item_name": "墙面贴瓷砖(600X1200)",
     "metric": "wall_tile_area_m2",
     "unit": "m2",
-    "unit_price": 90,
-    "material_price": 0,
-    "auxiliary_price": 35,
-    "labor_price": 55
+    "unit_price": 98,
+    "material_price": 40,
+    "auxiliary_price": 8,
+    "labor_price": 50
   },
   {
     "item_name": "墙地面防漏处理",
     "metric": "waterproof_area_m2",
     "unit": "m2",
-    "unit_price": 50,
-    "material_price": 28,
-    "auxiliary_price": 10,
-    "labor_price": 12,
-    "space_types": ["厨房", "卫生间", "阳台", "露台", "洗衣房"]
+    "unit_price": 60,
+    "material_price": 35,
+    "auxiliary_price": 7,
+    "labor_price": 18,
+    "space_types": [
+      "厨房",
+      "卫生间",
+      "阳台",
+      "露台",
+      "洗衣房"
+    ]
   },
   {
     "item_name": "窗台石铺贴",
@@ -205,52 +492,78 @@
     "material_price": 0,
     "auxiliary_price": 20,
     "labor_price": 25,
-    "space_types": ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "衣帽间", "储物间", "阳台", "露台", "洗衣房"]
+    "space_types": [
+      "客厅",
+      "餐厅",
+      "卧室",
+      "书房",
+      "茶室",
+      "娱乐室",
+      "过道",
+      "门厅",
+      "楼梯",
+      "楼梯过道",
+      "挑空",
+      "衣帽间",
+      "储物间",
+      "阳台",
+      "露台",
+      "洗衣房"
+    ]
   },
   {
     "item_name": "砌砖墙",
     "metric": "new_wall_unclassified_area_m2",
     "unit": "M2",
-    "unit_price": 220,
-    "material_price": 100,
-    "auxiliary_price": 0,
-    "labor_price": 120
+    "unit_price": 150,
+    "material_price": 45,
+    "auxiliary_price": 25,
+    "labor_price": 80
   },
   {
     "item_name": "砌120厚砖墙",
     "metric": "new_wall_120_area_m2",
     "unit": "M2",
-    "unit_price": 170,
-    "material_price": 80,
-    "auxiliary_price": 0,
-    "labor_price": 90
+    "unit_price": 150,
+    "material_price": 45,
+    "auxiliary_price": 25,
+    "labor_price": 80
   },
   {
     "item_name": "砌240厚砖墙",
     "metric": "new_wall_240_area_m2",
     "unit": "M2",
-    "unit_price": 220,
-    "material_price": 100,
-    "auxiliary_price": 0,
+    "unit_price": 230,
+    "material_price": 80,
+    "auxiliary_price": 30,
+    "labor_price": 120
+  },
+  {
+    "item_name": "现浇钢筋混凝土楼板",
+    "metric": "cast_slab_area_m2",
+    "unit": "m2",
+    "unit_price": 320,
+    "material_price": 145,
+    "auxiliary_price": 55,
     "labor_price": 120
   },
   {
     "item_name": "拆改及拆墙",
     "metric": "demolition_wall_area_m2",
     "unit": "M2",
-    "unit_price": 60,
+    "unit_price": 70,
     "material_price": 0,
-    "auxiliary_price": 0,
+    "auxiliary_price": 10,
     "labor_price": 60
   },
   {
     "item_name": "外墙批嵌以及修补",
     "metric": "manual_count",
     "unit": "M2",
-    "unit_price": 80,
-    "material_price": 0,
-    "auxiliary_price": 30,
-    "labor_price": 50
+    "unit_price": 70,
+    "material_price": 20,
+    "auxiliary_price": 15,
+    "labor_price": 35
   },
   {
     "item_name": "砖墙门窗洞过梁",
@@ -265,10 +578,10 @@
     "item_name": "水泥墙开槽",
     "metric": "building_area_m2",
     "unit": "M2",
-    "unit_price": 9,
+    "unit_price": 12,
     "material_price": 0,
-    "auxiliary_price": 3,
-    "labor_price": 6
+    "auxiliary_price": 4,
+    "labor_price": 8
   },
   {
     "item_name": "打混凝土过梁孔",
@@ -283,9 +596,9 @@
     "item_name": "厨房、卫生间排污管包隔音棉",
     "metric": "kitchen_bathroom_pipe_insulation_length_m",
     "unit": "M",
-    "unit_price": 35,
+    "unit_price": 50,
     "material_price": 0,
-    "auxiliary_price": 20,
+    "auxiliary_price": 35,
     "labor_price": 15
   },
   {
@@ -304,7 +617,9 @@
     "unit_price": 280,
     "material_price": 280,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "custom_cabinet"
   },
   {
     "item_name": "入户门",
@@ -313,7 +628,9 @@
     "unit_price": 2500,
     "material_price": 2500,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "doors_windows"
   },
   {
     "item_name": "室内门",
@@ -322,63 +639,81 @@
     "unit_price": 1200,
     "material_price": 1200,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "doors_windows"
   },
   {
     "item_name": "卫生间门",
     "metric": "bathroom_door_count",
     "unit": "樘",
-    "unit_price": 1200,
-    "material_price": 1200,
+    "unit_price": 900,
+    "material_price": 900,
     "auxiliary_price": 0,
     "labor_price": 0,
-    "space_types": ["卫生间"]
+    "space_types": [
+      "卫生间"
+    ],
+    "scope": "addon",
+    "package_id": "doors_windows"
   },
   {
     "item_name": "厨房推拉门",
     "metric": "sliding_door_area_m2",
     "unit": "m2",
-    "unit_price": 550,
-    "material_price": 550,
+    "unit_price": 400,
+    "material_price": 400,
     "auxiliary_price": 0,
     "labor_price": 0,
-    "space_types": ["厨房"]
+    "space_types": [
+      "厨房"
+    ],
+    "scope": "addon",
+    "package_id": "doors_windows"
   },
   {
     "item_name": "厨房推拉门双包套",
     "metric": "sliding_door_casing_length_m",
     "unit": "M",
-    "unit_price": 300,
-    "material_price": 300,
+    "unit_price": 110,
+    "material_price": 110,
     "auxiliary_price": 0,
     "labor_price": 0,
-    "space_types": ["厨房"]
+    "space_types": [
+      "厨房"
+    ],
+    "scope": "addon",
+    "package_id": "doors_windows"
   },
   {
     "item_name": "阳台推拉门",
     "metric": "sliding_door_area_m2",
     "unit": "M2",
-    "unit_price": 550,
-    "material_price": 550,
+    "unit_price": 400,
+    "material_price": 400,
     "auxiliary_price": 0,
     "labor_price": 0,
     "space_types": [
       "阳台",
       "露台"
-    ]
+    ],
+    "scope": "addon",
+    "package_id": "doors_windows"
   },
   {
     "item_name": "阳台推拉门双包套",
     "metric": "sliding_door_casing_length_m",
     "unit": "M",
-    "unit_price": 300,
-    "material_price": 300,
+    "unit_price": 110,
+    "material_price": 110,
     "auxiliary_price": 0,
     "labor_price": 0,
     "space_types": [
       "阳台",
       "露台"
-    ]
+    ],
+    "scope": "addon",
+    "package_id": "doors_windows"
   },
   {
     "item_name": "楼梯扶手",
@@ -387,7 +722,9 @@
     "unit_price": 480,
     "material_price": 480,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "curtains_windowsills"
   },
   {
     "item_name": "楼梯踏步铺贴",
@@ -406,38 +743,48 @@
     "item_name": "栏杆/护栏",
     "metric": "guardrail_length_m",
     "unit": "M",
-    "unit_price": 0,
-    "material_price": 0,
+    "unit_price": 450,
+    "material_price": 450,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "curtains_windowsills"
   },
   {
     "item_name": "铝合金封门窗",
     "metric": "manual_count",
     "unit": "M2",
-    "unit_price": 0,
-    "material_price": 0,
+    "unit_price": 600,
+    "material_price": 600,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "doors_windows"
   },
   {
     "item_name": "橱柜",
     "metric": "kitchen_cabinet_length_m",
     "unit": "M",
-    "unit_price": 799,
-    "material_price": 799,
+    "unit_price": 699,
+    "material_price": 699,
     "auxiliary_price": 0,
     "labor_price": 0,
-    "space_types": ["厨房"]
+    "space_types": [
+      "厨房"
+    ],
+    "scope": "addon",
+    "package_id": "custom_cabinet"
   },
   {
     "item_name": "全屋定制",
     "metric": "custom_cabinet_area_m2",
     "unit": "M2",
-    "unit_price": 799,
-    "material_price": 799,
+    "unit_price": 699,
+    "material_price": 699,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "custom_cabinet"
   },
   {
     "item_name": "马桶",
@@ -447,7 +794,11 @@
     "material_price": 1500,
     "auxiliary_price": 0,
     "labor_price": 0,
-    "space_types": ["卫生间"]
+    "space_types": [
+      "卫生间"
+    ],
+    "scope": "addon",
+    "package_id": "bath_fixtures"
   },
   {
     "item_name": "蹲坑",
@@ -456,35 +807,45 @@
     "unit_price": 500,
     "material_price": 500,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "bath_fixtures"
   },
   {
     "item_name": "浴室柜",
     "metric": "bathroom_vanity_count",
     "unit": "套",
-    "unit_price": 1500,
-    "material_price": 1500,
+    "unit_price": 1800,
+    "material_price": 1800,
     "auxiliary_price": 0,
     "labor_price": 0,
-    "space_types": ["卫生间"]
+    "space_types": [
+      "卫生间"
+    ],
+    "scope": "addon",
+    "package_id": "bath_fixtures"
   },
   {
     "item_name": "淋浴隔断",
     "metric": "manual_count",
     "unit": "套",
-    "unit_price": 400,
-    "material_price": 400,
+    "unit_price": 800,
+    "material_price": 800,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "bath_fixtures"
   },
   {
     "item_name": "玻璃淋浴房",
     "metric": "manual_count",
     "unit": "套",
-    "unit_price": 1800,
-    "material_price": 1800,
+    "unit_price": 1200,
+    "material_price": 1200,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "bath_fixtures"
   },
   {
     "item_name": "花洒",
@@ -494,7 +855,11 @@
     "material_price": 900,
     "auxiliary_price": 0,
     "labor_price": 0,
-    "space_types": ["卫生间"]
+    "space_types": [
+      "卫生间"
+    ],
+    "scope": "addon",
+    "package_id": "bath_fixtures"
   },
   {
     "item_name": "卫浴五件套",
@@ -504,61 +869,100 @@
     "material_price": 280,
     "auxiliary_price": 0,
     "labor_price": 0,
-    "space_types": ["卫生间"]
+    "space_types": [
+      "卫生间"
+    ],
+    "scope": "addon",
+    "package_id": "bath_fixtures"
   },
   {
     "item_name": "全屋插座开关",
     "metric": "switch_socket_package_count",
     "unit": "套",
-    "unit_price": 6000,
-    "material_price": 6000,
+    "unit_price": 20,
+    "material_price": 20,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "lighting_switches"
   },
   {
     "item_name": "全屋灯饰",
     "metric": "lighting_package_count",
     "unit": "套",
-    "unit_price": 15000,
-    "material_price": 15000,
+    "unit_price": 0,
+    "material_price": 0,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "lighting_switches"
   },
   {
     "item_name": "窗帘",
     "metric": "curtain_box_length_m",
     "unit": "M",
-    "unit_price": 60,
-    "material_price": 60,
-    "auxiliary_price": 0,
-    "labor_price": 0
+    "unit_price": 70,
+    "material_price": 50,
+    "auxiliary_price": 20,
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "curtains_windowsills"
   },
   {
     "item_name": "窗台石",
-    "metric": "manual_count",
-    "unit": "套",
-    "unit_price": 3600,
-    "material_price": 3600,
+    "metric": "windowsill_length_m",
+    "unit": "M",
+    "unit_price": 65,
+    "material_price": 65,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "space_types": [
+      "客厅",
+      "餐厅",
+      "卧室",
+      "书房",
+      "茶室",
+      "娱乐室",
+      "过道",
+      "门厅",
+      "楼梯",
+      "楼梯过道",
+      "挑空",
+      "衣帽间",
+      "储物间",
+      "阳台",
+      "露台",
+      "洗衣房"
+    ],
+    "scope": "addon",
+    "package_id": "curtains_windowsills"
   },
   {
     "item_name": "全屋保洁",
     "metric": "cleaning_package_count",
     "unit": "套",
-    "unit_price": 1200,
-    "material_price": 1200,
+    "unit_price": 0,
+    "material_price": 0,
     "auxiliary_price": 0,
-    "labor_price": 0
+    "labor_price": 0,
+    "scope": "addon",
+    "package_id": "cleaning"
   },
   {
     "item_name": "暗窗帘箱",
     "metric": "curtain_wall_width_m",
     "unit": "M",
-    "unit_price": 110,
-    "material_price": 65,
-    "auxiliary_price": 0,
+    "unit_price": 90,
+    "material_price": 35,
+    "auxiliary_price": 10,
     "labor_price": 45,
-    "space_types": ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室"]
+    "space_types": [
+      "客厅",
+      "餐厅",
+      "卧室",
+      "书房",
+      "茶室",
+      "娱乐室"
+    ]
   }
 ]

@@ -9,6 +9,12 @@ export type QuantityRow = {
   grossFloorAreaM2?: number;
   floorAreaM2: number;
   ceilingAreaM2: number;
+  gypsumFlatCeilingAreaM2?: number;
+  edgeCeilingAreaM2?: number;
+  edgeCeilingLengthM?: number;
+  gypsumLineCeilingAreaM2?: number;
+  gypsumLineCeilingLengthM?: number;
+  noCeilingAreaM2?: number;
   voidAreaM2?: number;
   ceilingFinishType?: CeilingFinishType;
   wallMeasureLengthM: number;
@@ -38,6 +44,7 @@ export type QuantityRow = {
   demolitionWallLengthM: number;
   demolitionWallAreaM2: number;
   backgroundWallAreaM2?: number;
+  castSlabAreaM2?: number;
   entryDoorCount?: number;
   interiorDoorCount: number;
   bathroomDoorCount: number;
@@ -106,11 +113,15 @@ export type DrawingGeometry = {
   measured_walls: DrawingSegment[];
   opening_edges?: DrawingSegment[];
   void_boundaries?: DrawingPoint[][];
+  edge_ceiling_boundaries?: DrawingPoint[][];
+  gypsum_line_ceiling_boundaries?: DrawingPoint[][];
+  no_ceiling_boundaries?: DrawingPoint[][];
   railings?: DrawingSegment[];
   tile_walls: DrawingSegment[];
   new_walls: DrawingSegment[];
   demolition_walls: DrawingSegment[];
   background_walls?: DrawingSegment[];
+  cast_slab_boundaries?: DrawingPoint[][];
   base_cabinets: DrawingSegment[];
   wall_cabinets: DrawingSegment[];
   base_cabinet_boundaries?: DrawingPoint[][];
@@ -141,6 +152,92 @@ export type QuantitySummary = {
   wall_measure_length_total_m: number;
   window_area_total_m2: number;
   latex_paint_area_total_m2: number;
+};
+
+export type HydropowerPointKind =
+  | "switch"
+  | "standard_outlet"
+  | "sofa_charging_outlet"
+  | "heating_outlet"
+  | "bed_end_fan_outlet"
+  | "kitchen_counter_outlet"
+  | "light"
+  | "weak_point"
+  | "ac_circuit"
+  | "high_power_circuit"
+  | "bathroom_heater_circuit"
+  | "smart_toilet_outlet"
+  | "washing_machine_outlet"
+  | "dryer_outlet"
+  | "water_purifier_outlet"
+  | "cold_water"
+  | "hot_water"
+  | "drain"
+  | "floor_drain";
+
+export type HydropowerPipeKind = "strong_conduit" | "weak_conduit" | "water_pipe" | "drain_pipe";
+export type HydropowerReviewStatus = "auto_estimated" | "confirmed" | "needs_review";
+export type HydropowerSource = "virtual_point" | "fixture_point" | "fallback_count";
+
+export type HydropowerPoint = {
+  id: string;
+  floor: string;
+  spaceName: string;
+  spaceType: string;
+  kind: HydropowerPointKind;
+  label: string;
+  quantity: number;
+  point: DrawingPoint | null;
+  source: HydropowerSource;
+  confidence: "high" | "medium" | "low";
+  note: string;
+};
+
+export type HydropowerPipeEstimate = {
+  id: string;
+  floor: string;
+  spaceName: string;
+  spaceType: string;
+  kind: HydropowerPipeKind;
+  label: string;
+  lengthM: number;
+  source: "virtual_point_distance" | "fallback_count_factor";
+  confidence: "high" | "medium" | "low";
+  note: string;
+};
+
+export type HydropowerSummary = {
+  switchPointCount: number;
+  standardOutletCount: number;
+  sofaChargingOutletCount: number;
+  heatingOutletCount: number;
+  bedEndFanOutletCount: number;
+  kitchenCounterOutletCount: number;
+  lightPointCount: number;
+  weakPointCount: number;
+  acCircuitCount: number;
+  highPowerCircuitCount: number;
+  bathroomHeaterCircuitCount: number;
+  smartToiletOutletCount: number;
+  washingMachineOutletCount: number;
+  dryerOutletCount: number;
+  waterPurifierOutletCount: number;
+  coldWaterPointCount: number;
+  hotWaterPointCount: number;
+  drainPointCount: number;
+  floorDrainPointCount: number;
+  strongConduitLengthM: number;
+  weakConduitLengthM: number;
+  waterPipeLengthM: number;
+  drainPipeLengthM: number;
+  lowConfidencePointCount: number;
+};
+
+export type HydropowerEstimate = {
+  points: HydropowerPoint[];
+  pipes: HydropowerPipeEstimate[];
+  summary: HydropowerSummary;
+  reviewStatus: HydropowerReviewStatus;
 };
 
 export type CalibrationDifference = {

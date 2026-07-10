@@ -15,8 +15,22 @@ def test_polygon_area_and_closed_length():
 
 def test_villa_common_space_names_are_classified_or_excluded():
     assert classify_space_type("麻将房") == "娱乐室"
+    assert classify_space_type("麻将室") == "娱乐室"
+    assert classify_space_type("电竞房") == "娱乐室"
+    assert classify_space_type("游戏房") == "娱乐室"
+    assert classify_space_type("多功能房") == "娱乐室"
+    assert classify_space_type("休闲区") == "娱乐室"
     assert classify_space_type("茶室") == "茶室"
     assert classify_space_type("客房") == "卧室"
+    assert classify_space_type("保姆房") == "卧室"
+    assert classify_space_type("会客厅") == "客厅"
+    assert classify_space_type("家庭厅") == "客厅"
+    assert classify_space_type("设备间") == "储物间"
+    assert classify_space_type("酒窖") == "储物间"
+    assert classify_space_type("车库") == "储物间"
+    assert classify_space_type("前院") == "露台"
+    assert classify_space_type("后院") == "露台"
+    assert classify_space_type("下沉庭院") == "露台"
     assert classify_space_type("楼梯过道") == "楼梯过道"
     assert classify_space_type("露台") == "露台"
     assert classify_space_type("上层楼板洞口") == "其他"
@@ -30,6 +44,8 @@ def test_villa_common_space_names_are_classified_or_excluded():
     assert is_excluded_space("阳台栏杆") is True
     assert is_excluded_space("护栏") is True
     assert is_excluded_space("开放边") is True
+    assert classify_space_type("客厅/电梯井") == "客厅"
+    assert is_excluded_space("客厅/电梯井") is False
 
 
 def test_void_area_deducts_floor_and_ceiling_independently():
@@ -538,6 +554,79 @@ def test_large_door_opening_adds_door_width_back_and_deducts_selected_opening_ar
     assert row.door_deduct_area_m2 == 3.78
     assert row.latex_paint_area_m2 == 43.26
     assert "已选门洞扣减 3.78m2" in row.evidence
+
+
+def test_cast_slab_area_sums_room_boundaries():
+    space = SpaceInput(
+        name="客厅",
+        boundary_points_m=[(0, 0), (6, 0), (6, 5), (0, 5)],
+        cast_slab_areas_m2=[4.25, 1.5],
+    )
+
+    row = calculate_quantity_row(space, ProjectDefaults())
+
+    assert row.cast_slab_area_m2 == 5.75
+
+
+def test_edge_ceiling_area_deducts_gypsum_flat_ceiling_and_keeps_paint_ceiling_area():
+    space = SpaceInput(
+        name="客厅",
+        boundary_points_m=[(0, 0), (5, 0), (5, 4), (0, 4)],
+        edge_ceiling_areas_m2=[6, 4],
+        edge_ceiling_lengths_m=[8, 6],
+    )
+
+    row = calculate_quantity_row(space, ProjectDefaults())
+
+    assert row.ceiling_area_m2 == 20
+    assert row.edge_ceiling_area_m2 == 10
+    assert row.edge_ceiling_length_m == 14
+    assert row.gypsum_flat_ceiling_area_m2 == 10
+
+
+def test_edge_ceiling_can_zero_out_gypsum_flat_ceiling():
+    space = SpaceInput(
+        name="卧室",
+        boundary_points_m=[(0, 0), (4, 0), (4, 3), (0, 3)],
+        edge_ceiling_areas_m2=[12],
+        edge_ceiling_lengths_m=[14],
+    )
+
+    row = calculate_quantity_row(space, ProjectDefaults())
+
+    assert row.ceiling_area_m2 == 12
+    assert row.edge_ceiling_area_m2 == 12
+    assert row.gypsum_flat_ceiling_area_m2 == 0
+
+
+def test_no_ceiling_area_deducts_gypsum_flat_ceiling_and_keeps_paint_ceiling_area():
+    space = SpaceInput(
+        name="车库",
+        boundary_points_m=[(0, 0), (5, 0), (5, 4), (0, 4)],
+        no_ceiling_areas_m2=[20],
+    )
+
+    row = calculate_quantity_row(space, ProjectDefaults())
+
+    assert row.ceiling_area_m2 == 20
+    assert row.no_ceiling_area_m2 == 20
+    assert row.gypsum_flat_ceiling_area_m2 == 0
+
+
+def test_gypsum_line_ceiling_deducts_flat_ceiling_and_keeps_own_length():
+    space = SpaceInput(
+        name="客厅",
+        boundary_points_m=[(0, 0), (5, 0), (5, 4), (0, 4)],
+        gypsum_line_ceiling_areas_m2=[5],
+        gypsum_line_ceiling_lengths_m=[12],
+    )
+
+    row = calculate_quantity_row(space, ProjectDefaults())
+
+    assert row.ceiling_area_m2 == 20
+    assert row.gypsum_line_ceiling_area_m2 == 5
+    assert row.gypsum_line_ceiling_length_m == 12
+    assert row.gypsum_flat_ceiling_area_m2 == 15
 
 
 def test_suspected_large_door_opening_requires_review_without_default_deduction():

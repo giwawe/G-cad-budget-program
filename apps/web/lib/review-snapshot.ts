@@ -1,4 +1,5 @@
-import type { CalibrationComparison, CeilingFinishType, QuantityRow, QuantitySummary } from "./types";
+import type { CalibrationComparison, CeilingFinishType, HydropowerEstimate, QuantityRow, QuantitySummary } from "./types";
+import type { QuoteMode, QuotePackageId } from "./quote-mapping";
 
 export type ReviewSnapshot = {
   exported_at: string;
@@ -6,9 +7,13 @@ export type ReviewSnapshot = {
   calibration_file: string | null;
   accepted_health_check_keys: string[];
   excel_manual_item_quantities: Record<string, number>;
+  quote_mode: QuoteMode;
+  selected_quote_package_ids: QuotePackageId[];
+  selected_quote_item_names: string[];
   summary: QuantitySummary | null;
   comparison: CalibrationComparison | null;
   rows: QuantityRow[];
+  hydropower?: HydropowerEstimate;
 };
 
 export function buildReviewSnapshot({
@@ -17,16 +22,24 @@ export function buildReviewSnapshot({
   rows,
   acceptedHealthCheckKeys = [],
   excelManualItemQuantities = {},
+  quoteMode = "full",
+  selectedQuotePackageIds = [],
+  selectedQuoteItemNames = [],
   summary,
   comparison,
+  hydropower,
 }: {
   fileName: string;
   calibrationFileName: string;
   rows: QuantityRow[];
   acceptedHealthCheckKeys?: string[];
   excelManualItemQuantities?: Partial<Record<string, number>>;
+  quoteMode?: QuoteMode;
+  selectedQuotePackageIds?: QuotePackageId[];
+  selectedQuoteItemNames?: string[];
   summary: QuantitySummary | null;
   comparison: CalibrationComparison | null;
+  hydropower?: HydropowerEstimate;
 }): ReviewSnapshot {
   return {
     exported_at: new Date().toISOString(),
@@ -34,9 +47,13 @@ export function buildReviewSnapshot({
     calibration_file: calibrationFileName || null,
     accepted_health_check_keys: acceptedHealthCheckKeys,
     excel_manual_item_quantities: normalizeExcelManualItemQuantities(excelManualItemQuantities),
+    quote_mode: normalizeSnapshotQuoteMode(quoteMode),
+    selected_quote_package_ids: normalizeSnapshotQuotePackageIds(selectedQuotePackageIds),
+    selected_quote_item_names: normalizeSnapshotQuoteItemNames(selectedQuoteItemNames),
     summary,
     comparison,
     rows,
+    hydropower,
   };
 }
 
@@ -71,9 +88,13 @@ export function parseReviewSnapshot(content: string): ReviewSnapshot {
     calibration_file: typeof snapshot.calibration_file === "string" ? snapshot.calibration_file : null,
     accepted_health_check_keys: normalizeAcceptedHealthCheckKeys(snapshot.accepted_health_check_keys),
     excel_manual_item_quantities: normalizeExcelManualItemQuantities(snapshot.excel_manual_item_quantities),
+    quote_mode: normalizeSnapshotQuoteMode(snapshot.quote_mode),
+    selected_quote_package_ids: normalizeSnapshotQuotePackageIds(snapshot.selected_quote_package_ids),
+    selected_quote_item_names: normalizeSnapshotQuoteItemNames(snapshot.selected_quote_item_names),
     summary: normalizeSnapshotSummary(snapshot.summary ?? null),
     comparison: snapshot.comparison ?? null,
     rows: snapshot.rows.map(normalizeSnapshotRow),
+    hydropower: isHydropowerEstimate(snapshot.hydropower) ? snapshot.hydropower : undefined,
   };
 }
 
@@ -95,6 +116,25 @@ function normalizeExcelManualItemQuantities(quantities: unknown): Record<string,
   );
 }
 
+function normalizeSnapshotQuoteMode(mode: unknown): QuoteMode {
+  return mode === "hard" || mode === "hard_plus" || mode === "full" ? mode : "full";
+}
+
+function normalizeSnapshotQuotePackageIds(packageIds: unknown): QuotePackageId[] {
+  if (!Array.isArray(packageIds)) {
+    return [];
+  }
+  const validPackageIds = new Set<QuotePackageId>(["tile_materials", "doors_windows", "custom_cabinet", "bath_fixtures", "lighting_switches", "curtains_windowsills", "cleaning"]);
+  return Array.from(new Set(packageIds.filter((item): item is QuotePackageId => typeof item === "string" && validPackageIds.has(item as QuotePackageId))));
+}
+
+function normalizeSnapshotQuoteItemNames(itemNames: unknown): string[] {
+  if (!Array.isArray(itemNames)) {
+    return [];
+  }
+  return Array.from(new Set(itemNames.filter((item): item is string => typeof item === "string" && item.trim().length > 0).map((item) => item.trim())));
+}
+
 function normalizeSnapshotSummary(summary: QuantitySummary | null): QuantitySummary | null {
   if (!summary) {
     return null;
@@ -110,6 +150,12 @@ function normalizeSnapshotRow(row: QuantityRow): QuantityRow {
     ...row,
     ceilingFinishType: normalizeCeilingFinishType(row.ceilingFinishType, row.spaceType),
     grossFloorAreaM2: typeof row.grossFloorAreaM2 === "number" ? row.grossFloorAreaM2 : row.floorAreaM2,
+    gypsumFlatCeilingAreaM2: typeof row.gypsumFlatCeilingAreaM2 === "number" ? row.gypsumFlatCeilingAreaM2 : row.ceilingAreaM2,
+    edgeCeilingAreaM2: typeof row.edgeCeilingAreaM2 === "number" ? row.edgeCeilingAreaM2 : 0,
+    edgeCeilingLengthM: typeof row.edgeCeilingLengthM === "number" ? row.edgeCeilingLengthM : 0,
+    gypsumLineCeilingAreaM2: typeof row.gypsumLineCeilingAreaM2 === "number" ? row.gypsumLineCeilingAreaM2 : 0,
+    gypsumLineCeilingLengthM: typeof row.gypsumLineCeilingLengthM === "number" ? row.gypsumLineCeilingLengthM : 0,
+    noCeilingAreaM2: typeof row.noCeilingAreaM2 === "number" ? row.noCeilingAreaM2 : 0,
     voidAreaM2: typeof row.voidAreaM2 === "number" ? row.voidAreaM2 : 0,
     windowsillLengthM: typeof row.windowsillLengthM === "number" ? row.windowsillLengthM : row.windowWidthTotalM,
     curtainWallWidthM: typeof row.curtainWallWidthM === "number" ? row.curtainWallWidthM : 0,
@@ -130,6 +176,7 @@ function normalizeSnapshotRow(row: QuantityRow): QuantityRow {
     demolitionWallLengthM: typeof row.demolitionWallLengthM === "number" ? row.demolitionWallLengthM : 0,
     demolitionWallAreaM2: typeof row.demolitionWallAreaM2 === "number" ? row.demolitionWallAreaM2 : 0,
     backgroundWallAreaM2: typeof row.backgroundWallAreaM2 === "number" ? row.backgroundWallAreaM2 : 0,
+    castSlabAreaM2: typeof row.castSlabAreaM2 === "number" ? row.castSlabAreaM2 : 0,
     entryDoorCount: typeof row.entryDoorCount === "number" ? row.entryDoorCount : 0,
     interiorDoorCount: typeof row.interiorDoorCount === "number" ? row.interiorDoorCount : 0,
     bathroomDoorCount: typeof row.bathroomDoorCount === "number" ? row.bathroomDoorCount : 0,
@@ -151,4 +198,20 @@ function normalizeCeilingFinishType(finishType: unknown, spaceType: string): Cei
     return finishType;
   }
   return spaceType === "厨房" || spaceType === "卫生间" ? "integrated" : "gypsum";
+}
+
+function isHydropowerEstimate(value: unknown): value is HydropowerEstimate {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+
+  const candidate = value as Partial<HydropowerEstimate>;
+  if (!Array.isArray(candidate.points) || !Array.isArray(candidate.pipes)) {
+    return false;
+  }
+  if (!candidate.summary || typeof candidate.summary !== "object" || Array.isArray(candidate.summary)) {
+    return false;
+  }
+
+  return candidate.reviewStatus === "auto_estimated" || candidate.reviewStatus === "confirmed" || candidate.reviewStatus === "needs_review";
 }

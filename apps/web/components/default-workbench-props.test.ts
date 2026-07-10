@@ -8,6 +8,6 @@ assert.ok(uploadWorkbenchSource.includes("initialFileName = \"样例数据\""), 
 assert.ok(uploadWorkbenchSource.includes("initialSummary = null"), "UploadWorkbench should support an initial summary");
 assert.ok(uploadWorkbenchSource.includes("useState(initialFileName)"), "default file name should seed workbench state");
 assert.ok(uploadWorkbenchSource.includes("useState<QuantitySummary | null>(initialSummary)"), "default summary should seed workbench state");
-assert.ok(pageSource.includes("DEFAULT_PROJECT_FILE_NAME"), "home page should use the default project file name");
-assert.ok(pageSource.includes("defaultProjectRows"), "home page should use the default project rows");
-assert.ok(pageSource.includes("defaultProjectSummary"), "home page should use the default project summary");
+assert.ok(!pageSource.includes("default-project"), "home page should not auto-load a bundled default drawing");
+assert.ok(pageSource.includes("initialRows={[]}"), "home page should start with an empty workbench");
+assert.ok(pageSource.includes("initialSummary={null}"), "home page should not seed a summary before upload");

@@ -13,6 +13,7 @@ from server.tests.dxf_fixtures import (
     build_custom_cabinet_dxf,
     build_deep_rectangular_window_dxf,
     build_demolition_wall_dxf,
+    build_edge_ceiling_dxf,
     build_ext_wall_area_dxf,
     build_ext_wall_area_repeated_endpoint_dxf,
     build_auto_door_type_dxf,
@@ -28,6 +29,7 @@ from server.tests.dxf_fixtures import (
     build_window_on_short_wall_dxf,
     build_window_height_marker_dxf,
     build_new_wall_height_marker_dxf,
+    build_no_ceiling_dxf,
     build_two_room_quote_dxf_with_duplicate_close_point,
     build_void_opening_railing_dxf,
 )
@@ -74,6 +76,27 @@ def test_parse_void_opening_and_railing_layers_into_space_inputs():
     assert review.drawing.railings == [((0.5, 0.5), (3.5, 0.5))]
 
 
+def test_quote_edge_ceiling_boundary_is_assigned_to_space():
+    review = parser.parse_dxf_review(build_edge_ceiling_dxf(), ProjectDefaults())
+
+    space = review.spaces[0]
+    assert space.edge_ceiling_areas_m2 == [5]
+    assert space.edge_ceiling_lengths_m == [12]
+    assert review.drawing.edge_ceiling_boundaries == [[(0.0, 0.0), (5.0, 0.0), (5.0, 1.0), (0.0, 1.0)]]
+
+
+def test_quote_no_ceiling_boundary_is_assigned_to_space():
+    review = parser.parse_dxf_review(build_no_ceiling_dxf(), ProjectDefaults())
+
+    space = review.spaces[0]
+    assert space.no_ceiling_areas_m2 == [20]
+    assert space.gypsum_line_ceiling_areas_m2 == [5]
+    assert space.gypsum_line_ceiling_lengths_m == [12]
+    assert "石膏线吊顶与原顶无吊顶范围重叠，请修图避免重复计价" in space.anomalies
+    assert review.drawing.gypsum_line_ceiling_boundaries == [[(0.0, 0.0), (5.0, 0.0), (5.0, 1.0), (0.0, 1.0)]]
+    assert review.drawing.no_ceiling_boundaries == [[(0.0, 0.0), (5.0, 0.0), (5.0, 4.0), (0.0, 4.0)]]
+
+
 def test_void_deductions_use_overlapped_floor_group_roles():
     boundary = [(0, 0), (3, 0), (3, 2), (0, 2)]
     assignments = [
@@ -117,6 +140,39 @@ def test_stair_void_overrides_use_adjacent_opening_for_bottom_and_restore_top_ce
     assert overrides[("楼梯间", "负二层")] == (0, 4)
     assert overrides[("楼梯间", "负一层")] == (4, 4)
     assert overrides[("楼梯间", "一层")] == (4, 0)
+
+
+def test_repeated_void_carrier_rooms_use_floor_sequence_when_panels_do_not_overlap():
+    bottom_room = [(0, 0), (4, 0), (4, 3), (0, 3)]
+    middle_room = [(10, 0), (14, 0), (14, 3), (10, 3)]
+    top_room = [(20, 0), (24, 0), (24, 3), (20, 3)]
+    middle_void = [(10.5, 0.5), (12.5, 0.5), (12.5, 2.5), (10.5, 2.5)]
+    top_void = [(20.5, 0.5), (22.5, 0.5), (22.5, 2.5), (20.5, 2.5)]
+    named_rooms = [
+        ("过道/电梯井", "负二层", bottom_room),
+        ("过道/电梯井", "负一层", middle_room),
+        ("过道/电梯井", "一层", top_room),
+    ]
+
+    overrides = parser._stair_void_deduction_overrides(named_rooms, [middle_void, top_void])
+
+    assert overrides[("过道/电梯井", "负二层")] == (0, 4)
+    assert overrides[("过道/电梯井", "负一层")] == (4, 4)
+    assert overrides[("过道/电梯井", "一层")] == (4, 0)
+
+
+def test_atrium_void_on_upper_panel_deducts_lower_floor_ceiling():
+    lower_room = [(0, 0), (6, 0), (6, 4), (0, 4)]
+    upper_atrium = [(10, 20), (12, 20), (12, 22), (10, 22)]
+    upper_room = [(10, 20), (16, 20), (16, 24), (10, 24)]
+    named_rooms = [
+        ("车库", "负二层", lower_room),
+        ("挑空", "负一层", upper_room),
+    ]
+
+    overrides = parser._atrium_lower_floor_ceiling_void_overrides(named_rooms, [upper_atrium])
+
+    assert overrides[("车库", "负二层")] == 4
 
 
 def test_building_area_sums_floor_ext_walls_and_deducts_voids_once():

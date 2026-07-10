@@ -3,9 +3,11 @@
 import { ChangeEvent, Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { Download, FileUp, Layers3, Loader2, ReceiptText, Settings2 } from "lucide-react";
 import { DrawingReview } from "@/components/drawing-review";
+import { HydropowerReviewPanel } from "@/components/hydropower-review-panel";
 import { QuantityTable } from "@/components/quantity-table";
 import { calibrationTemplateFileName, quantityRowsToCalibrationTemplate } from "@/lib/calibration-template";
 import { resolveCalibrationDifference } from "@/lib/calibration-differences";
+import { buildHydropowerEstimate } from "@/lib/hydropower-estimate";
 import { quantityRowAnchorHref } from "@/lib/quantity-row-anchor";
 import {
   buildHealthFixListMarkdown,
@@ -18,7 +20,7 @@ import {
   type QuantityHealthCheck,
   type QuantityHealthFilter,
 } from "@/lib/quantity-health";
-import { confirmQuantityRowsBySpaceNames, updateQuantityRowCurtainWallWidth, updateQuantityRowStatus, updateQuantityRowsStatusBySpaceNames } from "@/lib/quantity-row-status";
+import { confirmQuantityRowsBySpaceNames, updateQuantityRowCurtainWallWidth, updateQuantityRowSpaceType, updateQuantityRowStatus, updateQuantityRowsStatusBySpaceNames } from "@/lib/quantity-row-status";
 import { buildQuoteExcelHtml, quoteExcelFileName, type QuoteExcelManualItemQuantities } from "@/lib/quote-excel";
 import {
   aluminumWindowSuggestedAreaFromRows,
@@ -41,23 +43,34 @@ import {
   integratedCeilingPriceReminderItems,
   parseQuoteRules,
   projectSummaryQuoteItems,
+  QUOTE_PACKAGE_DEFINITIONS,
   quoteMappingFileName,
   quoteRulesTemplateFileName,
   type QuoteMapping,
+  type QuoteMode,
+  type QuotePackageId,
   type QuoteRule,
   updateQuoteRulePricePart,
   withDefaultQuoteRuleCoverage,
 } from "@/lib/quote-mapping";
+import { shouldResetSavedQuoteRules } from "@/lib/quote-rule-storage";
 import { buildReviewSnapshot, parseReviewSnapshot, reviewSnapshotFileName } from "@/lib/review-snapshot";
-import type { CalibrationComparison, CeilingFinishType, CurtainWallWidthSource, DrawingGeometry, QuantityRow, QuantitySummary, ReviewStatus } from "@/lib/types";
+import { buildSpaceNamingGuideMarkdown, spaceNamingGuideFileName } from "@/lib/space-naming-guide";
+import type { CalibrationComparison, CeilingFinishType, CurtainWallWidthSource, DrawingGeometry, HydropowerEstimate, QuantityRow, QuantitySummary, ReviewStatus } from "@/lib/types";
 
 const DEFAULT_DOOR_HEIGHT_M = 2.1;
 const FULL_WALL_TILE_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 const DEFAULT_INTEGRATED_CEILING_SPACE_TYPES = new Set(["厨房", "卫生间"]);
-const QUOTE_RULES_STORAGE_KEY = "cad-budget-program.quote-rules.v1";
-const QUOTE_RULE_GROUPS_STORAGE_KEY = "cad-budget-program.quote-rule-groups.v1";
+const QUOTE_RULES_STORAGE_KEY = "cad-budget-program.quote-rules.v2";
+const DEFAULT_QUOTE_RULES_STORAGE_VERSION = 9;
+const QUOTE_RULE_GROUPS_STORAGE_KEY = "cad-budget-program.quote-rule-groups.v3";
 const ALUMINUM_WINDOW_ITEM_NAME = "铝合金封门窗";
 const MANUAL_QUOTE_OPTION_ITEMS = [{ itemName: ALUMINUM_WINDOW_ITEM_NAME, unit: "M2", hint: "按窗户实际面积，默认不计价" }];
+const QUOTE_MODE_OPTIONS: { value: QuoteMode; label: string; hint: string }[] = [
+  { value: "hard", label: "硬装（半包）", hint: "只输出施工和硬装基础项" },
+  { value: "full", label: "整装（全包）", hint: "输出全部已接入报价项" },
+  { value: "hard_plus", label: "硬装 + 自选增项", hint: "半包基础上叠加选中的整装包" },
+];
 const quoteRuleGroups = [
   {
     title: "墙顶地/湿区",
@@ -66,6 +79,8 @@ const quoteRuleGroups = [
       "墙面批嵌",
       "墙面乳胶漆",
       "轻钢龙骨平顶",
+      "双眼皮/边吊吊顶",
+      "石膏线吊顶",
       "顶面批嵌",
       "顶面乳胶漆",
       "厨房卫生间集成吊顶",
@@ -77,6 +92,8 @@ const quoteRuleGroups = [
       "美缝",
       "墙面贴瓷砖(600X1200)",
       "墙地面防漏处理",
+      "窗台石铺贴",
+      "楼梯踏步铺贴",
     ]),
   },
   {
@@ -85,6 +102,7 @@ const quoteRuleGroups = [
       "砌砖墙",
       "砌120厚砖墙",
       "砌240厚砖墙",
+      "现浇钢筋混凝土楼板",
       "拆改及拆墙",
       "外墙批嵌以及修补",
       "砖墙门窗洞过梁",
@@ -96,7 +114,31 @@ const quoteRuleGroups = [
   },
   {
     title: "水电/项目服务",
-    itemNames: new Set(["强电布线", "弱电布线", "水路布管", "材料搬运费", "垃圾清运费", "地面砖现场维护费", "全屋保洁"]),
+    itemNames: new Set([
+      "强电插座",
+      "开关",
+      "灯位",
+      "筒灯/射灯",
+      "设备专线",
+      "弱电点位",
+      "强电线管",
+      "弱电线管",
+      "强电箱",
+      "弱电箱",
+      "分配电箱",
+      "给水点",
+      "热水点",
+      "排水点",
+      "给水管",
+      "排水管",
+      "强电布线",
+      "弱电布线",
+      "水路布管",
+      "材料搬运费",
+      "垃圾清运费",
+      "墙地面现场保护",
+      "全屋保洁",
+    ]),
   },
   {
     title: "门窗/定制",
@@ -120,9 +162,16 @@ const quoteRuleGroups = [
   },
   {
     title: "窗帘/收口",
-    itemNames: new Set(["窗帘", "窗台石", "暗窗帘箱"]),
+    itemNames: new Set(["窗帘", "窗台石", "暗窗帘箱", "楼梯扶手", "栏杆/护栏"]),
   },
 ];
+const DEFAULT_COLLAPSED_QUOTE_RULE_GROUPS = [...quoteRuleGroups.map((group) => group.title), "其他规则"];
+type WorkbenchPanelKey = "quoteRules" | "manualQuote" | "health";
+const DEFAULT_COLLAPSED_WORKBENCH_PANELS: Record<WorkbenchPanelKey, boolean> = {
+  quoteRules: true,
+  manualQuote: true,
+  health: false,
+};
 
 const QUOTE_INTEGRATION_STATUS_GROUPS = [
   {
@@ -130,7 +179,7 @@ const QUOTE_INTEGRATION_STATUS_GROUPS = [
     items: [
       "墙顶地面、墙砖/地砖、防水",
       "强弱电、水路、搬运、清运、成品保护",
-      "砌墙/拆墙/开槽/过梁孔/管槽修补",
+      "砌墙/拆墙/现浇楼板/开槽/过梁孔/管槽修补",
       "门类、推拉门、橱柜、全屋定制、洁具、灯饰、窗帘",
     ],
   },
@@ -140,7 +189,7 @@ const QUOTE_INTEGRATION_STATUS_GROUPS = [
   },
   {
     title: "固定占位/设计师手填",
-    items: ["铝合金封门窗、窗台石、蹲坑/马桶二选一、淋浴隔断/玻璃淋浴房二选一、砖墙门窗洞过梁"],
+    items: ["铝合金封门窗、蹲坑/马桶二选一、淋浴隔断/玻璃淋浴房二选一、砖墙门窗洞过梁"],
   },
   {
     title: "暂不接入",
@@ -155,6 +204,12 @@ type ApiQuantityRow = {
   gross_floor_area_m2?: number;
   floor_area_m2: number;
   ceiling_area_m2: number;
+  gypsum_flat_ceiling_area_m2?: number;
+  edge_ceiling_area_m2?: number;
+  edge_ceiling_length_m?: number;
+  gypsum_line_ceiling_area_m2?: number;
+  gypsum_line_ceiling_length_m?: number;
+  no_ceiling_area_m2?: number;
   void_area_m2?: number;
   ceiling_finish_type?: CeilingFinishType;
   wall_measure_length_m: number;
@@ -184,6 +239,7 @@ type ApiQuantityRow = {
   demolition_wall_length_m: number;
   demolition_wall_area_m2: number;
   background_wall_area_m2?: number;
+  cast_slab_area_m2?: number;
   entry_door_count?: number;
   interior_door_count: number;
   bathroom_door_count: number;
@@ -236,6 +292,12 @@ function toQuantityRow(row: ApiQuantityRow): QuantityRow {
     grossFloorAreaM2: row.gross_floor_area_m2 ?? row.floor_area_m2,
     floorAreaM2: row.floor_area_m2,
     ceilingAreaM2: row.ceiling_area_m2,
+    gypsumFlatCeilingAreaM2: row.gypsum_flat_ceiling_area_m2 ?? row.ceiling_area_m2,
+    edgeCeilingAreaM2: row.edge_ceiling_area_m2 ?? 0,
+    edgeCeilingLengthM: row.edge_ceiling_length_m ?? 0,
+    gypsumLineCeilingAreaM2: row.gypsum_line_ceiling_area_m2 ?? 0,
+    gypsumLineCeilingLengthM: row.gypsum_line_ceiling_length_m ?? 0,
+    noCeilingAreaM2: row.no_ceiling_area_m2 ?? 0,
     voidAreaM2: row.void_area_m2 ?? 0,
     ceilingFinishType: row.ceiling_finish_type ?? defaultCeilingFinishType(row.space_type),
     wallMeasureLengthM: row.wall_measure_length_m,
@@ -265,6 +327,7 @@ function toQuantityRow(row: ApiQuantityRow): QuantityRow {
     demolitionWallLengthM: row.demolition_wall_length_m ?? 0,
     demolitionWallAreaM2: row.demolition_wall_area_m2 ?? 0,
     backgroundWallAreaM2: row.background_wall_area_m2 ?? 0,
+    castSlabAreaM2: row.cast_slab_area_m2 ?? 0,
     entryDoorCount: row.entry_door_count ?? 0,
     interiorDoorCount: row.interior_door_count ?? 0,
     bathroomDoorCount: row.bathroom_door_count ?? 0,
@@ -378,11 +441,16 @@ export function UploadWorkbench({
   const [quoteRulesStorageReady, setQuoteRulesStorageReady] = useState(false);
   const [quoteRuleSearch, setQuoteRuleSearch] = useState("");
   const [generatedQuoteRules, setGeneratedQuoteRules] = useState<{ fileName: string; content: string } | null>(null);
-  const [collapsedQuoteRuleGroups, setCollapsedQuoteRuleGroups] = useState<string[]>([]);
+  const [collapsedQuoteRuleGroups, setCollapsedQuoteRuleGroups] = useState<string[]>(DEFAULT_COLLAPSED_QUOTE_RULE_GROUPS);
   const [healthFilter, setHealthFilter] = useState<QuantityHealthFilter>("all");
   const [acceptedHealthCheckKeys, setAcceptedHealthCheckKeys] = useState<string[]>([]);
   const [manualQuoteItemInputs, setManualQuoteItemInputs] = useState<Record<string, string>>({});
   const [bathroomManualChoices, setBathroomManualChoices] = useState<Record<string, BathroomManualChoice>>({});
+  const [hydropowerOverride, setHydropowerOverride] = useState<HydropowerEstimate | null>(null);
+  const [quoteMode, setQuoteMode] = useState<QuoteMode>("full");
+  const [selectedQuotePackageIds, setSelectedQuotePackageIds] = useState<QuotePackageId[]>([]);
+  const [selectedQuoteItemNames, setSelectedQuoteItemNames] = useState<string[]>([]);
+  const [collapsedWorkbenchPanels, setCollapsedWorkbenchPanels] = useState<Record<WorkbenchPanelKey, boolean>>(DEFAULT_COLLAPSED_WORKBENCH_PANELS);
 
   const excludedCount = useMemo(() => rows.filter((row) => row.status === "excluded").length, [rows]);
   const pendingQuoteMetrics = useMemo(() => apartmentPendingQuoteMetrics(), []);
@@ -390,6 +458,10 @@ export function UploadWorkbench({
   const bathroomRows = useMemo(() => bathroomRowsFromRows(rows), [rows]);
   const aluminumWindowSuggestedArea = useMemo(() => aluminumWindowSuggestedAreaFromRows(rows), [rows]);
   const manualQuoteItemQuantities = useMemo(() => manualQuoteQuantitiesFromInputs(manualQuoteItemInputs), [manualQuoteItemInputs]);
+  const hydropowerEstimate = useMemo(
+    () => buildHydropowerEstimate(rows, drawing, hydropowerOverride),
+    [rows, drawing, hydropowerOverride],
+  );
   const manualQuoteEditedCount = Object.keys(manualQuoteItemQuantities).length;
   const filteredQuoteRules = useMemo(() => {
     const keyword = quoteRuleSearch.trim().toLowerCase();
@@ -422,12 +494,20 @@ export function UploadWorkbench({
     }
     return grouped;
   }, [filteredQuoteRules]);
+  const quotePackageChoices = useMemo(
+    () =>
+      QUOTE_PACKAGE_DEFINITIONS.map((definition) => {
+        const itemNames = Array.from(new Set(quoteRules.filter((rule) => rule.package_id === definition.id).map((rule) => rule.item_name)));
+        return { ...definition, itemNames };
+      }).filter((definition) => definition.itemNames.length > 0),
+    [quoteRules],
+  );
   const projectSummaryItems = generatedQuoteMapping ? projectSummaryQuoteItems(generatedQuoteMapping.mapping) : [];
   const integratedCeilingPriceReminderItemsForMapping = generatedQuoteMapping ? integratedCeilingPriceReminderItems(generatedQuoteMapping.mapping) : [];
   const quoteExportRisks = generatedQuoteMapping ? exportQuoteMappingConfirmationMessages(generatedQuoteMapping.mapping) : [];
   const rawHealthChecks = useMemo(
-    () => buildQuantityHealthChecks({ rows, summary, quoteMapping: generatedQuoteMapping?.mapping ?? null }),
-    [rows, summary, generatedQuoteMapping],
+    () => buildQuantityHealthChecks({ rows, summary, quoteMapping: generatedQuoteMapping?.mapping ?? null, hydropower: hydropowerEstimate }),
+    [rows, summary, generatedQuoteMapping, hydropowerEstimate],
   );
   const healthChecks = useMemo(() => filterAcceptedHealthChecks(rawHealthChecks, acceptedHealthCheckKeys), [rawHealthChecks, acceptedHealthCheckKeys]);
   const healthSummary = useMemo(() => summarizeQuantityHealthChecks(healthChecks), [healthChecks]);
@@ -439,9 +519,13 @@ export function UploadWorkbench({
       if (!savedRules) {
         return;
       }
-      const parsed = JSON.parse(savedRules) as { fileName?: unknown; rules?: unknown };
+      const parsed = JSON.parse(savedRules) as { fileName?: unknown; rules?: unknown; defaultVersion?: unknown };
       if (!Array.isArray(parsed.rules)) {
         throw new Error("saved quote rules are invalid");
+      }
+      if (shouldResetSavedQuoteRules({ fileName: parsed.fileName, defaultVersion: parsed.defaultVersion, currentVersion: DEFAULT_QUOTE_RULES_STORAGE_VERSION, defaultRuleName: DEFAULT_QUOTE_RULES_NAME })) {
+        window.localStorage.removeItem(QUOTE_RULES_STORAGE_KEY);
+        return;
       }
       const restoredRules = withDefaultQuoteRuleCoverage(parseQuoteRules(JSON.stringify(parsed.rules)));
       setQuoteRules(restoredRules);
@@ -457,7 +541,7 @@ export function UploadWorkbench({
     if (!quoteRulesStorageReady) {
       return;
     }
-    window.localStorage.setItem(QUOTE_RULES_STORAGE_KEY, JSON.stringify({ fileName: quoteRulesFileName, rules: quoteRules }));
+    window.localStorage.setItem(QUOTE_RULES_STORAGE_KEY, JSON.stringify({ fileName: quoteRulesFileName, rules: quoteRules, defaultVersion: DEFAULT_QUOTE_RULES_STORAGE_VERSION }));
   }, [quoteRulesStorageReady, quoteRules, quoteRulesFileName]);
 
   useEffect(() => {
@@ -513,6 +597,7 @@ export function UploadWorkbench({
       setRows(nextRows);
       setDrawing(payload.drawing);
       setSummary(payload.summary);
+      setHydropowerOverride(null);
       setFileName(file.name);
       setCurrentDxfFile(file);
       setMessage(`解析完成：${payload.rows.length} 个空间`);
@@ -555,6 +640,7 @@ export function UploadWorkbench({
       setRows(nextRows);
       setSummary(payload.summary);
       setComparison(payload.comparison);
+      setHydropowerOverride(null);
       setGeneratedQuoteMapping(null);
       setGeneratedHealthFixList(null);
       setAcceptedHealthCheckKeys([]);
@@ -583,6 +669,7 @@ export function UploadWorkbench({
       setCalibrationFileName(snapshot.calibration_file ?? "");
       setCurrentDxfFile(null);
       setDrawing(null);
+      setHydropowerOverride(snapshot.hydropower ?? null);
       setGeneratedTemplate(null);
       setGeneratedHealthFixList(null);
       setGeneratedQuoteMapping(null);
@@ -590,6 +677,9 @@ export function UploadWorkbench({
       setAcceptedHealthCheckKeys(snapshot.accepted_health_check_keys);
       setManualQuoteItemInputs(manualQuoteInputsFromQuantities(snapshot.excel_manual_item_quantities));
       setBathroomManualChoices(bathroomManualChoicesFromQuantities(snapshot.excel_manual_item_quantities, snapshot.rows));
+      setQuoteMode(snapshot.quote_mode);
+      setSelectedQuotePackageIds(snapshot.selected_quote_package_ids);
+      setSelectedQuoteItemNames(snapshot.selected_quote_item_names);
       setGeneratedSnapshot({ fileName: snapshotFile.name, content: `${JSON.stringify(snapshot, null, 2)}\n` });
       setError("");
       setMessage(`已恢复校对快照：${snapshotFile.name}`);
@@ -627,7 +717,7 @@ export function UploadWorkbench({
 
   function handleDownloadReviewSnapshot() {
     const downloadName = reviewSnapshotFileName(fileName);
-    const content = `${JSON.stringify(buildReviewSnapshot({ fileName, calibrationFileName, rows, acceptedHealthCheckKeys, excelManualItemQuantities: manualQuoteItemQuantities, summary, comparison }), null, 2)}\n`;
+    const content = `${JSON.stringify(buildReviewSnapshot({ fileName, calibrationFileName, rows, acceptedHealthCheckKeys, excelManualItemQuantities: manualQuoteItemQuantities, quoteMode, selectedQuotePackageIds, selectedQuoteItemNames, summary, comparison, hydropower: hydropowerEstimate }), null, 2)}\n`;
     const blob = new Blob([content], { type: "application/json;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -683,10 +773,21 @@ export function UploadWorkbench({
   }
 
   function buildCurrentQuoteMapping() {
-    const baseMapping = buildQuoteMapping(rows, quoteRules, summary ?? undefined);
-    const quoteHealthChecks = filterAcceptedHealthChecks(buildQuantityHealthChecks({ rows, summary, quoteMapping: baseMapping }), acceptedHealthCheckKeys);
+    const baseMapping = buildQuoteMapping(rows, quoteRules, summary ?? undefined, {
+      hydropowerSummary: hydropowerEstimate.summary,
+      quoteMode,
+      selectedQuotePackageIds,
+      selectedQuoteItemNames,
+    });
+    const quoteHealthChecks = filterAcceptedHealthChecks(buildQuantityHealthChecks({ rows, summary, quoteMapping: baseMapping, hydropower: hydropowerEstimate }), acceptedHealthCheckKeys);
     const quoteHealthSummary = summarizeQuantityHealthChecks(quoteHealthChecks);
-    const mapping = buildQuoteMapping(rows, quoteRules, summary ?? undefined, quoteHealthSummary);
+    const mapping = buildQuoteMapping(rows, quoteRules, summary ?? undefined, {
+      hydropowerSummary: hydropowerEstimate.summary,
+      quantityHealthReadiness: quoteHealthSummary,
+      quoteMode,
+      selectedQuotePackageIds,
+      selectedQuoteItemNames,
+    });
     const confirmationMessages = exportQuoteMappingConfirmationMessages(mapping);
     if (confirmationMessages.length > 0) {
       const confirmed = window.confirm(`当前报价映射仍有待确认风险，将作为草稿报价导出：\n\n${confirmationMessages.join("\n")}\n\n是否继续导出？`);
@@ -772,6 +873,38 @@ export function UploadWorkbench({
     setMessage(`已生成报价规则模板：${downloadName}`);
   }
 
+  function handleDownloadSpaceNamingGuide() {
+    const downloadName = spaceNamingGuideFileName(fileName);
+    const content = buildSpaceNamingGuideMarkdown();
+    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = downloadName;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setMessage(`已生成空间命名规范：${downloadName}`);
+  }
+
+  function handleHydropowerConfirm() {
+    setHydropowerOverride({ ...hydropowerEstimate, reviewStatus: "confirmed" });
+    setGeneratedQuoteMapping(null);
+    setGeneratedHealthFixList(null);
+  }
+
+  function handleHydropowerPointQuantityChange(id: string, quantity: number) {
+    const safeQuantity = Number.isFinite(quantity) && quantity >= 0 ? Math.floor(quantity) : 0;
+    setHydropowerOverride({
+      ...hydropowerEstimate,
+      points: hydropowerEstimate.points.map((point) => (point.id === id ? { ...point, quantity: safeQuantity } : point)),
+      reviewStatus: "needs_review",
+    });
+    setGeneratedQuoteMapping(null);
+    setGeneratedHealthFixList(null);
+  }
+
   async function handleCopyQuoteRulesTemplate() {
     if (!generatedQuoteRules) {
       return;
@@ -786,7 +919,7 @@ export function UploadWorkbench({
       return;
     }
     try {
-      const parsedRules = parseQuoteRules(await rulesFile.text());
+      const parsedRules = withDefaultQuoteRuleCoverage(parseQuoteRules(await rulesFile.text()));
       setQuoteRules(parsedRules);
       setQuoteRulesFileName(rulesFile.name);
       setGeneratedQuoteMapping(null);
@@ -846,6 +979,10 @@ export function UploadWorkbench({
     setCollapsedQuoteRuleGroups([]);
   }
 
+  function handleToggleWorkbenchPanel(panelKey: WorkbenchPanelKey) {
+    setCollapsedWorkbenchPanels((current) => ({ ...current, [panelKey]: !current[panelKey] }));
+  }
+
   function handleChangeManualQuoteItem(itemName: string, value: string) {
     setManualQuoteItemInputs((current) => ({ ...current, [itemName]: value }));
     setMessage(value.trim() ? `${itemName} Excel 补项数量已更新` : `${itemName} Excel 补项已恢复默认`);
@@ -860,6 +997,37 @@ export function UploadWorkbench({
     setManualQuoteItemInputs({});
     setBathroomManualChoices({});
     setMessage("Excel 可选补项已恢复默认");
+  }
+
+  function handleChangeQuoteMode(nextMode: QuoteMode) {
+    setQuoteMode(nextMode);
+    setGeneratedQuoteMapping(null);
+    setMessage(`报价模式已切换为：${QUOTE_MODE_OPTIONS.find((option) => option.value === nextMode)?.label ?? nextMode}`);
+  }
+
+  function handleToggleQuotePackage(packageId: QuotePackageId) {
+    const packageItemNames = quotePackageChoices.find((item) => item.id === packageId)?.itemNames ?? [];
+    setSelectedQuotePackageIds((current) =>
+      current.includes(packageId) ? current.filter((item) => item !== packageId) : [...current, packageId],
+    );
+    setSelectedQuoteItemNames((current) => current.filter((itemName) => !packageItemNames.includes(itemName)));
+    setGeneratedQuoteMapping(null);
+  }
+
+  function handleToggleQuotePackageItem(packageId: QuotePackageId, itemName: string) {
+    const packageItemNames = quotePackageChoices.find((item) => item.id === packageId)?.itemNames ?? [];
+    const packageSelected = selectedQuotePackageIds.includes(packageId);
+    setSelectedQuotePackageIds((current) => current.filter((item) => item !== packageId));
+    setSelectedQuoteItemNames((current) => {
+      if (packageSelected) {
+        return [
+          ...current.filter((name) => !packageItemNames.includes(name)),
+          ...packageItemNames.filter((name) => name !== itemName),
+        ];
+      }
+      return current.includes(itemName) ? current.filter((name) => name !== itemName) : [...current, itemName];
+    });
+    setGeneratedQuoteMapping(null);
   }
 
   function handleChangeBathroomManualChoice(row: QuantityRow, rowIndex: number, part: keyof BathroomManualChoice, itemName: NonNullable<BathroomManualChoice[keyof BathroomManualChoice]>) {
@@ -877,6 +1045,15 @@ export function UploadWorkbench({
     setGeneratedQuoteMapping(null);
     setGeneratedHealthFixList(null);
     setMessage(`${spaceName} 状态已更新为 ${statusLabels[status]}`);
+  }
+
+  function handleChangeSpaceType(spaceName: string, spaceType: string) {
+    setRows((current) => updateQuantityRowSpaceType(current, spaceName, spaceType));
+    setComparison(null);
+    setGeneratedQuoteMapping(null);
+    setGeneratedHealthFixList(null);
+    setHydropowerOverride(null);
+    setMessage(`${spaceName} 空间类型已调整为 ${spaceType}`);
   }
 
   function handleMarkHealthCheckNeedsFix(spaceNames: string[]) {
@@ -1079,42 +1256,55 @@ export function UploadWorkbench({
           <h1>CAD 工程量校对工作台</h1>
         </div>
         <div className="topbarActions">
-          <button type="button" disabled={isUploading || isComparing} onClick={() => inputRef.current?.click()}>
-            {isUploading ? <Loader2 aria-hidden="true" className="spin" size={18} /> : <FileUp aria-hidden="true" size={18} />}
-            {isUploading ? "解析中" : "上传 DXF"}
-          </button>
-          <button type="button" disabled={!currentDxfFile || isUploading || isComparing} onClick={() => calibrationInputRef.current?.click()}>
-            {isComparing ? <Loader2 aria-hidden="true" className="spin" size={18} /> : <FileUp aria-hidden="true" size={18} />}
-            {isComparing ? "对比中" : "上传校准 JSON"}
-          </button>
-          <button type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadCalibrationTemplate}>
-            <Download aria-hidden="true" size={18} />
-            下载校准模板
-          </button>
-          <button type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadReviewSnapshot}>
-            <Download aria-hidden="true" size={18} />
-            导出校对快照
-          </button>
-          <button type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadQuoteMapping}>
-            <ReceiptText aria-hidden="true" size={18} />
-            导出报价映射
-          </button>
-          <button type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadQuoteExcelDraft}>
-            <Download aria-hidden="true" size={18} />
-            导出 Excel 草稿
-          </button>
-          <button type="button" disabled={isUploading || isComparing} onClick={handleDownloadQuoteRulesTemplate}>
-            <Download aria-hidden="true" size={18} />
-            下载报价规则
-          </button>
-          <button type="button" disabled={isUploading || isComparing} onClick={() => quoteRulesInputRef.current?.click()}>
-            <FileUp aria-hidden="true" size={18} />
-            导入报价规则
-          </button>
-          <button type="button" disabled={isUploading || isComparing} onClick={() => snapshotInputRef.current?.click()}>
-            <FileUp aria-hidden="true" size={18} />
-            导入校对快照
-          </button>
+          <div className="topbarActionGroup">
+            <span>导入</span>
+            <button type="button" disabled={isUploading || isComparing} onClick={() => inputRef.current?.click()}>
+              {isUploading ? <Loader2 aria-hidden="true" className="spin" size={18} /> : <FileUp aria-hidden="true" size={18} />}
+              {isUploading ? "解析中" : "上传 DXF"}
+            </button>
+            <button type="button" disabled={!currentDxfFile || isUploading || isComparing} onClick={() => calibrationInputRef.current?.click()}>
+              {isComparing ? <Loader2 aria-hidden="true" className="spin" size={18} /> : <FileUp aria-hidden="true" size={18} />}
+              {isComparing ? "对比中" : "上传校准 JSON"}
+            </button>
+            <button type="button" disabled={isUploading || isComparing} onClick={() => snapshotInputRef.current?.click()}>
+              <FileUp aria-hidden="true" size={18} />
+              导入快照
+            </button>
+          </div>
+          <div className="topbarActionGroup">
+            <span>导出</span>
+            <button type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadReviewSnapshot}>
+              <Download aria-hidden="true" size={18} />
+              导出校对快照
+            </button>
+            <button type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadQuoteMapping}>
+              <ReceiptText aria-hidden="true" size={18} />
+              导出报价映射
+            </button>
+            <button type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadQuoteExcelDraft}>
+              <Download aria-hidden="true" size={18} />
+              导出 Excel 草稿
+            </button>
+          </div>
+          <div className="topbarActionGroup">
+            <span>规则</span>
+            <button type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadCalibrationTemplate}>
+              <Download aria-hidden="true" size={18} />
+              下载校准模板
+            </button>
+            <button type="button" disabled={isUploading || isComparing} onClick={handleDownloadQuoteRulesTemplate}>
+              <Download aria-hidden="true" size={18} />
+              下载报价规则
+            </button>
+            <button type="button" disabled={isUploading || isComparing} onClick={handleDownloadSpaceNamingGuide}>
+              <Download aria-hidden="true" size={18} />
+              下载命名规范
+            </button>
+            <button type="button" disabled={isUploading || isComparing} onClick={() => quoteRulesInputRef.current?.click()}>
+              <FileUp aria-hidden="true" size={18} />
+              导入报价规则
+            </button>
+          </div>
         </div>
       </section>
 
@@ -1154,6 +1344,61 @@ export function UploadWorkbench({
         </div>
       </section>
 
+      <section className="quoteModePanel">
+        <div className="templateHeader">
+          <div>
+            <strong>报价输出模式</strong>
+            <span>导出报价映射和 Excel 草稿时生效；报价规则单价仍统一维护。</span>
+          </div>
+        </div>
+        <div className="quoteModeChoices">
+          {QUOTE_MODE_OPTIONS.map((option) => (
+            <button
+              type="button"
+              key={option.value}
+              className={quoteMode === option.value ? "active" : ""}
+              onClick={() => handleChangeQuoteMode(option.value)}
+            >
+              <strong>{option.label}</strong>
+              <span>{option.hint}</span>
+            </button>
+          ))}
+        </div>
+        {quoteMode === "hard_plus" && <div className="quotePackageChoices">
+          {quotePackageChoices.map((item) => (
+            <div className="quotePackageCard" key={item.id}>
+              <label className="quotePackageHeader">
+                <input
+                  type="checkbox"
+                  checked={selectedQuotePackageIds.includes(item.id)}
+                  onChange={() => handleToggleQuotePackage(item.id)}
+                />
+                <span>
+                  <strong>{item.label}</strong>
+                  <small>{item.description}</small>
+                </span>
+              </label>
+              <div className="quotePackageItems">
+                {item.itemNames.map((itemName) => {
+                  const packageSelected = selectedQuotePackageIds.includes(item.id);
+                  const itemSelected = packageSelected || selectedQuoteItemNames.includes(itemName);
+                  return (
+                    <label key={itemName}>
+                      <input
+                        type="checkbox"
+                        checked={itemSelected}
+                        onChange={() => handleToggleQuotePackageItem(item.id, itemName)}
+                      />
+                      <span>{itemName}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>}
+      </section>
+
       <section className="quoteRulesPanel">
         <div className="templateHeader">
           <div>
@@ -1161,173 +1406,193 @@ export function UploadWorkbench({
             <span>{quoteRulesFileName} · 本机自动保存 · 显示 {filteredQuoteRules.length}/{quoteRules.length} 项</span>
           </div>
           <div className="quoteRulesActions">
-            <button type="button" onClick={handleExpandAllQuoteRuleGroups}>全部展开</button>
-            <button type="button" onClick={handleCollapseAllQuoteRuleGroups}>全部收起</button>
-            <button type="button" onClick={handleResetQuoteRules}>恢复默认规则</button>
+            <button className="panelToggleButton" type="button" onClick={() => handleToggleWorkbenchPanel("quoteRules")}>
+              {collapsedWorkbenchPanels.quoteRules ? "展开面板" : "收起面板"}
+            </button>
+            {!collapsedWorkbenchPanels.quoteRules && (
+              <>
+                <button type="button" onClick={handleExpandAllQuoteRuleGroups}>全部展开</button>
+                <button type="button" onClick={handleCollapseAllQuoteRuleGroups}>全部收起</button>
+                <button type="button" onClick={handleResetQuoteRules}>恢复默认规则</button>
+              </>
+            )}
           </div>
         </div>
-        <label className="quoteRuleSearch">
-          <span>筛选规则</span>
-          <input
-            aria-label="筛选报价规则"
-            type="search"
-            placeholder="按清单项、取数指标、适用空间搜索"
-            value={quoteRuleSearch}
-            onChange={(event) => setQuoteRuleSearch(event.target.value)}
-          />
-        </label>
-        <div className="quoteRulesTable">
-          <table>
-            <thead>
-              <tr>
-                <th>清单项</th>
-                <th>取数指标</th>
-                <th>适用空间</th>
-                <th>单位</th>
-                <th>主材</th>
-                <th>辅材</th>
-                <th>人工</th>
-                <th>汇总单价</th>
-              </tr>
-            </thead>
-            <tbody>
-              {groupedQuoteRules.length === 0 && (
-                <tr>
-                  <td className="quoteRuleEmptyState" colSpan={8}>没有匹配的报价规则</td>
-                </tr>
-              )}
-              {groupedQuoteRules.map((group) => (
-                <Fragment key={group.title}>
-                  <tr className="quoteRuleGroupTitle">
-                    <td colSpan={8}>
-                      <button type="button" onClick={() => handleToggleQuoteRuleGroup(group.title)}>
-                        <span>{collapsedQuoteRuleGroups.includes(group.title) ? "展开" : "收起"}</span>
-                        <strong>{group.title}</strong>
-                        <span className="quoteRuleGroupCount">{group.rules.length} 项</span>
-                      </button>
-                    </td>
+        {!collapsedWorkbenchPanels.quoteRules && (
+          <>
+            <label className="quoteRuleSearch">
+              <span>筛选规则</span>
+              <input
+                aria-label="筛选报价规则"
+                type="search"
+                placeholder="按清单项、取数指标、适用空间搜索"
+                value={quoteRuleSearch}
+                onChange={(event) => setQuoteRuleSearch(event.target.value)}
+              />
+            </label>
+            <div className="quoteRulesTable">
+              <table>
+                <thead>
+                  <tr>
+                    <th>清单项</th>
+                    <th>取数指标</th>
+                    <th>适用空间</th>
+                    <th>单位</th>
+                    <th>主材</th>
+                    <th>辅材</th>
+                    <th>人工</th>
+                    <th>汇总单价</th>
                   </tr>
-                  {!collapsedQuoteRuleGroups.includes(group.title) && group.rules.map(({ rule, index }) => (
-                    <tr key={`${rule.item_name}-${rule.metric}-${index}`}>
-                      <td>{rule.item_name}</td>
-                      <td><code>{rule.metric}</code></td>
-                      <td>{rule.space_types?.join("、") ?? "全部"}</td>
-                      <td>{rule.unit}</td>
-                      <td>
-                        <input
-                          aria-label={`${rule.item_name} 主材单价`}
-                          min="0"
-                          step="0.01"
-                          type="number"
-                          value={rule.material_price ?? rule.unit_price}
-                          onChange={(event) => handleChangeQuoteRulePricePart(index, "material_price", event.target.value)}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          aria-label={`${rule.item_name} 辅材单价`}
-                          min="0"
-                          step="0.01"
-                          type="number"
-                          value={rule.auxiliary_price ?? 0}
-                          onChange={(event) => handleChangeQuoteRulePricePart(index, "auxiliary_price", event.target.value)}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          aria-label={`${rule.item_name} 人工单价`}
-                          min="0"
-                          step="0.01"
-                          type="number"
-                          value={rule.labor_price ?? 0}
-                          onChange={(event) => handleChangeQuoteRulePricePart(index, "labor_price", event.target.value)}
-                        />
-                      </td>
-                      <td>{rule.unit_price.toFixed(2)}</td>
+                </thead>
+                <tbody>
+                  {groupedQuoteRules.length === 0 && (
+                    <tr>
+                      <td className="quoteRuleEmptyState" colSpan={8}>没有匹配的报价规则</td>
                     </tr>
+                  )}
+                  {groupedQuoteRules.map((group) => (
+                    <Fragment key={group.title}>
+                      <tr className="quoteRuleGroupTitle">
+                        <td colSpan={8}>
+                          <button type="button" onClick={() => handleToggleQuoteRuleGroup(group.title)}>
+                            <span>{collapsedQuoteRuleGroups.includes(group.title) ? "展开" : "收起"}</span>
+                            <strong>{group.title}</strong>
+                            <span className="quoteRuleGroupCount">{group.rules.length} 项</span>
+                          </button>
+                        </td>
+                      </tr>
+                      {!collapsedQuoteRuleGroups.includes(group.title) && group.rules.map(({ rule, index }) => (
+                        <tr key={`${rule.item_name}-${rule.metric}-${index}`}>
+                          <td>{rule.item_name}</td>
+                          <td><code>{rule.metric}</code></td>
+                          <td>{rule.space_types?.join("、") ?? "全部"}</td>
+                          <td>{rule.unit}</td>
+                          <td>
+                            <input
+                              aria-label={`${rule.item_name} 主材单价`}
+                              min="0"
+                              step="0.01"
+                              type="number"
+                              value={rule.material_price ?? rule.unit_price}
+                              onChange={(event) => handleChangeQuoteRulePricePart(index, "material_price", event.target.value)}
+                            />
+                          </td>
+                          <td>
+                            <input
+                              aria-label={`${rule.item_name} 辅材单价`}
+                              min="0"
+                              step="0.01"
+                              type="number"
+                              value={rule.auxiliary_price ?? 0}
+                              onChange={(event) => handleChangeQuoteRulePricePart(index, "auxiliary_price", event.target.value)}
+                            />
+                          </td>
+                          <td>
+                            <input
+                              aria-label={`${rule.item_name} 人工单价`}
+                              min="0"
+                              step="0.01"
+                              type="number"
+                              value={rule.labor_price ?? 0}
+                              onChange={(event) => handleChangeQuoteRulePricePart(index, "labor_price", event.target.value)}
+                            />
+                          </td>
+                          <td>{rule.unit_price.toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </Fragment>
                   ))}
-                </Fragment>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
       </section>
 
       <section className="manualQuotePanel">
         <div className="templateHeader">
           <div>
             <strong>Excel 可选补项</strong>
-            <span>数量留空时沿用自动识别或默认占位；填写后只影响 Excel 草稿。入户门、阳台推拉门、窗台石等 Excel 固定占位由自动识别或草稿模板处理。</span>
+            <span>数量留空时沿用自动识别或默认占位；填写后只影响 Excel 草稿。入户门、阳台推拉门和窗台石由自动识别结果处理。</span>
           </div>
           <div className="quoteRulesActions">
-            <button type="button" disabled={manualQuoteEditedCount === 0} onClick={handleResetManualQuoteItems}>恢复默认</button>
+            <button className="panelToggleButton" type="button" onClick={() => handleToggleWorkbenchPanel("manualQuote")}>
+              {collapsedWorkbenchPanels.manualQuote ? "展开面板" : "收起面板"}
+            </button>
+            {!collapsedWorkbenchPanels.manualQuote && (
+              <button type="button" disabled={manualQuoteEditedCount === 0} onClick={handleResetManualQuoteItems}>恢复默认</button>
+            )}
           </div>
         </div>
-        <div className="manualQuoteGrid">
-          {MANUAL_QUOTE_OPTION_ITEMS.map((item) => (
-            <label className="manualQuoteItem" key={item.itemName}>
-              <span>
-                <strong>{item.itemName}</strong>
-                <small>{item.hint} · {item.unit}</small>
-                {item.itemName === ALUMINUM_WINDOW_ITEM_NAME && <small>建议 {aluminumWindowSuggestedArea.toFixed(2)} {item.unit}</small>}
-              </span>
-              <input
-                aria-label={`${item.itemName} Excel 补项数量`}
-                min="0"
-                step="0.01"
-                type="number"
-                placeholder="默认"
-                value={manualQuoteItemInputs[item.itemName] ?? ""}
-                onChange={(event) => handleChangeManualQuoteItem(item.itemName, event.target.value)}
-              />
-              {item.itemName === ALUMINUM_WINDOW_ITEM_NAME && (
-                <button type="button" disabled={aluminumWindowSuggestedArea <= 0} onClick={() => handleUseManualQuoteSuggestion(item.itemName, aluminumWindowSuggestedArea)}>
-                  使用建议
-                </button>
-              )}
-            </label>
-          ))}
-        </div>
-        <div className="manualBathroomChoices">
-          {bathroomRows.map((row, rowIndex) => {
-            const choiceKey = bathroomChoiceKey(row, rowIndex);
-            const choice = bathroomManualChoices[choiceKey] ?? {};
-            const selectedFixture = choice.fixture ?? "马桶";
-            const selectedShower = choice.shower ?? "淋浴隔断";
-            return (
-              <div className="manualBathroomChoice" key={choiceKey}>
-                <strong>{row.spaceName}</strong>
-                <div>
-                  <span>洁具</span>
-                  {(["马桶", "蹲坑"] as const).map((itemName) => (
-                    <button
-                      type="button"
-                      className={selectedFixture === itemName ? "active" : ""}
-                      onClick={() => handleChangeBathroomManualChoice(row, rowIndex, "fixture", itemName)}
-                      key={itemName}
-                    >
-                      {itemName}
+        {!collapsedWorkbenchPanels.manualQuote && (
+          <>
+            <div className="manualQuoteGrid">
+              {MANUAL_QUOTE_OPTION_ITEMS.map((item) => (
+                <label className="manualQuoteItem" key={item.itemName}>
+                  <span>
+                    <strong>{item.itemName}</strong>
+                    <small>{item.hint} · {item.unit}</small>
+                    {item.itemName === ALUMINUM_WINDOW_ITEM_NAME && <small>建议 {aluminumWindowSuggestedArea.toFixed(2)} {item.unit}</small>}
+                  </span>
+                  <input
+                    aria-label={`${item.itemName} Excel 补项数量`}
+                    min="0"
+                    step="0.01"
+                    type="number"
+                    placeholder="默认"
+                    value={manualQuoteItemInputs[item.itemName] ?? ""}
+                    onChange={(event) => handleChangeManualQuoteItem(item.itemName, event.target.value)}
+                  />
+                  {item.itemName === ALUMINUM_WINDOW_ITEM_NAME && (
+                    <button type="button" disabled={aluminumWindowSuggestedArea <= 0} onClick={() => handleUseManualQuoteSuggestion(item.itemName, aluminumWindowSuggestedArea)}>
+                      使用建议
                     </button>
-                  ))}
-                </div>
-                <div>
-                  <span>淋浴</span>
-                  {(["淋浴隔断", "玻璃淋浴房"] as const).map((itemName) => (
-                    <button
-                      type="button"
-                      className={selectedShower === itemName ? "active" : ""}
-                      onClick={() => handleChangeBathroomManualChoice(row, rowIndex, "shower", itemName)}
-                      key={itemName}
-                    >
-                      {itemName}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-          {bathroomRows.length === 0 && <p>当前没有可计价卫生间。</p>}
-        </div>
+                  )}
+                </label>
+              ))}
+            </div>
+            <div className="manualBathroomChoices">
+              {bathroomRows.map((row, rowIndex) => {
+                const choiceKey = bathroomChoiceKey(row, rowIndex);
+                const choice = bathroomManualChoices[choiceKey] ?? {};
+                const selectedFixture = choice.fixture ?? "马桶";
+                const selectedShower = choice.shower ?? "淋浴隔断";
+                return (
+                  <div className="manualBathroomChoice" key={choiceKey}>
+                    <strong>{row.spaceName}</strong>
+                    <div>
+                      <span>洁具</span>
+                      {(["马桶", "蹲坑"] as const).map((itemName) => (
+                        <button
+                          type="button"
+                          className={selectedFixture === itemName ? "active" : ""}
+                          onClick={() => handleChangeBathroomManualChoice(row, rowIndex, "fixture", itemName)}
+                          key={itemName}
+                        >
+                          {itemName}
+                        </button>
+                      ))}
+                    </div>
+                    <div>
+                      <span>淋浴</span>
+                      {(["淋浴隔断", "玻璃淋浴房"] as const).map((itemName) => (
+                        <button
+                          type="button"
+                          className={selectedShower === itemName ? "active" : ""}
+                          onClick={() => handleChangeBathroomManualChoice(row, rowIndex, "shower", itemName)}
+                          key={itemName}
+                        >
+                          {itemName}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+              {bathroomRows.length === 0 && <p>当前没有可计价卫生间。</p>}
+            </div>
+          </>
+        )}
       </section>
 
       <section className="healthPanel">
@@ -1336,57 +1601,68 @@ export function UploadWorkbench({
             <strong>算量健康检查</strong>
             <span>{healthSummary.label}</span>
           </div>
-          <button type="button" disabled={healthChecks.length === 0} onClick={handleDownloadHealthFixList}>
-            <Download aria-hidden="true" size={18} />
-            导出修图清单
-          </button>
-        </div>
-        {acceptedHealthCheckKeys.length > 0 && (
-          <p>
-            已接受 {acceptedHealthCheckKeys.length} 项检查，不再进入当前健康提示、修图清单和报价风险摘要。
-            <button type="button" onClick={handleRestoreAcceptedHealthChecks}>恢复已接受</button>
-          </p>
-        )}
-        <div className="healthFilter" role="group" aria-label="健康检查筛选">
-          {healthFilterOptions.map((option) => (
-            <button
-              type="button"
-              className={healthFilter === option.value ? "active" : ""}
-              onClick={() => setHealthFilter(option.value)}
-              key={option.value}
-            >
-              {option.label}
+          <div className="quoteRulesActions">
+            <button className="panelToggleButton" type="button" onClick={() => handleToggleWorkbenchPanel("health")}>
+              {collapsedWorkbenchPanels.health ? "展开面板" : "收起面板"}
             </button>
-          ))}
+            {!collapsedWorkbenchPanels.health && (
+              <button type="button" disabled={healthChecks.length === 0} onClick={handleDownloadHealthFixList}>
+                <Download aria-hidden="true" size={18} />
+                导出修图清单
+              </button>
+            )}
+          </div>
         </div>
-        {healthChecks.length > 0 ? (
-          <div className="healthList">
-            {filteredHealthChecks.map((check) => (
-              <div className={`healthCard ${check.severity}`} key={check.id}>
-                <strong>{check.title}</strong>
-                <span>{check.detail}</span>
-                {check.spaceNames && (
-                  <div>
-                    {check.spaceNames.map((spaceName, index) => (
-                      <a href={quantityRowAnchorHref(spaceName)} key={`${spaceName}-${index}`}>{spaceName}</a>
-                    ))}
-                    <button type="button" onClick={() => handleMarkHealthCheckNeedsFix(check.spaceNames ?? [])}>
-                      标记需修图
-                    </button>
-                    <button type="button" onClick={() => handleConfirmHealthCheckSpaces(check)}>
-                      标记已确认
+        {!collapsedWorkbenchPanels.health && (
+          <>
+            {acceptedHealthCheckKeys.length > 0 && (
+              <p>
+                已接受 {acceptedHealthCheckKeys.length} 项检查，不再进入当前健康提示、修图清单和报价风险摘要。
+                <button type="button" onClick={handleRestoreAcceptedHealthChecks}>恢复已接受</button>
+              </p>
+            )}
+            <div className="healthFilter" role="group" aria-label="健康检查筛选">
+              {healthFilterOptions.map((option) => (
+                <button
+                  type="button"
+                  className={healthFilter === option.value ? "active" : ""}
+                  onClick={() => setHealthFilter(option.value)}
+                  key={option.value}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+            {healthChecks.length > 0 ? (
+              <div className="healthList">
+                {filteredHealthChecks.map((check) => (
+                  <div className={`healthCard ${check.severity}`} key={check.id}>
+                    <strong>{check.title}</strong>
+                    <span>{check.detail}</span>
+                    {check.spaceNames && (
+                      <div>
+                        {check.spaceNames.map((spaceName, index) => (
+                          <a href={quantityRowAnchorHref(spaceName)} key={`${spaceName}-${index}`}>{spaceName}</a>
+                        ))}
+                        <button type="button" onClick={() => handleMarkHealthCheckNeedsFix(check.spaceNames ?? [])}>
+                          标记需修图
+                        </button>
+                        <button type="button" onClick={() => handleConfirmHealthCheckSpaces(check)}>
+                          标记已确认
+                        </button>
+                      </div>
+                    )}
+                    <button type="button" onClick={() => handleAcceptHealthCheck(check)}>
+                      接受此项
                     </button>
                   </div>
-                )}
-                <button type="button" onClick={() => handleAcceptHealthCheck(check)}>
-                  接受此项
-                </button>
+                ))}
+                {filteredHealthChecks.length === 0 && <p>当前筛选下暂无检查项。</p>}
               </div>
-            ))}
-            {filteredHealthChecks.length === 0 && <p>当前筛选下暂无检查项。</p>}
-          </div>
-        ) : (
-          <p>空间类型、建筑面积、窗帘确认和报价规则缺失项目前看起来正常。</p>
+            ) : (
+              <p>空间类型、建筑面积、窗帘确认和报价规则缺失项目前看起来正常。</p>
+            )}
+          </>
         )}
       </section>
 
@@ -1397,9 +1673,7 @@ export function UploadWorkbench({
               <strong>CAD 修图清单已生成</strong>
               <span>{generatedHealthFixList.fileName}</span>
             </div>
-            <button type="button" onClick={handleCopyHealthFixList}>
-              复制 Markdown
-            </button>
+            <button type="button" onClick={handleCopyHealthFixList}>复制 Markdown</button>
           </div>
           <textarea readOnly value={generatedHealthFixList.content} aria-label="CAD 修图清单 Markdown" />
         </section>
@@ -1646,8 +1920,15 @@ export function UploadWorkbench({
         </section>
       )}
 
+      <HydropowerReviewPanel
+        estimate={hydropowerEstimate}
+        onConfirm={handleHydropowerConfirm}
+        onPointQuantityChange={handleHydropowerPointQuantityChange}
+      />
+
       <DrawingReview
         drawing={drawing}
+        hydropowerPoints={hydropowerEstimate.points}
         rows={rows}
         summary={summary}
         onRenameSpace={handleRenameSpace}
@@ -1663,13 +1944,13 @@ export function UploadWorkbench({
             <p>第一期重点验证 DXF 自动算出的空间面积、墙面计量长度、窗洞扣减和计算依据。</p>
           </div>
         </div>
-        <QuantityTable rows={rows} differences={comparison?.differences ?? []} onChangeStatus={handleChangeStatus} onChangeCurtainWallWidth={handleChangeCurtainWallWidth} onChangeCeilingFinishType={handleChangeCeilingFinishType} />
+        <QuantityTable rows={rows} differences={comparison?.differences ?? []} onChangeStatus={handleChangeStatus} onChangeSpaceType={handleChangeSpaceType} onChangeCurtainWallWidth={handleChangeCurtainWallWidth} onChangeCeilingFinishType={handleChangeCeilingFinishType} />
       </section>
     </main>
   );
 }
 
-const layers = ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_EXT_WALL", "QUOTE_WALL_TILE", "QUOTE_NEW_WALL", "QUOTE_DEMO_WALL", "QUOTE_BASE_CABINET", "QUOTE_WALL_CABINET", "QUOTE_CUSTOM", "QUOTE_TOILET", "QUOTE_BATHROOM_VANITY", "QUOTE_WINDOW", "QUOTE_DOOR", "QUOTE_FLOOR", "QUOTE_HEIGHT"];
+const layers = ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_EXT_WALL", "QUOTE_WALL_TILE", "QUOTE_NEW_WALL", "QUOTE_DEMO_WALL", "QUOTE_CAST_SLAB", "QUOTE_EDGE_CEILING", "QUOTE_BASE_CABINET", "QUOTE_WALL_CABINET", "QUOTE_CUSTOM", "QUOTE_TOILET", "QUOTE_BATHROOM_VANITY", "QUOTE_WINDOW", "QUOTE_DOOR", "QUOTE_FLOOR", "QUOTE_HEIGHT"];
 
 const statusLabels: Record<ReviewStatus, string> = {
   pending_review: "待确认",
