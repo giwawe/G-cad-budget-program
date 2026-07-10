@@ -264,7 +264,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 墙面瓷砖：按 `wall_tile_piece_count` 全屋汇总，片数由墙面贴砖面积按 600X1200、5% 损耗向上取整。
 - 瓷砖加工费和美缝：按项目级 `tile_area_m2` 全屋汇总；`tile_area_m2 = 可计价空间地面铺砖面积 + 墙面贴砖面积`。瓷砖加工费当前按贴砖面积挂钩生成候选。
 - 水电推荐点位：复核面板保留开关点位、各类插座、灯位、弱电点位、空调/设备专线、冷热水、排水和地漏等细分来源；报价规则默认使用汇总 metric 进入最终报价：`hydropower_strong_outlet_count` 汇总强电插座，`hydropower_switch_count` 汇总开关，`hydropower_light_count` 汇总灯位，`hydropower_downlight_spotlight_count` 预留筒灯/射灯，`hydropower_equipment_circuit_count` 汇总空调和设备专线，`hydropower_weak_point_count` 汇总弱电点位，`hydropower_water_supply_point_count`、`hydropower_hot_water_point_count`、`hydropower_drainage_point_count` 分别汇总给水点、热水点和排水点；强电线管、弱电线管、给水管、排水管按对应长度 metric 进入报价。灯带、回水管、户外给水和户外排水当前不列入默认报价。
-- 材料搬运费、垃圾清运费、墙地面砖现场保护：默认按项目级 `building_area_m2` 生成“全屋”清单项。
+- 材料搬运费、垃圾清运费、墙地面现场保护：默认按项目级 `building_area_m2` 生成“全屋”清单项。
 - 全屋灯饰：按项目级 `lightingPackageCount=1`，有可计价空间时生成 1 套，不随空间重复；默认价格为 0。
 - 全屋插座开关：按项目级 `switchSocketPackageCount=1`，有可计价空间时生成 1 套；该项保留为项目级套餐，不再按建筑面积折算，不随空间重复。
 - 全屋保洁：按项目级 `cleaningPackageCount=1`，有可计价空间时生成 1 套，不随空间重复；默认价格为 0。

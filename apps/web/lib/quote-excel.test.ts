@@ -23,8 +23,8 @@ const mapping: QuoteMapping = {
       item_name: "地面找平",
       quantity: 4.48,
       unit: "m2",
-      unit_price: 55,
-      amount: 246.4,
+      unit_price: 45,
+      amount: 201.6,
     },
     {
       floor: "全屋",
@@ -41,7 +41,7 @@ const mapping: QuoteMapping = {
     space_count: 3,
     building_area_m2: 88.66,
     item_count: 3,
-    total_amount: 7699.48,
+    total_amount: 7654.68,
   },
   curtain_quote_readiness: {
     ready_count: 1,
@@ -113,17 +113,17 @@ assert.ok(html.indexOf("<td>二</td><td>厨房工程</td>") < html.indexOf("<td>
 assert.ok(html.indexOf("<td>八</td><td>集成吊顶、卫浴、全屋开关灯饰</td>") < html.indexOf("<td>厨房卫生间集成吊顶</td>"));
 assert.ok(!html.includes("<td>水电工程</td>"), "Excel draft should promote hydropower subcategories to top-level sections");
 assertQuoteRow(html, "厨房卫生间集成吊顶", "m2", "4.48", "120.00", "0.00", "0.00", "537.60");
-assertQuoteRow(html, "地面找平", "m2", "4.48", "0.00", "25.00", "30.00", "246.40");
+assertQuoteRow(html, "地面找平", "m2", "4.48", "0.00", "20.00", "25.00", "201.60");
 assertQuoteRow(html, "强电布线 & 水路复核", "M2", "88.66", "78.00", "0.00", "0.00", "6915.48");
-assertSubtotalAmount(html, "246.40");
+assertSubtotalAmount(html, "201.60");
 assertSubtotalAmount(html, "537.60");
 assertSubtotalAmount(html, "6915.48");
 assert.ok(!html.includes("<td>轻钢龙骨平顶</td>"), "space sections should not show missing fixed room items");
 assert.ok(!html.includes("<td>暗窗帘箱</td><td></td>"), "public curtain section should not contain space-only curtain box placeholders");
-assertTotalRow(html, "A", "直接费合计", /=SUM\(H\d+(?:,H\d+)+\)/, "7699.48");
-assertTotalRow(html, "B", "工程管理费(D=A* 5%)", /=H\d+\*5%/, "384.97");
-assertTotalRow(html, "C", "税金E=(A+B)* 3%", /=\(H\d+\+H\d+\)\*3%/, "242.53");
-assertTotalRow(html, "D", "工程总造价F=(A+B+C)", /=SUM\(H\d+:H\d+\)/, "8326.98");
+assertTotalRow(html, "A", "直接费合计", /=SUM\(H\d+(?:,H\d+)+\)/, "7654.68");
+assertTotalRow(html, "B", "工程管理费(D=A* 5%)", /=H\d+\*5%/, "382.73");
+assertTotalRow(html, "C", "税金E=(A+B)* 3%", /=\(H\d+\+H\d+\)\*3%/, "241.12");
+assertTotalRow(html, "D", "工程总造价F=(A+B+C)", /=SUM\(H\d+:H\d+\)/, "8278.53");
 assert.equal(EXCEL_FIXED_PLACEHOLDER_ITEMS.length, 5);
 assert.deepEqual(EXCEL_FIXED_PLACEHOLDER_ITEMS.map((item) => item.item_name), [
   "砖墙门窗洞过梁",
@@ -553,17 +553,17 @@ const hydropowerSectionHtml = buildQuoteExcelHtml(
         item_name: "给水管",
         quantity: 31.6,
         unit: "M",
-        unit_price: 55,
-        material_price: 22,
+        unit_price: 44,
+        material_price: 16,
         auxiliary_price: 10,
-        labor_price: 23,
-        amount: 1738,
+        labor_price: 18,
+        amount: 1390.4,
       },
     ],
     summary: {
       ...mapping.summary,
       item_count: 14,
-      total_amount: 17748,
+      total_amount: 17400.4,
     },
   },
   "水电点位项目",
@@ -583,7 +583,7 @@ assertQuoteRow(hydropowerSectionHtml, "强电箱", "套", "1", "450.00", "100.00
 assertQuoteRow(hydropowerSectionHtml, "弱电箱", "套", "1", "220.00", "60.00", "170.00", "450.00");
 assertQuoteRow(hydropowerSectionHtml, "给水点", "位", "3", "50.00", "25.00", "85.00", "480.00");
 assertQuoteRow(hydropowerSectionHtml, "热水点", "位", "3", "55.00", "30.00", "95.00", "540.00");
-assertQuoteRow(hydropowerSectionHtml, "给水管", "M", "31.60", "22.00", "10.00", "23.00", "1738.00");
+assertQuoteRow(hydropowerSectionHtml, "给水管", "M", "31.60", "16.00", "10.00", "18.00", "1390.40");
 assertQuoteRow(hydropowerSectionHtml, "排水管", "M", "21", "25.00", "12.00", "28.00", "1365.00");
 assert.ok(!hydropowerSectionHtml.includes("<td>开关点位</td>"));
 assert.ok(!hydropowerSectionHtml.includes("<td>普通插座点位</td>"));
@@ -863,8 +863,8 @@ const villaLikeHtml = buildQuoteExcelHtml(
         item_name: "地面找平",
         quantity: 3,
         unit: "m2",
-        unit_price: 55,
-        amount: 165,
+        unit_price: 45,
+        amount: 135,
       },
       {
         floor: "二层",
@@ -873,8 +873,8 @@ const villaLikeHtml = buildQuoteExcelHtml(
         item_name: "地面找平",
         quantity: 4,
         unit: "m2",
-        unit_price: 55,
-        amount: 220,
+        unit_price: 45,
+        amount: 180,
       },
       {
         floor: "二层",
@@ -914,7 +914,7 @@ assert.ok(villaLikeHtml.includes("<td>三</td><td>一层卧室工程一</td>"));
 assert.ok(villaLikeHtml.includes("<td>四</td><td>一层卧室工程二</td>"));
 assert.ok(villaLikeHtml.includes("<td>五</td><td>二层卫生间、盥洗区工程</td>"));
 assert.equal(countOccurrences(villaLikeHtml, "<td>二层卫生间、盥洗区工程</td>"), 1);
-assertQuoteRow(villaLikeHtml, "地面找平", "m2", "7", "0.00", "25.00", "30.00", "385.00");
+assertQuoteRow(villaLikeHtml, "地面找平", "m2", "7", "0.00", "20.00", "25.00", "315.00");
 assertQuoteRow(villaLikeHtml, "淋浴隔断安装", "套", "2", "0.00", "0.00", "200.00", "400.00");
 assert.ok(villaLikeHtml.includes("<td>六</td><td>二层卧室工程</td>"));
 assertQuoteRow(villaLikeHtml, "窗台石铺贴", "M", "2.40", "0.00", "20.00", "25.00", "108.00");
