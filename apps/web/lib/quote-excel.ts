@@ -54,7 +54,7 @@ const ROOM_SECTION_ITEM_NAMES = [
 
 const ONE_ITEM_PLACEHOLDER_NAMES = new Set<string>();
 const EXCEL_PLACEHOLDER_ITEM_NAMES = new Set<string>();
-const HYDROPOWER_STRONG_WEAK_ITEM_NAMES = ["强电插座", "开关", "灯位", "筒灯/射灯", "设备专线", "弱电点位", "强电线管", "弱电线管", "强电箱", "弱电箱", "分配电箱"];
+const HYDROPOWER_STRONG_WEAK_ITEM_NAMES = ["强电插座", "开关", "灯位", "筒灯/射灯", "设备专线", "弱电点位", "强电线管", "弱电线管", "强电箱", "弱电箱", "分配电箱", "强电布线 & 水路复核"];
 const HYDROPOWER_PLUMBING_ITEM_NAMES = ["给水点", "热水点", "排水点", "给水管", "排水管"];
 
 const FIXED_TEMPLATE_SECTIONS: QuoteTemplateSectionDefinition[] = [
@@ -65,11 +65,11 @@ const FIXED_TEMPLATE_SECTIONS: QuoteTemplateSectionDefinition[] = [
   },
   { title: "强弱电工程", itemNames: HYDROPOWER_STRONG_WEAK_ITEM_NAMES },
   { title: "给排水工程", itemNames: HYDROPOWER_PLUMBING_ITEM_NAMES },
-  { title: "主材项目", itemNames: ["地面瓷砖", "墙面瓷砖", "瓷砖加工费"], quotePackageIds: ["tile_materials"] },
+  { title: "主材项目", itemNames: ["地面瓷砖", "墙面瓷砖", "瓷砖加工费"], quotePackageIds: ["main_materials"] },
   { title: "全屋定制、衣柜、橱柜、全屋家具", itemNames: ["全屋定制", "橱柜", "背景墙"], quotePackageIds: ["custom_cabinet"] },
   { title: "室内门", itemNames: ["入户门", "室内门", "卫生间门", "厨房推拉门", "厨房推拉门双包套", "阳台推拉门", "阳台推拉门双包套", "铝合金封门窗"], quotePackageIds: ["doors_windows"] },
-  { title: "集成吊顶、卫浴、全屋开关灯饰", itemNames: ["厨房卫生间集成吊顶", "浴室柜", "马桶", "蹲坑", "淋浴隔断", "玻璃淋浴房", "花洒", "卫浴五件套", "全屋插座开关", "全屋灯饰"], quotePackageIds: ["lighting_switches", "bath_fixtures"] },
-  { title: "其他（窗帘、美缝、窗台石等）", itemNames: ["美缝", "窗帘", "窗台石", "楼梯扶手", "栏杆/护栏", "全屋保洁"], quotePackageIds: ["tile_materials", "curtains_windowsills", "cleaning"] },
+  { title: "集成吊顶、卫浴、全屋开关灯饰", itemNames: ["厨房卫生间集成吊顶", "浴室柜", "马桶", "蹲坑", "淋浴隔断", "玻璃淋浴房", "花洒", "卫浴五件套", "全屋插座开关", "全屋灯饰"], quotePackageIds: ["fixtures_lighting"] },
+  { title: "其他（窗帘、美缝、窗台石等）", itemNames: ["美缝", "窗帘", "窗台石", "楼梯扶手", "栏杆/护栏", "全屋保洁"], quotePackageIds: ["other_finishing"] },
 ];
 const TEMPLATE_ITEM_NAME_SET = new Set([...ROOM_SECTION_ITEM_NAMES, ...FIXED_TEMPLATE_SECTIONS.flatMap((section) => section.itemNames)]);
 
@@ -285,7 +285,7 @@ function quoteTemplateBodyHtmlRows(rows: string[][]): string {
       currentSectionStartRow = 0;
     } else if (className === "quoteTotalRow") {
       if (row[0] === "A") {
-        amountFormula = subtotalRows.length > 0 ? `=SUM(${subtotalRows.map((rowNumber) => `H${rowNumber}`).join(",")})` : "=0";
+        amountFormula = subtotalRows.length > 0 ? `=SUMIF(B5:B${excelRow - 1},"小 计",H5:H${excelRow - 1})` : "=0";
         directTotalRow = excelRow;
       } else if (row[0] === "B") {
         amountFormula = directTotalRow > 0 ? `=H${directTotalRow}*5%` : "=0";
@@ -346,18 +346,19 @@ function quoteTemplateRowClass(row: string[]): string {
 }
 
 function quoteTemplateRows(mapping: QuoteMapping, options: QuoteExcelOptions): string[][] {
-  const remainingItems = new Set(mapping.items);
+  const visibleItems = quoteItemsForExcelMode(mapping);
+  const remainingItems = new Set(visibleItems);
   const rows: string[][] = [];
   let sectionIndex = 1;
   let directTotal = 0;
-  const multiFloorProject = isMultiFloorProject(mapping.items, options.bathroomRows);
+  const multiFloorProject = isMultiFloorProject(visibleItems, options.bathroomRows);
 
   const firstFixedSection = templateSectionWithCode(FIXED_TEMPLATE_SECTIONS[0], sectionIndex++);
-  const firstFixedSectionRows = quoteTemplateSectionRows(firstFixedSection, fixedSectionItems(mapping.items, remainingItems, firstFixedSection), remainingItems, true, options);
+  const firstFixedSectionRows = quoteTemplateSectionRows(firstFixedSection, fixedSectionItems(visibleItems, remainingItems, firstFixedSection), remainingItems, true, options);
   rows.push(...firstFixedSectionRows.rows);
   directTotal += firstFixedSectionRows.subtotal;
 
-  for (const group of dynamicRoomSectionGroups(mapping.items, remainingItems, options, multiFloorProject)) {
+  for (const group of dynamicRoomSectionGroups(visibleItems, remainingItems, options, multiFloorProject)) {
     const roomSection = templateSectionWithCode({ title: group.title, itemNames: ROOM_SECTION_ITEM_NAMES }, sectionIndex++);
     const roomRows = quoteTemplateSectionRows(roomSection, group.items, remainingItems, false, options);
     rows.push(...roomRows.rows);
@@ -369,7 +370,7 @@ function quoteTemplateRows(mapping: QuoteMapping, options: QuoteExcelOptions): s
       continue;
     }
     const section = templateSectionWithCode(sectionDefinition, sectionIndex++);
-    const sectionRows = quoteTemplateSectionRows(section, fixedSectionItems(mapping.items, remainingItems, section), remainingItems, true, options);
+    const sectionRows = quoteTemplateSectionRows(section, fixedSectionItems(visibleItems, remainingItems, section), remainingItems, true, options);
     rows.push(...sectionRows.rows);
     directTotal += sectionRows.subtotal;
   }
@@ -387,6 +388,36 @@ function quoteTemplateRows(mapping: QuoteMapping, options: QuoteExcelOptions): s
   return rows;
 }
 
+function quoteItemsForExcelMode(mapping: QuoteMapping): QuoteMapping["items"] {
+  if (mapping.quote_mode === "full" || mapping.quote_mode === undefined) {
+    return mapping.items;
+  }
+  const selectedPackageIds = new Set(mapping.selected_quote_package_ids ?? []);
+  const selectedItemNames = new Set(mapping.selected_quote_item_names ?? []);
+  return mapping.items.filter((item) => {
+    const addonPackageIds = excelAddonPackageIdsForItem(item.item_name);
+    if (addonPackageIds.length === 0) {
+      return true;
+    }
+    if (mapping.quote_mode === "hard") {
+      return false;
+    }
+    return selectedItemNames.has(item.item_name) || addonPackageIds.some((packageId) => selectedPackageIds.has(packageId));
+  });
+}
+
+function excelAddonPackageIdsForItem(itemName: string): QuotePackageId[] {
+  for (const section of FIXED_TEMPLATE_SECTIONS) {
+    if (section.quotePackageIds && section.itemNames.some((templateItemName) => itemMatchesTemplate(itemName, templateItemName))) {
+      return section.quotePackageIds;
+    }
+  }
+  if (itemMatchesTemplate(itemName, "暗窗帘箱")) {
+    return ["other_finishing"];
+  }
+  return [];
+}
+
 function shouldRenderFixedSectionForQuoteMode(section: QuoteTemplateSectionDefinition, mapping: QuoteMapping): boolean {
   if (!section.quotePackageIds || section.quotePackageIds.length === 0) {
     return true;
@@ -398,7 +429,11 @@ function shouldRenderFixedSectionForQuoteMode(section: QuoteTemplateSectionDefin
     return false;
   }
   const selectedPackageIds = new Set(mapping.selected_quote_package_ids ?? []);
-  return section.quotePackageIds.some((packageId) => selectedPackageIds.has(packageId));
+  if (section.quotePackageIds.some((packageId) => selectedPackageIds.has(packageId))) {
+    return true;
+  }
+  const selectedItemNames = new Set(mapping.selected_quote_item_names ?? []);
+  return section.itemNames.some((itemName) => selectedItemNames.has(itemName));
 }
 
 function quoteTemplateSectionRows(

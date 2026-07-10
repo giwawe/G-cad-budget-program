@@ -124,8 +124,27 @@ function normalizeSnapshotQuotePackageIds(packageIds: unknown): QuotePackageId[]
   if (!Array.isArray(packageIds)) {
     return [];
   }
-  const validPackageIds = new Set<QuotePackageId>(["tile_materials", "doors_windows", "custom_cabinet", "bath_fixtures", "lighting_switches", "curtains_windowsills", "cleaning"]);
-  return Array.from(new Set(packageIds.filter((item): item is QuotePackageId => typeof item === "string" && validPackageIds.has(item as QuotePackageId))));
+  const validPackageIds = new Set<QuotePackageId>(["main_materials", "custom_cabinet", "doors_windows", "fixtures_lighting", "other_finishing"]);
+  const legacyAliases: Partial<Record<string, QuotePackageId[]>> = {
+    tile_materials: ["main_materials", "other_finishing"],
+    bath_fixtures: ["fixtures_lighting"],
+    lighting_switches: ["fixtures_lighting"],
+    curtains_windowsills: ["other_finishing"],
+    cleaning: ["other_finishing"],
+  };
+  const normalized: QuotePackageId[] = [];
+  for (const packageId of packageIds) {
+    if (typeof packageId !== "string") {
+      continue;
+    }
+    const candidates = legacyAliases[packageId] ?? (validPackageIds.has(packageId as QuotePackageId) ? [packageId as QuotePackageId] : []);
+    for (const candidate of candidates) {
+      if (!normalized.includes(candidate)) {
+        normalized.push(candidate);
+      }
+    }
+  }
+  return normalized;
 }
 
 function normalizeSnapshotQuoteItemNames(itemNames: unknown): string[] {

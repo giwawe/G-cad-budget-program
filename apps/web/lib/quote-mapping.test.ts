@@ -533,13 +533,20 @@ assert.equal(hardQuoteMapping.items.some((item) => item.item_name === "全屋灯
 
 const hardPlusTileMapping = buildQuoteMapping(rows, defaultQuoteRules(), { building_area_m2: 88.66 }, {
   quoteMode: "hard_plus",
-  selectedQuotePackageIds: ["tile_materials"],
+  selectedQuotePackageIds: ["main_materials"],
   hydropowerSummary,
 });
 assert.ok(hardPlusTileMapping.items.some((item) => item.item_name === "地面瓷砖"));
 assert.ok(hardPlusTileMapping.items.some((item) => item.item_name === "墙面瓷砖"));
-assert.ok(hardPlusTileMapping.items.some((item) => item.item_name === "美缝"));
+assert.equal(hardPlusTileMapping.items.some((item) => item.item_name === "美缝"), false);
 assert.equal(hardPlusTileMapping.items.some((item) => item.item_name === "橱柜"), false);
+
+const hardPlusOtherFinishingMapping = buildQuoteMapping(rows, defaultQuoteRules(), { building_area_m2: 88.66 }, {
+  quoteMode: "hard_plus",
+  selectedQuotePackageIds: ["other_finishing"],
+  hydropowerSummary,
+});
+assert.ok(hardPlusOtherFinishingMapping.items.some((item) => item.item_name === "美缝"));
 
 const hardPlusSingleItemMapping = buildQuoteMapping(rows, defaultQuoteRules(), { building_area_m2: 88.66 }, {
   quoteMode: "hard_plus",
@@ -738,7 +745,7 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "楼梯扶手"), {
   labor_price: 0,
   space_types: undefined,
   scope: "addon",
-  package_id: "curtains_windowsills",
+  package_id: "other_finishing",
 });
 assert.deepEqual(rules.find((rule) => rule.item_name === "栏杆/护栏"), {
   item_name: "栏杆/护栏",
@@ -750,7 +757,7 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "栏杆/护栏"), {
   labor_price: 0,
   space_types: undefined,
   scope: "addon",
-  package_id: "curtains_windowsills",
+  package_id: "other_finishing",
 });
 assert.deepEqual(rules.find((rule) => rule.item_name === "水泥墙开槽"), {
   item_name: "水泥墙开槽",
@@ -830,7 +837,7 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "马桶"), {
   labor_price: 0,
   space_types: ["卫生间"],
   scope: "addon",
-  package_id: "bath_fixtures",
+  package_id: "fixtures_lighting",
 });
 assert.deepEqual(rules.find((rule) => rule.item_name === "地面瓷砖"), {
   item_name: "地面瓷砖",
@@ -842,7 +849,7 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "地面瓷砖"), {
   labor_price: 0,
   space_types: undefined,
   scope: "addon",
-  package_id: "tile_materials",
+  package_id: "main_materials",
 });
 assert.deepEqual(rules.find((rule) => rule.item_name === "墙面瓷砖"), {
   item_name: "墙面瓷砖",
@@ -854,7 +861,7 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "墙面瓷砖"), {
   labor_price: 0,
   space_types: undefined,
   scope: "addon",
-  package_id: "tile_materials",
+  package_id: "main_materials",
 });
 assert.equal(rules.find((rule) => rule.item_name === "普通插座点位"), undefined);
 assert.equal(rules.find((rule) => rule.item_name === "沙发充电插座"), undefined);
@@ -1034,7 +1041,7 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "全屋灯饰"), {
   labor_price: 0,
   space_types: undefined,
   scope: "addon",
-  package_id: "lighting_switches",
+  package_id: "fixtures_lighting",
 });
 assert.deepEqual(rules.find((rule) => rule.item_name === "全屋保洁"), {
   item_name: "全屋保洁",
@@ -1046,7 +1053,7 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "全屋保洁"), {
   labor_price: 0,
   space_types: undefined,
   scope: "addon",
-  package_id: "cleaning",
+  package_id: "other_finishing",
 });
 assert.deepEqual(rules.find((rule) => rule.item_name === "材料搬运费"), {
   item_name: "材料搬运费",
@@ -1088,7 +1095,7 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "全屋插座开关"), 
   labor_price: 0,
   space_types: undefined,
   scope: "addon",
-  package_id: "lighting_switches",
+  package_id: "fixtures_lighting",
 });
 assert.deepEqual(rules.find((rule) => rule.item_name === "美缝"), {
   item_name: "美缝",
@@ -1100,7 +1107,7 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "美缝"), {
   labor_price: 0,
   space_types: undefined,
   scope: "addon",
-  package_id: "tile_materials",
+  package_id: "other_finishing",
 });
 assert.deepEqual(rules.find((rule) => rule.item_name === "瓷砖加工费"), {
   item_name: "瓷砖加工费",
@@ -1112,7 +1119,7 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "瓷砖加工费"), {
   labor_price: 0,
   space_types: undefined,
   scope: "addon",
-  package_id: "tile_materials",
+  package_id: "main_materials",
 });
 assert.deepEqual(rules.find((rule) => rule.item_name === "全屋定制"), {
   item_name: "全屋定制",
@@ -1136,7 +1143,7 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "浴室柜"), {
   labor_price: 0,
   space_types: ["卫生间"],
   scope: "addon",
-  package_id: "bath_fixtures",
+  package_id: "fixtures_lighting",
 });
 assert.deepEqual(rules.find((rule) => rule.item_name === "花洒"), {
   item_name: "花洒",
@@ -1148,7 +1155,7 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "花洒"), {
   labor_price: 0,
   space_types: ["卫生间"],
   scope: "addon",
-  package_id: "bath_fixtures",
+  package_id: "fixtures_lighting",
 });
 assert.deepEqual(rules.find((rule) => rule.item_name === "卫浴五件套"), {
   item_name: "卫浴五件套",
@@ -1160,7 +1167,7 @@ assert.deepEqual(rules.find((rule) => rule.item_name === "卫浴五件套"), {
   labor_price: 0,
   space_types: ["卫生间"],
   scope: "addon",
-  package_id: "bath_fixtures",
+  package_id: "fixtures_lighting",
 });
 assert.deepEqual(rules[0].space_types, ["客厅", "餐厅", "卧室", "书房", "茶室", "娱乐室", "过道", "门厅", "楼梯", "楼梯过道", "挑空", "衣帽间", "储物间", "露台"]);
 rules[0].unit_price = 99;
@@ -1290,7 +1297,7 @@ assert.equal(parsedWetRules[12].metric, "custom_cabinet_area_m2");
 assert.equal(parsedWetRules[13].metric, "background_wall_area_m2");
 assert.equal(parseQuoteRules(JSON.stringify([{ item_name: "美缝", metric: "tile_area_m2", unit: "M2", unit_price: 12 }]))[0].metric, "tile_area_m2");
 assert.equal(parseQuoteRules(JSON.stringify([{ item_name: "美缝", metric: "tile_area_m2", unit: "M2", unit_price: 12, scope: "hard" }]))[0].scope, "hard");
-assert.equal(parseQuoteRules(JSON.stringify([{ item_name: "美缝", metric: "tile_area_m2", unit: "M2", unit_price: 12, scope: "addon", package_id: "tile_materials" }]))[0].package_id, "tile_materials");
+assert.equal(parseQuoteRules(JSON.stringify([{ item_name: "美缝", metric: "tile_area_m2", unit: "M2", unit_price: 12, scope: "addon", package_id: "tile_materials" }]))[0].package_id, "other_finishing");
 assert.equal(parseQuoteRules(JSON.stringify([{ item_name: "墙面瓷砖", metric: "wall_tile_piece_count", unit: "片", unit_price: 30 }]))[0].metric, "wall_tile_piece_count");
 assert.equal(parseQuoteRules(JSON.stringify([{ item_name: "全屋插座开关", metric: "switch_socket_package_count", unit: "套", unit_price: 6000 }]))[0].metric, "switch_socket_package_count");
 assert.equal(parseQuoteRules(JSON.stringify([{ item_name: "全屋保洁", metric: "cleaning_package_count", unit: "套", unit_price: 4500 }]))[0].metric, "cleaning_package_count");

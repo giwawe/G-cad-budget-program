@@ -187,9 +187,12 @@ export type QuoteRule = {
 export type QuoteMode = "hard" | "full" | "hard_plus";
 export type QuoteRuleScope = "hard" | "addon";
 export type QuotePackageId =
+  | "main_materials"
   | "tile_materials"
   | "doors_windows"
   | "custom_cabinet"
+  | "fixtures_lighting"
+  | "other_finishing"
   | "bath_fixtures"
   | "lighting_switches"
   | "curtains_windowsills"
@@ -310,20 +313,25 @@ const WINDOWSILL_PAVING_SPACE_TYPES = ["客厅", "餐厅", "卧室", "书房", "
 const SWITCH_SOCKET_COUNT_PER_M2 = 0.8;
 const DUPLICATE_MANUAL_PLACEHOLDER_ITEM_NAMES = new Set(["砌砖墙", "砌120厚砖墙", "砌240厚砖墙", "入户门", "阳台推拉门", "阳台推拉门双包套"]);
 export const QUOTE_PACKAGE_DEFINITIONS: QuotePackageDefinition[] = [
-  { id: "tile_materials", label: "瓷砖主材/美缝", description: "地砖、墙砖、瓷砖加工费、美缝" },
-  { id: "doors_windows", label: "门窗定制", description: "入户门、室内门、推拉门、门套、封窗" },
-  { id: "custom_cabinet", label: "定制/橱柜", description: "橱柜、全屋定制、背景墙" },
-  { id: "bath_fixtures", label: "卫浴洁具", description: "马桶、蹲坑、浴室柜、花洒、淋浴房" },
-  { id: "lighting_switches", label: "集成吊顶/开关灯饰", description: "厨房卫生间集成吊顶、全屋开关插座、全屋灯饰" },
-  { id: "curtains_windowsills", label: "窗帘窗台石/其他", description: "窗帘、窗台石材料、楼梯扶手、栏杆护栏" },
-  { id: "cleaning", label: "保洁", description: "全屋保洁" },
+  { id: "main_materials", label: "主材项目", description: "地面瓷砖、墙面瓷砖、瓷砖加工费" },
+  { id: "custom_cabinet", label: "全屋定制、衣柜、橱柜、全屋家具", description: "橱柜、全屋定制、背景墙" },
+  { id: "doors_windows", label: "室内门", description: "入户门、室内门、推拉门、门套、封窗" },
+  { id: "fixtures_lighting", label: "集成吊顶、卫浴、全屋开关灯饰", description: "集成吊顶、卫浴洁具、全屋开关插座、全屋灯饰" },
+  { id: "other_finishing", label: "其他（窗帘、美缝、窗台石等）", description: "美缝、窗帘、窗台石、楼梯扶手、栏杆护栏、保洁" },
 ];
+const LEGACY_QUOTE_PACKAGE_ALIASES: Partial<Record<QuotePackageId, QuotePackageId[]>> = {
+  tile_materials: ["main_materials", "other_finishing"],
+  bath_fixtures: ["fixtures_lighting"],
+  lighting_switches: ["fixtures_lighting"],
+  curtains_windowsills: ["other_finishing"],
+  cleaning: ["other_finishing"],
+};
 const QUOTE_RULE_PACKAGE_BY_ITEM_NAME = new Map<string, QuotePackageId>([
-  ["地面瓷砖", "tile_materials"],
-  ["墙面瓷砖", "tile_materials"],
-  ["瓷砖加工费", "tile_materials"],
-  ["美缝", "tile_materials"],
-  ["厨房卫生间集成吊顶", "lighting_switches"],
+  ["地面瓷砖", "main_materials"],
+  ["墙面瓷砖", "main_materials"],
+  ["瓷砖加工费", "main_materials"],
+  ["美缝", "other_finishing"],
+  ["厨房卫生间集成吊顶", "fixtures_lighting"],
   ["入户门", "doors_windows"],
   ["室内门", "doors_windows"],
   ["卫生间门", "doors_windows"],
@@ -332,23 +340,23 @@ const QUOTE_RULE_PACKAGE_BY_ITEM_NAME = new Map<string, QuotePackageId>([
   ["阳台推拉门", "doors_windows"],
   ["阳台推拉门双包套", "doors_windows"],
   ["铝合金封门窗", "doors_windows"],
-  ["楼梯扶手", "curtains_windowsills"],
-  ["栏杆/护栏", "curtains_windowsills"],
+  ["楼梯扶手", "other_finishing"],
+  ["栏杆/护栏", "other_finishing"],
   ["橱柜", "custom_cabinet"],
   ["全屋定制", "custom_cabinet"],
   ["背景墙", "custom_cabinet"],
-  ["马桶", "bath_fixtures"],
-  ["蹲坑", "bath_fixtures"],
-  ["浴室柜", "bath_fixtures"],
-  ["淋浴隔断", "bath_fixtures"],
-  ["玻璃淋浴房", "bath_fixtures"],
-  ["花洒", "bath_fixtures"],
-  ["卫浴五件套", "bath_fixtures"],
-  ["全屋插座开关", "lighting_switches"],
-  ["全屋灯饰", "lighting_switches"],
-  ["窗帘", "curtains_windowsills"],
-  ["窗台石", "curtains_windowsills"],
-  ["全屋保洁", "cleaning"],
+  ["马桶", "fixtures_lighting"],
+  ["蹲坑", "fixtures_lighting"],
+  ["浴室柜", "fixtures_lighting"],
+  ["淋浴隔断", "fixtures_lighting"],
+  ["玻璃淋浴房", "fixtures_lighting"],
+  ["花洒", "fixtures_lighting"],
+  ["卫浴五件套", "fixtures_lighting"],
+  ["全屋插座开关", "fixtures_lighting"],
+  ["全屋灯饰", "fixtures_lighting"],
+  ["窗帘", "other_finishing"],
+  ["窗台石", "other_finishing"],
+  ["全屋保洁", "other_finishing"],
 ]);
 const SUMMED_PROJECT_METRICS = new Set<QuoteMetric>([
   "floor_tile_piece_count",
@@ -777,7 +785,19 @@ export function normalizeQuotePackageIds(packageIds: unknown): QuotePackageId[] 
     return [];
   }
   const validPackageIds = new Set(QUOTE_PACKAGE_DEFINITIONS.map((item) => item.id));
-  return Array.from(new Set(packageIds.filter((item): item is QuotePackageId => typeof item === "string" && validPackageIds.has(item as QuotePackageId))));
+  const normalizedPackageIds: QuotePackageId[] = [];
+  packageIds.forEach((item) => {
+    if (typeof item !== "string") {
+      return;
+    }
+    const packageId = item as QuotePackageId;
+    if (validPackageIds.has(packageId)) {
+      normalizedPackageIds.push(packageId);
+      return;
+    }
+    normalizedPackageIds.push(...(LEGACY_QUOTE_PACKAGE_ALIASES[packageId] ?? []));
+  });
+  return Array.from(new Set(normalizedPackageIds));
 }
 
 export function normalizeQuoteItemNames(itemNames: unknown): string[] {
@@ -1163,7 +1183,7 @@ function normalizeQuoteRuleScope(rule: Partial<QuoteRule>): Partial<Pick<QuoteRu
   if (scope === "hard") {
     return rule.scope === "hard" ? { scope: "hard" } : {};
   }
-  const packageId = normalizeQuotePackageIds([rule.package_id])[0] ?? inferredPackageId;
+  const packageId = inferredPackageId ?? normalizeQuotePackageIds([rule.package_id])[0];
   return packageId ? { scope: "addon", package_id: packageId } : {};
 }
 
