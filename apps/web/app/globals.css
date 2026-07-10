@@ -49,6 +49,33 @@ input {
   justify-content: flex-end;
 }
 
+.topbarActionGroup {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 8px;
+}
+
+.topbarActionGroup > span {
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.topbarActionGroup button {
+  min-height: 36px;
+  padding: 0 11px;
+}
+
 .topbar p,
 .reviewSection p {
   margin: 0;
@@ -1624,7 +1651,11 @@ td .curtainWallHelp {
     justify-content: flex-start;
   }
 
-  .topbarActions button {
+  .topbarActionGroup {
+    width: 100%;
+  }
+
+  .topbarActionGroup button {
     flex: 1 1 150px;
     justify-content: center;
     min-width: 0;
@@ -1699,11 +1730,20 @@ td .curtainWallHelp {
 
   .topbarActions {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
   }
 
-  .topbarActions button {
+  .topbarActionGroup {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .topbarActionGroup > span {
+    grid-column: 1 / -1;
+    min-height: 18px;
+  }
+
+  .topbarActionGroup button {
     width: 100%;
     min-height: 36px;
     padding: 0 8px;

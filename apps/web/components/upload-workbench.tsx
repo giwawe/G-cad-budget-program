@@ -63,7 +63,7 @@ const FULL_WALL_TILE_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 const DEFAULT_INTEGRATED_CEILING_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 const QUOTE_RULES_STORAGE_KEY = "cad-budget-program.quote-rules.v2";
 const DEFAULT_QUOTE_RULES_STORAGE_VERSION = 9;
-const QUOTE_RULE_GROUPS_STORAGE_KEY = "cad-budget-program.quote-rule-groups.v2";
+const QUOTE_RULE_GROUPS_STORAGE_KEY = "cad-budget-program.quote-rule-groups.v3";
 const ALUMINUM_WINDOW_ITEM_NAME = "铝合金封门窗";
 const MANUAL_QUOTE_OPTION_ITEMS = [{ itemName: ALUMINUM_WINDOW_ITEM_NAME, unit: "M2", hint: "按窗户实际面积，默认不计价" }];
 const QUOTE_MODE_OPTIONS: { value: QuoteMode; label: string; hint: string }[] = [
@@ -1245,46 +1245,55 @@ export function UploadWorkbench({
           <h1>CAD 工程量校对工作台</h1>
         </div>
         <div className="topbarActions">
-          <button type="button" disabled={isUploading || isComparing} onClick={() => inputRef.current?.click()}>
-            {isUploading ? <Loader2 aria-hidden="true" className="spin" size={18} /> : <FileUp aria-hidden="true" size={18} />}
-            {isUploading ? "解析中" : "上传 DXF"}
-          </button>
-          <button type="button" disabled={!currentDxfFile || isUploading || isComparing} onClick={() => calibrationInputRef.current?.click()}>
-            {isComparing ? <Loader2 aria-hidden="true" className="spin" size={18} /> : <FileUp aria-hidden="true" size={18} />}
-            {isComparing ? "对比中" : "上传校准 JSON"}
-          </button>
-          <button type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadCalibrationTemplate}>
-            <Download aria-hidden="true" size={18} />
-            下载校准模板
-          </button>
-          <button type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadReviewSnapshot}>
-            <Download aria-hidden="true" size={18} />
-            导出校对快照
-          </button>
-          <button type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadQuoteMapping}>
-            <ReceiptText aria-hidden="true" size={18} />
-            导出报价映射
-          </button>
-          <button type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadQuoteExcelDraft}>
-            <Download aria-hidden="true" size={18} />
-            导出 Excel 草稿
-          </button>
-          <button type="button" disabled={isUploading || isComparing} onClick={handleDownloadQuoteRulesTemplate}>
-            <Download aria-hidden="true" size={18} />
-            下载报价规则
-          </button>
-          <button type="button" disabled={isUploading || isComparing} onClick={handleDownloadSpaceNamingGuide}>
-            <Download aria-hidden="true" size={18} />
-            下载命名规范
-          </button>
-          <button type="button" disabled={isUploading || isComparing} onClick={() => quoteRulesInputRef.current?.click()}>
-            <FileUp aria-hidden="true" size={18} />
-            导入报价规则
-          </button>
-          <button type="button" disabled={isUploading || isComparing} onClick={() => snapshotInputRef.current?.click()}>
-            <FileUp aria-hidden="true" size={18} />
-            导入校对快照
-          </button>
+          <div className="topbarActionGroup">
+            <span>导入</span>
+            <button type="button" disabled={isUploading || isComparing} onClick={() => inputRef.current?.click()}>
+              {isUploading ? <Loader2 aria-hidden="true" className="spin" size={18} /> : <FileUp aria-hidden="true" size={18} />}
+              {isUploading ? "解析中" : "上传 DXF"}
+            </button>
+            <button type="button" disabled={!currentDxfFile || isUploading || isComparing} onClick={() => calibrationInputRef.current?.click()}>
+              {isComparing ? <Loader2 aria-hidden="true" className="spin" size={18} /> : <FileUp aria-hidden="true" size={18} />}
+              {isComparing ? "对比中" : "上传校准 JSON"}
+            </button>
+            <button type="button" disabled={isUploading || isComparing} onClick={() => snapshotInputRef.current?.click()}>
+              <FileUp aria-hidden="true" size={18} />
+              导入快照
+            </button>
+          </div>
+          <div className="topbarActionGroup">
+            <span>导出</span>
+            <button type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadReviewSnapshot}>
+              <Download aria-hidden="true" size={18} />
+              导出校对快照
+            </button>
+            <button type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadQuoteMapping}>
+              <ReceiptText aria-hidden="true" size={18} />
+              导出报价映射
+            </button>
+            <button type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadQuoteExcelDraft}>
+              <Download aria-hidden="true" size={18} />
+              导出 Excel 草稿
+            </button>
+          </div>
+          <div className="topbarActionGroup">
+            <span>规则</span>
+            <button type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadCalibrationTemplate}>
+              <Download aria-hidden="true" size={18} />
+              下载校准模板
+            </button>
+            <button type="button" disabled={isUploading || isComparing} onClick={handleDownloadQuoteRulesTemplate}>
+              <Download aria-hidden="true" size={18} />
+              下载报价规则
+            </button>
+            <button type="button" disabled={isUploading || isComparing} onClick={handleDownloadSpaceNamingGuide}>
+              <Download aria-hidden="true" size={18} />
+              下载命名规范
+            </button>
+            <button type="button" disabled={isUploading || isComparing} onClick={() => quoteRulesInputRef.current?.click()}>
+              <FileUp aria-hidden="true" size={18} />
+              导入报价规则
+            </button>
+          </div>
         </div>
       </section>
 
@@ -1344,13 +1353,12 @@ export function UploadWorkbench({
             </button>
           ))}
         </div>
-        <div className="quotePackageChoices" aria-disabled={quoteMode !== "hard_plus"}>
+        {quoteMode === "hard_plus" && <div className="quotePackageChoices">
           {quotePackageChoices.map((item) => (
-            <div className={quoteMode === "hard_plus" ? "quotePackageCard" : "quotePackageCard disabled"} key={item.id}>
+            <div className="quotePackageCard" key={item.id}>
               <label className="quotePackageHeader">
                 <input
                   type="checkbox"
-                  disabled={quoteMode !== "hard_plus"}
                   checked={selectedQuotePackageIds.includes(item.id)}
                   onChange={() => handleToggleQuotePackage(item.id)}
                 />
@@ -1367,7 +1375,6 @@ export function UploadWorkbench({
                     <label key={itemName}>
                       <input
                         type="checkbox"
-                        disabled={quoteMode !== "hard_plus"}
                         checked={itemSelected}
                         onChange={() => handleToggleQuotePackageItem(item.id, itemName)}
                       />
@@ -1378,7 +1385,7 @@ export function UploadWorkbench({
               </div>
             </div>
           ))}
-        </div>
+        </div>}
       </section>
 
       <section className="quoteRulesPanel">
