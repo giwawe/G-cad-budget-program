@@ -250,6 +250,7 @@ export type AtriumCurtainCandidate = {
 export type QuoteMapping = {
   quote_mode: QuoteMode;
   selected_quote_package_ids: QuotePackageId[];
+  selected_quote_item_names: string[];
   items: QuoteMappingItem[];
   summary: {
     space_count: number;
@@ -290,6 +291,7 @@ type BuildQuoteMappingOptions = {
   quantityHealthReadiness?: QuantityHealthReadiness;
   quoteMode?: QuoteMode;
   selectedQuotePackageIds?: QuotePackageId[];
+  selectedQuoteItemNames?: string[];
 };
 
 export const DEFAULT_QUOTE_RULES_NAME = "商品房整装默认规则";
@@ -486,9 +488,10 @@ export function defaultQuoteRules(): QuoteRule[] {
 }
 
 export function withDefaultQuoteRuleCoverage(rules: QuoteRule[]): QuoteRule[] {
-  const remainingRules = [...rules];
+  const defaultRuleKeys = new Set(DEFAULT_RULES.map((rule) => quoteRuleKey(rule)));
+  const remainingRules = rules.map(normalizeLegacyQuoteRuleName);
   const mergedDefaultRules = DEFAULT_RULES.map((defaultRule) => {
-    const existingIndex = remainingRules.findIndex((rule) => rule.item_name === defaultRule.item_name && rule.metric === defaultRule.metric);
+    const existingIndex = remainingRules.findIndex((rule) => quoteRuleKey(rule) === quoteRuleKey(defaultRule));
     if (existingIndex < 0) {
       return cloneQuoteRule(defaultRule);
     }
@@ -505,11 +508,28 @@ export function withDefaultQuoteRuleCoverage(rules: QuoteRule[]): QuoteRule[] {
       space_types: mergeSpaceTypes(existingRule.space_types, defaultRule.space_types),
     };
   });
-  return [...mergedDefaultRules, ...remainingRules.filter((rule) => !isDuplicateManualPlaceholderRule(rule)).map(cloneQuoteRule)];
+  return [
+    ...mergedDefaultRules,
+    ...remainingRules
+      .filter((rule) => !defaultRuleKeys.has(quoteRuleKey(rule)))
+      .filter((rule) => !isDuplicateManualPlaceholderRule(rule))
+      .map(cloneQuoteRule),
+  ];
 }
 
 function cloneQuoteRule(rule: QuoteRule): QuoteRule {
   return { ...rule, space_types: rule.space_types ? [...rule.space_types] : undefined };
+}
+
+function normalizeLegacyQuoteRuleName(rule: QuoteRule): QuoteRule {
+  if (rule.item_name === "墙地面砖现场保护" && rule.metric === "building_area_m2") {
+    return { ...rule, item_name: "墙地面现场保护" };
+  }
+  return rule;
+}
+
+function quoteRuleKey(rule: Pick<QuoteRule, "item_name" | "metric">): string {
+  return `${rule.item_name}\u0000${rule.metric}`;
 }
 
 function withDefaultQuoteRuleScope(rule: QuoteRule): QuoteRule {
@@ -660,7 +680,7 @@ export function buildQuoteMapping(
   const billableRows = rows.filter((row) => row.status !== "excluded");
   const buildingAreaM2 = round2(summary?.building_area_m2 ?? 0);
   const normalizedOptions = normalizeBuildQuoteMappingOptions(options);
-  const scopedRules = quoteRulesForMode(rules, normalizedOptions.quoteMode, normalizedOptions.selectedQuotePackageIds);
+  const scopedRules = quoteRulesForMode(rules, normalizedOptions.quoteMode, normalizedOptions.selectedQuotePackageIds, normalizedOptions.selectedQuoteItemNames);
   const rowRules = scopedRules.filter((rule): rule is QuoteRule & { metric: RowQuoteMetric } => !isProjectMetric(rule.metric) && !SUMMED_PROJECT_METRICS.has(rule.metric));
   const projectRules = scopedRules.filter((rule) => isProjectMetric(rule.metric) || SUMMED_PROJECT_METRICS.has(rule.metric));
   const rowSpaceNames = displaySpaceNamesByRow(billableRows);
@@ -686,6 +706,7 @@ export function buildQuoteMapping(
   return {
     quote_mode: normalizedOptions.quoteMode,
     selected_quote_package_ids: normalizedOptions.selectedQuotePackageIds,
+    selected_quote_item_names: normalizedOptions.selectedQuoteItemNames,
     items,
     summary: {
       space_count: billableRows.length,
@@ -702,10 +723,10 @@ export function buildQuoteMapping(
   };
 }
 
-function normalizeBuildQuoteMappingOptions(options?: BuildQuoteMappingOptions | QuantityHealthReadiness): Required<Pick<BuildQuoteMappingOptions, "quantityHealthReadiness" | "quoteMode" | "selectedQuotePackageIds">> & Pick<BuildQuoteMappingOptions, "hydropowerSummary"> {
+function normalizeBuildQuoteMappingOptions(options?: BuildQuoteMappingOptions | QuantityHealthReadiness): Required<Pick<BuildQuoteMappingOptions, "quantityHealthReadiness" | "quoteMode" | "selectedQuotePackageIds" | "selectedQuoteItemNames">> & Pick<BuildQuoteMappingOptions, "hydropowerSummary"> {
   const defaultQuantityHealthReadiness: QuantityHealthReadiness = { total: 0, warning: 0, info: 0, label: "当前无待确认项" };
   if (!options) {
-    return { hydropowerSummary: undefined, quantityHealthReadiness: defaultQuantityHealthReadiness, quoteMode: "full", selectedQuotePackageIds: [] };
+    return { hydropowerSummary: undefined, quantityHealthReadiness: defaultQuantityHealthReadiness, quoteMode: "full", selectedQuotePackageIds: [], selectedQuoteItemNames: [] };
   }
   if (isQuantityHealthReadiness(options)) {
     return {
@@ -713,6 +734,7 @@ function normalizeBuildQuoteMappingOptions(options?: BuildQuoteMappingOptions | 
       quantityHealthReadiness: options,
       quoteMode: "full",
       selectedQuotePackageIds: [],
+      selectedQuoteItemNames: [],
     };
   }
   return {
@@ -720,20 +742,22 @@ function normalizeBuildQuoteMappingOptions(options?: BuildQuoteMappingOptions | 
     quantityHealthReadiness: options.quantityHealthReadiness ?? defaultQuantityHealthReadiness,
     quoteMode: normalizeQuoteMode(options.quoteMode),
     selectedQuotePackageIds: normalizeQuotePackageIds(options.selectedQuotePackageIds),
+    selectedQuoteItemNames: normalizeQuoteItemNames(options.selectedQuoteItemNames),
   };
 }
 
-function quoteRulesForMode(rules: QuoteRule[], quoteMode: QuoteMode, selectedPackageIds: QuotePackageId[]): QuoteRule[] {
+function quoteRulesForMode(rules: QuoteRule[], quoteMode: QuoteMode, selectedPackageIds: QuotePackageId[], selectedItemNames: string[]): QuoteRule[] {
   if (quoteMode === "full") {
     return rules;
   }
   const selectedPackages = new Set(selectedPackageIds);
+  const selectedItems = new Set(selectedItemNames);
   return rules.filter((rule) => {
     const scope = quoteRuleScope(rule);
     if (scope === "hard") {
       return true;
     }
-    return quoteMode === "hard_plus" && rule.package_id !== undefined && selectedPackages.has(rule.package_id);
+    return quoteMode === "hard_plus" && ((rule.package_id !== undefined && selectedPackages.has(rule.package_id)) || selectedItems.has(rule.item_name));
   });
 }
 
@@ -754,6 +778,13 @@ export function normalizeQuotePackageIds(packageIds: unknown): QuotePackageId[] 
   }
   const validPackageIds = new Set(QUOTE_PACKAGE_DEFINITIONS.map((item) => item.id));
   return Array.from(new Set(packageIds.filter((item): item is QuotePackageId => typeof item === "string" && validPackageIds.has(item as QuotePackageId))));
+}
+
+export function normalizeQuoteItemNames(itemNames: unknown): string[] {
+  if (!Array.isArray(itemNames)) {
+    return [];
+  }
+  return Array.from(new Set(itemNames.filter((item): item is string => typeof item === "string" && item.trim().length > 0).map((item) => item.trim())));
 }
 
 function isQuantityHealthReadiness(options: BuildQuoteMappingOptions | QuantityHealthReadiness): options is QuantityHealthReadiness {

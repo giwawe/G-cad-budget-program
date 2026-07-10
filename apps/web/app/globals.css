@@ -345,12 +345,8 @@ code {
   gap: 10px;
 }
 
-.quotePackageChoices label {
+.quotePackageCard {
   min-width: 0;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: start;
-  gap: 8px;
   border: 1px solid #d8e1eb;
   border-radius: 8px;
   background: #ffffff;
@@ -358,29 +354,57 @@ code {
   padding: 10px;
 }
 
-.quotePackageChoices label.disabled {
+.quotePackageCard.disabled {
   background: #f7f9fb;
   color: var(--muted);
+}
+
+.quotePackageHeader,
+.quotePackageItems label {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
 }
 
 .quotePackageChoices input {
   margin-top: 2px;
 }
 
-.quotePackageChoices strong,
-.quotePackageChoices small {
+.quotePackageHeader strong,
+.quotePackageHeader small {
   display: block;
 }
 
-.quotePackageChoices strong {
+.quotePackageHeader strong {
   font-size: 13px;
 }
 
-.quotePackageChoices small {
+.quotePackageHeader small {
   margin-top: 3px;
   color: var(--muted);
   font-size: 11px;
   line-height: 1.35;
+}
+
+.quotePackageItems {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin-top: 9px;
+  padding-top: 8px;
+  border-top: 1px solid #edf2f7;
+}
+
+.quotePackageItems label {
+  align-items: center;
+  font-size: 11px;
+  color: #4d5d6c;
+}
+
+.quotePackageItems input {
+  margin-top: 0;
 }
 
 .manualQuoteGrid {

@@ -60,6 +60,7 @@ const snapshot = buildReviewSnapshot({
   },
   quoteMode: "hard_plus",
   selectedQuotePackageIds: ["tile_materials", "custom_cabinet"],
+  selectedQuoteItemNames: ["地面瓷砖", "窗帘"],
   summary: {
     space_count: 1,
     building_area_m2: 20,
@@ -99,6 +100,7 @@ assert.deepEqual(snapshot.accepted_health_check_keys, ["space-type-other:客厅"
 assert.deepEqual(snapshot.excel_manual_item_quantities, { 入户门: 1, 马桶: 2, 淋浴隔断: 2 });
 assert.equal(snapshot.quote_mode, "hard_plus");
 assert.deepEqual(snapshot.selected_quote_package_ids, ["tile_materials", "custom_cabinet"]);
+assert.deepEqual(snapshot.selected_quote_item_names, ["地面瓷砖", "窗帘"]);
 assert.equal(snapshot.summary.space_count, 1);
 assert.equal(snapshot.summary.building_area_m2, 20);
 assert.equal(reviewSnapshotFileName("test-case.dxf"), "test-case.review-snapshot.json");
@@ -114,6 +116,7 @@ assert.deepEqual(parsed.accepted_health_check_keys, ["space-type-other:客厅"])
 assert.deepEqual(parsed.excel_manual_item_quantities, { 入户门: 1, 马桶: 2, 淋浴隔断: 2 });
 assert.equal(parsed.quote_mode, "hard_plus");
 assert.deepEqual(parsed.selected_quote_package_ids, ["tile_materials", "custom_cabinet"]);
+assert.deepEqual(parsed.selected_quote_item_names, ["地面瓷砖", "窗帘"]);
 
 const manualSpaceTypeSnapshot = buildReviewSnapshot({
   fileName: "manual-space-type.dxf",
@@ -230,11 +233,13 @@ const olderSnapshot = {
   excel_manual_item_quantities: undefined,
   quote_mode: undefined,
   selected_quote_package_ids: undefined,
+  selected_quote_item_names: undefined,
 };
 assert.deepEqual(parseReviewSnapshot(JSON.stringify(olderSnapshot)).accepted_health_check_keys, []);
 assert.deepEqual(parseReviewSnapshot(JSON.stringify(olderSnapshot)).excel_manual_item_quantities, {});
 assert.equal(parseReviewSnapshot(JSON.stringify(olderSnapshot)).quote_mode, "full");
 assert.deepEqual(parseReviewSnapshot(JSON.stringify(olderSnapshot)).selected_quote_package_ids, []);
+assert.deepEqual(parseReviewSnapshot(JSON.stringify(olderSnapshot)).selected_quote_item_names, []);
 
 const snapshotWithInvalidManualQuantities = {
   ...snapshot,

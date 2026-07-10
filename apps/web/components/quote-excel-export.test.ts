@@ -27,7 +27,7 @@ assert.ok(uploadWorkbenchSource.includes("handleToggleQuoteRuleGroup"), "quote r
 assert.ok(uploadWorkbenchSource.includes("quoteRuleGroupCount"), "quote rule group headers should show matched rule counts");
 assert.ok(uploadWorkbenchSource.includes("没有匹配的报价规则"), "quote rule search should show an empty state");
 assert.ok(uploadWorkbenchSource.includes("QUOTE_RULE_GROUPS_STORAGE_KEY"), "quote rule group collapsed state should be stored locally");
-assert.ok(uploadWorkbenchSource.includes("const DEFAULT_QUOTE_RULES_STORAGE_VERSION = 8"), "default quote rule storage version should reset stale local edited defaults after price table updates");
+assert.ok(uploadWorkbenchSource.includes("const DEFAULT_QUOTE_RULES_STORAGE_VERSION = 9"), "default quote rule storage version should reset stale local edited defaults after price table updates");
 assert.ok(uploadWorkbenchSource.includes("handleCollapseAllQuoteRuleGroups"), "quote rule panel should collapse all groups at once");
 assert.ok(uploadWorkbenchSource.includes("handleExpandAllQuoteRuleGroups"), "quote rule panel should expand all groups at once");
 assert.ok(uploadWorkbenchSource.includes("全部收起"), "quote rule panel should expose collapse all action");

@@ -62,8 +62,8 @@ const DEFAULT_DOOR_HEIGHT_M = 2.1;
 const FULL_WALL_TILE_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 const DEFAULT_INTEGRATED_CEILING_SPACE_TYPES = new Set(["厨房", "卫生间"]);
 const QUOTE_RULES_STORAGE_KEY = "cad-budget-program.quote-rules.v2";
-const DEFAULT_QUOTE_RULES_STORAGE_VERSION = 8;
-const QUOTE_RULE_GROUPS_STORAGE_KEY = "cad-budget-program.quote-rule-groups.v1";
+const DEFAULT_QUOTE_RULES_STORAGE_VERSION = 9;
+const QUOTE_RULE_GROUPS_STORAGE_KEY = "cad-budget-program.quote-rule-groups.v2";
 const ALUMINUM_WINDOW_ITEM_NAME = "铝合金封门窗";
 const MANUAL_QUOTE_OPTION_ITEMS = [{ itemName: ALUMINUM_WINDOW_ITEM_NAME, unit: "M2", hint: "按窗户实际面积，默认不计价" }];
 const QUOTE_MODE_OPTIONS: { value: QuoteMode; label: string; hint: string }[] = [
@@ -92,6 +92,8 @@ const quoteRuleGroups = [
       "美缝",
       "墙面贴瓷砖(600X1200)",
       "墙地面防漏处理",
+      "窗台石铺贴",
+      "楼梯踏步铺贴",
     ]),
   },
   {
@@ -160,9 +162,10 @@ const quoteRuleGroups = [
   },
   {
     title: "窗帘/收口",
-    itemNames: new Set(["窗帘", "窗台石", "暗窗帘箱"]),
+    itemNames: new Set(["窗帘", "窗台石", "暗窗帘箱", "楼梯扶手", "栏杆/护栏"]),
   },
 ];
+const DEFAULT_COLLAPSED_QUOTE_RULE_GROUPS = [...quoteRuleGroups.map((group) => group.title), "其他规则"];
 
 const QUOTE_INTEGRATION_STATUS_GROUPS = [
   {
@@ -432,7 +435,7 @@ export function UploadWorkbench({
   const [quoteRulesStorageReady, setQuoteRulesStorageReady] = useState(false);
   const [quoteRuleSearch, setQuoteRuleSearch] = useState("");
   const [generatedQuoteRules, setGeneratedQuoteRules] = useState<{ fileName: string; content: string } | null>(null);
-  const [collapsedQuoteRuleGroups, setCollapsedQuoteRuleGroups] = useState<string[]>([]);
+  const [collapsedQuoteRuleGroups, setCollapsedQuoteRuleGroups] = useState<string[]>(DEFAULT_COLLAPSED_QUOTE_RULE_GROUPS);
   const [healthFilter, setHealthFilter] = useState<QuantityHealthFilter>("all");
   const [acceptedHealthCheckKeys, setAcceptedHealthCheckKeys] = useState<string[]>([]);
   const [manualQuoteItemInputs, setManualQuoteItemInputs] = useState<Record<string, string>>({});
@@ -440,6 +443,7 @@ export function UploadWorkbench({
   const [hydropowerOverride, setHydropowerOverride] = useState<HydropowerEstimate | null>(null);
   const [quoteMode, setQuoteMode] = useState<QuoteMode>("full");
   const [selectedQuotePackageIds, setSelectedQuotePackageIds] = useState<QuotePackageId[]>([]);
+  const [selectedQuoteItemNames, setSelectedQuoteItemNames] = useState<string[]>([]);
 
   const excludedCount = useMemo(() => rows.filter((row) => row.status === "excluded").length, [rows]);
   const pendingQuoteMetrics = useMemo(() => apartmentPendingQuoteMetrics(), []);
@@ -483,6 +487,14 @@ export function UploadWorkbench({
     }
     return grouped;
   }, [filteredQuoteRules]);
+  const quotePackageChoices = useMemo(
+    () =>
+      QUOTE_PACKAGE_DEFINITIONS.map((definition) => {
+        const itemNames = Array.from(new Set(quoteRules.filter((rule) => rule.package_id === definition.id).map((rule) => rule.item_name)));
+        return { ...definition, itemNames };
+      }).filter((definition) => definition.itemNames.length > 0),
+    [quoteRules],
+  );
   const projectSummaryItems = generatedQuoteMapping ? projectSummaryQuoteItems(generatedQuoteMapping.mapping) : [];
   const integratedCeilingPriceReminderItemsForMapping = generatedQuoteMapping ? integratedCeilingPriceReminderItems(generatedQuoteMapping.mapping) : [];
   const quoteExportRisks = generatedQuoteMapping ? exportQuoteMappingConfirmationMessages(generatedQuoteMapping.mapping) : [];
@@ -660,6 +672,7 @@ export function UploadWorkbench({
       setBathroomManualChoices(bathroomManualChoicesFromQuantities(snapshot.excel_manual_item_quantities, snapshot.rows));
       setQuoteMode(snapshot.quote_mode);
       setSelectedQuotePackageIds(snapshot.selected_quote_package_ids);
+      setSelectedQuoteItemNames(snapshot.selected_quote_item_names);
       setGeneratedSnapshot({ fileName: snapshotFile.name, content: `${JSON.stringify(snapshot, null, 2)}\n` });
       setError("");
       setMessage(`已恢复校对快照：${snapshotFile.name}`);
@@ -697,7 +710,7 @@ export function UploadWorkbench({
 
   function handleDownloadReviewSnapshot() {
     const downloadName = reviewSnapshotFileName(fileName);
-    const content = `${JSON.stringify(buildReviewSnapshot({ fileName, calibrationFileName, rows, acceptedHealthCheckKeys, excelManualItemQuantities: manualQuoteItemQuantities, quoteMode, selectedQuotePackageIds, summary, comparison, hydropower: hydropowerEstimate }), null, 2)}\n`;
+    const content = `${JSON.stringify(buildReviewSnapshot({ fileName, calibrationFileName, rows, acceptedHealthCheckKeys, excelManualItemQuantities: manualQuoteItemQuantities, quoteMode, selectedQuotePackageIds, selectedQuoteItemNames, summary, comparison, hydropower: hydropowerEstimate }), null, 2)}\n`;
     const blob = new Blob([content], { type: "application/json;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -757,6 +770,7 @@ export function UploadWorkbench({
       hydropowerSummary: hydropowerEstimate.summary,
       quoteMode,
       selectedQuotePackageIds,
+      selectedQuoteItemNames,
     });
     const quoteHealthChecks = filterAcceptedHealthChecks(buildQuantityHealthChecks({ rows, summary, quoteMapping: baseMapping, hydropower: hydropowerEstimate }), acceptedHealthCheckKeys);
     const quoteHealthSummary = summarizeQuantityHealthChecks(quoteHealthChecks);
@@ -765,6 +779,7 @@ export function UploadWorkbench({
       quantityHealthReadiness: quoteHealthSummary,
       quoteMode,
       selectedQuotePackageIds,
+      selectedQuoteItemNames,
     });
     const confirmationMessages = exportQuoteMappingConfirmationMessages(mapping);
     if (confirmationMessages.length > 0) {
@@ -980,9 +995,27 @@ export function UploadWorkbench({
   }
 
   function handleToggleQuotePackage(packageId: QuotePackageId) {
+    const packageItemNames = quotePackageChoices.find((item) => item.id === packageId)?.itemNames ?? [];
     setSelectedQuotePackageIds((current) =>
       current.includes(packageId) ? current.filter((item) => item !== packageId) : [...current, packageId],
     );
+    setSelectedQuoteItemNames((current) => current.filter((itemName) => !packageItemNames.includes(itemName)));
+    setGeneratedQuoteMapping(null);
+  }
+
+  function handleToggleQuotePackageItem(packageId: QuotePackageId, itemName: string) {
+    const packageItemNames = quotePackageChoices.find((item) => item.id === packageId)?.itemNames ?? [];
+    const packageSelected = selectedQuotePackageIds.includes(packageId);
+    setSelectedQuotePackageIds((current) => current.filter((item) => item !== packageId));
+    setSelectedQuoteItemNames((current) => {
+      if (packageSelected) {
+        return [
+          ...current.filter((name) => !packageItemNames.includes(name)),
+          ...packageItemNames.filter((name) => name !== itemName),
+        ];
+      }
+      return current.includes(itemName) ? current.filter((name) => name !== itemName) : [...current, itemName];
+    });
     setGeneratedQuoteMapping(null);
   }
 
@@ -1312,19 +1345,38 @@ export function UploadWorkbench({
           ))}
         </div>
         <div className="quotePackageChoices" aria-disabled={quoteMode !== "hard_plus"}>
-          {QUOTE_PACKAGE_DEFINITIONS.map((item) => (
-            <label className={quoteMode === "hard_plus" ? "" : "disabled"} key={item.id}>
-              <input
-                type="checkbox"
-                disabled={quoteMode !== "hard_plus"}
-                checked={selectedQuotePackageIds.includes(item.id)}
-                onChange={() => handleToggleQuotePackage(item.id)}
-              />
-              <span>
-                <strong>{item.label}</strong>
-                <small>{item.description}</small>
-              </span>
-            </label>
+          {quotePackageChoices.map((item) => (
+            <div className={quoteMode === "hard_plus" ? "quotePackageCard" : "quotePackageCard disabled"} key={item.id}>
+              <label className="quotePackageHeader">
+                <input
+                  type="checkbox"
+                  disabled={quoteMode !== "hard_plus"}
+                  checked={selectedQuotePackageIds.includes(item.id)}
+                  onChange={() => handleToggleQuotePackage(item.id)}
+                />
+                <span>
+                  <strong>{item.label}</strong>
+                  <small>{item.description}</small>
+                </span>
+              </label>
+              <div className="quotePackageItems">
+                {item.itemNames.map((itemName) => {
+                  const packageSelected = selectedQuotePackageIds.includes(item.id);
+                  const itemSelected = packageSelected || selectedQuoteItemNames.includes(itemName);
+                  return (
+                    <label key={itemName}>
+                      <input
+                        type="checkbox"
+                        disabled={quoteMode !== "hard_plus"}
+                        checked={itemSelected}
+                        onChange={() => handleToggleQuotePackageItem(item.id, itemName)}
+                      />
+                      <span>{itemName}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
           ))}
         </div>
       </section>

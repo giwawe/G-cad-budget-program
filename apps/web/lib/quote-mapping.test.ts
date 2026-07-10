@@ -541,6 +541,16 @@ assert.ok(hardPlusTileMapping.items.some((item) => item.item_name === "墙面瓷
 assert.ok(hardPlusTileMapping.items.some((item) => item.item_name === "美缝"));
 assert.equal(hardPlusTileMapping.items.some((item) => item.item_name === "橱柜"), false);
 
+const hardPlusSingleItemMapping = buildQuoteMapping(rows, defaultQuoteRules(), { building_area_m2: 88.66 }, {
+  quoteMode: "hard_plus",
+  selectedQuoteItemNames: ["地面瓷砖"],
+  hydropowerSummary,
+});
+assert.ok(hardPlusSingleItemMapping.items.some((item) => item.item_name === "地面瓷砖"));
+assert.equal(hardPlusSingleItemMapping.items.some((item) => item.item_name === "墙面瓷砖"), false);
+assert.equal(hardPlusSingleItemMapping.items.some((item) => item.item_name === "美缝"), false);
+assert.deepEqual(hardPlusSingleItemMapping.selected_quote_item_names, ["地面瓷砖"]);
+
 const fullQuoteMapping = buildQuoteMapping(rows, defaultQuoteRules(), { building_area_m2: 88.66 }, {
   quoteMode: "full",
   hydropowerSummary,
@@ -1199,6 +1209,23 @@ assert.deepEqual(
   (({ unit_price, material_price, auxiliary_price, labor_price }) => ({ unit_price, material_price, auxiliary_price, labor_price }))(coveredDefaultRules.find((rule) => rule.item_name === "楼梯扶手")!),
   { unit_price: 480, material_price: 480, auxiliary_price: 0, labor_price: 0 },
 );
+
+const legacyProtectionRules = withDefaultQuoteRuleCoverage([
+  ...defaultQuoteRules(),
+  {
+    item_name: "墙地面砖现场保护",
+    metric: "building_area_m2",
+    unit: "M2",
+    unit_price: 21,
+    material_price: 0,
+    auxiliary_price: 6,
+    labor_price: 15,
+  },
+]);
+assert.equal(legacyProtectionRules.length, defaultQuoteRules().length);
+assert.equal(legacyProtectionRules.filter((rule) => rule.item_name.includes("现场保护")).length, 1);
+assert.ok(legacyProtectionRules.some((rule) => rule.item_name === "墙地面现场保护"));
+assert.ok(!legacyProtectionRules.some((rule) => rule.item_name === "墙地面砖现场保护"));
 
 const pendingMetricGroups = new Set(apartmentPendingQuoteMetrics().map((item) => item.source_group));
 assert.equal(apartmentPendingQuoteMetrics().length, 0);

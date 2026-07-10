@@ -9,6 +9,7 @@ export type ReviewSnapshot = {
   excel_manual_item_quantities: Record<string, number>;
   quote_mode: QuoteMode;
   selected_quote_package_ids: QuotePackageId[];
+  selected_quote_item_names: string[];
   summary: QuantitySummary | null;
   comparison: CalibrationComparison | null;
   rows: QuantityRow[];
@@ -23,6 +24,7 @@ export function buildReviewSnapshot({
   excelManualItemQuantities = {},
   quoteMode = "full",
   selectedQuotePackageIds = [],
+  selectedQuoteItemNames = [],
   summary,
   comparison,
   hydropower,
@@ -34,6 +36,7 @@ export function buildReviewSnapshot({
   excelManualItemQuantities?: Partial<Record<string, number>>;
   quoteMode?: QuoteMode;
   selectedQuotePackageIds?: QuotePackageId[];
+  selectedQuoteItemNames?: string[];
   summary: QuantitySummary | null;
   comparison: CalibrationComparison | null;
   hydropower?: HydropowerEstimate;
@@ -46,6 +49,7 @@ export function buildReviewSnapshot({
     excel_manual_item_quantities: normalizeExcelManualItemQuantities(excelManualItemQuantities),
     quote_mode: normalizeSnapshotQuoteMode(quoteMode),
     selected_quote_package_ids: normalizeSnapshotQuotePackageIds(selectedQuotePackageIds),
+    selected_quote_item_names: normalizeSnapshotQuoteItemNames(selectedQuoteItemNames),
     summary,
     comparison,
     rows,
@@ -86,6 +90,7 @@ export function parseReviewSnapshot(content: string): ReviewSnapshot {
     excel_manual_item_quantities: normalizeExcelManualItemQuantities(snapshot.excel_manual_item_quantities),
     quote_mode: normalizeSnapshotQuoteMode(snapshot.quote_mode),
     selected_quote_package_ids: normalizeSnapshotQuotePackageIds(snapshot.selected_quote_package_ids),
+    selected_quote_item_names: normalizeSnapshotQuoteItemNames(snapshot.selected_quote_item_names),
     summary: normalizeSnapshotSummary(snapshot.summary ?? null),
     comparison: snapshot.comparison ?? null,
     rows: snapshot.rows.map(normalizeSnapshotRow),
@@ -121,6 +126,13 @@ function normalizeSnapshotQuotePackageIds(packageIds: unknown): QuotePackageId[]
   }
   const validPackageIds = new Set<QuotePackageId>(["tile_materials", "doors_windows", "custom_cabinet", "bath_fixtures", "lighting_switches", "curtains_windowsills", "cleaning"]);
   return Array.from(new Set(packageIds.filter((item): item is QuotePackageId => typeof item === "string" && validPackageIds.has(item as QuotePackageId))));
+}
+
+function normalizeSnapshotQuoteItemNames(itemNames: unknown): string[] {
+  if (!Array.isArray(itemNames)) {
+    return [];
+  }
+  return Array.from(new Set(itemNames.filter((item): item is string => typeof item === "string" && item.trim().length > 0).map((item) => item.trim())));
 }
 
 function normalizeSnapshotSummary(summary: QuantitySummary | null): QuantitySummary | null {
