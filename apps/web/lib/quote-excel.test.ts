@@ -81,13 +81,17 @@ assert.ok(html.includes("<td colspan=\"2\">装修面积：88.66</td>"));
 assert.ok(html.includes("<th>编号</th><th>项目名称</th><th>单位</th><th>数量</th><th colspan=\"2\">材料费(元)</th><th>人工费\n(元)</th><th>总价(元)</th><th>材  料  及  工  艺  说  明</th>"));
 assert.ok(html.includes("<th colspan=\"2\">材料费(元)</th>"), "Excel material fee header should span main and auxiliary material columns");
 assert.ok(html.includes("<th></th><th></th><th></th><th></th><th>主材\n单价</th><th>辅材\n单价</th><th></th><th></th><th></th>"));
-assert.ok(html.includes('<table width="1040"'), "Excel draft should fit within A4 narrow print margins");
-assert.ok(html.includes("font-size: 9pt"), "Excel draft should use a larger body font after shrinking columns");
-assert.ok(html.includes('<col width="54"'), "Excel draft should use the A4-printable index column width");
-assert.ok(html.includes('<col width="236"'), "Excel draft should give item names an A4-printable width");
-assert.ok(html.includes('<col width="270"'), "Excel draft should give process notes an A4-printable width");
+assert.ok(html.includes("<x:FitToPage/>"), "Excel draft should ask Excel to fit the sheet to A4 width");
+assert.ok(html.includes('x:CenterVertical="1"'), "Excel draft should print centered vertically");
+assert.ok(!html.includes('x:CenterHorizontal="1"'), "Excel draft should not force horizontal centering");
+assert.ok(html.includes('<table width="1080"'), "Excel draft should use the refined A4 printable table width");
+assert.ok(html.includes("font-size: 8.5pt"), "Excel draft should use a compact printable body font");
+assert.ok(html.includes("mso-fit-shrink-to-fit: yes"), "Excel cells should shrink long text when possible");
+assert.ok(html.includes('<col width="44"'), "Excel draft should use the A4-printable index column width");
+assert.ok(html.includes('<col width="270"'), "Excel draft should give item names an A4-printable width");
+assert.ok(html.includes('<col width="356"'), "Excel draft should give process notes more printable width");
 assert.ok(html.includes("<tr class=\"quoteTitleRow\">"), "Excel draft should style the title row");
-assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>一</td><td>全屋拆改工程</td>"), "Excel draft should style section rows");
+assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>一</td><td colspan=\"8\">全屋拆改工程</td></tr>"), "Excel draft should style section rows");
 assert.ok(html.includes("<tr class=\"quoteSubtotalRow\"><td></td><td>小 计</td>"), "Excel draft should style subtotal rows");
 assert.ok(html.includes("<tr class=\"quoteTotalRow\"><td>A</td><td>直接费合计</td>"), "Excel draft should style total rows");
 assert.ok(html.includes("<tr class=\"quoteFooterNoteRow\"><td colspan=\"9\">编制说明：</td></tr>"), "Excel draft should include the adjusted footer notes");
@@ -95,22 +99,38 @@ assert.ok(html.includes("施工以合同与预算为准，口头承诺无效。"
 assert.ok(html.includes("<td colspan=\"2\">客户签名：</td><td colspan=\"5\">设计师：</td><td colspan=\"2\">报价员：</td>"), "Excel draft should include the adjusted signature footer");
 assert.ok(!html.includes("<h2>空间小计</h2>"));
 assert.ok(!html.includes("<h2>人工补项</h2>"));
-assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>一</td><td>全屋拆改工程</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
-assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>二</td><td>厨房工程</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
-assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>三</td><td>其他工程</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
-assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>四</td><td>强弱电工程</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
-assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>五</td><td>给排水工程</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
-assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>六</td><td>主材项目</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
-assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>七</td><td>全屋定制、衣柜、橱柜、全屋家具</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
-assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>八</td><td>室内门</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
-assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>九</td><td>集成吊顶、卫浴、全屋开关灯饰</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
-assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>十</td><td>其他（窗帘、美缝、窗台石等）</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"));
+
+const projectInfoHtml = buildQuoteExcelHtml(mapping, "文件名项目", {
+  projectInfo: {
+    addressName: "滨江花园 1-1201",
+    customerName: "张三",
+    designerName: "李设计",
+    estimatorName: "王报价",
+    quoteDate: "2026-07-10",
+    decorationAreaM2: 120.5,
+  },
+});
+assert.ok(projectInfoHtml.includes("<td colspan=\"2\">地址名称：滨江花园 1-1201</td>"));
+assert.ok(projectInfoHtml.includes("<td colspan=\"4\">客户：张三</td>"));
+assert.ok(projectInfoHtml.includes("<td colspan=\"2\">装修面积：120.50</td>"));
+assert.ok(projectInfoHtml.includes("<td>日期：2026-07-10</td>"));
+assert.ok(projectInfoHtml.includes("<td colspan=\"2\">客户签名：张三</td><td colspan=\"5\">设计师：李设计</td><td colspan=\"2\">报价员：王报价</td>"));
+assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>一</td><td colspan=\"8\">全屋拆改工程</td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>二</td><td colspan=\"8\">厨房工程</td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>三</td><td colspan=\"8\">其他工程</td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>四</td><td colspan=\"8\">强弱电工程</td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>五</td><td colspan=\"8\">给排水工程</td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>六</td><td colspan=\"8\">主材项目</td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>七</td><td colspan=\"8\">全屋定制、衣柜、橱柜、全屋家具</td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>八</td><td colspan=\"8\">室内门</td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>九</td><td colspan=\"8\">集成吊顶、卫浴、全屋开关灯饰</td></tr>"));
+assert.ok(html.includes("<tr class=\"quoteSectionRow\"><td>十</td><td colspan=\"8\">其他（窗帘、美缝、窗台石等）</td></tr>"));
 assert.ok(!html.includes("<td>过道工程</td>"));
 assert.ok(!html.includes("<td>主卧工程</td>"));
 assert.ok(!html.includes("<td>次卧工程</td>"));
 assert.ok(!html.includes("<td>露台工程</td>"));
-assert.ok(html.indexOf("<td>二</td><td>厨房工程</td>") < html.indexOf("<td>地面找平</td>"));
-assert.ok(html.indexOf("<td>八</td><td>集成吊顶、卫浴、全屋开关灯饰</td>") < html.indexOf("<td>厨房卫生间集成吊顶</td>"));
+assert.ok(html.indexOf("<td>二</td><td colspan=\"8\">厨房工程</td>") < html.indexOf("<td>地面找平</td>"));
+assert.ok(html.indexOf("<td>八</td><td colspan=\"8\">集成吊顶、卫浴、全屋开关灯饰</td>") < html.indexOf("<td>厨房卫生间集成吊顶</td>"));
 assert.ok(!html.includes("<td>水电工程</td>"), "Excel draft should promote hydropower subcategories to top-level sections");
 assertQuoteRow(html, "厨房卫生间集成吊顶", "m2", "4.48", "120.00", "0.00", "0.00", "537.60");
 assertQuoteRow(html, "地面找平", "m2", "4.48", "0.00", "20.00", "25.00", "201.60");
@@ -157,11 +177,11 @@ const hardQuoteHtml = buildQuoteExcelHtml(
   },
   "硬装测试",
 );
-assert.ok(hardQuoteHtml.includes("<td>全屋拆改工程</td>"));
-assert.ok(hardQuoteHtml.includes("<td>厨房工程</td>"));
-assert.ok(hardQuoteHtml.includes("<td>其他工程</td>"));
-assert.ok(hardQuoteHtml.includes("<td>强弱电工程</td>"));
-assert.ok(hardQuoteHtml.includes("<td>给排水工程</td>"));
+assert.ok(hardQuoteHtml.includes("<td colspan=\"8\">全屋拆改工程</td>"));
+assert.ok(hardQuoteHtml.includes("<td colspan=\"8\">厨房工程</td>"));
+assert.ok(hardQuoteHtml.includes("<td colspan=\"8\">其他工程</td>"));
+assert.ok(hardQuoteHtml.includes("<td colspan=\"8\">强弱电工程</td>"));
+assert.ok(hardQuoteHtml.includes("<td colspan=\"8\">给排水工程</td>"));
 assert.ok(!hardQuoteHtml.includes("<td>主材项目</td>"));
 assert.ok(!hardQuoteHtml.includes("<td>全屋定制、衣柜、橱柜、全屋家具</td>"));
 assert.ok(!hardQuoteHtml.includes("<td>室内门</td>"));
@@ -200,8 +220,8 @@ const hardPlusTileQuoteHtml = buildQuoteExcelHtml(
   },
   "半包加瓷砖",
 );
-assert.ok(hardPlusTileQuoteHtml.includes("<td>主材项目</td>"));
-assert.ok(hardPlusTileQuoteHtml.includes("<td>其他（窗帘、美缝、窗台石等）</td>"));
+assert.ok(hardPlusTileQuoteHtml.includes("<td colspan=\"8\">主材项目</td>"));
+assert.ok(hardPlusTileQuoteHtml.includes("<td colspan=\"8\">其他（窗帘、美缝、窗台石等）</td>"));
 assert.ok(!hardPlusTileQuoteHtml.includes("<td>全屋定制、衣柜、橱柜、全屋家具</td>"));
 assert.ok(!hardPlusTileQuoteHtml.includes("<td>室内门</td>"));
 assert.ok(!hardPlusTileQuoteHtml.includes("<td>集成吊顶、卫浴、全屋开关灯饰</td>"));
@@ -229,7 +249,7 @@ const hardPlusSingleTileItemQuoteHtml = buildQuoteExcelHtml(
   },
   "半包加单项瓷砖",
 );
-assert.ok(hardPlusSingleTileItemQuoteHtml.includes("<td>主材项目</td>"));
+assert.ok(hardPlusSingleTileItemQuoteHtml.includes("<td colspan=\"8\">主材项目</td>"));
 assert.ok(hardPlusSingleTileItemQuoteHtml.includes("<td>地面瓷砖</td>"));
 assert.ok(!hardPlusSingleTileItemQuoteHtml.includes("<td>未归类自动清单</td>"));
 assertTotalRow(hardPlusSingleTileItemQuoteHtml, "A", "直接费合计", /=SUMIF\(B5:B\d+,&quot;小 计&quot;,H5:H\d+\)/, "7517.08");
@@ -256,7 +276,7 @@ const hardPlusSingleOtherItemQuoteHtml = buildQuoteExcelHtml(
   },
   "半包加单项美缝",
 );
-assert.ok(hardPlusSingleOtherItemQuoteHtml.includes("<td>其他（窗帘、美缝、窗台石等）</td>"));
+assert.ok(hardPlusSingleOtherItemQuoteHtml.includes("<td colspan=\"8\">其他（窗帘、美缝、窗台石等）</td>"));
 assert.ok(hardPlusSingleOtherItemQuoteHtml.includes("<td>美缝</td>"));
 assert.ok(!hardPlusSingleOtherItemQuoteHtml.includes("<td>未归类自动清单</td>"));
 
@@ -354,7 +374,7 @@ const atriumMergeHtml = buildQuoteExcelHtml(
   "挑空合并项目",
 );
 
-assert.equal(countOccurrences(atriumMergeHtml, "<td>一层挑空工程</td>"), 1);
+assert.equal(countOccurrences(atriumMergeHtml, "<td colspan=\"8\">一层挑空工程</td>"), 1);
 assert.ok(!atriumMergeHtml.includes("<td>一层挑空工程一</td>"));
 assert.ok(!atriumMergeHtml.includes("<td>一层挑空工程二</td>"));
 assert.equal(countOccurrences(atriumMergeHtml, "<td>地面砖铺贴(750X1500)</td>"), 1);
@@ -623,8 +643,8 @@ const hydropowerSectionHtml = buildQuoteExcelHtml(
   "水电点位项目",
 );
 assert.ok(!hydropowerSectionHtml.includes("<td>水电工程</td>"), "Excel draft should no longer render a wrapper hydropower section");
-assert.ok(hydropowerSectionHtml.indexOf("<td>强弱电工程</td>") < hydropowerSectionHtml.indexOf("<td>强电插座</td>"));
-assert.ok(hydropowerSectionHtml.indexOf("<td>给排水工程</td>") < hydropowerSectionHtml.indexOf("<td>排水点</td>"));
+assert.ok(hydropowerSectionHtml.indexOf("<td colspan=\"8\">强弱电工程</td>") < hydropowerSectionHtml.indexOf("<td>强电插座</td>"));
+assert.ok(hydropowerSectionHtml.indexOf("<td colspan=\"8\">给排水工程</td>") < hydropowerSectionHtml.indexOf("<td>排水点</td>"));
 assertQuoteRow(hydropowerSectionHtml, "强电插座", "位", "37", "5.00", "12.00", "55.00", "2664.00");
 assertQuoteRow(hydropowerSectionHtml, "开关", "位", "9", "5.00", "10.00", "53.00", "612.00");
 assertQuoteRow(hydropowerSectionHtml, "灯位", "位", "8", "0.00", "15.00", "95.00", "880.00");
@@ -772,10 +792,10 @@ assert.ok(riskyHtml.includes("<td></td><td>零单价</td><td></td><td></td><td><
 const defaultProjectMapping = buildQuoteMapping(defaultProjectRows, defaultQuoteRules(), defaultProjectSummary);
 const defaultProjectHtml = buildQuoteExcelHtml(defaultProjectMapping, "默认10号图纸");
 
-assert.ok(defaultProjectHtml.includes("<td>四</td><td>卫生间一工程</td>"));
-assert.ok(defaultProjectHtml.includes("<td>五</td><td>卫生间二工程</td>"));
-assert.ok(defaultProjectHtml.includes("<td>六</td><td>卧室一工程</td>"));
-assert.ok(defaultProjectHtml.includes("<td>八</td><td>卧室二工程</td>"));
+assert.ok(defaultProjectHtml.includes("<td>四</td><td colspan=\"8\">卫生间一工程</td>"));
+assert.ok(defaultProjectHtml.includes("<td>五</td><td colspan=\"8\">卫生间二工程</td>"));
+assert.ok(defaultProjectHtml.includes("<td>六</td><td colspan=\"8\">卧室一工程</td>"));
+assert.ok(defaultProjectHtml.includes("<td>八</td><td colspan=\"8\">卧室二工程</td>"));
 assert.ok(!defaultProjectHtml.includes("<td>卧室工程</td>"));
 assertQuoteRow(defaultProjectHtml, "厨房推拉门", "m2", "3.85", "400.00", "0.00", "0.00", "1540.00");
 assertQuoteRow(defaultProjectHtml, "厨房推拉门双包套", "M", "6.15", "110.00", "0.00", "0.00", "676.50");
@@ -791,7 +811,7 @@ const bathroomInstallHtml = buildQuoteExcelHtml(defaultProjectMapping, "默认10
     [`${defaultBathroomRows[0].floor}::${defaultBathroomRows[0].spaceName}::0`]: { shower: "淋浴隔断" },
   },
 });
-assert.ok(bathroomInstallHtml.includes("<td>卫生间一工程</td>"));
+assert.ok(bathroomInstallHtml.includes("<td colspan=\"8\">卫生间一工程</td>"));
 assertQuoteRow(bathroomInstallHtml, "淋浴隔断安装", "套", "1", "0.00", "0.00", "200.00", "200.00");
 
 const defaultBathroomInstallHtml = buildQuoteExcelHtml(defaultProjectMapping, "默认10号图纸", {
@@ -837,11 +857,11 @@ const unorderedVillaRows = [
   },
 ];
 const unorderedVillaHtml = buildQuoteExcelHtml(buildQuoteMapping(unorderedVillaRows, defaultQuoteRules(), { building_area_m2: 0 }), "乱序别墅项目");
-assert.ok(unorderedVillaHtml.includes("<td>二</td><td>一层茶室工程</td>"));
-assert.ok(unorderedVillaHtml.includes("<td>三</td><td>一层楼梯间工程</td>"));
-assert.ok(unorderedVillaHtml.includes("<td>四</td><td>二层麻将房工程</td>"));
-assert.ok(unorderedVillaHtml.indexOf("<td>一层茶室工程</td>") < unorderedVillaHtml.indexOf("<td>二层麻将房工程</td>"));
-assert.ok(unorderedVillaHtml.indexOf("<td>一层楼梯间工程</td>") < unorderedVillaHtml.indexOf("<td>二层麻将房工程</td>"));
+assert.ok(unorderedVillaHtml.includes("<td>二</td><td colspan=\"8\">一层茶室工程</td>"));
+assert.ok(unorderedVillaHtml.includes("<td>三</td><td colspan=\"8\">一层楼梯间工程</td>"));
+assert.ok(unorderedVillaHtml.includes("<td>四</td><td colspan=\"8\">二层麻将房工程</td>"));
+assert.ok(unorderedVillaHtml.indexOf("<td colspan=\"8\">一层茶室工程</td>") < unorderedVillaHtml.indexOf("<td colspan=\"8\">二层麻将房工程</td>"));
+assert.ok(unorderedVillaHtml.indexOf("<td colspan=\"8\">一层楼梯间工程</td>") < unorderedVillaHtml.indexOf("<td colspan=\"8\">二层麻将房工程</td>"));
 assertQuoteRow(unorderedVillaHtml, "墙面乳胶漆", "m2", "20", "10.00", "0.00", "10.00", "400.00");
 assertQuoteRow(unorderedVillaHtml, "顶面乳胶漆", "m2", "10", "10.00", "0.00", "10.00", "200.00");
 assertQuoteRow(unorderedVillaHtml, "顶面乳胶漆", "m2", "12", "10.00", "0.00", "10.00", "240.00");
@@ -959,18 +979,18 @@ const villaLikeHtml = buildQuoteExcelHtml(
   },
   "别墅口径项目",
 );
-assert.ok(villaLikeHtml.includes("<td>二</td><td>一层楼梯间工程</td>"));
+assert.ok(villaLikeHtml.includes("<td>二</td><td colspan=\"8\">一层楼梯间工程</td>"));
 assertQuoteRow(villaLikeHtml, "楼梯踏步铺贴", "步", "15", "0.00", "45.00", "80.00", "1875.00");
 assertQuoteRow(villaLikeHtml, "墙面乳胶漆", "m2", "18", "10.00", "0.00", "10.00", "360.00");
 assertQuoteRow(villaLikeHtml, "轻钢龙骨平顶", "m2", "6", "60.00", "30.00", "90.00", "1080.00");
 assertQuoteRow(villaLikeHtml, "石膏线吊顶", "M", "5.60", "12.00", "5.00", "18.00", "196.00");
-assert.ok(villaLikeHtml.includes("<td>三</td><td>一层卧室工程一</td>"));
-assert.ok(villaLikeHtml.includes("<td>四</td><td>一层卧室工程二</td>"));
-assert.ok(villaLikeHtml.includes("<td>五</td><td>二层卫生间、盥洗区工程</td>"));
-assert.equal(countOccurrences(villaLikeHtml, "<td>二层卫生间、盥洗区工程</td>"), 1);
+assert.ok(villaLikeHtml.includes("<td>三</td><td colspan=\"8\">一层卧室工程一</td>"));
+assert.ok(villaLikeHtml.includes("<td>四</td><td colspan=\"8\">一层卧室工程二</td>"));
+assert.ok(villaLikeHtml.includes("<td>五</td><td colspan=\"8\">二层卫生间、盥洗区工程</td>"));
+assert.equal(countOccurrences(villaLikeHtml, "<td colspan=\"8\">二层卫生间、盥洗区工程</td>"), 1);
 assertQuoteRow(villaLikeHtml, "地面找平", "m2", "7", "0.00", "20.00", "25.00", "315.00");
 assertQuoteRow(villaLikeHtml, "淋浴隔断安装", "套", "2", "0.00", "0.00", "200.00", "400.00");
-assert.ok(villaLikeHtml.includes("<td>六</td><td>二层卧室工程</td>"));
+assert.ok(villaLikeHtml.includes("<td>六</td><td colspan=\"8\">二层卧室工程</td>"));
 assertQuoteRow(villaLikeHtml, "窗台石铺贴", "M", "2.40", "0.00", "20.00", "25.00", "108.00");
 
 const handrailHtml = buildQuoteExcelHtml(
@@ -993,7 +1013,7 @@ const handrailHtml = buildQuoteExcelHtml(
   "扶手项目",
 );
 assert.ok(!handrailHtml.includes("<td>一层楼梯间工程</td>"));
-assert.ok(handrailHtml.includes("<td>其他（窗帘、美缝、窗台石等）</td>"));
+assert.ok(handrailHtml.includes("<td colspan=\"8\">其他（窗帘、美缝、窗台石等）</td>"));
 assertQuoteRow(handrailHtml, "楼梯扶手", "M", "4.10", "480.00", "0.00", "0.00", "1968.00");
 
 function countOccurrences(value: string, pattern: string): number {

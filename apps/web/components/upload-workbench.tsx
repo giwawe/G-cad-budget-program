@@ -21,7 +21,7 @@ import {
   type QuantityHealthFilter,
 } from "@/lib/quantity-health";
 import { confirmQuantityRowsBySpaceNames, updateQuantityRowCurtainWallWidth, updateQuantityRowSpaceType, updateQuantityRowStatus, updateQuantityRowsStatusBySpaceNames } from "@/lib/quantity-row-status";
-import { buildQuoteExcelHtml, quoteExcelFileName, type QuoteExcelManualItemQuantities } from "@/lib/quote-excel";
+import { buildQuoteExcelHtml, quoteExcelFileName, type QuoteExcelManualItemQuantities, type QuoteExcelProjectInfo } from "@/lib/quote-excel";
 import {
   aluminumWindowSuggestedAreaFromRows,
   bathroomChoiceKey,
@@ -451,6 +451,9 @@ export function UploadWorkbench({
   const [selectedQuotePackageIds, setSelectedQuotePackageIds] = useState<QuotePackageId[]>([]);
   const [selectedQuoteItemNames, setSelectedQuoteItemNames] = useState<string[]>([]);
   const [expandedQuotePackageIds, setExpandedQuotePackageIds] = useState<QuotePackageId[]>([]);
+  const [quoteProjectInfo, setQuoteProjectInfo] = useState<QuoteExcelProjectInfo>(() => ({
+    quoteDate: new Date().toISOString().slice(0, 10),
+  }));
   const [collapsedWorkbenchPanels, setCollapsedWorkbenchPanels] = useState<Record<WorkbenchPanelKey, boolean>>(DEFAULT_COLLAPSED_WORKBENCH_PANELS);
 
   const excludedCount = useMemo(() => rows.filter((row) => row.status === "excluded").length, [rows]);
@@ -687,6 +690,10 @@ export function UploadWorkbench({
       setQuoteMode(snapshot.quote_mode);
       setSelectedQuotePackageIds(snapshot.selected_quote_package_ids);
       setSelectedQuoteItemNames(snapshot.selected_quote_item_names);
+      setQuoteProjectInfo({
+        ...snapshot.project_info,
+        quoteDate: snapshot.project_info.quoteDate ?? new Date().toISOString().slice(0, 10),
+      });
       setGeneratedSnapshot({ fileName: snapshotFile.name, content: `${JSON.stringify(snapshot, null, 2)}\n` });
       setError("");
       setMessage(`已恢复校对快照：${snapshotFile.name}`);
@@ -724,7 +731,7 @@ export function UploadWorkbench({
 
   function handleDownloadReviewSnapshot() {
     const downloadName = reviewSnapshotFileName(fileName);
-    const content = `${JSON.stringify(buildReviewSnapshot({ fileName, calibrationFileName, rows, acceptedHealthCheckKeys, excelManualItemQuantities: manualQuoteItemQuantities, quoteMode, selectedQuotePackageIds, selectedQuoteItemNames, summary, comparison, hydropower: hydropowerEstimate }), null, 2)}\n`;
+    const content = `${JSON.stringify(buildReviewSnapshot({ fileName, calibrationFileName, rows, acceptedHealthCheckKeys, excelManualItemQuantities: manualQuoteItemQuantities, quoteMode, selectedQuotePackageIds, selectedQuoteItemNames, projectInfo: quoteProjectInfo, summary, comparison, hydropower: hydropowerEstimate }), null, 2)}\n`;
     const blob = new Blob([content], { type: "application/json;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -840,6 +847,10 @@ export function UploadWorkbench({
       manualItems: manualQuoteItemQuantities,
       bathroomChoices: bathroomManualChoices,
       bathroomRows,
+      projectInfo: {
+        ...quoteProjectInfo,
+        decorationAreaM2: summary?.building_area_m2 ?? mapping.summary.building_area_m2,
+      },
     });
     const blob = new Blob([content], { type: "application/vnd.ms-excel;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -1004,6 +1015,10 @@ export function UploadWorkbench({
     setManualQuoteItemInputs({});
     setBathroomManualChoices({});
     setMessage("Excel 可选补项已恢复默认");
+  }
+
+  function handleChangeQuoteProjectInfo(field: keyof QuoteExcelProjectInfo, value: string) {
+    setQuoteProjectInfo((current) => ({ ...current, [field]: value }));
   }
 
   function handleChangeQuoteMode(nextMode: QuoteMode) {
@@ -1325,10 +1340,14 @@ export function UploadWorkbench({
         <div className="panel">
           <div className="panelTitle">
             <Settings2 aria-hidden="true" size={18} />
-            项目默认参数
+            报价抬头信息
           </div>
           <div className="fieldGrid">
-            <label>项目名称<input defaultValue="商品房算量验证" /></label>
+            <label>地址名称<input value={quoteProjectInfo.addressName ?? ""} placeholder={fileName === "样例数据" ? "报价映射" : fileName.replace(/\.[^.]+$/, "")} onChange={(event) => handleChangeQuoteProjectInfo("addressName", event.target.value)} /></label>
+            <label>客户<input value={quoteProjectInfo.customerName ?? ""} placeholder="客户姓名" onChange={(event) => handleChangeQuoteProjectInfo("customerName", event.target.value)} /></label>
+            <label>设计师<input value={quoteProjectInfo.designerName ?? ""} placeholder="设计师" onChange={(event) => handleChangeQuoteProjectInfo("designerName", event.target.value)} /></label>
+            <label>报价员<input value={quoteProjectInfo.estimatorName ?? ""} placeholder="报价员" onChange={(event) => handleChangeQuoteProjectInfo("estimatorName", event.target.value)} /></label>
+            <label>报价日期<input type="date" value={quoteProjectInfo.quoteDate ?? ""} onChange={(event) => handleChangeQuoteProjectInfo("quoteDate", event.target.value)} /></label>
             <label>默认层高<input defaultValue="2.80 m" /></label>
             <label>默认窗高<input defaultValue="1.80 m" /></label>
             <label>默认门高<input defaultValue="2.10 m" /></label>

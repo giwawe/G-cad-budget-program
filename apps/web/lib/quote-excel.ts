@@ -11,10 +11,20 @@ export type ManualQuoteDraftItem = {
 
 export type QuoteExcelManualItemQuantities = Partial<Record<string, number>>;
 
+export type QuoteExcelProjectInfo = {
+  addressName?: string;
+  customerName?: string;
+  designerName?: string;
+  estimatorName?: string;
+  quoteDate?: string;
+  decorationAreaM2?: number;
+};
+
 export type QuoteExcelOptions = {
   manualItems?: QuoteExcelManualItemQuantities;
   bathroomChoices?: Record<string, BathroomManualChoice>;
   bathroomRows?: QuantityRow[];
+  projectInfo?: QuoteExcelProjectInfo;
 };
 
 type QuoteTemplateSection = {
@@ -195,10 +205,11 @@ export function quoteExcelFileName(fileName: string): string {
 }
 
 export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string, options: QuoteExcelOptions = {}): string {
-  const title = `${projectName.trim() || "报价映射"}清单式报价表`;
+  const projectInfo = normalizeQuoteExcelProjectInfo(projectName, mapping, options.projectInfo);
+  const title = `${projectInfo.addressName}清单式报价表`;
   const riskRows = quoteExcelRiskRows(mapping);
   const groupedQuoteRows = quoteTemplateRows(mapping, options);
-  const summaryRows = quoteTemplateSummaryRows(mapping, projectName);
+  const summaryRows = quoteTemplateSummaryRows(projectInfo);
   const riskNoteRows = quoteTemplateRiskNoteRows(riskRows);
 
   return `\uFEFF<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
@@ -206,49 +217,50 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string, 
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <meta name="ProgId" content="Excel.Sheet" />
   <title>${escapeHtml(title)}</title>
+  ${quoteExcelWorkbookXml()}
   <style>
-    @page { margin: 0.63in 0.20in 0.24in 0.28in; mso-header-margin: 0.50in; mso-footer-margin: 0.50in; }
-    body { font-family: "宋体", "Microsoft YaHei", Arial, sans-serif; }
-    table { border-collapse: collapse; margin-bottom: 16px; table-layout: fixed; width: 520pt; }
+    @page { margin: 0.55in 0.25in 0.25in 0.25in; mso-header-margin: 0.30in; mso-footer-margin: 0.30in; }
+    body { margin: 0; font-family: "宋体", "Microsoft YaHei", Arial, sans-serif; }
+    table { border-collapse: collapse; margin: 0 0 16px 0; table-layout: fixed; width: 540pt; }
     col { mso-width-source: userset; }
-    th, td { border: 1px solid #999; padding: 3px 4px; vertical-align: middle; white-space: normal; font-size: 9pt; }
+    th, td { border: .5pt solid #808080; padding: 2px 4px; vertical-align: middle; white-space: normal; font-size: 8.5pt; line-height: 1.2; mso-fit-shrink-to-fit: yes; }
     th { font-weight: 700; text-align: center; }
     td:nth-child(1), td:nth-child(3), td:nth-child(4), td:nth-child(5), td:nth-child(6), td:nth-child(7), td:nth-child(8) { text-align: center; }
     td:nth-child(9) { text-align: left; }
-    .quoteTitleRow th { font-size: 14pt; font-weight: 700; height: 23pt; }
-    .quoteMetaRow td { height: 14pt; }
-    .quoteHeaderRow th { height: 28.75pt; }
-    .quoteSubHeaderRow th { height: 20.75pt; }
-    .quoteSectionRow td, .quoteSubsectionRow td { font-weight: 700; height: 14.75pt; }
-    .quoteItemRow td, .quoteSubtotalRow td, .quoteTotalRow td { height: 14.75pt; }
+    .quoteTitleRow th { font-size: 16pt; font-weight: 700; height: 27pt; letter-spacing: 1pt; }
+    .quoteMetaRow td { height: 16pt; font-size: 9pt; }
+    .quoteHeaderRow th { height: 30pt; font-size: 9.5pt; }
+    .quoteSubHeaderRow th { height: 20pt; font-size: 8.5pt; }
+    .quoteSectionRow td, .quoteSubsectionRow td { font-weight: 700; height: 16pt; font-size: 9pt; }
+    .quoteItemRow td, .quoteSubtotalRow td, .quoteTotalRow td { height: 16pt; }
     .quoteSubtotalRow td, .quoteTotalRow td { font-weight: 700; }
     .quoteRiskRow td { color: #8a4b00; }
-    .quoteFooterNoteRow td, .quoteSignatureRow td { border: .5pt solid #000000; font-size: 9pt; text-align: left; height: 15pt; }
+    .quoteFooterNoteRow td, .quoteSignatureRow td { border: .5pt solid #808080; font-size: 8.5pt; text-align: left; height: 15pt; }
   </style>
 </head>
 <body>
-  <table width="1040" border="0" cellpadding="0" cellspacing="0" style="width:520pt;border-collapse:collapse;table-layout:fixed;">
+  <table width="1080" border="0" cellpadding="0" cellspacing="0" style="width:540pt;border-collapse:collapse;table-layout:fixed;">
     <colgroup>
-      <col width="54" style="mso-width-source:userset;mso-width-alt:1316;" />
-      <col width="236" style="mso-width-source:userset;mso-width-alt:5755;" />
-      <col width="62" style="mso-width-source:userset;mso-width-alt:1511;" />
-      <col width="70" style="mso-width-source:userset;mso-width-alt:1706;" />
-      <col width="70" style="mso-width-source:userset;mso-width-alt:1706;" />
-      <col width="70" style="mso-width-source:userset;mso-width-alt:1706;" />
-      <col width="70" style="mso-width-source:userset;mso-width-alt:1706;" />
-      <col width="94" style="mso-width-source:userset;mso-width-alt:2291;" />
+      <col width="44" style="mso-width-source:userset;mso-width-alt:1073;" />
       <col width="270" style="mso-width-source:userset;mso-width-alt:6584;" />
+      <col width="58" style="mso-width-source:userset;mso-width-alt:1414;" />
+      <col width="68" style="mso-width-source:userset;mso-width-alt:1658;" />
+      <col width="64" style="mso-width-source:userset;mso-width-alt:1560;" />
+      <col width="64" style="mso-width-source:userset;mso-width-alt:1560;" />
+      <col width="70" style="mso-width-source:userset;mso-width-alt:1706;" />
+      <col width="86" style="mso-width-source:userset;mso-width-alt:2097;" />
+      <col width="356" style="mso-width-source:userset;mso-width-alt:8680;" />
     </colgroup>
     <thead>
       <tr class="quoteTitleRow"><th colspan="9">${escapeHtml(summaryRows[0][0])}</th></tr>
-      ${quoteTemplateMetaHtmlRow(mapping, projectName)}
+      ${quoteTemplateMetaHtmlRow(projectInfo)}
       <tr class="quoteHeaderRow"><th>${escapeHtml(summaryRows[2][0])}</th><th>${escapeHtml(summaryRows[2][1])}</th><th>${escapeHtml(summaryRows[2][2])}</th><th>${escapeHtml(summaryRows[2][3])}</th><th colspan="2">${escapeHtml(summaryRows[2][4])}</th><th>${escapeHtml(summaryRows[2][6])}</th><th>${escapeHtml(summaryRows[2][7])}</th><th>${escapeHtml(summaryRows[2][8])}</th></tr>
       <tr class="quoteSubHeaderRow">${summaryRows[3].map((cell) => `<th>${escapeHtml(cell)}</th>`).join("")}</tr>
     </thead>
     <tbody>
       ${quoteTemplateBodyHtmlRows(groupedQuoteRows)}
       ${riskNoteRows.map((row) => quoteTemplateHtmlRow(row)).join("\n      ")}
-      ${quoteTemplateFooterHtmlRows()}
+      ${quoteTemplateFooterHtmlRows(projectInfo)}
     </tbody>
   </table>
 </body>
@@ -256,10 +268,56 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string, 
 `;
 }
 
-function quoteTemplateMetaHtmlRow(mapping: QuoteMapping, projectName: string): string {
+function quoteExcelWorkbookXml(): string {
+  return `<!--[if gte mso 9]><xml>
+    <x:ExcelWorkbook>
+      <x:ExcelWorksheets>
+        <x:ExcelWorksheet>
+          <x:Name>报价草稿</x:Name>
+          <x:WorksheetOptions>
+            <x:PageSetup><x:Layout x:CenterVertical="1"/></x:PageSetup>
+            <x:FitToPage/>
+            <x:Print>
+              <x:FitWidth>1</x:FitWidth>
+              <x:FitHeight>0</x:FitHeight>
+              <x:ValidPrinterInfo/>
+              <x:HorizontalResolution>600</x:HorizontalResolution>
+              <x:VerticalResolution>600</x:VerticalResolution>
+            </x:Print>
+          </x:WorksheetOptions>
+        </x:ExcelWorksheet>
+      </x:ExcelWorksheets>
+    </x:ExcelWorkbook>
+  </xml><![endif]-->`;
+}
+
+function normalizeQuoteExcelProjectInfo(projectName: string, mapping: QuoteMapping, projectInfo?: QuoteExcelProjectInfo): Required<QuoteExcelProjectInfo> {
   const now = new Date();
-  const dateLabel = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-  return `<tr class="quoteMetaRow"><td colspan="2">地址名称：${escapeHtml(projectName.trim() || "报价映射")}</td><td colspan="4">客户：</td><td colspan="2">装修面积：${escapeHtml(formatQuantity(mapping.summary.building_area_m2))}</td><td>日期：${escapeHtml(dateLabel)}</td></tr>`;
+  const defaultDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  return {
+    addressName: projectInfo?.addressName?.trim() || projectName.trim() || "报价映射",
+    customerName: projectInfo?.customerName?.trim() ?? "",
+    designerName: projectInfo?.designerName?.trim() ?? "",
+    estimatorName: projectInfo?.estimatorName?.trim() ?? "",
+    quoteDate: normalizeQuoteDate(projectInfo?.quoteDate) || defaultDate,
+    decorationAreaM2: projectInfo?.decorationAreaM2 ?? mapping.summary.building_area_m2,
+  };
+}
+
+function normalizeQuoteDate(value?: string): string {
+  const trimmed = value?.trim() ?? "";
+  if (!trimmed) {
+    return "";
+  }
+  const match = trimmed.match(/^(\d{4})-(\d{2})(?:-(\d{2}))?$/);
+  if (!match) {
+    return trimmed;
+  }
+  return match[3] ? `${match[1]}-${match[2]}-${match[3]}` : `${match[1]}-${match[2]}`;
+}
+
+function quoteTemplateMetaHtmlRow(projectInfo: Required<QuoteExcelProjectInfo>): string {
+  return `<tr class="quoteMetaRow"><td colspan="2">地址名称：${escapeHtml(projectInfo.addressName)}</td><td colspan="4">客户：${escapeHtml(projectInfo.customerName)}</td><td colspan="2">装修面积：${escapeHtml(formatQuantity(projectInfo.decorationAreaM2))}</td><td>日期：${escapeHtml(projectInfo.quoteDate)}</td></tr>`;
 }
 
 function quoteTemplateBodyHtmlRows(rows: string[][]): string {
@@ -303,6 +361,12 @@ function quoteTemplateBodyHtmlRows(rows: string[][]): string {
 
 function quoteTemplateHtmlRow(row: string[], formulas?: Partial<Record<number, string>>): string {
   const className = quoteTemplateRowClass(row);
+  if (className === "quoteSectionRow") {
+    return `<tr class="${className}"><td>${escapeHtml(row[0])}</td><td colspan="8">${escapeHtml(row[1])}</td></tr>`;
+  }
+  if (className === "quoteSubsectionRow") {
+    return `<tr class="${className}"><td></td><td colspan="8">${escapeHtml(row[1])}</td></tr>`;
+  }
   return `<tr${className ? ` class="${className}"` : ""}>${row.map((cell, index) => quoteTemplateHtmlCell(cell, formulas?.[index])).join("")}</tr>`;
 }
 
@@ -318,11 +382,11 @@ function isQuoteItemRow(row: string[]): boolean {
   return /^\d+$/.test(row[0]) && row[1] !== "";
 }
 
-function quoteTemplateFooterHtmlRows(): string {
+function quoteTemplateFooterHtmlRows(projectInfo: Required<QuoteExcelProjectInfo>): string {
   const noteRows = QUOTE_EXCEL_FOOTER_NOTES.map((note) => `<tr class="quoteFooterNoteRow"><td colspan="9">${escapeHtml(note)}</td></tr>`);
   return [
     ...noteRows,
-    `<tr class="quoteSignatureRow"><td colspan="2">客户签名：</td><td colspan="5">设计师：</td><td colspan="2">报价员：</td></tr>`,
+    `<tr class="quoteSignatureRow"><td colspan="2">客户签名：${escapeHtml(projectInfo.customerName)}</td><td colspan="5">设计师：${escapeHtml(projectInfo.designerName)}</td><td colspan="2">报价员：${escapeHtml(projectInfo.estimatorName)}</td></tr>`,
   ].join("\n      ");
 }
 
@@ -616,12 +680,10 @@ function sectionSubtotalRow(amount: number): string[] {
   return ["", "小 计", "", "", "", "", "", formatMoney(amount), ""];
 }
 
-function quoteTemplateSummaryRows(mapping: QuoteMapping, projectName: string): string[][] {
-  const now = new Date();
-  const dateLabel = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+function quoteTemplateSummaryRows(projectInfo: Required<QuoteExcelProjectInfo>): string[][] {
   return [
     ["工程(预) 算表", "", "", "", "", "", "", "", ""],
-    [`名称：${projectName.trim() || "报价映射"}`, "", `装修面积：${formatQuantity(mapping.summary.building_area_m2)}`, "", "", "", "", `日期：${dateLabel}`, ""],
+    [`名称：${projectInfo.addressName}`, "", `装修面积：${formatQuantity(projectInfo.decorationAreaM2)}`, "", "", "", "", `日期：${projectInfo.quoteDate}`, ""],
     ["编号", "项目名称", "单位", "数量", "材料费(元)", "", "人工费\n(元)", "总价(元)", "材  料  及  工  艺  说  明"],
     ["", "", "", "", "主材\n单价", "辅材\n单价", "", "", ""],
   ];

@@ -1,5 +1,6 @@
 import type { CalibrationComparison, CeilingFinishType, HydropowerEstimate, QuantityRow, QuantitySummary } from "./types";
 import type { QuoteMode, QuotePackageId } from "./quote-mapping";
+import type { QuoteExcelProjectInfo } from "./quote-excel";
 
 export type ReviewSnapshot = {
   exported_at: string;
@@ -10,6 +11,7 @@ export type ReviewSnapshot = {
   quote_mode: QuoteMode;
   selected_quote_package_ids: QuotePackageId[];
   selected_quote_item_names: string[];
+  project_info: QuoteExcelProjectInfo;
   summary: QuantitySummary | null;
   comparison: CalibrationComparison | null;
   rows: QuantityRow[];
@@ -25,6 +27,7 @@ export function buildReviewSnapshot({
   quoteMode = "full",
   selectedQuotePackageIds = [],
   selectedQuoteItemNames = [],
+  projectInfo = {},
   summary,
   comparison,
   hydropower,
@@ -37,6 +40,7 @@ export function buildReviewSnapshot({
   quoteMode?: QuoteMode;
   selectedQuotePackageIds?: QuotePackageId[];
   selectedQuoteItemNames?: string[];
+  projectInfo?: QuoteExcelProjectInfo;
   summary: QuantitySummary | null;
   comparison: CalibrationComparison | null;
   hydropower?: HydropowerEstimate;
@@ -50,6 +54,7 @@ export function buildReviewSnapshot({
     quote_mode: normalizeSnapshotQuoteMode(quoteMode),
     selected_quote_package_ids: normalizeSnapshotQuotePackageIds(selectedQuotePackageIds),
     selected_quote_item_names: normalizeSnapshotQuoteItemNames(selectedQuoteItemNames),
+    project_info: normalizeSnapshotProjectInfo(projectInfo),
     summary,
     comparison,
     rows,
@@ -91,6 +96,7 @@ export function parseReviewSnapshot(content: string): ReviewSnapshot {
     quote_mode: normalizeSnapshotQuoteMode(snapshot.quote_mode),
     selected_quote_package_ids: normalizeSnapshotQuotePackageIds(snapshot.selected_quote_package_ids),
     selected_quote_item_names: normalizeSnapshotQuoteItemNames(snapshot.selected_quote_item_names),
+    project_info: normalizeSnapshotProjectInfo(snapshot.project_info),
     summary: normalizeSnapshotSummary(snapshot.summary ?? null),
     comparison: snapshot.comparison ?? null,
     rows: snapshot.rows.map(normalizeSnapshotRow),
@@ -152,6 +158,29 @@ function normalizeSnapshotQuoteItemNames(itemNames: unknown): string[] {
     return [];
   }
   return Array.from(new Set(itemNames.filter((item): item is string => typeof item === "string" && item.trim().length > 0).map((item) => item.trim())));
+}
+
+function normalizeSnapshotProjectInfo(projectInfo: unknown): QuoteExcelProjectInfo {
+  if (!projectInfo || typeof projectInfo !== "object" || Array.isArray(projectInfo)) {
+    return {};
+  }
+  const info = projectInfo as QuoteExcelProjectInfo;
+  return {
+    addressName: normalizeSnapshotString(info.addressName),
+    customerName: normalizeSnapshotString(info.customerName),
+    designerName: normalizeSnapshotString(info.designerName),
+    estimatorName: normalizeSnapshotString(info.estimatorName),
+    quoteDate: normalizeSnapshotString(info.quoteDate),
+    decorationAreaM2: typeof info.decorationAreaM2 === "number" && Number.isFinite(info.decorationAreaM2) && info.decorationAreaM2 >= 0 ? Math.round(info.decorationAreaM2 * 100) / 100 : undefined,
+  };
+}
+
+function normalizeSnapshotString(value: unknown): string | undefined {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed ? trimmed : undefined;
 }
 
 function normalizeSnapshotSummary(summary: QuantitySummary | null): QuantitySummary | null {

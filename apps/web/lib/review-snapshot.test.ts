@@ -61,6 +61,14 @@ const snapshot = buildReviewSnapshot({
   quoteMode: "hard_plus",
   selectedQuotePackageIds: ["tile_materials", "custom_cabinet"],
   selectedQuoteItemNames: ["地面瓷砖", "窗帘"],
+  projectInfo: {
+    addressName: "滨江花园 1-1201",
+    customerName: "张三",
+    designerName: "李设计",
+    estimatorName: "王报价",
+    quoteDate: "2026-07-10",
+    decorationAreaM2: 120.567,
+  },
   summary: {
     space_count: 1,
     building_area_m2: 20,
@@ -101,6 +109,14 @@ assert.deepEqual(snapshot.excel_manual_item_quantities, { 入户门: 1, 马桶: 
 assert.equal(snapshot.quote_mode, "hard_plus");
 assert.deepEqual(snapshot.selected_quote_package_ids, ["main_materials", "other_finishing", "custom_cabinet"]);
 assert.deepEqual(snapshot.selected_quote_item_names, ["地面瓷砖", "窗帘"]);
+assert.deepEqual(snapshot.project_info, {
+  addressName: "滨江花园 1-1201",
+  customerName: "张三",
+  designerName: "李设计",
+  estimatorName: "王报价",
+  quoteDate: "2026-07-10",
+  decorationAreaM2: 120.57,
+});
 assert.equal(snapshot.summary.space_count, 1);
 assert.equal(snapshot.summary.building_area_m2, 20);
 assert.equal(reviewSnapshotFileName("test-case.dxf"), "test-case.review-snapshot.json");
@@ -117,6 +133,8 @@ assert.deepEqual(parsed.excel_manual_item_quantities, { 入户门: 1, 马桶: 2,
 assert.equal(parsed.quote_mode, "hard_plus");
 assert.deepEqual(parsed.selected_quote_package_ids, ["main_materials", "other_finishing", "custom_cabinet"]);
 assert.deepEqual(parsed.selected_quote_item_names, ["地面瓷砖", "窗帘"]);
+assert.equal(parsed.project_info.customerName, "张三");
+assert.equal(parsed.project_info.decorationAreaM2, 120.57);
 
 const manualSpaceTypeSnapshot = buildReviewSnapshot({
   fileName: "manual-space-type.dxf",
@@ -234,12 +252,14 @@ const olderSnapshot = {
   quote_mode: undefined,
   selected_quote_package_ids: undefined,
   selected_quote_item_names: undefined,
+  project_info: undefined,
 };
 assert.deepEqual(parseReviewSnapshot(JSON.stringify(olderSnapshot)).accepted_health_check_keys, []);
 assert.deepEqual(parseReviewSnapshot(JSON.stringify(olderSnapshot)).excel_manual_item_quantities, {});
 assert.equal(parseReviewSnapshot(JSON.stringify(olderSnapshot)).quote_mode, "full");
 assert.deepEqual(parseReviewSnapshot(JSON.stringify(olderSnapshot)).selected_quote_package_ids, []);
 assert.deepEqual(parseReviewSnapshot(JSON.stringify(olderSnapshot)).selected_quote_item_names, []);
+assert.deepEqual(parseReviewSnapshot(JSON.stringify(olderSnapshot)).project_info, {});
 
 const snapshotWithInvalidManualQuantities = {
   ...snapshot,
