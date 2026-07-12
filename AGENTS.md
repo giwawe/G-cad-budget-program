@@ -49,10 +49,12 @@ python -m uvicorn server.app.main:app --host 127.0.0.1 --port 8010
 启动前端：
 
 ```powershell
-node node_modules\next\dist\bin\next dev apps\web --hostname 127.0.0.1 --port 3010
+Push-Location apps\web
+node ..\..\node_modules\next\dist\bin\next dev --hostname 127.0.0.1 --port 3010
+Pop-Location
 ```
 
-注意：这台机器上曾观察到 `npm`/`npx` 不可用，但仓库已有 `node_modules`，所以常用 `node node_modules\next\dist\bin\next ...` 直接运行 Next。
+注意：这台机器上曾观察到 `npm`/`npx` 不可用，但仓库已有 `node_modules`，所以常用 `node ..\..\node_modules\next\dist\bin\next ...` 直接运行 Next。前端 dev server 建议从 `apps\web` 目录启动；如果在仓库根目录执行 `next dev apps\web`，在刚跑过 `next build apps\web` 后曾出现页面 HTML 为 200 但 `/_next/static/css/app/layout.css` 和部分 JS chunk 为 404，表现为前端样式丢失。
 
 ## 验证命令
 
@@ -359,7 +361,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 修改文件时使用 `apply_patch`，不要用 shell 重定向或 Python 脚本写文件。
 - 搜索优先用 `rg`。
 - 不要提交日志、截图、构建产物、临时文件。
-- 如果构建后继续本地试用，建议重启 `3010` 前端 dev server，避免旧 chunk 或缓存状态干扰。
+- 如果构建后继续本地试用，建议按上面的 `apps\web` 目录启动方式重启 `3010` 前端 dev server，避免旧 chunk 或缓存状态干扰。
 - 后端 Python 代码变更后需要重启 `8010`，uvicorn 当前常用命令未带 `--reload`。
 
 ## 设计取向
