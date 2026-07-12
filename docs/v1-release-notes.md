@@ -4,7 +4,7 @@
 
 发布日期：2026-07-12
 
-对应提交：`4aa05cb docs: add v1 acceptance and designer guide`
+对应提交：`8a94955 docs: add v1 release notes`
 
 ## 发布定位
 
@@ -73,5 +73,6 @@ D:\Desktop\cad-real-drawing-regression-2026-07-12-v1
 
 1. 让 1-2 个设计师用真实项目试跑完整流程，记录卡点。
 2. 修正别墅二混合命名图纸后重新回归。
-3. 根据试用反馈微调前端信息层级。
-4. 再规划 DWG、登录、客户档案和后台管理等平台化能力。
+3. 使用 `docs/v1-trial-feedback.md` 汇总必须修、近期优化和后续版本事项。
+4. 根据试用反馈微调前端信息层级。
+5. 再规划 DWG、登录、客户档案和后台管理等平台化能力。
