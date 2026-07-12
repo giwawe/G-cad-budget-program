@@ -74,7 +74,12 @@ assert.ok(hydropowerPanelSource.includes("groupedPoints.map"), "hydropower panel
 assert.ok(drawingReviewSource.includes("hydropowerPoints?: HydropowerPoint[]"), "drawing review should accept hydropower points as an optional overlay prop");
 assert.ok(drawingReviewSource.includes("showHydropowerPoints"), "drawing review should expose a hydropower point layer toggle");
 assert.ok(drawingReviewSource.includes("svgHydropowerPoint"), "drawing review should render hydropower point markers");
-assert.ok(drawingReviewSource.includes("系统估算点位"), "drawing review toolbar should mark the hydropower overlay as system-estimated");
+assert.ok(drawingReviewSource.includes("方案完整性复核"), "drawing review should present itself as the designer plan-completeness review area");
+assert.ok(drawingReviewSource.includes("检查房间边界、墙线、门窗、吊顶和柜体是否漏画"), "drawing review should explain the designer-facing review purpose");
+assert.ok(drawingReviewSource.includes("showMoreDrawingLayers"), "drawing review should hide less frequent layers behind a more-layers control");
+assert.ok(drawingReviewSource.includes("const [showBathroomFixtures, setShowBathroomFixtures] = useState(false)"), "drawing review should keep bathroom fixtures hidden by default");
+assert.ok(drawingReviewSource.includes("const [showHydropowerPoints, setShowHydropowerPoints] = useState(false)"), "drawing review should keep recommended hydropower points hidden by default");
+assert.ok(drawingReviewSource.includes("水电推荐点位"), "drawing review toolbar should label hydropower points as recommendations");
 assert.ok(drawingReviewSource.includes("系统推荐点位"), "drawing review point tooltip should explain the overlay markers are recommendations");
 assert.ok(drawingReviewSource.includes("showVoids"), "drawing review should expose a void boundary layer toggle");
 assert.ok(drawingReviewSource.includes("showGypsumLineCeilings"), "drawing review should expose a gypsum line ceiling layer toggle");

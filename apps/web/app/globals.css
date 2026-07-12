@@ -1155,6 +1155,33 @@ code {
   margin-bottom: 18px;
 }
 
+.drawingReviewHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 12px 14px;
+}
+
+.drawingReviewHeader div {
+  display: grid;
+  gap: 4px;
+}
+
+.drawingReviewHeader strong {
+  color: var(--text);
+  font-size: 18px;
+}
+
+.drawingReviewHeader span {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .summaryCards {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -1195,6 +1222,20 @@ code {
   min-height: 32px;
   min-width: 34px;
   padding: 0 10px;
+}
+
+.drawingToolbar .drawingLayerMoreButton {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #1e40af;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.drawingToolbar .drawingLayerMoreButton.active {
+  border-color: #0f766e;
+  background: #0f766e;
+  color: #fff;
 }
 
 .drawingToolbar input[type="range"] {
@@ -1248,6 +1289,17 @@ code {
   width: 14px;
   min-height: 14px;
   accent-color: var(--accent);
+}
+
+.drawingLayerMoreGroup {
+  display: flex;
+  flex: 1 1 100%;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  margin-top: 2px;
+  padding-top: 8px;
 }
 
 .drawingCanvas {
@@ -1700,6 +1752,7 @@ td .curtainWallHelp {
   }
 
   .topbar,
+  .drawingReviewHeader,
   .sectionHeader {
     align-items: stretch;
     flex-direction: column;

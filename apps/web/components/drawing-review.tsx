@@ -111,15 +111,16 @@ export function DrawingReview({
   const [showBaseCabinets, setShowBaseCabinets] = useState(true);
   const [showWallCabinets, setShowWallCabinets] = useState(true);
   const [showCustomCabinets, setShowCustomCabinets] = useState(true);
-  const [showExteriorWalls, setShowExteriorWalls] = useState(true);
-  const [showVoids, setShowVoids] = useState(true);
+  const [showMoreDrawingLayers, setShowMoreDrawingLayers] = useState(false);
+  const [showExteriorWalls, setShowExteriorWalls] = useState(false);
+  const [showVoids, setShowVoids] = useState(false);
   const [showEdgeCeilings, setShowEdgeCeilings] = useState(true);
   const [showGypsumLineCeilings, setShowGypsumLineCeilings] = useState(true);
   const [showNoCeilings, setShowNoCeilings] = useState(true);
-  const [showBathroomFixtures, setShowBathroomFixtures] = useState(true);
+  const [showBathroomFixtures, setShowBathroomFixtures] = useState(false);
   const [showWindows, setShowWindows] = useState(true);
   const [showDoors, setShowDoors] = useState(true);
-  const [showHydropowerPoints, setShowHydropowerPoints] = useState(true);
+  const [showHydropowerPoints, setShowHydropowerPoints] = useState(false);
   const [selectedWindowIndex, setSelectedWindowIndex] = useState<number | null>(null);
   const [selectedFloor, setSelectedFloor] = useState<string>("");
 
@@ -352,6 +353,13 @@ export function DrawingReview({
 
   return (
     <section className="drawingReview">
+      <div className="drawingReviewHeader">
+        <div>
+          <strong>方案完整性复核</strong>
+          <span>检查房间边界、墙线、门窗、吊顶和柜体是否漏画。</span>
+        </div>
+      </div>
+
       <div className="summaryCards">
         <div><span>空间</span><strong>{summary.space_count}</strong></div>
         <div><span>建筑面积</span><strong>{summary.building_area_m2.toFixed(2)} m2</strong></div>
@@ -382,15 +390,26 @@ export function DrawingReview({
         <label className="drawingLayerToggle"><input type="checkbox" checked={showBaseCabinets} onChange={(event) => setShowBaseCabinets(event.target.checked)} />地柜 {visibleDrawing.base_cabinets.length + (visibleDrawing.base_cabinet_boundaries?.length ?? 0)}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showWallCabinets} onChange={(event) => setShowWallCabinets(event.target.checked)} />吊柜 {visibleDrawing.wall_cabinets.length + (visibleDrawing.wall_cabinet_boundaries?.length ?? 0)}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showCustomCabinets} onChange={(event) => setShowCustomCabinets(event.target.checked)} />定制柜 {visibleDrawing.custom_cabinets.length}</label>
-        <label className="drawingLayerToggle"><input type="checkbox" checked={showExteriorWalls} onChange={(event) => setShowExteriorWalls(event.target.checked)} />外墙 {visibleDrawing.exterior_wall_boundaries.length}</label>
-        <label className="drawingLayerToggle"><input type="checkbox" checked={showVoids} onChange={(event) => setShowVoids(event.target.checked)} />洞口 {visibleDrawing.void_boundaries?.length ?? 0}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showEdgeCeilings} onChange={(event) => setShowEdgeCeilings(event.target.checked)} />边吊 {visibleDrawing.edge_ceiling_boundaries?.length ?? 0}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showGypsumLineCeilings} onChange={(event) => setShowGypsumLineCeilings(event.target.checked)} />石膏线 {visibleDrawing.gypsum_line_ceiling_boundaries?.length ?? 0}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showNoCeilings} onChange={(event) => setShowNoCeilings(event.target.checked)} />无吊顶 {visibleDrawing.no_ceiling_boundaries?.length ?? 0}</label>
-        <label className="drawingLayerToggle"><input type="checkbox" checked={showBathroomFixtures} onChange={(event) => setShowBathroomFixtures(event.target.checked)} />洁具 {visibleDrawing.toilets.length + visibleDrawing.bathroom_vanities.length}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showWindows} onChange={(event) => setShowWindows(event.target.checked)} />窗 {visibleDrawing.window_openings.length}</label>
         <label className="drawingLayerToggle"><input type="checkbox" checked={showDoors} onChange={(event) => setShowDoors(event.target.checked)} />门 {visibleDrawing.door_openings.length}</label>
-        <label className="drawingLayerToggle" title="系统按空间轮廓和设备位置估算的推荐水电点位"><input type="checkbox" checked={showHydropowerPoints} onChange={(event) => setShowHydropowerPoints(event.target.checked)} />系统估算点位 {visibleHydropowerPoints.length}</label>
+        <button
+          type="button"
+          className={`drawingLayerMoreButton ${showMoreDrawingLayers ? "active" : ""}`}
+          onClick={() => setShowMoreDrawingLayers((current) => !current)}
+        >
+          {showMoreDrawingLayers ? "收起更多图层" : "更多图层"}
+        </button>
+        {showMoreDrawingLayers && (
+          <div className="drawingLayerMoreGroup">
+            <label className="drawingLayerToggle"><input type="checkbox" checked={showExteriorWalls} onChange={(event) => setShowExteriorWalls(event.target.checked)} />外墙 {visibleDrawing.exterior_wall_boundaries.length}</label>
+            <label className="drawingLayerToggle"><input type="checkbox" checked={showVoids} onChange={(event) => setShowVoids(event.target.checked)} />洞口 {visibleDrawing.void_boundaries?.length ?? 0}</label>
+            <label className="drawingLayerToggle"><input type="checkbox" checked={showBathroomFixtures} onChange={(event) => setShowBathroomFixtures(event.target.checked)} />洁具 {visibleDrawing.toilets.length + visibleDrawing.bathroom_vanities.length}</label>
+            <label className="drawingLayerToggle" title="系统按空间轮廓和设备位置估算的推荐水电点位"><input type="checkbox" checked={showHydropowerPoints} onChange={(event) => setShowHydropowerPoints(event.target.checked)} />水电推荐点位 {visibleHydropowerPoints.length}</label>
+          </div>
+        )}
         {selectedWindow && (
           <div className="windowEditor">
             <span>窗宽 {selectedWindow.width_m.toFixed(2)} m</span>
