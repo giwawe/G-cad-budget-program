@@ -375,6 +375,14 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 
 ## 最近稳定检查点
 
+2026-07-13 稳定标签：
+
+- `v1.0.1-real-drawing-quote-stable`：真实图纸报价导出稳定版。
+- 关键修复提交：`b9b08b6 fix: filter bathroom rows for shower install export`。
+- 真实图纸回归输出：`D:\Desktop\cad-real-drawing-regression-2026-07-13-v1.0.1`。
+- 5 张真实 DXF 均解析并导出三种 Excel；健康检查仅剩“水电点位待复核”提醒。
+- 别墅二卫生间、盥洗区工程已与人工导出表核对：负二层不生成卫生间分组，其它楼层淋浴隔断安装数量和金额一致。
+
 已完成并提交过的功能包括：
 
 - DXF 校准对比 API 与 golden 回归。

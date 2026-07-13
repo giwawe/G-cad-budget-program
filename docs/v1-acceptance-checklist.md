@@ -1,6 +1,6 @@
 # V1 可用版本收口清单
 
-更新时间：2026-07-12
+更新时间：2026-07-13
 
 本清单用于把当前 CAD 报价工具收口为第一个可试用版本。V1 目标是让设计师基于规范 DXF 完成上传、方案完整性复核、工程量校对、报价抬头填写和 Excel 草稿导出；登录、DWG、后台管理、合同等平台化能力放到后续版本。
 
@@ -16,7 +16,7 @@
 
 ## 真实图纸回归
 
-2026-07-12 已用 5 张真实 DXF 跑通回归：
+2026-07-13 已用 5 张真实 DXF 跑通回归：
 
 - `D:/Desktop/别墅一.dxf`
 - `D:/Desktop/别墅二.dxf`
@@ -27,7 +27,7 @@
 输出目录：
 
 ```text
-D:\Desktop\cad-real-drawing-regression-2026-07-12-v1
+D:\Desktop\cad-real-drawing-regression-2026-07-13-v1.0.1
 ```
 
 每张图纸均已生成：
@@ -41,16 +41,12 @@ D:\Desktop\cad-real-drawing-regression-2026-07-12-v1
 
 - 5 张图纸均能解析并生成报价映射和 Excel。
 - 15 份 Excel 均包含地址/日期/设计师/报价员位置、强弱电工程、给排水工程、总价区域和直接费 `SUMIF` 公式。
-- 商品房一、商品房二、商品房三、别墅一没有 blocking warning，仅有“水电点位待复核”提醒。
-- 别墅二存在 1 项需优先处理 warning：`过道/电梯井`、`客厅/电梯井` 为混合命名，需要 CAD 拆分空间边界或改成规范空间名。
+- 商品房一、商品房二、商品房三、别墅一、别墅二没有 blocking warning，仅有“水电点位待复核”提醒。
+- 别墅二卫生间、盥洗区工程已与人工导出表核对：负二层不生成卫生间分组，其它楼层淋浴隔断安装数量和金额一致。
 
 ## V1 必须处理
 
-1. 别墅二正式报价前，设计师应先处理混合空间命名：
-   - 涉及空间：`过道/电梯井`、`客厅/电梯井`
-   - 建议：把可计价空间和电梯井拆成独立 `QUOTE_ROOM`，或用 `QUOTE_VOID` 表达洞口。
-
-2. 导出正式客户报价前，设计师需要确认水电点位：
+1. 导出正式客户报价前，设计师需要确认水电点位：
    - 当前水电点位是系统按空间轮廓、设备位置和默认规则推荐。
    - V1 可以用于报价草稿，但正式报价前应在水电点位复核区确认或调整。
 
@@ -83,7 +79,7 @@ python -m uvicorn server.app.main:app --host 127.0.0.1 --port 8010
 运行真实图纸回归：
 
 ```powershell
-node --experimental-strip-types tools\real-drawing-regression.mjs --date 2026-07-12 --out D:\Desktop\cad-real-drawing-regression-2026-07-12-v1
+node --experimental-strip-types tools\real-drawing-regression.mjs --date 2026-07-13 --out D:\Desktop\cad-real-drawing-regression-2026-07-13-v1.0.1
 ```
 
 常规验证：
