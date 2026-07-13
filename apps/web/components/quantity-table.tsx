@@ -71,10 +71,10 @@ function QuantityStatusBadge({ status }: { status: ReviewStatus }) {
     return null;
   }
   return (
-    <div className={`status ${status}`}>
+    <span className={`status ${status}`}>
       {statusIcons[status]}
       {statusLabels[status]}
-    </div>
+    </span>
   );
 }
 
@@ -137,24 +137,27 @@ export function QuantityTable({
     setOpenRowKeys((current) => addKey(current, rowKey));
   }
 
+  function toggleRowOpen(rowKey: string) {
+    setOpenRowKeys((current) => (current.includes(rowKey) ? removeKey(current, rowKey) : addKey(current, rowKey)));
+  }
+
   return (
     <div className="quantityReviewShell">
-      <details
-        className="quantityCardsDetails"
-        open={isSummaryOpen}
-        onToggle={(event) => {
-          if (event.target === event.currentTarget) {
-            setIsSummaryOpen(event.currentTarget.open);
-          }
-        }}
-      >
-        <summary>
+      <section className={`quantityCardsPanel ${isSummaryOpen ? "open" : ""}`}>
+        <button
+          className="quantityCardsSummary"
+          type="button"
+          aria-expanded={isSummaryOpen}
+          onClick={() => setIsSummaryOpen((current) => !current)}
+        >
           <strong>{anomalyCount > 0 ? `${anomalyCount} 个空间需要确认` : `查看空间工程量摘要（${displayRows.length} 个空间）`}</strong>
           <span>空间默认收起；有异常或本次修改后再展开确认。</span>
-        </summary>
-        <div className="quantityCardGrid">
+        </button>
+        {isSummaryOpen && (
+        <div className="quantityCardGrid" id="quantity-cards-panel">
           {displayRows.map(({ row, index }) => {
             const rowKey = rowStateKey(row, index);
+            const rowAnchorId = quantityRowAnchorId(row.spaceName);
             const rowHasAnomalies = row.anomalies.length > 0;
             const rowEdited = editedRowKeys.includes(rowKey);
             const rowOpen = openRowKeys.includes(rowKey);
@@ -167,26 +170,27 @@ export function QuantityTable({
             const latexPaintDifference = differencesByCell.get(differenceKey(row.spaceName, "latex_paint_area_m2"));
             const waterproofDifference = differencesByCell.get(differenceKey(row.spaceName, "waterproof_area_m2"));
             return (
-              <details
-                className={`quantitySpaceCard ${row.status}`}
-                id={quantityRowAnchorId(row.spaceName)}
+              <article
+                className={`quantitySpaceCard ${row.status} ${rowOpen ? "open" : ""}`}
+                id={rowAnchorId}
                 key={rowKey}
-                open={rowOpen}
-                onToggle={(event) => {
-                  if (event.target !== event.currentTarget) {
-                    return;
-                  }
-                  setOpenRowKeys((current) => (event.currentTarget.open ? addKey(current, rowKey) : removeKey(current, rowKey)));
-                }}
               >
-                <summary className="quantitySpaceHeader">
+                <button
+                  className="quantitySpaceHeader"
+                  type="button"
+                  aria-expanded={rowOpen}
+                  aria-controls={`${rowAnchorId}-body`}
+                  onClick={() => toggleRowOpen(rowKey)}
+                >
                   <span>{row.floor}</span>
                   <strong>{row.spaceName}</strong>
                   <small>{row.spaceType}</small>
                   {rowHasAnomalies && <em>需确认</em>}
                   {rowEdited && <em className="edited">已修改</em>}
                   <QuantityStatusBadge status={row.status} />
-                </summary>
+                </button>
+                {rowOpen && (
+                <div className="quantitySpaceBody" id={`${rowAnchorId}-body`}>
                 <div className="quantitySpaceControls">
                   {onChangeSpaceType ? (
                     <label>
@@ -317,15 +321,18 @@ export function QuantityTable({
                     )}
                   </div>
                 )}
-                <details className="quantityEvidence" open={rowHasAnomalies}>
+                <details className="quantityEvidence">
                   <summary>计算依据</summary>
                   <p>{row.evidence}</p>
                 </details>
-              </details>
+                </div>
+                )}
+              </article>
             );
           })}
         </div>
-      </details>
+        )}
+      </section>
     </div>
   );
 }
