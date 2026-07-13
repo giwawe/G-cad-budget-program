@@ -290,6 +290,15 @@ function getApiBaseUrl() {
   return "http://127.0.0.1:8000";
 }
 
+async function readErrorDetail(response: Response) {
+  try {
+    const payload = await response.json();
+    return typeof payload.detail === "string" ? payload.detail : "";
+  } catch {
+    return "";
+  }
+}
+
 function toQuantityRow(row: ApiQuantityRow): QuantityRow {
   return {
     floor: row.floor,
@@ -616,7 +625,8 @@ export function UploadWorkbench({
       const response = await fetch(`${getApiBaseUrl()}/api/parse-dxf-review`, { method: "POST", body: formData });
 
       if (!response.ok) {
-        throw new Error(`DXF 解析失败：HTTP ${response.status}`);
+        const detail = await readErrorDetail(response);
+        throw new Error(detail ? `方案解析失败：${detail}` : `方案解析失败：HTTP ${response.status}`);
       }
 
       const payload = (await response.json()) as ReviewResponse;
@@ -630,7 +640,7 @@ export function UploadWorkbench({
       setProjectInfoConfirmedAt("");
       setMessage(`解析完成：${payload.rows.length} 个空间`);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "DXF 解析失败");
+      setError(caught instanceof Error ? caught.message : "方案解析失败");
       setMessage("");
     } finally {
       setIsUploading(false);
@@ -644,7 +654,7 @@ export function UploadWorkbench({
       return;
     }
     if (!currentDxfFile) {
-      setError("请先上传 DXF 文件，再上传校准 JSON");
+      setError("请先上传 DXF 或 DWG 方案文件，再上传校准 JSON");
       event.target.value = "";
       return;
     }
@@ -1323,7 +1333,7 @@ export function UploadWorkbench({
 
   return (
     <main>
-      <input ref={inputRef} hidden className="fileInput" type="file" accept=".dxf" onChange={handleFileChange} />
+      <input ref={inputRef} hidden className="fileInput" type="file" accept=".dxf,.dwg" onChange={handleFileChange} />
       <input ref={calibrationInputRef} hidden className="fileInput" type="file" accept=".json,application/json" onChange={handleCalibrationChange} />
       <input ref={snapshotInputRef} hidden className="fileInput" type="file" accept=".json,application/json" onChange={handleSnapshotChange} />
       <input ref={quoteRulesInputRef} hidden className="fileInput" type="file" accept=".json,application/json" onChange={handleQuoteRulesChange} />

@@ -4,6 +4,7 @@ import json
 from fastapi import FastAPI, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
+from server.app.cad_uploads import normalize_cad_upload
 from server.app.dxf.parser import DrawingGeometry, parse_dxf_review, parse_dxf_spaces
 from server.app.models import OpeningInput, ProjectDefaults, SpaceInput
 from server.app.quantity.calculator import calculate_quantity_row
@@ -62,14 +63,16 @@ def sample_quantities():
 @app.post("/api/parse-dxf")
 async def parse_dxf(file: UploadFile):
     defaults = ProjectDefaults()
-    spaces = parse_dxf_spaces(await file.read(), defaults)
+    upload = normalize_cad_upload(file.filename, await file.read())
+    spaces = parse_dxf_spaces(upload.content, defaults)
     return [asdict(calculate_quantity_row(space, defaults)) for space in spaces]
 
 
 @app.post("/api/parse-dxf-review")
 async def parse_dxf_review_endpoint(file: UploadFile):
     defaults = ProjectDefaults()
-    parsed = parse_dxf_review(await file.read(), defaults)
+    upload = normalize_cad_upload(file.filename, await file.read())
+    parsed = parse_dxf_review(upload.content, defaults)
     rows = [asdict(calculate_quantity_row(space, defaults)) for space in parsed.spaces]
     return {"rows": rows, "drawing": _serialize_drawing(parsed.drawing), "summary": _summarize_rows(rows, parsed.drawing.building_area_m2)}
 
@@ -78,7 +81,8 @@ async def parse_dxf_review_endpoint(file: UploadFile):
 async def compare_dxf_calibration(file: UploadFile, calibration: UploadFile):
     defaults = ProjectDefaults()
     expected_payload = json.loads((await calibration.read()).decode("utf-8"))
-    parsed = parse_dxf_review(await file.read(), defaults)
+    upload = normalize_cad_upload(file.filename, await file.read())
+    parsed = parse_dxf_review(upload.content, defaults)
     rows = [asdict(calculate_quantity_row(space, defaults)) for space in parsed.spaces]
     stable_rows = [_stable_quantity_row(row) for row in rows]
     summary = _summarize_rows(rows, parsed.drawing.building_area_m2)

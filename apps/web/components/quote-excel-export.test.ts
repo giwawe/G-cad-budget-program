@@ -10,6 +10,7 @@ assert.ok(uploadWorkbenchSource.includes("buildQuoteExcelHtml"), "workbench shou
 assert.ok(uploadWorkbenchSource.includes("quoteExcelFileName"), "workbench should use the Excel draft filename helper");
 assert.ok(uploadWorkbenchSource.includes("下载 Excel 草稿"), "quote mapping panel should expose an Excel draft download button");
 assert.ok(uploadWorkbenchSource.includes("预算导出"), "top toolbar should expose a visible budget export button");
+assert.ok(uploadWorkbenchSource.includes('accept=".dxf,.dwg"'), "designer upload input should accept DXF and DWG files");
 assert.ok(uploadWorkbenchSource.includes("空间命名规范"), "top toolbar should expose a designer space naming guide download");
 assert.ok(uploadWorkbenchSource.includes("画图规范"), "top toolbar should expose a designer drawing guide download");
 assert.ok(uploadWorkbenchSource.includes("handleDownloadSpaceNamingGuide"), "space naming guide should be downloadable from the workbench");

@@ -132,6 +132,17 @@ def test_parse_real_dxf_review_payload_includes_drawing_summary_and_measured_wal
     assert measured_length == payload["summary"]["wall_measure_length_total_m"]
 
 
+def test_parse_dwg_review_returns_actionable_converter_error(monkeypatch):
+    client = TestClient(app)
+    monkeypatch.setattr("server.app.cad_uploads.odafc.is_installed", lambda: False)
+
+    response = client.post("/api/parse-dxf-review", files={"file": ("quote.dwg", b"dwg-bytes", "application/acad")})
+
+    assert response.status_code == 422
+    assert "DWG" in response.json()["detail"]
+    assert "ODA File Converter" in response.json()["detail"]
+
+
 def test_parse_default_10_dxf_review_keeps_key_quote_metrics_stable():
     client = TestClient(app)
     fixture = Path(__file__).parent / "fixtures" / "10.dxf"

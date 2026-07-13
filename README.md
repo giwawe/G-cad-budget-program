@@ -1,8 +1,8 @@
 # CAD Budget Program G
 
-DXF 空间算量准确性验证工具。
+CAD/DXF 空间算量准确性验证工具。
 
-第一期目标是读取按规范绘制的 DXF，生成可校对的空间工程量依据表。当前项目骨架先实现确定性的算量核心和前端工作台壳，后续接入真实 DXF 解析。
+第一期目标是读取按规范绘制的方案文件，生成可校对的空间工程量依据表。DXF 是稳定解析路径；DWG 上传会由服务端转换为临时 DXF 后复用同一解析流程。
 
 ## 当前范围
 
@@ -37,7 +37,7 @@ GET http://127.0.0.1:8010/api/sample-quantities
 ```text
 POST http://127.0.0.1:8010/api/compare-dxf-calibration
 multipart/form-data:
-- file: DXF 文件
+- file: DXF 或 DWG 文件；DWG 依赖服务器安装并配置 ODA File Converter
 - calibration: 校准 JSON，格式参考 server/tests/fixtures/test-case.golden.json
 ```
 
