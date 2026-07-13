@@ -538,6 +538,7 @@ export function UploadWorkbench({
   const designerHealthChecks = useMemo(() => healthChecks.filter((check) => !DESIGNER_HIDDEN_HEALTH_CHECK_IDS.has(check.id)), [healthChecks]);
   const healthSummary = useMemo(() => summarizeQuantityHealthChecks(designerHealthChecks), [designerHealthChecks]);
   const filteredHealthChecks = useMemo(() => filterQuantityHealthChecks(designerHealthChecks, healthFilter), [designerHealthChecks, healthFilter]);
+  const hasImportedPlan = rows.length > 0;
 
   useEffect(() => {
     try {
@@ -1337,23 +1338,27 @@ export function UploadWorkbench({
           </div>
         </div>
         <div className="topbarActions mainActions">
-          <button className="primaryAction" type="button" disabled={isUploading || isComparing} onClick={() => inputRef.current?.click()}>
-            {isUploading ? <Loader2 aria-hidden="true" className="spin" size={18} /> : <FileUp aria-hidden="true" size={18} />}
-            {isUploading ? "解析中" : "方案上传"}
-          </button>
-          <button className="primaryAction" type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadQuoteExcelDraft}>
-            <Download aria-hidden="true" size={18} />
-            预算导出
-          </button>
-          <span className="budgetModeHint">当前预算：{activeQuoteModeOption.label}</span>
-          <button className="secondaryAction" type="button" disabled={isUploading || isComparing} onClick={handleDownloadSpaceNamingGuide}>
-            <Download aria-hidden="true" size={18} />
-            空间命名规范
-          </button>
-          <button className="secondaryAction" type="button" disabled={isUploading || isComparing} onClick={handleDownloadDrawingSpecGuide}>
-            <Download aria-hidden="true" size={18} />
-            画图规范
-          </button>
+          <div className="mainActionsBudgetStatus">
+            <span className="budgetModeHint">当前预算：{activeQuoteModeOption.label}</span>
+          </div>
+          <div className="mainActionButtons">
+            <button className="primaryAction" type="button" disabled={isUploading || isComparing} onClick={() => inputRef.current?.click()}>
+              {isUploading ? <Loader2 aria-hidden="true" className="spin" size={18} /> : <FileUp aria-hidden="true" size={18} />}
+              {isUploading ? "解析中" : "方案上传"}
+            </button>
+            <button className="primaryAction" type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadQuoteExcelDraft}>
+              <Download aria-hidden="true" size={18} />
+              预算导出
+            </button>
+            <button className="secondaryAction" type="button" disabled={isUploading || isComparing} onClick={handleDownloadSpaceNamingGuide}>
+              <Download aria-hidden="true" size={18} />
+              空间命名规范
+            </button>
+            <button className="secondaryAction" type="button" disabled={isUploading || isComparing} onClick={handleDownloadDrawingSpecGuide}>
+              <Download aria-hidden="true" size={18} />
+              画图规范
+            </button>
+          </div>
         </div>
       </section>
 
@@ -1680,7 +1685,6 @@ export function UploadWorkbench({
             <div className="manualQuoteGrid">
               {MANUAL_QUOTE_OPTION_ITEMS.map((item) => {
                 const selectedQuantity = manualQuoteItemQuantities[item.itemName] ?? 0;
-                const unitPrice = item.itemName === ALUMINUM_WINDOW_ITEM_NAME ? aluminumWindowUnitPrice : 0;
                 const defaultUnitPrice = item.itemName === ALUMINUM_WINDOW_ITEM_NAME ? aluminumWindowRulePrice : 0;
                 const selectedAmount = item.itemName === ALUMINUM_WINDOW_ITEM_NAME ? aluminumWindowSelectedAmount : 0;
                 return (
@@ -1689,7 +1693,7 @@ export function UploadWorkbench({
                       <strong>{item.itemName === ALUMINUM_WINDOW_ITEM_NAME ? "铝合金窗" : item.itemName}</strong>
                       <small>{item.hint}</small>
                     </div>
-                    <label>
+                    <label className="manualQuoteMetric">
                       <span>面积</span>
                       <input
                         aria-label={`${item.itemName} 预算数量`}
@@ -1701,7 +1705,7 @@ export function UploadWorkbench({
                         onChange={(event) => handleChangeManualQuoteItem(item.itemName, event.target.value)}
                       />
                     </label>
-                    <label className="manualQuotePrice">
+                    <label className="manualQuoteMetric manualQuotePrice">
                       <span>单价</span>
                       <input
                         aria-label={`${item.itemName} 预算单价`}
@@ -1712,12 +1716,10 @@ export function UploadWorkbench({
                         value={manualQuoteItemPriceInputs[item.itemName] ?? ""}
                         onChange={(event) => handleChangeManualQuoteItemPrice(item.itemName, event.target.value)}
                       />
-                      <small>默认 {defaultUnitPrice.toFixed(2)} 元/{item.unit}</small>
                     </label>
-                    <div className="manualQuotePrice">
+                    <div className="manualQuoteMetric manualQuoteAmount">
                       <span>总价</span>
                       <strong>{selectedAmount.toFixed(2)} 元</strong>
-                      <small>{unitPrice.toFixed(2)} 元/{item.unit}</small>
                     </div>
                     <div className="manualQuoteActions">
                       <button type="button" disabled={aluminumWindowSuggestedArea <= 0} onClick={() => handleUseManualQuoteSuggestion(item.itemName, aluminumWindowSuggestedArea)}>
@@ -1775,6 +1777,7 @@ export function UploadWorkbench({
         )}
       </section>
 
+      {hasImportedPlan && (
       <section className="healthPanel">
         <div className="templateHeader">
           <div>
@@ -1845,6 +1848,7 @@ export function UploadWorkbench({
           </>
         )}
       </section>
+      )}
 
       {generatedHealthFixList && (
         <section className="templatePanel">

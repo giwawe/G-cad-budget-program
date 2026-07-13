@@ -97,6 +97,22 @@ input {
 
 .mainActions {
   max-width: 650px;
+  display: grid;
+  gap: 8px;
+  justify-items: end;
+}
+
+.mainActionsBudgetStatus {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.mainActionButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
 }
 
 .mainActions button {
@@ -106,7 +122,7 @@ input {
 }
 
 .budgetModeHint {
-  align-self: center;
+  align-self: flex-end;
   border: 1px solid rgba(18, 108, 95, 0.18);
   border-radius: 999px;
   background: #ffffff;
@@ -738,8 +754,8 @@ code {
 .manualQuoteItem {
   min-width: 0;
   display: grid;
-  grid-template-columns: minmax(180px, 1.15fr) minmax(130px, 0.7fr) minmax(150px, 0.75fr) minmax(130px, 0.7fr) auto;
-  align-items: center;
+  grid-template-columns: minmax(190px, 1.1fr) minmax(140px, 0.72fr) minmax(150px, 0.72fr) minmax(130px, 0.68fr) auto;
+  align-items: start;
   gap: 12px;
   border: 1px solid #e0e6ee;
   border-radius: 8px;
@@ -771,13 +787,17 @@ code {
   font-size: 15px;
 }
 
+.manualQuoteName {
+  align-self: center;
+}
+
 .manualQuoteItem label {
   display: grid;
   gap: 5px;
 }
 
 .manualQuoteItem label span,
-.manualQuotePrice span {
+.manualQuoteMetric > span {
   color: var(--muted);
   font-size: 12px;
   font-weight: 700;
@@ -793,6 +813,13 @@ code {
   gap: 5px;
 }
 
+.manualQuoteMetric {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-height: 62px;
+}
+
 .manualQuotePrice input {
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -803,6 +830,13 @@ code {
 
 .manualQuotePrice strong {
   font-size: 14px;
+}
+
+.manualQuoteAmount strong {
+  display: flex;
+  align-items: center;
+  min-height: 34px;
+  margin-top: 0;
 }
 
 .manualQuoteActions {
@@ -2486,6 +2520,13 @@ td .curtainWallHelp {
 
   .mainActions {
     max-width: none;
+    justify-items: start;
+    width: 100%;
+  }
+
+  .mainActionsBudgetStatus,
+  .mainActionButtons {
+    justify-content: flex-start;
   }
 
   .topbarActionGroup {
@@ -2593,6 +2634,16 @@ td .curtainWallHelp {
   }
 
   .mainActions button {
+    width: 100%;
+  }
+
+  .mainActionButtons {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .mainActionsBudgetStatus {
     width: 100%;
   }
 

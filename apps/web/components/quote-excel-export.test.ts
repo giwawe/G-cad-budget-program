@@ -15,8 +15,12 @@ assert.ok(uploadWorkbenchSource.includes("画图规范"), "top toolbar should ex
 assert.ok(uploadWorkbenchSource.includes("handleDownloadSpaceNamingGuide"), "space naming guide should be downloadable from the workbench");
 assert.ok(uploadWorkbenchSource.includes("handleDownloadDrawingSpecGuide"), "drawing guide should be downloadable from the workbench");
 assert.ok(uploadWorkbenchSource.includes("handleDownloadQuoteExcelDraft"), "Excel draft export should be available before the quote mapping panel is shown");
-assert.ok(uploadWorkbenchSource.includes("budgetModeHint"), "top toolbar budget mode should be shown as a hint beside the export button");
+assert.ok(uploadWorkbenchSource.includes("mainActionsBudgetStatus"), "top toolbar budget mode should be shown in a separate status row");
+assert.ok(uploadWorkbenchSource.includes("mainActionButtons"), "top toolbar action buttons should be grouped separately from the budget hint");
+assert.ok(uploadWorkbenchSource.includes("budgetModeHint"), "top toolbar budget mode should be shown as a hint near the export button");
 assert.ok(uploadWorkbenchSource.includes("当前预算：{activeQuoteModeOption.label}"), "top toolbar budget hint should show the active budget mode");
+assert.ok(uploadWorkbenchSource.includes("const hasImportedPlan = rows.length > 0"), "designer-facing health checks should know whether a plan has been imported");
+assert.ok(uploadWorkbenchSource.includes("{hasImportedPlan && ("), "health check panel should be hidden before any plan is imported");
 assert.ok(uploadWorkbenchSource.includes("方案报价可选项"), "quote mapping panel should explain that optional quote items are included in budget exports");
 assert.ok(uploadWorkbenchSource.includes("quoteRuleSearch"), "quote rule panel should keep a search state for fast price edits");
 assert.ok(uploadWorkbenchSource.includes("筛选报价规则"), "quote rule panel should expose a visible search control");
@@ -45,6 +49,9 @@ assert.ok(uploadWorkbenchSource.includes("固定占位/设计师手填"), "quote
 assert.ok(uploadWorkbenchSource.includes("暂不接入"), "quote integration status should include currently excluded items");
 assert.ok(uploadWorkbenchSource.includes("manualItems: manualQuoteItemQuantities"), "Excel draft export should apply manual quote item quantities");
 assert.ok(uploadWorkbenchSource.includes("manualItemPrices: { [ALUMINUM_WINDOW_ITEM_NAME]: aluminumWindowUnitPrice }"), "Excel draft export should apply manual quote item unit prices");
+assert.ok(uploadWorkbenchSource.includes("manualQuoteMetric"), "manual quote optional item values should share an aligned metric layout");
+assert.ok(uploadWorkbenchSource.includes("manualQuoteAmount"), "manual quote optional item total should use the aligned metric layout");
+assert.ok(!uploadWorkbenchSource.includes("默认 {defaultUnitPrice.toFixed(2)} 元/{item.unit}"), "manual quote unit price should not repeat the default price as helper text");
 assert.ok(uploadWorkbenchSource.includes("excelManualItemQuantities: manualQuoteItemQuantities"), "review snapshots should persist manual quote item quantities");
 assert.ok(uploadWorkbenchSource.includes("excelManualItemPrices: manualQuoteItemPriceOverrides"), "review snapshots should persist manual quote item price overrides");
 assert.ok(uploadWorkbenchSource.includes("manualQuoteInputsFromQuantities(snapshot.excel_manual_item_quantities)"), "review snapshot import should restore manual quote item inputs");
