@@ -21,15 +21,17 @@ import {
   type QuantityHealthFilter,
 } from "@/lib/quantity-health";
 import { confirmQuantityRowsBySpaceNames, updateQuantityRowCurtainWallWidth, updateQuantityRowSpaceType, updateQuantityRowStatus, updateQuantityRowsStatusBySpaceNames } from "@/lib/quantity-row-status";
-import { buildQuoteExcelHtml, quoteExcelFileName, type QuoteExcelManualItemQuantities, type QuoteExcelProjectInfo } from "@/lib/quote-excel";
+import { buildQuoteExcelHtml, quoteExcelFileName, type QuoteExcelProjectInfo } from "@/lib/quote-excel";
 import {
   aluminumWindowSuggestedAreaFromRows,
   bathroomChoiceKey,
   bathroomManualChoicesFromQuantities,
   bathroomRowsFromRows,
   type BathroomManualChoice,
+  manualQuoteInputsFromPrices,
   manualQuoteInputsFromQuantities,
   manualQuoteInputsFromBathroomChoices,
+  manualQuotePricesFromInputs,
   manualQuoteQuantitiesFromInputs,
 } from "@/lib/manual-quote-options";
 import {
@@ -449,6 +451,7 @@ export function UploadWorkbench({
   const [healthFilter, setHealthFilter] = useState<QuantityHealthFilter>("all");
   const [acceptedHealthCheckKeys, setAcceptedHealthCheckKeys] = useState<string[]>([]);
   const [manualQuoteItemInputs, setManualQuoteItemInputs] = useState<Record<string, string>>({});
+  const [manualQuoteItemPriceInputs, setManualQuoteItemPriceInputs] = useState<Record<string, string>>({});
   const [bathroomManualChoices, setBathroomManualChoices] = useState<Record<string, BathroomManualChoice>>({});
   const [hydropowerOverride, setHydropowerOverride] = useState<HydropowerEstimate | null>(null);
   const [quoteMode, setQuoteMode] = useState<QuoteMode>("full");
@@ -467,13 +470,18 @@ export function UploadWorkbench({
   const bathroomRows = useMemo(() => bathroomRowsFromRows(rows), [rows]);
   const aluminumWindowSuggestedArea = useMemo(() => aluminumWindowSuggestedAreaFromRows(rows), [rows]);
   const manualQuoteItemQuantities = useMemo(() => manualQuoteQuantitiesFromInputs(manualQuoteItemInputs), [manualQuoteItemInputs]);
+  const manualQuoteItemPriceOverrides = useMemo(() => manualQuotePricesFromInputs(manualQuoteItemPriceInputs), [manualQuoteItemPriceInputs]);
+  const aluminumWindowRulePrice = useMemo(() => quoteRules.find((rule) => rule.item_name === ALUMINUM_WINDOW_ITEM_NAME)?.unit_price ?? ALUMINUM_WINDOW_UNIT_PRICE, [quoteRules]);
+  const aluminumWindowUnitPrice = manualQuoteItemPriceOverrides[ALUMINUM_WINDOW_ITEM_NAME] ?? aluminumWindowRulePrice;
   const aluminumWindowSelectedArea = manualQuoteItemQuantities[ALUMINUM_WINDOW_ITEM_NAME] ?? 0;
-  const aluminumWindowSelectedAmount = round2(aluminumWindowSelectedArea * ALUMINUM_WINDOW_UNIT_PRICE);
+  const aluminumWindowSelectedAmount = round2(aluminumWindowSelectedArea * aluminumWindowUnitPrice);
   const hydropowerEstimate = useMemo(
     () => buildHydropowerEstimate(rows, drawing, hydropowerOverride),
     [rows, drawing, hydropowerOverride],
   );
-  const manualQuoteEditedCount = Object.keys(manualQuoteItemQuantities).length;
+  const manualQuoteQuantityEditedCount = Object.keys(manualQuoteItemQuantities).length;
+  const manualQuotePriceEditedCount = Object.keys(manualQuoteItemPriceOverrides).length;
+  const manualQuoteEditedCount = manualQuoteQuantityEditedCount + manualQuotePriceEditedCount;
   const filteredQuoteRules = useMemo(() => {
     const keyword = quoteRuleSearch.trim().toLowerCase();
     return quoteRules
@@ -695,6 +703,7 @@ export function UploadWorkbench({
       setGeneratedQuoteRules(null);
       setAcceptedHealthCheckKeys(snapshot.accepted_health_check_keys);
       setManualQuoteItemInputs(manualQuoteInputsFromQuantities(snapshot.excel_manual_item_quantities));
+      setManualQuoteItemPriceInputs(manualQuoteInputsFromPrices(snapshot.excel_manual_item_prices));
       setBathroomManualChoices(bathroomManualChoicesFromQuantities(snapshot.excel_manual_item_quantities, snapshot.rows));
       setQuoteMode(snapshot.quote_mode);
       setSelectedQuotePackageIds(snapshot.selected_quote_package_ids);
@@ -741,7 +750,7 @@ export function UploadWorkbench({
 
   function handleDownloadReviewSnapshot() {
     const downloadName = reviewSnapshotFileName(fileName);
-    const content = `${JSON.stringify(buildReviewSnapshot({ fileName, calibrationFileName, rows, acceptedHealthCheckKeys, excelManualItemQuantities: manualQuoteItemQuantities, quoteMode, selectedQuotePackageIds, selectedQuoteItemNames, projectInfo: quoteProjectInfo, summary, comparison, hydropower: hydropowerEstimate }), null, 2)}\n`;
+    const content = `${JSON.stringify(buildReviewSnapshot({ fileName, calibrationFileName, rows, acceptedHealthCheckKeys, excelManualItemQuantities: manualQuoteItemQuantities, excelManualItemPrices: manualQuoteItemPriceOverrides, quoteMode, selectedQuotePackageIds, selectedQuoteItemNames, projectInfo: quoteProjectInfo, summary, comparison, hydropower: hydropowerEstimate }), null, 2)}\n`;
     const blob = new Blob([content], { type: "application/json;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -855,6 +864,7 @@ export function UploadWorkbench({
     const downloadName = quoteExcelFileName(fileName);
     const content = buildQuoteExcelHtml(mapping, fileName, {
       manualItems: manualQuoteItemQuantities,
+      manualItemPrices: { [ALUMINUM_WINDOW_ITEM_NAME]: aluminumWindowUnitPrice },
       bathroomChoices: bathroomManualChoices,
       bathroomRows,
       projectInfo: {
@@ -1032,6 +1042,11 @@ export function UploadWorkbench({
     setMessage(value.trim() ? `${itemName} 已加入本次预算` : `${itemName} 已从本次预算移除`);
   }
 
+  function handleChangeManualQuoteItemPrice(itemName: string, value: string) {
+    setManualQuoteItemPriceInputs((current) => ({ ...current, [itemName]: value }));
+    setMessage(value.trim() ? `${itemName} 单价已调整，本次预算导出会使用该单价。` : `${itemName} 单价已恢复为报价规则默认值。`);
+  }
+
   function handleUseManualQuoteSuggestion(itemName: string, quantity: number) {
     handleChangeManualQuoteItem(itemName, String(quantity));
     setMessage(`${itemName} 已填入建议数量 ${quantity}`);
@@ -1039,6 +1054,7 @@ export function UploadWorkbench({
 
   function handleResetManualQuoteItems() {
     setManualQuoteItemInputs({});
+    setManualQuoteItemPriceInputs({});
     setBathroomManualChoices({});
     setMessage("方案报价可选项已恢复默认");
   }
@@ -1327,7 +1343,8 @@ export function UploadWorkbench({
           </button>
           <button className="primaryAction" type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadQuoteExcelDraft}>
             <Download aria-hidden="true" size={18} />
-            预算导出
+            <span>预算导出：</span>
+            <strong>{activeQuoteModeOption.label}</strong>
           </button>
           <button className="secondaryAction" type="button" disabled={isUploading || isComparing} onClick={handleDownloadSpaceNamingGuide}>
             <Download aria-hidden="true" size={18} />
@@ -1663,6 +1680,8 @@ export function UploadWorkbench({
             <div className="manualQuoteGrid">
               {MANUAL_QUOTE_OPTION_ITEMS.map((item) => {
                 const selectedQuantity = manualQuoteItemQuantities[item.itemName] ?? 0;
+                const unitPrice = item.itemName === ALUMINUM_WINDOW_ITEM_NAME ? aluminumWindowUnitPrice : 0;
+                const defaultUnitPrice = item.itemName === ALUMINUM_WINDOW_ITEM_NAME ? aluminumWindowRulePrice : 0;
                 const selectedAmount = item.itemName === ALUMINUM_WINDOW_ITEM_NAME ? aluminumWindowSelectedAmount : 0;
                 return (
                   <div className="manualQuoteItem" key={item.itemName}>
@@ -1682,13 +1701,23 @@ export function UploadWorkbench({
                         onChange={(event) => handleChangeManualQuoteItem(item.itemName, event.target.value)}
                       />
                     </label>
-                    <div className="manualQuotePrice">
+                    <label className="manualQuotePrice">
                       <span>单价</span>
-                      <strong>{item.itemName === ALUMINUM_WINDOW_ITEM_NAME ? ALUMINUM_WINDOW_UNIT_PRICE : 0} 元/{item.unit}</strong>
-                    </div>
+                      <input
+                        aria-label={`${item.itemName} 预算单价`}
+                        min="0"
+                        step="0.01"
+                        type="number"
+                        placeholder={defaultUnitPrice.toFixed(2)}
+                        value={manualQuoteItemPriceInputs[item.itemName] ?? ""}
+                        onChange={(event) => handleChangeManualQuoteItemPrice(item.itemName, event.target.value)}
+                      />
+                      <small>默认 {defaultUnitPrice.toFixed(2)} 元/{item.unit}</small>
+                    </label>
                     <div className="manualQuotePrice">
                       <span>总价</span>
                       <strong>{selectedAmount.toFixed(2)} 元</strong>
+                      <small>{unitPrice.toFixed(2)} 元/{item.unit}</small>
                     </div>
                     <div className="manualQuoteActions">
                       <button type="button" disabled={aluminumWindowSuggestedArea <= 0} onClick={() => handleUseManualQuoteSuggestion(item.itemName, aluminumWindowSuggestedArea)}>
@@ -1969,7 +1998,7 @@ export function UploadWorkbench({
             <div className="curtainReadiness">
               <strong>方案报价可选项 {MANUAL_QUOTE_OPTION_ITEMS.length} 项</strong>
               <span>
-                当前已填写 {manualQuoteEditedCount} 项；这些数量只写入预算导出，不改变报价映射 JSON 的自动合计。
+                当前已调整 {manualQuoteEditedCount} 项；数量和本次单价只写入预算导出，不改变报价映射 JSON 的自动合计。
               </span>
             </div>
             <div className="curtainReadiness">
@@ -2081,7 +2110,7 @@ export function UploadWorkbench({
         <div className="sectionHeader">
           <div>
             <h2>空间工程量摘要</h2>
-            <p>默认展示设计师需要快速核对的面积、墙线、窗洞和状态；完整明细可展开查看。</p>
+            <p>默认折叠；有异常提示时自动展开，设计师核对面积、墙线和窗洞后确认空间。</p>
           </div>
         </div>
         <QuantityTable rows={rows} differences={comparison?.differences ?? []} onChangeStatus={handleChangeStatus} onChangeSpaceType={handleChangeSpaceType} onChangeCurtainWallWidth={handleChangeCurtainWallWidth} onChangeCeilingFinishType={handleChangeCeilingFinishType} />

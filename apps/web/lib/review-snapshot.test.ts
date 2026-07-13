@@ -58,6 +58,9 @@ const snapshot = buildReviewSnapshot({
     马桶: 2,
     淋浴隔断: 2,
   },
+  excelManualItemPrices: {
+    铝合金封门窗: 650,
+  },
   quoteMode: "hard_plus",
   selectedQuotePackageIds: ["tile_materials", "custom_cabinet"],
   selectedQuoteItemNames: ["地面瓷砖", "窗帘"],
@@ -106,6 +109,7 @@ assert.equal(snapshot.rows[0].status, "confirmed");
 assert.equal(snapshot.hydropower?.reviewStatus, "confirmed");
 assert.deepEqual(snapshot.accepted_health_check_keys, ["space-type-other:客厅"]);
 assert.deepEqual(snapshot.excel_manual_item_quantities, { 入户门: 1, 马桶: 2, 淋浴隔断: 2 });
+assert.deepEqual(snapshot.excel_manual_item_prices, { 铝合金封门窗: 650 });
 assert.equal(snapshot.quote_mode, "hard_plus");
 assert.deepEqual(snapshot.selected_quote_package_ids, ["main_materials", "other_finishing", "custom_cabinet"]);
 assert.deepEqual(snapshot.selected_quote_item_names, ["地面瓷砖", "窗帘"]);
@@ -130,6 +134,7 @@ assert.equal(parsed.rows[0].spaceType, "厨房");
 assert.equal(parsed.hydropower?.reviewStatus, "confirmed");
 assert.deepEqual(parsed.accepted_health_check_keys, ["space-type-other:客厅"]);
 assert.deepEqual(parsed.excel_manual_item_quantities, { 入户门: 1, 马桶: 2, 淋浴隔断: 2 });
+assert.deepEqual(parsed.excel_manual_item_prices, { 铝合金封门窗: 650 });
 assert.equal(parsed.quote_mode, "hard_plus");
 assert.deepEqual(parsed.selected_quote_package_ids, ["main_materials", "other_finishing", "custom_cabinet"]);
 assert.deepEqual(parsed.selected_quote_item_names, ["地面瓷砖", "窗帘"]);
@@ -187,6 +192,7 @@ assert.ok(manuallyClassifiedMapping.items.some((item) => item.space_name === "�
 
 const legacySnapshot = {
   ...snapshot,
+  excel_manual_item_prices: undefined,
   summary: {
     ...snapshot.summary,
     building_area_m2: undefined,
@@ -243,12 +249,14 @@ assert.equal(parsedLegacySnapshot.rows[0].bathroomVanityCount, 0);
 assert.equal(parsedLegacySnapshot.summary?.building_area_m2, 0);
 assert.deepEqual(parsedLegacySnapshot.accepted_health_check_keys, ["space-type-other:客厅"]);
 assert.deepEqual(parsedLegacySnapshot.excel_manual_item_quantities, { 入户门: 1, 马桶: 2, 淋浴隔断: 2 });
+assert.deepEqual(parsedLegacySnapshot.excel_manual_item_prices, {});
 assert.equal(parsedLegacySnapshot.hydropower?.reviewStatus, "confirmed");
 
 const olderSnapshot = {
   ...snapshot,
   accepted_health_check_keys: undefined,
   excel_manual_item_quantities: undefined,
+  excel_manual_item_prices: undefined,
   quote_mode: undefined,
   selected_quote_package_ids: undefined,
   selected_quote_item_names: undefined,
@@ -256,6 +264,7 @@ const olderSnapshot = {
 };
 assert.deepEqual(parseReviewSnapshot(JSON.stringify(olderSnapshot)).accepted_health_check_keys, []);
 assert.deepEqual(parseReviewSnapshot(JSON.stringify(olderSnapshot)).excel_manual_item_quantities, {});
+assert.deepEqual(parseReviewSnapshot(JSON.stringify(olderSnapshot)).excel_manual_item_prices, {});
 assert.equal(parseReviewSnapshot(JSON.stringify(olderSnapshot)).quote_mode, "full");
 assert.deepEqual(parseReviewSnapshot(JSON.stringify(olderSnapshot)).selected_quote_package_ids, []);
 assert.deepEqual(parseReviewSnapshot(JSON.stringify(olderSnapshot)).selected_quote_item_names, []);
@@ -271,6 +280,16 @@ const snapshotWithInvalidManualQuantities = {
   },
 };
 assert.deepEqual(parseReviewSnapshot(JSON.stringify(snapshotWithInvalidManualQuantities)).excel_manual_item_quantities, { 入户门: 1 });
+
+const snapshotWithInvalidManualPrices = {
+  ...snapshot,
+  excel_manual_item_prices: {
+    铝合金封门窗: 650,
+    负数单价: -1,
+    坏单价: "bad",
+  },
+};
+assert.deepEqual(parseReviewSnapshot(JSON.stringify(snapshotWithInvalidManualPrices)).excel_manual_item_prices, { 铝合金封门窗: 650 });
 
 const invalidHydropowerSnapshot = {
   ...snapshot,

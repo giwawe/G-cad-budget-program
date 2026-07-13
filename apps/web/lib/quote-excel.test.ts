@@ -725,6 +725,12 @@ assertQuoteRow(manualDraftHtml, "蹲坑", "套", "0", "500.00", "0.00", "0.00", 
 assertQuoteRow(manualDraftHtml, "淋浴隔断", "套", "2", "800.00", "0.00", "0.00", "1600.00");
 assertQuoteRow(manualDraftHtml, "玻璃淋浴房", "套", "0", "1200.00", "0.00", "0.00", "0.00");
 
+const manualPriceOverrideHtml = buildQuoteExcelHtml(mapping, "人工改价项目", {
+  manualItems: { 铝合金封门窗: 2 },
+  manualItemPrices: { 铝合金封门窗: 650 },
+});
+assertQuoteRow(manualPriceOverrideHtml, "铝合金封门窗", "M2", "2", "650.00", "0.00", "0.00", "1300.00");
+
 const editedPricePartHtml = buildQuoteExcelHtml(
   {
     ...mapping,

@@ -8,6 +8,7 @@ export type ReviewSnapshot = {
   calibration_file: string | null;
   accepted_health_check_keys: string[];
   excel_manual_item_quantities: Record<string, number>;
+  excel_manual_item_prices: Record<string, number>;
   quote_mode: QuoteMode;
   selected_quote_package_ids: QuotePackageId[];
   selected_quote_item_names: string[];
@@ -24,6 +25,7 @@ export function buildReviewSnapshot({
   rows,
   acceptedHealthCheckKeys = [],
   excelManualItemQuantities = {},
+  excelManualItemPrices = {},
   quoteMode = "full",
   selectedQuotePackageIds = [],
   selectedQuoteItemNames = [],
@@ -37,6 +39,7 @@ export function buildReviewSnapshot({
   rows: QuantityRow[];
   acceptedHealthCheckKeys?: string[];
   excelManualItemQuantities?: Partial<Record<string, number>>;
+  excelManualItemPrices?: Partial<Record<string, number>>;
   quoteMode?: QuoteMode;
   selectedQuotePackageIds?: QuotePackageId[];
   selectedQuoteItemNames?: string[];
@@ -51,6 +54,7 @@ export function buildReviewSnapshot({
     calibration_file: calibrationFileName || null,
     accepted_health_check_keys: acceptedHealthCheckKeys,
     excel_manual_item_quantities: normalizeExcelManualItemQuantities(excelManualItemQuantities),
+    excel_manual_item_prices: normalizeExcelManualItemPrices(excelManualItemPrices),
     quote_mode: normalizeSnapshotQuoteMode(quoteMode),
     selected_quote_package_ids: normalizeSnapshotQuotePackageIds(selectedQuotePackageIds),
     selected_quote_item_names: normalizeSnapshotQuoteItemNames(selectedQuoteItemNames),
@@ -93,6 +97,7 @@ export function parseReviewSnapshot(content: string): ReviewSnapshot {
     calibration_file: typeof snapshot.calibration_file === "string" ? snapshot.calibration_file : null,
     accepted_health_check_keys: normalizeAcceptedHealthCheckKeys(snapshot.accepted_health_check_keys),
     excel_manual_item_quantities: normalizeExcelManualItemQuantities(snapshot.excel_manual_item_quantities),
+    excel_manual_item_prices: normalizeExcelManualItemPrices(snapshot.excel_manual_item_prices),
     quote_mode: normalizeSnapshotQuoteMode(snapshot.quote_mode),
     selected_quote_package_ids: normalizeSnapshotQuotePackageIds(snapshot.selected_quote_package_ids),
     selected_quote_item_names: normalizeSnapshotQuoteItemNames(snapshot.selected_quote_item_names),
@@ -119,6 +124,17 @@ function normalizeExcelManualItemQuantities(quantities: unknown): Record<string,
     Object.entries(quantities)
       .filter((entry): entry is [string, number] => typeof entry[0] === "string" && entry[0].trim().length > 0 && typeof entry[1] === "number" && Number.isFinite(entry[1]) && entry[1] >= 0)
       .map(([itemName, quantity]) => [itemName, Math.round(quantity * 100) / 100]),
+  );
+}
+
+function normalizeExcelManualItemPrices(prices: unknown): Record<string, number> {
+  if (!prices || typeof prices !== "object" || Array.isArray(prices)) {
+    return {};
+  }
+  return Object.fromEntries(
+    Object.entries(prices)
+      .filter((entry): entry is [string, number] => typeof entry[0] === "string" && entry[0].trim().length > 0 && typeof entry[1] === "number" && Number.isFinite(entry[1]) && entry[1] >= 0)
+      .map(([itemName, price]) => [itemName, Math.round(price * 100) / 100]),
   );
 }
 

@@ -31,7 +31,7 @@ const KIND_LABELS: Record<HydropowerPointKind, string> = {
   floor_drain: "地漏",
 };
 
-function groupPoints(points: HydropowerPoint[]) {
+function groupPointsBySpace(points: HydropowerPoint[]) {
   const grouped = new Map<string, HydropowerPoint[]>();
   for (const point of points) {
     const key = `${point.floor}｜${point.spaceName}`;
@@ -43,6 +43,22 @@ function groupPoints(points: HydropowerPoint[]) {
     grouped.set(key, [point]);
   }
   return [...grouped.entries()];
+}
+
+function groupPointsBySpaceType(points: HydropowerPoint[]) {
+  const grouped = new Map<string, { pointCount: number; spaces: Set<string> }>();
+  for (const point of points) {
+    const key = point.spaceType || "其他";
+    const current = grouped.get(key) ?? { pointCount: 0, spaces: new Set<string>() };
+    current.pointCount += Math.max(point.quantity, 0);
+    current.spaces.add(`${point.floor}｜${point.spaceName}`);
+    grouped.set(key, current);
+  }
+  return [...grouped.entries()].map(([spaceType, summary]) => ({
+    spaceType,
+    pointCount: summary.pointCount,
+    spaceCount: summary.spaces.size,
+  }));
 }
 
 function formatPipeLength(length: number) {
@@ -59,14 +75,15 @@ export function HydropowerReviewPanel({ estimate, onConfirm, onPointQuantityChan
   }
 
   const quoteSummary = aggregateHydropowerQuoteSummary(estimate.summary);
-  const groupedPoints = groupPoints(estimate.points);
+  const groupedPoints = groupPointsBySpace(estimate.points);
+  const groupedSpaceTypes = groupPointsBySpaceType(estimate.points);
   const reviewStatusLabel =
     estimate.reviewStatus === "confirmed"
-      ? "已确认"
+      ? "已确定"
       : estimate.reviewStatus === "needs_review"
-        ? "已调整，待确认"
-        : "系统推算";
-  const confirmLabel = estimate.reviewStatus === "needs_review" ? "确认修改并同步预算" : "确认水电点位";
+        ? "已修改，待确认"
+        : "";
+  const confirmLabel = estimate.reviewStatus === "needs_review" ? "确认修改" : "确定水电点位";
 
   return (
     <section className="reviewSection hydropowerReviewPanel">
@@ -75,8 +92,8 @@ export function HydropowerReviewPanel({ estimate, onConfirm, onPointQuantityChan
           <h2>水电点位复核</h2>
           <p>汇总数量会带入预算导出；各空间点位明细默认收起，需要调整时展开修改。</p>
         </div>
-        <div>
-          <strong>{reviewStatusLabel}</strong>
+        <div className="hydropowerConfirmActions">
+          {reviewStatusLabel && <strong>{reviewStatusLabel}</strong>}
           <button type="button" onClick={onConfirm}>{confirmLabel}</button>
         </div>
       </div>
@@ -97,34 +114,47 @@ export function HydropowerReviewPanel({ estimate, onConfirm, onPointQuantityChan
         <div><span>低置信点位</span><strong>{estimate.summary.lowConfidencePointCount}</strong></div>
       </div>
 
-      <div className="healthList">
-        {groupedPoints.map(([group, points]) => (
-          <details className="healthCard info hydropowerSpaceDetails" key={group}>
-            <summary>
-              <strong>{group}</strong>
-              <span>{points.length} 个推荐点位</span>
-            </summary>
-            <div className="hydropowerPointGrid">
-              {points.map((point) => (
-                <label className="hydropowerPointItem" key={point.id}>
-                  <span>
-                    <strong>{KIND_LABELS[point.kind] ?? point.label}</strong>
-                    <small>{point.note}</small>
-                  </span>
-                  <input
-                    aria-label={`${point.spaceName} ${point.label} 数量`}
-                    min="0"
-                    step="1"
-                    type="number"
-                    value={point.quantity}
-                    onChange={(event) => onPointQuantityChange(point.id, Number(event.target.value))}
-                  />
-                </label>
-              ))}
-            </div>
-          </details>
+      <div className="hydropowerCategoryGrid" aria-label="水电点位空间类别摘要">
+        {groupedSpaceTypes.map((group) => (
+          <div className="hydropowerCategoryCard" key={group.spaceType}>
+            <strong>{group.spaceType}</strong>
+            <span>{group.spaceCount} 个空间</span>
+            <em>{group.pointCount.toFixed(0)} 个点位</em>
+          </div>
         ))}
       </div>
+
+      <details className="hydropowerAdvancedDetails">
+        <summary>查看各空间点位明细</summary>
+        <div className="healthList">
+          {groupedPoints.map(([group, points]) => (
+            <details className="healthCard info hydropowerSpaceDetails" key={group}>
+              <summary>
+                <strong>{group}</strong>
+                <span>{points.length} 个推荐点位</span>
+              </summary>
+              <div className="hydropowerPointGrid">
+                {points.map((point) => (
+                  <label className="hydropowerPointItem" key={point.id}>
+                    <span>
+                      <strong>{KIND_LABELS[point.kind] ?? point.label}</strong>
+                      <small>{point.note}</small>
+                    </span>
+                    <input
+                      aria-label={`${point.spaceName} ${point.label} 数量`}
+                      min="0"
+                      step="1"
+                      type="number"
+                      value={point.quantity}
+                      onChange={(event) => onPointQuantityChange(point.id, Number(event.target.value))}
+                    />
+                  </label>
+                ))}
+              </div>
+            </details>
+          ))}
+        </div>
+      </details>
     </section>
   );
 }

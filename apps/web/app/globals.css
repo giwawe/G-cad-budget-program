@@ -112,6 +112,17 @@ input {
   font-weight: 800;
 }
 
+.primaryAction span,
+.primaryAction strong {
+  min-width: 0;
+  color: inherit;
+  line-height: 1.2;
+}
+
+.primaryAction strong {
+  font-size: 13px;
+}
+
 .secondaryAction,
 .advancedToolsPanel button,
 .quoteRulesActions button {
@@ -715,7 +726,7 @@ code {
 .manualQuoteItem {
   min-width: 0;
   display: grid;
-  grid-template-columns: minmax(180px, 1.2fr) minmax(120px, 0.7fr) minmax(120px, 0.7fr) minmax(120px, 0.7fr) auto;
+  grid-template-columns: minmax(180px, 1.15fr) minmax(130px, 0.7fr) minmax(150px, 0.75fr) minmax(130px, 0.7fr) auto;
   align-items: center;
   gap: 12px;
   border: 1px solid #e0e6ee;
@@ -761,12 +772,21 @@ code {
 }
 
 .manualQuoteItem input {
+  width: 100%;
   min-height: 34px;
 }
 
 .manualQuotePrice {
   display: grid;
   gap: 5px;
+}
+
+.manualQuotePrice input {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--ink);
+  padding: 7px 9px;
 }
 
 .manualQuotePrice strong {
@@ -1071,6 +1091,70 @@ code {
   border-color: #cbd5e1;
   background: #f1f5f9;
   color: #334155;
+}
+
+.hydropowerConfirmActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.hydropowerConfirmActions strong {
+  color: var(--accent);
+  font-size: 13px;
+}
+
+.hydropowerCategoryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.hydropowerCategoryCard {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+  border: 1px solid #d8e5ea;
+  border-radius: 8px;
+  background: #fbfdfd;
+  padding: 10px 12px;
+}
+
+.hydropowerCategoryCard strong {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.hydropowerCategoryCard span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.hydropowerCategoryCard em {
+  color: var(--accent);
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.hydropowerAdvancedDetails {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.hydropowerAdvancedDetails > summary {
+  cursor: pointer;
+  color: #31535d;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 12px 14px;
+}
+
+.hydropowerAdvancedDetails .healthList {
+  border-top: 1px solid #e2e8f0;
+  padding: 12px;
 }
 
 .hydropowerSpaceDetails {
@@ -1865,10 +1949,44 @@ code {
   padding: 16px;
 }
 
+.quantityCardsDetails {
+  border: 1px solid #dce5e8;
+  border-radius: 8px;
+  background: #fbfdfd;
+}
+
+.quantityCardsDetails > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  cursor: pointer;
+  padding: 14px 16px;
+}
+
+.quantityCardsDetails > summary strong {
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.quantityCardsDetails > summary span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.quantityCardsDetails[open] {
+  background: #ffffff;
+}
+
+.quantityCardsDetails[open] > summary {
+  border-bottom: 1px solid var(--line);
+}
+
 .quantityCardGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
+  padding: 14px;
 }
 
 .quantitySpaceCard {
@@ -1968,6 +2086,77 @@ code {
   margin-top: 4px;
   color: var(--ink);
   font-size: 14px;
+}
+
+.quantityMetricGrid .inlineNumberField {
+  display: flex;
+  margin-top: 4px;
+}
+
+.quantityMetricGrid .inlineNumberField input {
+  width: 88px;
+}
+
+.quantityMetricGrid .curtainWallSource {
+  display: block;
+  width: fit-content;
+  margin-top: 6px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.quantityMetricGrid .curtainWallSource.fallback_longest_wall {
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.quantityMetricGrid .curtainWallSource.manual_required_l_shape_window {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.quantityMetricGrid .curtainWallSource.matched_window_wall {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.quantityMetricGrid .curtainWallSource.matched_l_shape_window {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.quantityMetricGrid .curtainWallSource.manual {
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.quantityCardActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quantityCardActions button {
+  min-height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #ffffff;
+  color: #334155;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 0 10px;
+}
+
+.quantityCardActions button:first-child {
+  border-color: var(--accent);
+  background: #e9f7f3;
+  color: var(--accent);
 }
 
 .quantityAnomalies {
@@ -2213,6 +2402,7 @@ td .curtainWallHelp {
   .summaryCards,
   .calibrationDifferences,
   .healthList,
+  .hydropowerCategoryGrid,
   .quoteSummary,
   .quoteGaps ul,
   .quantityCardGrid,
@@ -2317,6 +2507,11 @@ td .curtainWallHelp {
 
   .quantityMetricGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .quantityCardsDetails > summary {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 

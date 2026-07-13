@@ -5,7 +5,9 @@ import {
   bathroomManualChoicesFromQuantities,
   bathroomRowsFromRows,
   manualQuoteInputsFromBathroomChoices,
+  manualQuoteInputsFromPrices,
   manualQuoteInputsFromQuantities,
+  manualQuotePricesFromInputs,
   manualQuoteQuantitiesFromInputs,
 } from "./manual-quote-options.ts";
 import type { QuantityRow } from "./types.ts";
@@ -75,6 +77,12 @@ assert.deepEqual(manualQuoteQuantitiesFromInputs({ 入户门: "1", 马桶: "2.34
 });
 
 assert.deepEqual(manualQuoteInputsFromQuantities({ 入户门: 1, 马桶: 2 }), { 入户门: "1", 马桶: "2" });
+
+assert.deepEqual(manualQuotePricesFromInputs({ 铝合金封门窗: "650.236", 坏单价: "bad", 负数单价: "-1", 空单价: "" }), {
+  铝合金封门窗: 650.24,
+});
+
+assert.deepEqual(manualQuoteInputsFromPrices({ 铝合金封门窗: 650 }), { 铝合金封门窗: "650" });
 
 assert.deepEqual(
   manualQuoteInputsFromBathroomChoices(

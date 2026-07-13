@@ -15,6 +15,7 @@ assert.ok(uploadWorkbenchSource.includes("画图规范"), "top toolbar should ex
 assert.ok(uploadWorkbenchSource.includes("handleDownloadSpaceNamingGuide"), "space naming guide should be downloadable from the workbench");
 assert.ok(uploadWorkbenchSource.includes("handleDownloadDrawingSpecGuide"), "drawing guide should be downloadable from the workbench");
 assert.ok(uploadWorkbenchSource.includes("handleDownloadQuoteExcelDraft"), "Excel draft export should be available before the quote mapping panel is shown");
+assert.ok(uploadWorkbenchSource.includes("预算导出："), "top toolbar budget export should show the active budget mode");
 assert.ok(uploadWorkbenchSource.includes("方案报价可选项"), "quote mapping panel should explain that optional quote items are included in budget exports");
 assert.ok(uploadWorkbenchSource.includes("quoteRuleSearch"), "quote rule panel should keep a search state for fast price edits");
 assert.ok(uploadWorkbenchSource.includes("筛选报价规则"), "quote rule panel should expose a visible search control");
@@ -42,8 +43,11 @@ assert.ok(uploadWorkbenchSource.includes("自动取数，需复核"), "quote int
 assert.ok(uploadWorkbenchSource.includes("固定占位/设计师手填"), "quote integration status should include manual placeholder items");
 assert.ok(uploadWorkbenchSource.includes("暂不接入"), "quote integration status should include currently excluded items");
 assert.ok(uploadWorkbenchSource.includes("manualItems: manualQuoteItemQuantities"), "Excel draft export should apply manual quote item quantities");
+assert.ok(uploadWorkbenchSource.includes("manualItemPrices: { [ALUMINUM_WINDOW_ITEM_NAME]: aluminumWindowUnitPrice }"), "Excel draft export should apply manual quote item unit prices");
 assert.ok(uploadWorkbenchSource.includes("excelManualItemQuantities: manualQuoteItemQuantities"), "review snapshots should persist manual quote item quantities");
+assert.ok(uploadWorkbenchSource.includes("excelManualItemPrices: manualQuoteItemPriceOverrides"), "review snapshots should persist manual quote item price overrides");
 assert.ok(uploadWorkbenchSource.includes("manualQuoteInputsFromQuantities(snapshot.excel_manual_item_quantities)"), "review snapshot import should restore manual quote item inputs");
+assert.ok(uploadWorkbenchSource.includes("manualQuoteInputsFromPrices(snapshot.excel_manual_item_prices)"), "review snapshot import should restore manual quote item price inputs");
 assert.ok(uploadWorkbenchSource.includes("QuoteExcelProjectInfo"), "workbench should type quote project header information");
 assert.ok(uploadWorkbenchSource.includes("const [quoteProjectInfo, setQuoteProjectInfo]"), "workbench should keep quote project header state");
 assert.ok(uploadWorkbenchSource.includes("方案信息"), "workbench should expose quote project header fields");
@@ -74,6 +78,10 @@ assert.ok(hydropowerPanelSource.includes("强电插座"), "hydropower panel shou
 assert.ok(hydropowerPanelSource.includes("设备专线"), "hydropower panel should show equipment circuit aggregate");
 assert.ok(hydropowerPanelSource.includes("给水点"), "hydropower panel should show water point aggregate");
 assert.ok(hydropowerPanelSource.includes("groupedPoints.map"), "hydropower panel should keep fine-grained per-space sources");
+assert.ok(hydropowerPanelSource.includes("hydropowerCategoryGrid"), "hydropower panel should summarize points by space category before details");
+assert.ok(hydropowerPanelSource.includes("查看各空间点位明细"), "hydropower panel should keep per-space point details collapsed");
+assert.ok(hydropowerPanelSource.includes("确认修改"), "hydropower panel should show a concise confirm-modification action after edits");
+assert.ok(!hydropowerPanelSource.includes("系统推算"), "hydropower panel should not use system-internal wording in the designer UI");
 assert.ok(drawingReviewSource.includes("hydropowerPoints?: HydropowerPoint[]"), "drawing review should accept hydropower points as an optional overlay prop");
 assert.ok(drawingReviewSource.includes("showHydropowerPoints"), "drawing review should expose a hydropower point layer toggle");
 assert.ok(drawingReviewSource.includes("svgHydropowerPoint"), "drawing review should render hydropower point markers");
@@ -93,5 +101,5 @@ assert.ok(drawingReviewSource.includes("svgNoCeiling"), "drawing review should r
 assert.ok(hydropowerReviewPanelSource.includes("HydropowerEstimate"), "hydropower review panel should type its estimate prop");
 assert.ok(hydropowerReviewPanelSource.includes("HydropowerPointKind"), "hydropower review panel should map point kinds to labels");
 assert.ok(hydropowerReviewPanelSource.includes("水电点位复核"), "hydropower review panel should render the review heading");
-assert.ok(hydropowerReviewPanelSource.includes("确认水电点位"), "hydropower review panel should render the confirm action");
+assert.ok(hydropowerReviewPanelSource.includes("确定水电点位"), "hydropower review panel should render the confirm action");
 assert.ok(hydropowerReviewPanelSource.includes("onPointQuantityChange"), "hydropower review panel should let the user edit suggested point quantities");

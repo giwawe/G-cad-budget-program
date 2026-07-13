@@ -10,6 +10,7 @@ export type ManualQuoteDraftItem = {
 };
 
 export type QuoteExcelManualItemQuantities = Partial<Record<string, number>>;
+export type QuoteExcelManualItemPrices = Partial<Record<string, number>>;
 
 export type QuoteExcelProjectInfo = {
   addressName?: string;
@@ -22,6 +23,7 @@ export type QuoteExcelProjectInfo = {
 
 export type QuoteExcelOptions = {
   manualItems?: QuoteExcelManualItemQuantities;
+  manualItemPrices?: QuoteExcelManualItemPrices;
   bathroomChoices?: Record<string, BathroomManualChoice>;
   bathroomRows?: QuantityRow[];
   projectInfo?: QuoteExcelProjectInfo;
@@ -523,7 +525,7 @@ function quoteTemplateSectionRows(
       for (const matchedItem of matchingItems) {
         remainingItems.delete(matchedItem);
       }
-      const item = manualQuoteItem(templateItemName, manualQuantity);
+      const item = manualQuoteItem(templateItemName, manualQuantity, options);
       subtotal += item.amount;
       rows.push(quoteItemTemplateRow(item, rowIndex++));
       continue;
@@ -604,8 +606,8 @@ function zeroItemTemplateRow(itemName: string, index: number): string[] {
   return [String(index), itemName, templateUnitForItem(itemName), "0", formatMoney(price.material), formatMoney(price.auxiliary), formatMoney(price.labor), "0.00", note];
 }
 
-function manualQuoteItem(itemName: string, quantity: number): QuoteMapping["items"][number] {
-  const price = TEMPLATE_PRICES[itemName] ?? { material: 0, auxiliary: 0, labor: 0, note: "" };
+function manualQuoteItem(itemName: string, quantity: number, options: QuoteExcelOptions): QuoteMapping["items"][number] {
+  const price = manualPriceForItem(itemName, options);
   const unitPrice = round2(price.material + price.auxiliary + price.labor);
   return {
     floor: "全屋",
@@ -619,6 +621,20 @@ function manualQuoteItem(itemName: string, quantity: number): QuoteMapping["item
     auxiliary_price: price.auxiliary,
     labor_price: price.labor,
     amount: round2(quantity * unitPrice),
+  };
+}
+
+function manualPriceForItem(itemName: string, options: QuoteExcelOptions): QuoteTemplatePrice {
+  const basePrice = TEMPLATE_PRICES[itemName] ?? { material: 0, auxiliary: 0, labor: 0, note: "" };
+  const manualUnitPrice = options.manualItemPrices?.[itemName];
+  if (typeof manualUnitPrice !== "number" || !Number.isFinite(manualUnitPrice) || manualUnitPrice < 0) {
+    return basePrice;
+  }
+  return {
+    ...basePrice,
+    material: round2(manualUnitPrice),
+    auxiliary: 0,
+    labor: 0,
   };
 }
 

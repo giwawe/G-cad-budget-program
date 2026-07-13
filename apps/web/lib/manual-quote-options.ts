@@ -1,4 +1,4 @@
-import type { QuoteExcelManualItemQuantities } from "./quote-excel";
+import type { QuoteExcelManualItemPrices, QuoteExcelManualItemQuantities } from "./quote-excel";
 import type { QuantityRow } from "./types";
 
 export type BathroomManualChoice = {
@@ -31,6 +31,19 @@ export function manualQuoteQuantitiesFromInputs(inputs: Record<string, string>):
 
 export function manualQuoteInputsFromQuantities(quantities: Record<string, number>): Record<string, string> {
   return Object.fromEntries(Object.entries(quantities).map(([itemName, quantity]) => [itemName, String(quantity)]));
+}
+
+export function manualQuotePricesFromInputs(inputs: Record<string, string>): QuoteExcelManualItemPrices {
+  return Object.fromEntries(
+    Object.entries(inputs)
+      .map(([itemName, value]) => [itemName, value.trim() === "" ? undefined : Number(value)] as const)
+      .filter((entry): entry is [string, number] => entry[1] !== undefined && Number.isFinite(entry[1]) && entry[1] >= 0)
+      .map(([itemName, value]) => [itemName, round2(value)]),
+  );
+}
+
+export function manualQuoteInputsFromPrices(prices: Record<string, number>): Record<string, string> {
+  return Object.fromEntries(Object.entries(prices).map(([itemName, price]) => [itemName, String(price)]));
 }
 
 export function manualQuoteInputsFromBathroomChoices(

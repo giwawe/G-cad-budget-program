@@ -14,3 +14,9 @@ assert.ok(source.includes("value={row.spaceType}"), "space type select should sh
 assert.ok(source.includes("普通干区"), "space type correction should expose a dry-area billing group label");
 assert.ok(source.includes("湿区"), "space type correction should expose a wet-area billing group label");
 assert.ok(source.includes("不计价"), "space type correction should explain excluded spaces can be marked as not quoted");
+assert.ok(source.includes("quantityCardsDetails"), "designer-facing quantity review should be a collapsible card summary");
+assert.ok(source.includes("确认本空间"), "space cards should expose an explicit confirmation action");
+assert.ok(source.includes("setIsSummaryOpen(true)"), "space summary should expand automatically when rows have anomaly prompts");
+assert.ok(source.includes("open={isSummaryOpen}"), "space summary should remain user-controllable after it opens");
+assert.ok(!source.includes("advancedQuantityDetails"), "full quantity detail table should not be shown in the designer-facing frontend");
+assert.ok(!source.includes("查看完整工程量明细"), "full quantity detail table should be reserved for backend/admin workflows");
