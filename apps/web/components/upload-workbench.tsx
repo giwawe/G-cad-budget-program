@@ -1343,9 +1343,9 @@ export function UploadWorkbench({
           </button>
           <button className="primaryAction" type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadQuoteExcelDraft}>
             <Download aria-hidden="true" size={18} />
-            <span>预算导出：</span>
-            <strong>{activeQuoteModeOption.label}</strong>
+            预算导出
           </button>
+          <span className="budgetModeHint">当前预算：{activeQuoteModeOption.label}</span>
           <button className="secondaryAction" type="button" disabled={isUploading || isComparing} onClick={handleDownloadSpaceNamingGuide}>
             <Download aria-hidden="true" size={18} />
             空间命名规范
@@ -2110,7 +2110,7 @@ export function UploadWorkbench({
         <div className="sectionHeader">
           <div>
             <h2>空间工程量摘要</h2>
-            <p>默认折叠；有异常提示时自动展开，设计师核对面积、墙线和窗洞后确认空间。</p>
+            <p>空间默认折叠；有异常提示时自动展开，设计师需要修改时展开核对面积、墙砖和窗洞。</p>
           </div>
         </div>
         <QuantityTable rows={rows} differences={comparison?.differences ?? []} onChangeStatus={handleChangeStatus} onChangeSpaceType={handleChangeSpaceType} onChangeCurtainWallWidth={handleChangeCurtainWallWidth} onChangeCeilingFinishType={handleChangeCeilingFinishType} />

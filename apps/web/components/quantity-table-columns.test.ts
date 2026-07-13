@@ -15,7 +15,12 @@ assert.ok(source.includes("普通干区"), "space type correction should expose 
 assert.ok(source.includes("湿区"), "space type correction should expose a wet-area billing group label");
 assert.ok(source.includes("不计价"), "space type correction should explain excluded spaces can be marked as not quoted");
 assert.ok(source.includes("quantityCardsDetails"), "designer-facing quantity review should be a collapsible card summary");
-assert.ok(source.includes("确认本空间"), "space cards should expose an explicit confirmation action");
+assert.ok(source.includes("open={rowOpen}"), "each space card should be individually collapsible");
+assert.ok(source.includes("markRowEdited(rowKey)"), "editing a space should mark that row as needing confirmation");
+assert.ok(source.includes("rowEdited || (rowHasAnomalies"), "confirmation should only show for edited or anomalous rows");
+assert.ok(source.includes("确认修改"), "edited space cards should expose an explicit confirmation action");
+assert.ok(source.includes('label="墙砖"'), "space cards should show wall tile area instead of wall length");
+assert.ok(!source.includes('label="墙线"'), "space cards should not show wall line length as a default card metric");
 assert.ok(source.includes("setIsSummaryOpen(true)"), "space summary should expand automatically when rows have anomaly prompts");
 assert.ok(source.includes("open={isSummaryOpen}"), "space summary should remain user-controllable after it opens");
 assert.ok(!source.includes("advancedQuantityDetails"), "full quantity detail table should not be shown in the designer-facing frontend");

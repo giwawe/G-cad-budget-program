@@ -54,6 +54,18 @@ function differenceClass(difference?: CalibrationDifference) {
   return difference ? "quantityDiffCell" : undefined;
 }
 
+function rowStateKey(row: QuantityRow, index: number) {
+  return `${row.floor}::${row.spaceName}::${index}`;
+}
+
+function addKey(keys: string[], key: string) {
+  return keys.includes(key) ? keys : [...keys, key];
+}
+
+function removeKey(keys: string[], key: string) {
+  return keys.filter((item) => item !== key);
+}
+
 function QuantityStatusBadge({ status }: { status: ReviewStatus }) {
   if (status === "pending_review") {
     return null;
@@ -106,38 +118,75 @@ export function QuantityTable({
     .map((row, index) => ({ row, index }))
     .sort((left, right) => compareFloors(left.row.floor, right.row.floor) || left.index - right.index);
   const anomalyCount = displayRows.filter(({ row }) => row.anomalies.length > 0).length;
+  const anomalyRowKeys = displayRows.filter(({ row }) => row.anomalies.length > 0).map(({ row, index }) => rowStateKey(row, index));
+  const anomalyRowKeySignature = anomalyRowKeys.join("|");
   const [isSummaryOpen, setIsSummaryOpen] = useState(() => anomalyCount > 0);
+  const [openRowKeys, setOpenRowKeys] = useState<string[]>(() => anomalyRowKeys);
+  const [editedRowKeys, setEditedRowKeys] = useState<string[]>([]);
 
   useEffect(() => {
     if (anomalyCount > 0) {
       setIsSummaryOpen(true);
+      const nextAnomalyRowKeys = anomalyRowKeySignature.split("|").filter(Boolean);
+      setOpenRowKeys((current) => nextAnomalyRowKeys.reduce((next, key) => addKey(next, key), current));
     }
-  }, [anomalyCount]);
+  }, [anomalyCount, anomalyRowKeySignature]);
+
+  function markRowEdited(rowKey: string) {
+    setEditedRowKeys((current) => addKey(current, rowKey));
+    setOpenRowKeys((current) => addKey(current, rowKey));
+  }
 
   return (
     <div className="quantityReviewShell">
-      <details className="quantityCardsDetails" open={isSummaryOpen} onToggle={(event) => setIsSummaryOpen(event.currentTarget.open)}>
+      <details
+        className="quantityCardsDetails"
+        open={isSummaryOpen}
+        onToggle={(event) => {
+          if (event.target === event.currentTarget) {
+            setIsSummaryOpen(event.currentTarget.open);
+          }
+        }}
+      >
         <summary>
           <strong>{anomalyCount > 0 ? `${anomalyCount} 个空间需要确认` : `查看空间工程量摘要（${displayRows.length} 个空间）`}</strong>
-          <span>设计师可修改计价类型、顶面口径和窗帘墙宽，核对后确认空间。</span>
+          <span>空间默认收起；有异常或本次修改后再展开确认。</span>
         </summary>
         <div className="quantityCardGrid">
           {displayRows.map(({ row, index }) => {
+            const rowKey = rowStateKey(row, index);
+            const rowHasAnomalies = row.anomalies.length > 0;
+            const rowEdited = editedRowKeys.includes(rowKey);
+            const rowOpen = openRowKeys.includes(rowKey);
             const spaceTypeOptions = QUOTE_SPACE_TYPE_OPTIONS.includes(row.spaceType) ? QUOTE_SPACE_TYPE_OPTIONS : [row.spaceType, ...QUOTE_SPACE_TYPE_OPTIONS];
             const floorAreaDifference = differencesByCell.get(differenceKey(row.spaceName, "floor_area_m2"));
-            const wallLengthDifference = differencesByCell.get(differenceKey(row.spaceName, "wall_measure_length_m"));
+            const wallTileDifference = differencesByCell.get(differenceKey(row.spaceName, "wall_tile_area_m2"));
             const curtainWallDifference = differencesByCell.get(differenceKey(row.spaceName, "curtain_wall_width_m"));
             const curtainWallCalibrationValue = curtainWallCalibrationTarget(row, curtainWallDifference);
             const windowAreaDifference = differencesByCell.get(differenceKey(row.spaceName, "window_area_m2"));
             const latexPaintDifference = differencesByCell.get(differenceKey(row.spaceName, "latex_paint_area_m2"));
             const waterproofDifference = differencesByCell.get(differenceKey(row.spaceName, "waterproof_area_m2"));
             return (
-              <article className={`quantitySpaceCard ${row.status}`} id={quantityRowAnchorId(row.spaceName)} key={`${row.floor}-${row.spaceName}-${index}`}>
-                <div className="quantitySpaceHeader">
+              <details
+                className={`quantitySpaceCard ${row.status}`}
+                id={quantityRowAnchorId(row.spaceName)}
+                key={rowKey}
+                open={rowOpen}
+                onToggle={(event) => {
+                  if (event.target !== event.currentTarget) {
+                    return;
+                  }
+                  setOpenRowKeys((current) => (event.currentTarget.open ? addKey(current, rowKey) : removeKey(current, rowKey)));
+                }}
+              >
+                <summary className="quantitySpaceHeader">
                   <span>{row.floor}</span>
                   <strong>{row.spaceName}</strong>
+                  <small>{row.spaceType}</small>
+                  {rowHasAnomalies && <em>需确认</em>}
+                  {rowEdited && <em className="edited">已修改</em>}
                   <QuantityStatusBadge status={row.status} />
-                </div>
+                </summary>
                 <div className="quantitySpaceControls">
                   {onChangeSpaceType ? (
                     <label>
@@ -146,7 +195,10 @@ export function QuantityTable({
                         aria-label={`${row.spaceName} 空间类型`}
                         className="statusSelect"
                         value={row.spaceType}
-                        onChange={(event) => onChangeSpaceType(row.spaceName, event.target.value)}
+                        onChange={(event) => {
+                          markRowEdited(rowKey);
+                          onChangeSpaceType(row.spaceName, event.target.value);
+                        }}
                       >
                         {spaceTypeOptions.filter((spaceType) => !QUOTE_SPACE_TYPE_OPTIONS.includes(spaceType)).map((spaceType) => (
                           <option key={spaceType} value={spaceType}>
@@ -174,7 +226,10 @@ export function QuantityTable({
                         aria-label={`${row.spaceName} 顶面类型`}
                         className="statusSelect"
                         value={row.ceilingFinishType ?? "integrated"}
-                        onChange={(event) => onChangeCeilingFinishType(row.spaceName, event.target.value as CeilingFinishType)}
+                        onChange={(event) => {
+                          markRowEdited(rowKey);
+                          onChangeCeilingFinishType(row.spaceName, event.target.value as CeilingFinishType);
+                        }}
                       >
                         <option value="integrated">集成吊顶</option>
                         <option value="gypsum">石膏板吊顶</option>
@@ -184,7 +239,7 @@ export function QuantityTable({
                 </div>
                 <div className="quantityMetricGrid">
                   <QuantityMetric label="地面" value={row.floorAreaM2} unit="m2" difference={floorAreaDifference} />
-                  <QuantityMetric label="墙线" value={row.wallMeasureLengthM} unit="m" difference={wallLengthDifference} />
+                  <QuantityMetric label="墙砖" value={row.wallTileAreaM2} unit="m2" difference={wallTileDifference} />
                   <QuantityMetric label="窗洞" value={row.windowAreaM2} unit="m2" difference={windowAreaDifference} />
                   <QuantityMetric label="乳胶漆" value={row.latexPaintAreaM2} unit="m2" difference={latexPaintDifference} />
                   <QuantityMetric label="防水" value={row.waterproofAreaM2} unit="m2" difference={waterproofDifference} />
@@ -198,7 +253,10 @@ export function QuantityTable({
                           step="0.01"
                           type="number"
                           value={row.curtainWallWidthM}
-                          onChange={(event) => onChangeCurtainWallWidth(row.spaceName, Number(event.target.value))}
+                          onChange={(event) => {
+                            markRowEdited(rowKey);
+                            onChangeCurtainWallWidth(row.spaceName, Number(event.target.value));
+                          }}
                         />
                         <span>m</span>
                       </label>
@@ -207,26 +265,63 @@ export function QuantityTable({
                     )}
                     <small className={`curtainWallSource ${row.curtainWallWidthSource}`}>{curtainWallSourceLabels[row.curtainWallWidthSource]}</small>
                     {onChangeCurtainWallWidth && curtainWallCalibrationValue !== null && (
-                      <button className="inlineApplyButton" type="button" onClick={() => onChangeCurtainWallWidth(row.spaceName, curtainWallCalibrationValue, "calibration")}>
+                      <button
+                        className="inlineApplyButton"
+                        type="button"
+                        onClick={() => {
+                          markRowEdited(rowKey);
+                          onChangeCurtainWallWidth(row.spaceName, curtainWallCalibrationValue, "calibration");
+                        }}
+                      >
                         应用校准 {curtainWallCalibrationValue.toFixed(2)} m
                       </button>
                     )}
                     <DifferenceValue difference={curtainWallDifference} />
                   </div>
                 </div>
-                {row.anomalies.length > 0 && <small className="quantityAnomalies">{row.anomalies.join("；")}</small>}
+                {rowHasAnomalies && <small className="quantityAnomalies">{row.anomalies.join("；")}</small>}
                 {onChangeStatus && (
                   <div className="quantityCardActions">
-                    {row.status !== "confirmed" && <button type="button" onClick={() => onChangeStatus(row.spaceName, "confirmed")}>确认本空间</button>}
-                    {row.status !== "needs_fix" && <button type="button" onClick={() => onChangeStatus(row.spaceName, "needs_fix")}>需修图</button>}
-                    {row.status !== "excluded" && <button type="button" onClick={() => onChangeStatus(row.spaceName, "excluded")}>不计价</button>}
+                    {(rowEdited || (rowHasAnomalies && row.status !== "confirmed")) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onChangeStatus(row.spaceName, "confirmed");
+                          setEditedRowKeys((current) => removeKey(current, rowKey));
+                        }}
+                      >
+                        {rowEdited ? "确认修改" : "确认本空间"}
+                      </button>
+                    )}
+                    {row.status !== "needs_fix" && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onChangeStatus(row.spaceName, "needs_fix");
+                          setEditedRowKeys((current) => removeKey(current, rowKey));
+                        }}
+                      >
+                        需修图
+                      </button>
+                    )}
+                    {row.status !== "excluded" && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onChangeStatus(row.spaceName, "excluded");
+                          setEditedRowKeys((current) => removeKey(current, rowKey));
+                        }}
+                      >
+                        不计价
+                      </button>
+                    )}
                   </div>
                 )}
-                <details className="quantityEvidence" open={row.anomalies.length > 0}>
+                <details className="quantityEvidence" open={rowHasAnomalies}>
                   <summary>计算依据</summary>
                   <p>{row.evidence}</p>
                 </details>
-              </article>
+              </details>
             );
           })}
         </div>
