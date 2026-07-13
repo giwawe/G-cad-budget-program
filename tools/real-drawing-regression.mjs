@@ -40,6 +40,7 @@ const KEY_QUOTE_ITEMS = [
 
 const cwd = process.cwd();
 const { buildHydropowerEstimate } = await import(pathToFileURL(path.join(cwd, "apps/web/lib/hydropower-estimate.ts")).href);
+const { bathroomRowsFromRows } = await import(pathToFileURL(path.join(cwd, "apps/web/lib/manual-quote-options.ts")).href);
 const { buildQuantityHealthChecks, summarizeQuantityHealthChecks, buildHealthFixListMarkdown } = await import(pathToFileURL(path.join(cwd, "apps/web/lib/quantity-health.ts")).href);
 const { buildQuoteExcelHtml, quoteExcelFileName } = await import(pathToFileURL(path.join(cwd, "apps/web/lib/quote-excel.ts")).href);
 const { buildQuoteMapping, defaultQuoteRules } = await import(pathToFileURL(path.join(cwd, "apps/web/lib/quote-mapping.ts")).href);
@@ -96,7 +97,7 @@ for (const filePath of options.dxfFiles) {
       selectedQuoteItemNames: [],
     });
     const html = buildQuoteExcelHtml(mapping, fileName, {
-      bathroomRows: rows,
+      bathroomRows: bathroomRowsFromRows(rows),
       projectInfo,
     });
     const outputName = safeFilePart(`${projectName}-${exportOption.suffix}-${quoteExcelFileName(fileName)}`);

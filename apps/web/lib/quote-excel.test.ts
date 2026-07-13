@@ -993,6 +993,44 @@ assertQuoteRow(villaLikeHtml, "淋浴隔断安装", "套", "2", "0.00", "0.00", 
 assert.ok(villaLikeHtml.includes("<td>六</td><td colspan=\"8\">二层卧室工程</td>"));
 assertQuoteRow(villaLikeHtml, "窗台石铺贴", "M", "2.40", "0.00", "20.00", "25.00", "108.00");
 
+const unfilteredBathroomRowsHtml = buildQuoteExcelHtml(
+  {
+    ...mapping,
+    items: [
+      {
+        floor: "负二层",
+        space_name: "酒窖",
+        space_type: "储物间",
+        item_name: "顶面乳胶漆",
+        quantity: 5,
+        unit: "m2",
+        unit_price: 20,
+        amount: 100,
+      },
+      {
+        floor: "一层",
+        space_name: "公卫",
+        space_type: "卫生间",
+        item_name: "地面找平",
+        quantity: 4,
+        unit: "m2",
+        unit_price: 45,
+        amount: 180,
+      },
+    ],
+    summary: { ...mapping.summary, item_count: 2, total_amount: 280 },
+  },
+  "误传整表空间项目",
+  {
+    bathroomRows: [
+      { ...defaultProjectRows[0], floor: "负二层", spaceName: "酒窖", spaceType: "储物间", status: "pending_review" },
+      { ...defaultBathroomRows[0], floor: "一层", spaceName: "公卫", spaceType: "卫生间", status: "pending_review" },
+    ],
+  },
+);
+assert.ok(!unfilteredBathroomRowsHtml.includes("<td colspan=\"8\">负二层卫生间、盥洗区工程</td>"));
+assertQuoteRow(unfilteredBathroomRowsHtml, "淋浴隔断安装", "套", "1", "0.00", "0.00", "200.00", "200.00");
+
 const handrailHtml = buildQuoteExcelHtml(
   {
     ...mapping,

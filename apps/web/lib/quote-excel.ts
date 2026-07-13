@@ -830,8 +830,11 @@ function bathroomInstallationItemsFromOptions(options: QuoteExcelOptions, multiF
   const bathroomChoices = options.bathroomChoices ?? {};
   const items: QuoteMapping["items"] = [];
   const quantityByFloor = new Map<string, { floor: string; quantity: number }>();
-  const displayNames = displayBathroomNamesByRow(bathroomRows);
-  bathroomRows.forEach((row, index) => {
+  const billableBathroomRows = bathroomRows
+    .map((row, index) => ({ row, index }))
+    .filter(({ row }) => row.spaceType === "卫生间" && row.status !== "excluded");
+  const displayNames = displayBathroomNamesByRow(billableBathroomRows.map(({ row }) => row));
+  billableBathroomRows.forEach(({ row, index }) => {
     const choice = bathroomChoices[`${row.floor}::${row.spaceName}::${index}`] ?? { shower: "淋浴隔断" };
     if (choice?.shower === "淋浴隔断" || choice?.shower === "玻璃淋浴房") {
       if (multiFloorProject) {
