@@ -1,7 +1,7 @@
 "use client";
 
 import { ChangeEvent, Fragment, useEffect, useMemo, useRef, useState } from "react";
-import { Download, FileUp, Layers3, Loader2, ReceiptText, Settings2 } from "lucide-react";
+import { Download, FileUp, Loader2, ReceiptText, Settings2 } from "lucide-react";
 import { DrawingReview } from "@/components/drawing-review";
 import { HydropowerReviewPanel } from "@/components/hydropower-review-panel";
 import { QuantityTable } from "@/components/quantity-table";
@@ -55,6 +55,7 @@ import {
 } from "@/lib/quote-mapping";
 import { shouldResetSavedQuoteRules } from "@/lib/quote-rule-storage";
 import { buildReviewSnapshot, parseReviewSnapshot, reviewSnapshotFileName } from "@/lib/review-snapshot";
+import { buildDrawingSpecGuideMarkdown, drawingSpecGuideFileName } from "@/lib/drawing-spec-guide";
 import { buildSpaceNamingGuideMarkdown, spaceNamingGuideFileName } from "@/lib/space-naming-guide";
 import type { CalibrationComparison, CeilingFinishType, CurtainWallWidthSource, DrawingGeometry, HydropowerEstimate, QuantityRow, QuantitySummary, ReviewStatus } from "@/lib/types";
 
@@ -65,7 +66,9 @@ const QUOTE_RULES_STORAGE_KEY = "cad-budget-program.quote-rules.v2";
 const DEFAULT_QUOTE_RULES_STORAGE_VERSION = 9;
 const QUOTE_RULE_GROUPS_STORAGE_KEY = "cad-budget-program.quote-rule-groups.v3";
 const ALUMINUM_WINDOW_ITEM_NAME = "铝合金封门窗";
+const ALUMINUM_WINDOW_UNIT_PRICE = 600;
 const MANUAL_QUOTE_OPTION_ITEMS = [{ itemName: ALUMINUM_WINDOW_ITEM_NAME, unit: "M2", hint: "按窗户实际面积，默认不计价" }];
+const DESIGNER_HIDDEN_HEALTH_CHECK_IDS = new Set<QuantityHealthCheck["id"]>(["hydropower-auto-estimated"]);
 const QUOTE_MODE_OPTIONS: { value: QuoteMode; label: string; hint: string }[] = [
   { value: "hard", label: "硬装（半包）", hint: "只输出施工和硬装基础项" },
   { value: "full", label: "整装（全包）", hint: "输出全部已接入报价项" },
@@ -166,11 +169,12 @@ const quoteRuleGroups = [
   },
 ];
 const DEFAULT_COLLAPSED_QUOTE_RULE_GROUPS = [...quoteRuleGroups.map((group) => group.title), "其他规则"];
-type WorkbenchPanelKey = "quoteRules" | "manualQuote" | "health";
+type WorkbenchPanelKey = "quoteRules" | "manualQuote" | "health" | "advancedTools";
 const DEFAULT_COLLAPSED_WORKBENCH_PANELS: Record<WorkbenchPanelKey, boolean> = {
   quoteRules: true,
-  manualQuote: true,
+  manualQuote: false,
   health: false,
+  advancedTools: true,
 };
 
 const QUOTE_INTEGRATION_STATUS_GROUPS = [
@@ -454,6 +458,7 @@ export function UploadWorkbench({
   const [quoteProjectInfo, setQuoteProjectInfo] = useState<QuoteExcelProjectInfo>(() => ({
     quoteDate: new Date().toISOString().slice(0, 10),
   }));
+  const [projectInfoConfirmedAt, setProjectInfoConfirmedAt] = useState("");
   const [collapsedWorkbenchPanels, setCollapsedWorkbenchPanels] = useState<Record<WorkbenchPanelKey, boolean>>(DEFAULT_COLLAPSED_WORKBENCH_PANELS);
 
   const excludedCount = useMemo(() => rows.filter((row) => row.status === "excluded").length, [rows]);
@@ -462,6 +467,8 @@ export function UploadWorkbench({
   const bathroomRows = useMemo(() => bathroomRowsFromRows(rows), [rows]);
   const aluminumWindowSuggestedArea = useMemo(() => aluminumWindowSuggestedAreaFromRows(rows), [rows]);
   const manualQuoteItemQuantities = useMemo(() => manualQuoteQuantitiesFromInputs(manualQuoteItemInputs), [manualQuoteItemInputs]);
+  const aluminumWindowSelectedArea = manualQuoteItemQuantities[ALUMINUM_WINDOW_ITEM_NAME] ?? 0;
+  const aluminumWindowSelectedAmount = round2(aluminumWindowSelectedArea * ALUMINUM_WINDOW_UNIT_PRICE);
   const hydropowerEstimate = useMemo(
     () => buildHydropowerEstimate(rows, drawing, hydropowerOverride),
     [rows, drawing, hydropowerOverride],
@@ -520,8 +527,9 @@ export function UploadWorkbench({
     [rows, summary, generatedQuoteMapping, hydropowerEstimate],
   );
   const healthChecks = useMemo(() => filterAcceptedHealthChecks(rawHealthChecks, acceptedHealthCheckKeys), [rawHealthChecks, acceptedHealthCheckKeys]);
-  const healthSummary = useMemo(() => summarizeQuantityHealthChecks(healthChecks), [healthChecks]);
-  const filteredHealthChecks = useMemo(() => filterQuantityHealthChecks(healthChecks, healthFilter), [healthChecks, healthFilter]);
+  const designerHealthChecks = useMemo(() => healthChecks.filter((check) => !DESIGNER_HIDDEN_HEALTH_CHECK_IDS.has(check.id)), [healthChecks]);
+  const healthSummary = useMemo(() => summarizeQuantityHealthChecks(designerHealthChecks), [designerHealthChecks]);
+  const filteredHealthChecks = useMemo(() => filterQuantityHealthChecks(designerHealthChecks, healthFilter), [designerHealthChecks, healthFilter]);
 
   useEffect(() => {
     try {
@@ -610,6 +618,7 @@ export function UploadWorkbench({
       setHydropowerOverride(null);
       setFileName(file.name);
       setCurrentDxfFile(file);
+      setProjectInfoConfirmedAt("");
       setMessage(`解析完成：${payload.rows.length} 个空间`);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "DXF 解析失败");
@@ -694,6 +703,7 @@ export function UploadWorkbench({
         ...snapshot.project_info,
         quoteDate: snapshot.project_info.quoteDate ?? new Date().toISOString().slice(0, 10),
       });
+      setProjectInfoConfirmedAt("");
       setGeneratedSnapshot({ fileName: snapshotFile.name, content: `${JSON.stringify(snapshot, null, 2)}\n` });
       setError("");
       setMessage(`已恢复校对快照：${snapshotFile.name}`);
@@ -755,7 +765,7 @@ export function UploadWorkbench({
 
   function handleDownloadHealthFixList() {
     const downloadName = healthFixListFileName(fileName);
-    const content = buildHealthFixListMarkdown({ fileName, checks: healthChecks, rows });
+    const content = buildHealthFixListMarkdown({ fileName, checks: designerHealthChecks, rows });
     const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -906,10 +916,26 @@ export function UploadWorkbench({
     setMessage(`已生成空间命名规范：${downloadName}`);
   }
 
+  function handleDownloadDrawingSpecGuide() {
+    const downloadName = drawingSpecGuideFileName(fileName);
+    const content = buildDrawingSpecGuideMarkdown();
+    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = downloadName;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setMessage(`已生成画图规范：${downloadName}`);
+  }
+
   function handleHydropowerConfirm() {
     setHydropowerOverride({ ...hydropowerEstimate, reviewStatus: "confirmed" });
     setGeneratedQuoteMapping(null);
     setGeneratedHealthFixList(null);
+    setMessage("水电点位已确认，预算导出会使用当前点位数量。");
   }
 
   function handleHydropowerPointQuantityChange(id: string, quantity: number) {
@@ -1003,7 +1029,7 @@ export function UploadWorkbench({
 
   function handleChangeManualQuoteItem(itemName: string, value: string) {
     setManualQuoteItemInputs((current) => ({ ...current, [itemName]: value }));
-    setMessage(value.trim() ? `${itemName} Excel 补项数量已更新` : `${itemName} Excel 补项已恢复默认`);
+    setMessage(value.trim() ? `${itemName} 已加入本次预算` : `${itemName} 已从本次预算移除`);
   }
 
   function handleUseManualQuoteSuggestion(itemName: string, quantity: number) {
@@ -1014,11 +1040,17 @@ export function UploadWorkbench({
   function handleResetManualQuoteItems() {
     setManualQuoteItemInputs({});
     setBathroomManualChoices({});
-    setMessage("Excel 可选补项已恢复默认");
+    setMessage("方案报价可选项已恢复默认");
   }
 
   function handleChangeQuoteProjectInfo(field: keyof QuoteExcelProjectInfo, value: string) {
     setQuoteProjectInfo((current) => ({ ...current, [field]: value }));
+    setProjectInfoConfirmedAt("");
+  }
+
+  function handleConfirmProjectInfo() {
+    setProjectInfoConfirmedAt(new Date().toLocaleString("zh-CN", { hour12: false }));
+    setMessage("方案信息已确认，预算导出会使用当前抬头信息。");
   }
 
   function handleChangeQuoteMode(nextMode: QuoteMode) {
@@ -1279,17 +1311,47 @@ export function UploadWorkbench({
       <input ref={snapshotInputRef} hidden className="fileInput" type="file" accept=".json,application/json" onChange={handleSnapshotChange} />
       <input ref={quoteRulesInputRef} hidden className="fileInput" type="file" accept=".json,application/json" onChange={handleQuoteRulesChange} />
       <section className="topbar">
-        <div>
-          <p>DXF 空间算量验证工具</p>
-          <h1>CAD 工程量校对工作台</h1>
+        <div className="brandBlock">
+          <p>设计师预算工作台</p>
+          <h1>全友整装预算报价系统</h1>
+          <div className="workflowSteps" aria-label="预算流程">
+            <span>方案上传</span>
+            <span>完整性复核</span>
+            <span>预算导出</span>
+          </div>
         </div>
-        <div className="topbarActions">
-          <div className="topbarActionGroup">
-            <span>导入</span>
-            <button type="button" disabled={isUploading || isComparing} onClick={() => inputRef.current?.click()}>
-              {isUploading ? <Loader2 aria-hidden="true" className="spin" size={18} /> : <FileUp aria-hidden="true" size={18} />}
-              {isUploading ? "解析中" : "上传 DXF"}
-            </button>
+        <div className="topbarActions mainActions">
+          <button className="primaryAction" type="button" disabled={isUploading || isComparing} onClick={() => inputRef.current?.click()}>
+            {isUploading ? <Loader2 aria-hidden="true" className="spin" size={18} /> : <FileUp aria-hidden="true" size={18} />}
+            {isUploading ? "解析中" : "方案上传"}
+          </button>
+          <button className="primaryAction" type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadQuoteExcelDraft}>
+            <Download aria-hidden="true" size={18} />
+            预算导出
+          </button>
+          <button className="secondaryAction" type="button" disabled={isUploading || isComparing} onClick={handleDownloadSpaceNamingGuide}>
+            <Download aria-hidden="true" size={18} />
+            空间命名规范
+          </button>
+          <button className="secondaryAction" type="button" disabled={isUploading || isComparing} onClick={handleDownloadDrawingSpecGuide}>
+            <Download aria-hidden="true" size={18} />
+            画图规范
+          </button>
+        </div>
+      </section>
+
+      <section className="advancedToolsPanel">
+        <div className="templateHeader">
+          <div>
+            <strong>后台/校准工具</strong>
+            <span>用于内部回归、校准 JSON、快照和报价规则维护。</span>
+          </div>
+          <button className="panelToggleButton" type="button" onClick={() => handleToggleWorkbenchPanel("advancedTools")}>
+            {collapsedWorkbenchPanels.advancedTools ? "展开工具" : "收起工具"}
+          </button>
+        </div>
+        {!collapsedWorkbenchPanels.advancedTools && (
+          <div className="advancedToolGrid">
             <button type="button" disabled={!currentDxfFile || isUploading || isComparing} onClick={() => calibrationInputRef.current?.click()}>
               {isComparing ? <Loader2 aria-hidden="true" className="spin" size={18} /> : <FileUp aria-hidden="true" size={18} />}
               {isComparing ? "对比中" : "上传校准 JSON"}
@@ -1298,24 +1360,14 @@ export function UploadWorkbench({
               <FileUp aria-hidden="true" size={18} />
               导入快照
             </button>
-          </div>
-          <div className="topbarActionGroup">
-            <span>导出</span>
             <button type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadReviewSnapshot}>
               <Download aria-hidden="true" size={18} />
               导出校对快照
             </button>
             <button type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadQuoteMapping}>
               <ReceiptText aria-hidden="true" size={18} />
-              导出报价映射
+              导出报价映射 JSON
             </button>
-            <button type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadQuoteExcelDraft}>
-              <Download aria-hidden="true" size={18} />
-              导出 Excel 草稿
-            </button>
-          </div>
-          <div className="topbarActionGroup">
-            <span>规则</span>
             <button type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadCalibrationTemplate}>
               <Download aria-hidden="true" size={18} />
               下载校准模板
@@ -1324,63 +1376,84 @@ export function UploadWorkbench({
               <Download aria-hidden="true" size={18} />
               下载报价规则
             </button>
-            <button type="button" disabled={isUploading || isComparing} onClick={handleDownloadSpaceNamingGuide}>
-              <Download aria-hidden="true" size={18} />
-              下载命名规范
-            </button>
             <button type="button" disabled={isUploading || isComparing} onClick={() => quoteRulesInputRef.current?.click()}>
               <FileUp aria-hidden="true" size={18} />
               导入报价规则
             </button>
           </div>
-        </div>
+        )}
       </section>
 
       <section className="summaryGrid">
-        <div className="panel">
-          <div className="panelTitle">
-            <Settings2 aria-hidden="true" size={18} />
-            报价抬头信息
+        <div className="panel projectInfoPanel">
+          <div className="panelTitleRow">
+            <div className="panelTitle">
+              <Settings2 aria-hidden="true" size={18} />
+              方案信息
+            </div>
+            <span className={`confirmBadge ${projectInfoConfirmedAt ? "confirmed" : "pending"}`}>
+              {projectInfoConfirmedAt ? `已确认 ${projectInfoConfirmedAt}` : "待确认"}
+            </span>
           </div>
-          <div className="fieldGrid">
+          <div className="fieldGrid projectInfoFields">
             <label>地址名称<input value={quoteProjectInfo.addressName ?? ""} placeholder={fileName === "样例数据" ? "报价映射" : fileName.replace(/\.[^.]+$/, "")} onChange={(event) => handleChangeQuoteProjectInfo("addressName", event.target.value)} /></label>
             <label>客户<input value={quoteProjectInfo.customerName ?? ""} placeholder="客户姓名" onChange={(event) => handleChangeQuoteProjectInfo("customerName", event.target.value)} /></label>
             <label>设计师<input value={quoteProjectInfo.designerName ?? ""} placeholder="设计师" onChange={(event) => handleChangeQuoteProjectInfo("designerName", event.target.value)} /></label>
             <label>报价员<input value={quoteProjectInfo.estimatorName ?? ""} placeholder="报价员" onChange={(event) => handleChangeQuoteProjectInfo("estimatorName", event.target.value)} /></label>
             <label>报价日期<input type="date" value={quoteProjectInfo.quoteDate ?? ""} onChange={(event) => handleChangeQuoteProjectInfo("quoteDate", event.target.value)} /></label>
-            <label>默认层高<input defaultValue="2.80 m" /></label>
-            <label>默认窗高<input defaultValue="1.80 m" /></label>
-            <label>默认门高<input defaultValue="2.10 m" /></label>
+            <label>默认层高<input readOnly value="2.80 m" /></label>
+            <label>默认窗高<input readOnly value="1.80 m" /></label>
+            <label>默认门高<input readOnly value="2.10 m" /></label>
           </div>
+          <button className="confirmProjectButton" type="button" onClick={handleConfirmProjectInfo}>
+            确认方案信息
+          </button>
         </div>
 
-        <div className="panel">
+        <div className="panel workflowPanel">
           <div className="panelTitle">
-            <Layers3 aria-hidden="true" size={18} />
-            识别图层
+            <ReceiptText aria-hidden="true" size={18} />
+            当前流程
           </div>
-          <div className="layerList">{layers.map((layer) => <code key={layer}>{layer}</code>)}</div>
+          <div className="workflowList">
+            <span className={rows.length > 0 ? "done" : "active"}>方案上传</span>
+            <span className={drawing ? "active" : ""}>方案复核</span>
+            <span className={hydropowerEstimate.reviewStatus === "confirmed" ? "done" : ""}>水电确认</span>
+            <span className={manualQuoteEditedCount > 0 ? "done" : ""}>可选项</span>
+          </div>
+          <div className="workflowMeta">
+            <span>预算模式：{activeQuoteModeOption.label}</span>
+            <span>报价规则：{quoteRules.length} 项</span>
+            <span>{pendingQuoteMetrics.length > 0 ? `待补口径 ${pendingQuoteMetrics.length} 项` : "待补口径已接入"}</span>
+          </div>
         </div>
 
         <div className="panel metricPanel">
-          <div className="metricLabel">{fileName}</div>
+          <div className="metricLabel">方案概览</div>
           <strong>{rows.length}</strong>
           <span>个空间，其中 {excludedCount} 个默认不计价</span>
+          {summary && <small className="infoText">建筑面积：{summary.building_area_m2.toFixed(2)} m2</small>}
           {message && <small className="infoText">{message}</small>}
           {error && <small className="errorText">{error}</small>}
-          {calibrationFileName && <small className="infoText">校准文件：{calibrationFileName}</small>}
-          <small className="infoText">报价规则：{quoteRulesFileName}（{quoteRules.length} 项）</small>
-          <small className="infoText">
-            {pendingQuoteMetrics.length > 0 ? `待补取数口径：${pendingQuoteMetrics.length} 项不参与当前金额` : "待补取数口径：已全部接入当前规则"}
-          </small>
         </div>
       </section>
+
+      <DrawingReview
+        drawing={drawing}
+        hydropowerPoints={hydropowerEstimate.points}
+        rows={rows}
+        summary={summary}
+        onRenameSpace={handleRenameSpace}
+        onToggleDoorDeduction={handleToggleDoorDeduction}
+        onToggleWindowDeduction={handleToggleWindowDeduction}
+        onChangeWindowHeight={handleChangeWindowHeight}
+      />
 
       <section className="quoteModePanel">
         <div className="templateHeader">
           <div>
-            <strong>报价输出模式</strong>
-            <span>导出报价映射和 Excel 草稿时生效；报价规则单价仍统一维护。</span>
+            <strong>预算输出模式</strong>
+            <span>预算导出时生效；报价规则单价仍统一维护。</span>
           </div>
           <div className="quoteModeStatus" aria-label="当前报价输出模式">
             <span>当前</span>
@@ -1460,7 +1533,7 @@ export function UploadWorkbench({
         </div>}
       </section>
 
-      <section className="quoteRulesPanel">
+      {!collapsedWorkbenchPanels.advancedTools && <section className="quoteRulesPanel">
         <div className="templateHeader">
           <div>
             <strong>报价规则单价</strong>
@@ -1568,13 +1641,13 @@ export function UploadWorkbench({
             </div>
           </>
         )}
-      </section>
+      </section>}
 
       <section className="manualQuotePanel">
         <div className="templateHeader">
           <div>
-            <strong>Excel 可选补项</strong>
-            <span>数量留空时沿用自动识别或默认占位；填写后只影响 Excel 草稿。入户门、阳台推拉门和窗台石由自动识别结果处理。</span>
+            <strong>方案报价可选项</strong>
+            <span>设计师可选择是否加入本次总预算；面积、单价和总价会按报价表口径带入预算导出。入户门、推拉门和窗台石仍由方案自动识别。</span>
           </div>
           <div className="quoteRulesActions">
             <button className="panelToggleButton" type="button" onClick={() => handleToggleWorkbenchPanel("manualQuote")}>
@@ -1588,29 +1661,46 @@ export function UploadWorkbench({
         {!collapsedWorkbenchPanels.manualQuote && (
           <>
             <div className="manualQuoteGrid">
-              {MANUAL_QUOTE_OPTION_ITEMS.map((item) => (
-                <label className="manualQuoteItem" key={item.itemName}>
-                  <span>
-                    <strong>{item.itemName}</strong>
-                    <small>{item.hint} · {item.unit}</small>
-                    {item.itemName === ALUMINUM_WINDOW_ITEM_NAME && <small>建议 {aluminumWindowSuggestedArea.toFixed(2)} {item.unit}</small>}
-                  </span>
-                  <input
-                    aria-label={`${item.itemName} Excel 补项数量`}
-                    min="0"
-                    step="0.01"
-                    type="number"
-                    placeholder="默认"
-                    value={manualQuoteItemInputs[item.itemName] ?? ""}
-                    onChange={(event) => handleChangeManualQuoteItem(item.itemName, event.target.value)}
-                  />
-                  {item.itemName === ALUMINUM_WINDOW_ITEM_NAME && (
-                    <button type="button" disabled={aluminumWindowSuggestedArea <= 0} onClick={() => handleUseManualQuoteSuggestion(item.itemName, aluminumWindowSuggestedArea)}>
-                      使用建议
-                    </button>
-                  )}
-                </label>
-              ))}
+              {MANUAL_QUOTE_OPTION_ITEMS.map((item) => {
+                const selectedQuantity = manualQuoteItemQuantities[item.itemName] ?? 0;
+                const selectedAmount = item.itemName === ALUMINUM_WINDOW_ITEM_NAME ? aluminumWindowSelectedAmount : 0;
+                return (
+                  <div className="manualQuoteItem" key={item.itemName}>
+                    <div className="manualQuoteName">
+                      <strong>{item.itemName === ALUMINUM_WINDOW_ITEM_NAME ? "铝合金窗" : item.itemName}</strong>
+                      <small>{item.hint}</small>
+                    </div>
+                    <label>
+                      <span>面积</span>
+                      <input
+                        aria-label={`${item.itemName} 预算数量`}
+                        min="0"
+                        step="0.01"
+                        type="number"
+                        placeholder="不计入"
+                        value={manualQuoteItemInputs[item.itemName] ?? ""}
+                        onChange={(event) => handleChangeManualQuoteItem(item.itemName, event.target.value)}
+                      />
+                    </label>
+                    <div className="manualQuotePrice">
+                      <span>单价</span>
+                      <strong>{item.itemName === ALUMINUM_WINDOW_ITEM_NAME ? ALUMINUM_WINDOW_UNIT_PRICE : 0} 元/{item.unit}</strong>
+                    </div>
+                    <div className="manualQuotePrice">
+                      <span>总价</span>
+                      <strong>{selectedAmount.toFixed(2)} 元</strong>
+                    </div>
+                    <div className="manualQuoteActions">
+                      <button type="button" disabled={aluminumWindowSuggestedArea <= 0} onClick={() => handleUseManualQuoteSuggestion(item.itemName, aluminumWindowSuggestedArea)}>
+                        加入建议面积 {aluminumWindowSuggestedArea.toFixed(2)} {item.unit}
+                      </button>
+                      <button type="button" disabled={selectedQuantity <= 0} onClick={() => handleChangeManualQuoteItem(item.itemName, "")}>
+                        不计入报价
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
             <div className="manualBathroomChoices">
               {bathroomRows.map((row, rowIndex) => {
@@ -1667,7 +1757,7 @@ export function UploadWorkbench({
               {collapsedWorkbenchPanels.health ? "展开面板" : "收起面板"}
             </button>
             {!collapsedWorkbenchPanels.health && (
-              <button type="button" disabled={healthChecks.length === 0} onClick={handleDownloadHealthFixList}>
+              <button type="button" disabled={designerHealthChecks.length === 0} onClick={handleDownloadHealthFixList}>
                 <Download aria-hidden="true" size={18} />
                 导出修图清单
               </button>
@@ -1694,7 +1784,7 @@ export function UploadWorkbench({
                 </button>
               ))}
             </div>
-            {healthChecks.length > 0 ? (
+            {designerHealthChecks.length > 0 ? (
               <div className="healthList">
                 {filteredHealthChecks.map((check) => (
                   <div className={`healthCard ${check.severity}`} key={check.id}>
@@ -1877,9 +1967,9 @@ export function UploadWorkbench({
               <span>{pendingQuoteMetrics.length > 0 ? `${pendingQuoteMetrics.length} 项暂不参与金额汇总，后续补齐 metric 后再接入。` : "当前默认规则已无待补取数口径。"}</span>
             </div>
             <div className="curtainReadiness">
-              <strong>Excel 可选补项 {MANUAL_QUOTE_OPTION_ITEMS.length} 项</strong>
+              <strong>方案报价可选项 {MANUAL_QUOTE_OPTION_ITEMS.length} 项</strong>
               <span>
-                当前已填写 {manualQuoteEditedCount} 项；这些数量只写入 Excel 草稿，不改变报价映射 JSON 的自动合计。
+                当前已填写 {manualQuoteEditedCount} 项；这些数量只写入预算导出，不改变报价映射 JSON 的自动合计。
               </span>
             </div>
             <div className="curtainReadiness">
@@ -1987,22 +2077,11 @@ export function UploadWorkbench({
         onPointQuantityChange={handleHydropowerPointQuantityChange}
       />
 
-      <DrawingReview
-        drawing={drawing}
-        hydropowerPoints={hydropowerEstimate.points}
-        rows={rows}
-        summary={summary}
-        onRenameSpace={handleRenameSpace}
-        onToggleDoorDeduction={handleToggleDoorDeduction}
-        onToggleWindowDeduction={handleToggleWindowDeduction}
-        onChangeWindowHeight={handleChangeWindowHeight}
-      />
-
       <section className="reviewSection">
         <div className="sectionHeader">
           <div>
-            <h2>空间工程量校对表</h2>
-            <p>第一期重点验证 DXF 自动算出的空间面积、墙面计量长度、窗洞扣减和计算依据。</p>
+            <h2>空间工程量摘要</h2>
+            <p>默认展示设计师需要快速核对的面积、墙线、窗洞和状态；完整明细可展开查看。</p>
           </div>
         </div>
         <QuantityTable rows={rows} differences={comparison?.differences ?? []} onChangeStatus={handleChangeStatus} onChangeSpaceType={handleChangeSpaceType} onChangeCurtainWallWidth={handleChangeCurtainWallWidth} onChangeCeilingFinishType={handleChangeCeilingFinishType} />
@@ -2010,8 +2089,6 @@ export function UploadWorkbench({
     </main>
   );
 }
-
-const layers = ["QUOTE_ROOM", "QUOTE_WALL", "QUOTE_EXT_WALL", "QUOTE_WALL_TILE", "QUOTE_NEW_WALL", "QUOTE_DEMO_WALL", "QUOTE_CAST_SLAB", "QUOTE_EDGE_CEILING", "QUOTE_BASE_CABINET", "QUOTE_WALL_CABINET", "QUOTE_CUSTOM", "QUOTE_TOILET", "QUOTE_BATHROOM_VANITY", "QUOTE_WINDOW", "QUOTE_DOOR", "QUOTE_FLOOR", "QUOTE_HEIGHT"];
 
 const statusLabels: Record<ReviewStatus, string> = {
   pending_review: "待确认",

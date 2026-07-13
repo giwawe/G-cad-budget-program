@@ -66,17 +66,18 @@ export function HydropowerReviewPanel({ estimate, onConfirm, onPointQuantityChan
       : estimate.reviewStatus === "needs_review"
         ? "已调整，待确认"
         : "系统推算";
+  const confirmLabel = estimate.reviewStatus === "needs_review" ? "确认修改并同步预算" : "确认水电点位";
 
   return (
     <section className="reviewSection hydropowerReviewPanel">
       <div className="sectionHeader">
         <div>
           <h2>水电点位复核</h2>
-          <p>系统按空间和图形轮廓生成推荐点位，线管长度按推荐点位与空间干线估算，确认后会带入报价映射与校对快照。</p>
+          <p>汇总数量会带入预算导出；各空间点位明细默认收起，需要调整时展开修改。</p>
         </div>
         <div>
           <strong>{reviewStatusLabel}</strong>
-          <button type="button" onClick={onConfirm}>确认水电点位</button>
+          <button type="button" onClick={onConfirm}>{confirmLabel}</button>
         </div>
       </div>
 
@@ -98,14 +99,14 @@ export function HydropowerReviewPanel({ estimate, onConfirm, onPointQuantityChan
 
       <div className="healthList">
         {groupedPoints.map(([group, points]) => (
-          <details className="healthCard info" key={group} open>
+          <details className="healthCard info hydropowerSpaceDetails" key={group}>
             <summary>
               <strong>{group}</strong>
               <span>{points.length} 个推荐点位</span>
             </summary>
-            <div className="manualQuoteGrid">
+            <div className="hydropowerPointGrid">
               {points.map((point) => (
-                <label className="manualQuoteItem" key={point.id}>
+                <label className="hydropowerPointItem" key={point.id}>
                   <span>
                     <strong>{KIND_LABELS[point.kind] ?? point.label}</strong>
                     <small>{point.note}</small>

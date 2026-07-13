@@ -9,11 +9,13 @@ const hydropowerReviewPanelSource = readFileSync(new URL("./hydropower-review-pa
 assert.ok(uploadWorkbenchSource.includes("buildQuoteExcelHtml"), "workbench should build Excel draft content from generated quote mapping");
 assert.ok(uploadWorkbenchSource.includes("quoteExcelFileName"), "workbench should use the Excel draft filename helper");
 assert.ok(uploadWorkbenchSource.includes("下载 Excel 草稿"), "quote mapping panel should expose an Excel draft download button");
-assert.ok(uploadWorkbenchSource.includes("导出 Excel 草稿"), "top toolbar should expose a visible Excel draft export button");
-assert.ok(uploadWorkbenchSource.includes("下载命名规范"), "top toolbar should expose a designer space naming guide download");
+assert.ok(uploadWorkbenchSource.includes("预算导出"), "top toolbar should expose a visible budget export button");
+assert.ok(uploadWorkbenchSource.includes("空间命名规范"), "top toolbar should expose a designer space naming guide download");
+assert.ok(uploadWorkbenchSource.includes("画图规范"), "top toolbar should expose a designer drawing guide download");
 assert.ok(uploadWorkbenchSource.includes("handleDownloadSpaceNamingGuide"), "space naming guide should be downloadable from the workbench");
+assert.ok(uploadWorkbenchSource.includes("handleDownloadDrawingSpecGuide"), "drawing guide should be downloadable from the workbench");
 assert.ok(uploadWorkbenchSource.includes("handleDownloadQuoteExcelDraft"), "Excel draft export should be available before the quote mapping panel is shown");
-assert.ok(uploadWorkbenchSource.includes("Excel 可选补项"), "quote mapping panel should explain that manual quote items are included in Excel drafts");
+assert.ok(uploadWorkbenchSource.includes("方案报价可选项"), "quote mapping panel should explain that optional quote items are included in budget exports");
 assert.ok(uploadWorkbenchSource.includes("quoteRuleSearch"), "quote rule panel should keep a search state for fast price edits");
 assert.ok(uploadWorkbenchSource.includes("筛选报价规则"), "quote rule panel should expose a visible search control");
 assert.ok(uploadWorkbenchSource.includes("显示 {filteredQuoteRules.length}/{quoteRules.length} 项"), "quote rule panel should show filtered rule counts");
@@ -32,7 +34,7 @@ assert.ok(uploadWorkbenchSource.includes("handleCollapseAllQuoteRuleGroups"), "q
 assert.ok(uploadWorkbenchSource.includes("handleExpandAllQuoteRuleGroups"), "quote rule panel should expand all groups at once");
 assert.ok(uploadWorkbenchSource.includes("全部收起"), "quote rule panel should expose collapse all action");
 assert.ok(uploadWorkbenchSource.includes("全部展开"), "quote rule panel should expose expand all action");
-assert.ok(uploadWorkbenchSource.includes("自动识别结果处理"), "manual Excel options should explain auto quoted fixed items");
+assert.ok(uploadWorkbenchSource.includes("入户门、推拉门和窗台石仍由方案自动识别"), "manual quote options should explain auto quoted fixed items");
 assert.ok(uploadWorkbenchSource.includes("QUOTE_INTEGRATION_STATUS_GROUPS"), "quote panel should define quote integration status groups");
 assert.ok(uploadWorkbenchSource.includes("报价接入状态清单"), "quote panel should show the quote integration status summary");
 assert.ok(uploadWorkbenchSource.includes("已自动取数"), "quote integration status should include auto-quoted items");
@@ -44,7 +46,8 @@ assert.ok(uploadWorkbenchSource.includes("excelManualItemQuantities: manualQuote
 assert.ok(uploadWorkbenchSource.includes("manualQuoteInputsFromQuantities(snapshot.excel_manual_item_quantities)"), "review snapshot import should restore manual quote item inputs");
 assert.ok(uploadWorkbenchSource.includes("QuoteExcelProjectInfo"), "workbench should type quote project header information");
 assert.ok(uploadWorkbenchSource.includes("const [quoteProjectInfo, setQuoteProjectInfo]"), "workbench should keep quote project header state");
-assert.ok(uploadWorkbenchSource.includes("报价抬头信息"), "workbench should expose quote project header fields");
+assert.ok(uploadWorkbenchSource.includes("方案信息"), "workbench should expose quote project header fields");
+assert.ok(uploadWorkbenchSource.includes("确认方案信息"), "workbench should let designers confirm project header fields");
 assert.ok(uploadWorkbenchSource.includes("地址名称"), "quote header fields should include address name");
 assert.ok(uploadWorkbenchSource.includes("客户姓名"), "quote header fields should include customer name");
 assert.ok(uploadWorkbenchSource.includes("设计师"), "quote header fields should include designer name");

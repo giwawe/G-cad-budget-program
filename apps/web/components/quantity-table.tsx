@@ -78,8 +78,101 @@ export function QuantityTable({
     .sort((left, right) => compareFloors(left.row.floor, right.row.floor) || left.index - right.index);
 
   return (
-    <div className="tableWrap">
-      <table>
+    <div className="quantityReviewShell">
+      <div className="quantityCardGrid">
+        {displayRows.map(({ row, index }) => {
+          const spaceTypeOptions = QUOTE_SPACE_TYPE_OPTIONS.includes(row.spaceType) ? QUOTE_SPACE_TYPE_OPTIONS : [row.spaceType, ...QUOTE_SPACE_TYPE_OPTIONS];
+          return (
+            <article className={`quantitySpaceCard ${row.status}`} id={quantityRowAnchorId(row.spaceName)} key={`${row.floor}-${row.spaceName}-${index}`}>
+              <div className="quantitySpaceHeader">
+                <span>{row.floor}</span>
+                <strong>{row.spaceName}</strong>
+                <div className={`status ${row.status}`}>
+                  {statusIcons[row.status]}
+                  {statusLabels[row.status]}
+                </div>
+              </div>
+              <div className="quantitySpaceControls">
+                {onChangeSpaceType ? (
+                  <label>
+                    <span>计价类型</span>
+                    <select
+                      aria-label={`${row.spaceName} 空间类型`}
+                      className="statusSelect"
+                      value={row.spaceType}
+                      onChange={(event) => onChangeSpaceType(row.spaceName, event.target.value)}
+                    >
+                      {spaceTypeOptions.filter((spaceType) => !QUOTE_SPACE_TYPE_OPTIONS.includes(spaceType)).map((spaceType) => (
+                        <option key={spaceType} value={spaceType}>
+                          {spaceType}
+                        </option>
+                      ))}
+                      {QUOTE_SPACE_TYPE_GROUPS.map((group) => (
+                        <optgroup key={group.label} label={group.label}>
+                          {group.options.map((spaceType) => (
+                            <option key={spaceType} value={spaceType}>
+                              {spaceType}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                  </label>
+                ) : (
+                  <span>{row.spaceType}</span>
+                )}
+                {onChangeStatus && (
+                  <label>
+                    <span>状态</span>
+                    <select
+                      aria-label={`${row.spaceName} 状态`}
+                      className="statusSelect"
+                      value={row.status}
+                      onChange={(event) => onChangeStatus(row.spaceName, event.target.value as ReviewStatus)}
+                    >
+                      <option value="pending_review">待确认</option>
+                      <option value="confirmed">已确认</option>
+                      <option value="needs_fix">需修图</option>
+                      <option value="excluded">不计价</option>
+                    </select>
+                  </label>
+                )}
+              </div>
+              <div className="quantityMetricGrid">
+                <div><span>地面</span><strong>{row.floorAreaM2.toFixed(2)} m2</strong></div>
+                <div><span>墙线</span><strong>{row.wallMeasureLengthM.toFixed(2)} m</strong></div>
+                <div><span>窗洞</span><strong>{row.windowAreaM2.toFixed(2)} m2</strong></div>
+                <div><span>乳胶漆</span><strong>{row.latexPaintAreaM2.toFixed(2)} m2</strong></div>
+                <div><span>防水</span><strong>{row.waterproofAreaM2.toFixed(2)} m2</strong></div>
+                <div><span>窗帘墙宽</span><strong>{row.curtainWallWidthM.toFixed(2)} m</strong></div>
+              </div>
+              {OPTIONAL_CEILING_FINISH_SPACE_TYPES.has(row.spaceType) && onChangeCeilingFinishType && (
+                <label className="quantityCeilingControl">
+                  <span>顶面类型</span>
+                  <select
+                    aria-label={`${row.spaceName} 顶面类型`}
+                    className="statusSelect"
+                    value={row.ceilingFinishType ?? "integrated"}
+                    onChange={(event) => onChangeCeilingFinishType(row.spaceName, event.target.value as CeilingFinishType)}
+                  >
+                    <option value="integrated">集成吊顶</option>
+                    <option value="gypsum">石膏板吊顶</option>
+                  </select>
+                </label>
+              )}
+              {row.anomalies.length > 0 && <small className="quantityAnomalies">{row.anomalies.join("；")}</small>}
+              <details className="quantityEvidence">
+                <summary>计算依据</summary>
+                <p>{row.evidence}</p>
+              </details>
+            </article>
+          );
+        })}
+      </div>
+      <details className="advancedQuantityDetails">
+        <summary>查看完整工程量明细</summary>
+        <div className="tableWrap">
+          <table>
         <thead>
           <tr>
             <th>楼层</th>
@@ -133,7 +226,7 @@ export function QuantityTable({
             const bathroomVanityCountDifference = differencesByCell.get(differenceKey(row.spaceName, "bathroom_vanity_count"));
             const waterproofDifference = differencesByCell.get(differenceKey(row.spaceName, "waterproof_area_m2"));
             return (
-            <tr id={quantityRowAnchorId(row.spaceName)} key={`${row.floor}-${row.spaceName}-${index}`} className={differences.some((difference) => difference.space_name === row.spaceName) ? "quantityDiffRow" : undefined}>
+            <tr key={`${row.floor}-${row.spaceName}-${index}`} className={differences.some((difference) => difference.space_name === row.spaceName) ? "quantityDiffRow" : undefined}>
               <td>{row.floor}</td>
               <td>
                 <strong>{row.spaceName}</strong>
@@ -304,7 +397,9 @@ export function QuantityTable({
             );
           })}
         </tbody>
-      </table>
+          </table>
+        </div>
+      </details>
     </div>
   );
 }

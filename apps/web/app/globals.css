@@ -1,11 +1,16 @@
 :root {
   color-scheme: light;
-  --bg: #f4f6f8;
+  --bg: #eef3f5;
   --panel: #ffffff;
+  --ink: #14212b;
   --text: #1f2933;
   --muted: #617080;
   --line: #d8dee5;
   --accent: #126c5f;
+  --accent-strong: #0b5f54;
+  --accent-soft: #e8f5f1;
+  --data-blue: #255f85;
+  --paper: #fbfcfc;
   --danger: #a53b2c;
   --warning: #9a6500;
   --excluded: #68727f;
@@ -18,7 +23,9 @@
 body {
   overflow-x: hidden;
   margin: 0;
-  background: var(--bg);
+  background:
+    linear-gradient(180deg, rgba(18, 108, 95, 0.08), rgba(18, 108, 95, 0) 260px),
+    var(--bg);
   color: var(--text);
   font-family: Arial, "Microsoft YaHei", sans-serif;
 }
@@ -36,10 +43,15 @@ input {
 
 .topbar {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 20px;
-  margin-bottom: 22px;
+  gap: 24px;
+  border: 1px solid rgba(18, 108, 95, 0.16);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ffffff 0%, #f7fbfa 62%, #eef7f4 100%);
+  box-shadow: 0 18px 42px rgba(27, 44, 52, 0.08);
+  margin-bottom: 14px;
+  padding: 22px 24px;
 }
 
 .topbarActions {
@@ -47,6 +59,93 @@ input {
   flex-wrap: wrap;
   gap: 10px;
   justify-content: flex-end;
+}
+
+.brandBlock {
+  min-width: 280px;
+}
+
+.brandBlock h1 {
+  margin-top: 6px;
+  color: var(--ink);
+  font-size: clamp(28px, 4vw, 44px);
+  line-height: 1.05;
+}
+
+.brandBlock p {
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.workflowSteps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.workflowSteps span {
+  border: 1px solid rgba(18, 108, 95, 0.18);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #3f5965;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 10px;
+}
+
+.mainActions {
+  max-width: 650px;
+}
+
+.mainActions button {
+  justify-content: center;
+  min-height: 42px;
+  white-space: nowrap;
+}
+
+.primaryAction {
+  border-color: var(--accent-strong);
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.secondaryAction,
+.advancedToolsPanel button,
+.quoteRulesActions button {
+  border-color: #cbd7dc;
+  background: #ffffff;
+  color: #31535d;
+}
+
+.secondaryAction:hover,
+.advancedToolsPanel button:hover,
+.quoteRulesActions button:hover {
+  border-color: rgba(18, 108, 95, 0.42);
+  color: var(--accent-strong);
+}
+
+.advancedToolsPanel {
+  display: grid;
+  gap: 12px;
+  border: 1px dashed #c6d3d8;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.72);
+  margin-bottom: 16px;
+  padding: 12px 14px;
+}
+
+.advancedToolGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.advancedToolGrid button {
+  min-height: 34px;
+  font-size: 13px;
 }
 
 .topbarActionGroup {
@@ -145,7 +244,7 @@ button:disabled {
 .summaryGrid {
   min-width: 0;
   display: grid;
-  grid-template-columns: 1.5fr 1.2fr 0.8fr;
+  grid-template-columns: minmax(420px, 1.45fr) minmax(280px, 0.85fr) minmax(240px, 0.7fr);
   gap: 14px;
   margin-bottom: 18px;
 }
@@ -162,6 +261,18 @@ button:disabled {
   padding: 16px;
 }
 
+.projectInfoPanel {
+  display: grid;
+  gap: 14px;
+}
+
+.panelTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .panelTitle {
   display: flex;
   align-items: center;
@@ -171,10 +282,34 @@ button:disabled {
   font-weight: 700;
 }
 
+.confirmBadge {
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 10px;
+  white-space: nowrap;
+}
+
+.confirmBadge.pending {
+  border: 1px solid #ead09a;
+  background: #fff8e8;
+  color: #83590d;
+}
+
+.confirmBadge.confirmed {
+  border: 1px solid rgba(18, 108, 95, 0.28);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
 .fieldGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
+}
+
+.projectInfoFields {
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
 }
 
 label {
@@ -191,6 +326,78 @@ input {
   border-radius: 6px;
   padding: 0 10px;
   color: var(--text);
+}
+
+input[readonly] {
+  background: #f5f8f8;
+  color: #596a72;
+}
+
+.confirmProjectButton {
+  justify-self: start;
+  min-height: 36px;
+  border-color: rgba(18, 108, 95, 0.42);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-weight: 800;
+}
+
+.workflowPanel {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.workflowList {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.workflowList span {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #dce5e8;
+  border-radius: 8px;
+  background: #f8fbfb;
+  color: #516773;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 9px 10px;
+}
+
+.workflowList span::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #a7b5bc;
+}
+
+.workflowList span.active {
+  border-color: rgba(18, 108, 95, 0.32);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.workflowList span.active::before,
+.workflowList span.done::before {
+  background: var(--accent);
+}
+
+.workflowMeta {
+  display: grid;
+  gap: 6px;
+  border-top: 1px solid #edf2f4;
+  padding-top: 10px;
+}
+
+.workflowMeta span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .layerList {
@@ -501,20 +708,20 @@ code {
 
 .manualQuoteGrid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 10px;
 }
 
 .manualQuoteItem {
   min-width: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 92px auto;
+  grid-template-columns: minmax(180px, 1.2fr) minmax(120px, 0.7fr) minmax(120px, 0.7fr) minmax(120px, 0.7fr) auto;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   border: 1px solid #e0e6ee;
   border-radius: 8px;
-  background: #f9fbfd;
-  padding: 10px;
+  background: #fbfdfd;
+  padding: 12px;
 }
 
 .manualQuoteItem span,
@@ -537,8 +744,40 @@ code {
   line-height: 1.35;
 }
 
+.manualQuoteName strong {
+  font-size: 15px;
+}
+
+.manualQuoteItem label {
+  display: grid;
+  gap: 5px;
+}
+
+.manualQuoteItem label span,
+.manualQuotePrice span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .manualQuoteItem input {
   min-height: 34px;
+}
+
+.manualQuotePrice {
+  display: grid;
+  gap: 5px;
+}
+
+.manualQuotePrice strong {
+  font-size: 14px;
+}
+
+.manualQuoteActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .manualQuoteItem button {
@@ -832,6 +1071,56 @@ code {
   border-color: #cbd5e1;
   background: #f1f5f9;
   color: #334155;
+}
+
+.hydropowerSpaceDetails {
+  padding: 0;
+}
+
+.hydropowerSpaceDetails summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  padding: 12px;
+}
+
+.healthCard .hydropowerPointGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  border-top: 1px solid #e2e8f0;
+  padding: 12px;
+}
+
+.healthCard .hydropowerPointItem {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 92px;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #e4ebf0;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 10px;
+}
+
+.hydropowerPointItem strong {
+  display: block;
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.hydropowerPointItem small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.hydropowerPointItem input {
+  min-height: 34px;
 }
 
 .quotePanel {
@@ -1570,6 +1859,166 @@ code {
   border-bottom: 1px solid var(--line);
 }
 
+.quantityReviewShell {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.quantityCardGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.quantitySpaceCard {
+  display: grid;
+  gap: 12px;
+  border: 1px solid #dce5e8;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 14px;
+  scroll-margin-top: 16px;
+}
+
+.quantitySpaceCard:target {
+  border-color: var(--warning);
+  box-shadow: 0 0 0 3px rgba(154, 101, 0, 0.16);
+}
+
+.quantitySpaceCard.needs_fix {
+  border-color: #e9b6aa;
+}
+
+.quantitySpaceCard.excluded {
+  background: #f7f9fa;
+}
+
+.quantitySpaceHeader {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.quantitySpaceHeader > span {
+  border-radius: 999px;
+  background: #edf4f3;
+  color: var(--accent-strong);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 5px 8px;
+}
+
+.quantitySpaceHeader > strong {
+  min-width: 0;
+  color: var(--ink);
+  font-size: 16px;
+  overflow-wrap: anywhere;
+}
+
+.quantitySpaceControls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.quantitySpaceControls label,
+.quantityCeilingControl {
+  display: grid;
+  gap: 5px;
+}
+
+.quantitySpaceControls label span,
+.quantityCeilingControl span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.quantitySpaceControls .statusSelect,
+.quantityCeilingControl .statusSelect {
+  width: 100%;
+  margin-top: 0;
+}
+
+.quantityMetricGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.quantityMetricGrid div {
+  min-width: 0;
+  border: 1px solid #edf2f4;
+  border-radius: 8px;
+  background: #f9fbfb;
+  padding: 9px;
+}
+
+.quantityMetricGrid span {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.quantityMetricGrid strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.quantityAnomalies {
+  border: 1px solid #f0d2ca;
+  border-radius: 8px;
+  background: #fff6f3;
+  color: var(--danger);
+  font-size: 12px;
+  line-height: 1.45;
+  padding: 8px 10px;
+}
+
+.quantityEvidence {
+  border-top: 1px solid #edf2f4;
+  padding-top: 8px;
+}
+
+.quantityEvidence summary,
+.advancedQuantityDetails > summary {
+  cursor: pointer;
+  color: #31535d;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.quantityEvidence p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.advancedQuantityDetails {
+  border: 1px solid #dce5e8;
+  border-radius: 8px;
+  background: #fbfdfd;
+  padding: 12px;
+}
+
+.advancedQuantityDetails > summary {
+  list-style-position: inside;
+}
+
+.advancedQuantityDetails[open] {
+  background: #ffffff;
+}
+
+.advancedQuantityDetails .tableWrap {
+  margin-top: 12px;
+}
+
 .tableWrap {
   max-width: 100%;
   overflow-x: auto;
@@ -1760,11 +2209,14 @@ td .curtainWallHelp {
 
   .summaryGrid,
   .fieldGrid,
+  .projectInfoFields,
   .summaryCards,
   .calibrationDifferences,
   .healthList,
   .quoteSummary,
-  .quoteGaps ul {
+  .quoteGaps ul,
+  .quantityCardGrid,
+  .healthCard .hydropowerPointGrid {
     grid-template-columns: 1fr;
   }
 
@@ -1779,6 +2231,10 @@ td .curtainWallHelp {
 
   .topbarActions {
     justify-content: flex-start;
+  }
+
+  .mainActions {
+    max-width: none;
   }
 
   .topbarActionGroup {
@@ -1834,7 +2290,20 @@ td .curtainWallHelp {
   }
 
   .manualQuoteGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
+  }
+
+  .manualQuoteItem {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .manualQuoteName,
+  .manualQuoteActions {
+    grid-column: 1 / -1;
+  }
+
+  .manualQuoteActions {
+    justify-content: flex-start;
   }
 
   .quoteModeChoices,
@@ -1844,6 +2313,10 @@ td .curtainWallHelp {
 
   .manualBathroomChoices {
     grid-template-columns: 1fr;
+  }
+
+  .quantityMetricGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1861,6 +2334,10 @@ td .curtainWallHelp {
   .topbarActions {
     display: grid;
     gap: 8px;
+  }
+
+  .mainActions button {
+    width: 100%;
   }
 
   .topbarActionGroup {
@@ -1906,6 +2383,13 @@ td .curtainWallHelp {
   }
 
   .manualQuoteGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .manualQuoteItem,
+  .quantitySpaceControls,
+  .quantityMetricGrid,
+  .healthCard .hydropowerPointItem {
     grid-template-columns: 1fr;
   }
 
