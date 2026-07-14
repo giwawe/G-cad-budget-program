@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { buildQuoteExcelHtml, EXCEL_FIXED_PLACEHOLDER_ITEMS, quoteExcelFileName } from "./quote-excel.ts";
+import { buildQuoteExcelHtml, buildQuoteExcelPreview, EXCEL_FIXED_PLACEHOLDER_ITEMS, quoteExcelFileName } from "./quote-excel.ts";
 import { defaultProjectRows, defaultProjectSummary } from "./default-project.ts";
 import { buildQuoteMapping, defaultQuoteRules } from "./quote-mapping.ts";
 import type { QuoteMapping } from "./quote-mapping.ts";
@@ -69,8 +69,13 @@ assert.equal(quoteExcelFileName("test-case.dxf"), "test-case.quote-draft.xls");
 assert.equal(quoteExcelFileName("样例数据"), "quote-draft.xls");
 
 const html = buildQuoteExcelHtml(mapping, "A&B 项目");
+const preview = buildQuoteExcelPreview(mapping, "A&B 项目");
 
 assert.ok(html.startsWith("\uFEFF<html"), "Excel HTML should include UTF-8 BOM for Chinese compatibility");
+assert.equal(preview.projectInfo.addressName, "A&B 项目", "Excel preview should use the same normalized project address");
+assert.equal(preview.summaryRows[0][0], "工程(预) 算表", "Excel preview should expose the template title row");
+assert.ok(preview.bodyRows.some((row) => row.kind === "section" && row.cells[1] === "全屋拆改工程"), "Excel preview should expose section rows from the same template");
+assert.ok(preview.bodyRows.some((row) => row.kind === "total" && row.cells[1] === "工程总造价F=(A+B+C)"), "Excel preview should expose final total rows");
 assert.ok(html.includes('xmlns:x="urn:schemas-microsoft-com:office:excel"'), "Excel HTML should include Excel namespaces from the print template");
 assert.ok(html.includes("@page"), "Excel HTML should include print page setup");
 assert.ok(html.includes("<title>A&amp;B 项目清单式报价表</title>"));

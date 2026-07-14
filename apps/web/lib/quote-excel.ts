@@ -29,6 +29,20 @@ export type QuoteExcelOptions = {
   projectInfo?: QuoteExcelProjectInfo;
 };
 
+export type QuoteExcelPreviewRowKind = "section" | "subsection" | "item" | "subtotal" | "total" | "risk" | "footer" | "signature" | "default";
+
+export type QuoteExcelPreviewRow = {
+  kind: QuoteExcelPreviewRowKind;
+  cells: string[];
+};
+
+export type QuoteExcelPreview = {
+  projectInfo: Required<QuoteExcelProjectInfo>;
+  summaryRows: string[][];
+  bodyRows: QuoteExcelPreviewRow[];
+  riskRows: string[][];
+};
+
 type QuoteTemplateSection = {
   code: string;
   title: string;
@@ -207,12 +221,14 @@ export function quoteExcelFileName(fileName: string): string {
 }
 
 export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string, options: QuoteExcelOptions = {}): string {
-  const projectInfo = normalizeQuoteExcelProjectInfo(projectName, mapping, options.projectInfo);
+  const preview = buildQuoteExcelPreview(mapping, projectName, options);
+  const projectInfo = preview.projectInfo;
   const title = `${projectInfo.addressName}清单式报价表`;
-  const riskRows = quoteExcelRiskRows(mapping);
-  const groupedQuoteRows = quoteTemplateRows(mapping, options);
-  const summaryRows = quoteTemplateSummaryRows(projectInfo);
-  const riskNoteRows = quoteTemplateRiskNoteRows(riskRows);
+  const groupedQuoteRows = preview.bodyRows
+    .filter((row) => row.kind !== "footer" && row.kind !== "signature")
+    .map((row) => row.cells);
+  const summaryRows = preview.summaryRows;
+  const footerRows = preview.bodyRows.filter((row) => row.kind === "footer" || row.kind === "signature").map((row) => row.cells);
 
   return `\uFEFF<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
 <head>
@@ -261,13 +277,24 @@ export function buildQuoteExcelHtml(mapping: QuoteMapping, projectName: string, 
     </thead>
     <tbody>
       ${quoteTemplateBodyHtmlRows(groupedQuoteRows)}
-      ${riskNoteRows.map((row) => quoteTemplateHtmlRow(row)).join("\n      ")}
-      ${quoteTemplateFooterHtmlRows(projectInfo)}
+      ${footerRows.map((row) => quoteTemplateHtmlRow(row)).join("\n      ")}
     </tbody>
   </table>
 </body>
 </html>
 `;
+}
+
+export function buildQuoteExcelPreview(mapping: QuoteMapping, projectName: string, options: QuoteExcelOptions = {}): QuoteExcelPreview {
+  const projectInfo = normalizeQuoteExcelProjectInfo(projectName, mapping, options.projectInfo);
+  const riskRows = quoteExcelRiskRows(mapping);
+  const summaryRows = quoteTemplateSummaryRows(projectInfo);
+  const bodyRows = [
+    ...quoteTemplateRows(mapping, options),
+    ...quoteTemplateRiskNoteRows(riskRows),
+    ...quoteTemplateFooterRows(projectInfo),
+  ].map((row) => ({ kind: quoteTemplatePreviewRowKind(row), cells: row }));
+  return { projectInfo, summaryRows, bodyRows, riskRows };
 }
 
 function quoteExcelWorkbookXml(): string {
@@ -369,6 +396,12 @@ function quoteTemplateHtmlRow(row: string[], formulas?: Partial<Record<number, s
   if (className === "quoteSubsectionRow") {
     return `<tr class="${className}"><td></td><td colspan="8">${escapeHtml(row[1])}</td></tr>`;
   }
+  if (className === "quoteFooterNoteRow") {
+    return `<tr class="${className}"><td colspan="9">${escapeHtml(row[0])}</td></tr>`;
+  }
+  if (className === "quoteSignatureRow") {
+    return `<tr class="${className}"><td colspan="2">${escapeHtml(row[0])}</td><td colspan="5">${escapeHtml(row[2])}</td><td colspan="2">${escapeHtml(row[7])}</td></tr>`;
+  }
   return `<tr${className ? ` class="${className}"` : ""}>${row.map((cell, index) => quoteTemplateHtmlCell(cell, formulas?.[index])).join("")}</tr>`;
 }
 
@@ -384,15 +417,20 @@ function isQuoteItemRow(row: string[]): boolean {
   return /^\d+$/.test(row[0]) && row[1] !== "";
 }
 
-function quoteTemplateFooterHtmlRows(projectInfo: Required<QuoteExcelProjectInfo>): string {
-  const noteRows = QUOTE_EXCEL_FOOTER_NOTES.map((note) => `<tr class="quoteFooterNoteRow"><td colspan="9">${escapeHtml(note)}</td></tr>`);
+function quoteTemplateFooterRows(projectInfo: Required<QuoteExcelProjectInfo>): string[][] {
   return [
-    ...noteRows,
-    `<tr class="quoteSignatureRow"><td colspan="2">客户签名：${escapeHtml(projectInfo.customerName)}</td><td colspan="5">设计师：${escapeHtml(projectInfo.designerName)}</td><td colspan="2">报价员：${escapeHtml(projectInfo.estimatorName)}</td></tr>`,
-  ].join("\n      ");
+    ...QUOTE_EXCEL_FOOTER_NOTES.map((note) => [note, "", "", "", "", "", "", "", ""]),
+    [`客户签名：${projectInfo.customerName}`, "", `设计师：${projectInfo.designerName}`, "", "", "", "", `报价员：${projectInfo.estimatorName}`, ""],
+  ];
 }
 
 function quoteTemplateRowClass(row: string[]): string {
+  if (row[0].startsWith("编制说明") || /^\d+、/.test(row[0])) {
+    return "quoteFooterNoteRow";
+  }
+  if (row[0].startsWith("客户签名：") && row[2]?.startsWith("设计师：")) {
+    return "quoteSignatureRow";
+  }
   if (row[1] === "小 计") {
     return "quoteSubtotalRow";
   }
@@ -409,6 +447,35 @@ function quoteTemplateRowClass(row: string[]): string {
     return "quoteSubsectionRow";
   }
   return "";
+}
+
+function quoteTemplatePreviewRowKind(row: string[]): QuoteExcelPreviewRowKind {
+  const className = quoteTemplateRowClass(row);
+  if (className === "quoteSectionRow") {
+    return "section";
+  }
+  if (className === "quoteSubsectionRow") {
+    return "subsection";
+  }
+  if (className === "quoteSubtotalRow") {
+    return "subtotal";
+  }
+  if (className === "quoteTotalRow") {
+    return "total";
+  }
+  if (className === "quoteRiskRow") {
+    return "risk";
+  }
+  if (className === "quoteFooterNoteRow") {
+    return "footer";
+  }
+  if (className === "quoteSignatureRow") {
+    return "signature";
+  }
+  if (isQuoteItemRow(row)) {
+    return "item";
+  }
+  return "default";
 }
 
 function quoteTemplateRows(mapping: QuoteMapping, options: QuoteExcelOptions): string[][] {

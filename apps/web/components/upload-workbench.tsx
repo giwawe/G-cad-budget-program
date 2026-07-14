@@ -21,7 +21,7 @@ import {
   type QuantityHealthFilter,
 } from "@/lib/quantity-health";
 import { confirmQuantityRowsBySpaceNames, updateQuantityRowCurtainWallWidth, updateQuantityRowSpaceType, updateQuantityRowStatus, updateQuantityRowsStatusBySpaceNames } from "@/lib/quantity-row-status";
-import { buildQuoteExcelHtml, quoteExcelFileName, type QuoteExcelProjectInfo } from "@/lib/quote-excel";
+import { buildQuoteExcelHtml, buildQuoteExcelPreview, quoteExcelFileName, type QuoteExcelOptions, type QuoteExcelPreview, type QuoteExcelPreviewRow, type QuoteExcelProjectInfo } from "@/lib/quote-excel";
 import {
   aluminumWindowSuggestedAreaFromRows,
   bathroomChoiceKey,
@@ -381,6 +381,10 @@ function round2(value: number) {
   return Math.round(value * 100) / 100;
 }
 
+function capitalizePreviewKind(kind: string) {
+  return `${kind.slice(0, 1).toUpperCase()}${kind.slice(1)}`;
+}
+
 function calculateWallTileArea(row: QuantityRow, windowAreaM2 = row.windowAreaM2, doorWidthTotalM = row.doorWidthTotalM) {
   if (row.spaceType === "厨房" || row.spaceType === "卫生间") {
     return round2(Math.max(row.wallMeasureLengthM * 2.5 - windowAreaM2 - doorWidthTotalM * DEFAULT_DOOR_HEIGHT_M, 0));
@@ -451,6 +455,7 @@ export function UploadWorkbench({
   const [generatedSnapshot, setGeneratedSnapshot] = useState<{ fileName: string; content: string } | null>(null);
   const [generatedHealthFixList, setGeneratedHealthFixList] = useState<{ fileName: string; content: string } | null>(null);
   const [generatedQuoteMapping, setGeneratedQuoteMapping] = useState<{ fileName: string; content: string; mapping: QuoteMapping } | null>(null);
+  const [quotePreviewPage, setQuotePreviewPage] = useState<{ fileName: string; mapping: QuoteMapping; preview: QuoteExcelPreview } | null>(null);
   const [quoteRules, setQuoteRules] = useState<QuoteRule[]>(() => defaultQuoteRules());
   const [quoteRulesFileName, setQuoteRulesFileName] = useState(DEFAULT_QUOTE_RULES_NAME);
   const [quoteRulesStorageReady, setQuoteRulesStorageReady] = useState(false);
@@ -600,6 +605,12 @@ export function UploadWorkbench({
   useEffect(() => {
     window.localStorage.setItem(QUOTE_RULE_GROUPS_STORAGE_KEY, JSON.stringify(collapsedQuoteRuleGroups));
   }, [collapsedQuoteRuleGroups]);
+
+  useEffect(() => {
+    if (!generatedQuoteMapping) {
+      setQuotePreviewPage(null);
+    }
+  }, [generatedQuoteMapping]);
 
   async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -871,9 +882,8 @@ export function UploadWorkbench({
     setMessage(`已复制报价映射：${generatedQuoteMapping.fileName}`);
   }
 
-  function handleDownloadQuoteExcel(mapping: QuoteMapping) {
-    const downloadName = quoteExcelFileName(fileName);
-    const content = buildQuoteExcelHtml(mapping, fileName, {
+  function buildCurrentQuoteExcelOptions(mapping: QuoteMapping): QuoteExcelOptions {
+    return {
       manualItems: manualQuoteItemQuantities,
       manualItemPrices: { [ALUMINUM_WINDOW_ITEM_NAME]: aluminumWindowUnitPrice },
       bathroomChoices: bathroomManualChoices,
@@ -882,7 +892,12 @@ export function UploadWorkbench({
         ...quoteProjectInfo,
         decorationAreaM2: summary?.building_area_m2 ?? mapping.summary.building_area_m2,
       },
-    });
+    };
+  }
+
+  function handleDownloadQuoteExcel(mapping: QuoteMapping) {
+    const downloadName = quoteExcelFileName(fileName);
+    const content = buildQuoteExcelHtml(mapping, fileName, buildCurrentQuoteExcelOptions(mapping));
     const blob = new Blob([content], { type: "application/vnd.ms-excel;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -903,7 +918,13 @@ export function UploadWorkbench({
     const downloadName = quoteMappingFileName(fileName);
     const content = `${JSON.stringify(mapping, null, 2)}\n`;
     setGeneratedQuoteMapping({ fileName: downloadName, content, mapping });
-    handleDownloadQuoteExcel(mapping);
+    setQuotePreviewPage({
+      fileName: quoteExcelFileName(fileName),
+      mapping,
+      preview: buildQuoteExcelPreview(mapping, fileName, buildCurrentQuoteExcelOptions(mapping)),
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    setMessage(`已生成预算预览：${quoteExcelFileName(fileName)}`);
   }
 
   function handleDownloadQuoteRulesTemplate() {
@@ -1331,6 +1352,150 @@ export function UploadWorkbench({
     });
   }
 
+  function renderQuotePreviewBodyRow(row: QuoteExcelPreviewRow, index: number) {
+    const key = `${row.kind}-${index}-${row.cells[0]}-${row.cells[1]}`;
+    if (row.kind === "section") {
+      return (
+        <tr key={key} className="quotePreviewSectionRow">
+          <td>{row.cells[0]}</td>
+          <td colSpan={8}>{row.cells[1]}</td>
+        </tr>
+      );
+    }
+    if (row.kind === "subsection") {
+      return (
+        <tr key={key} className="quotePreviewSubsectionRow">
+          <td />
+          <td colSpan={8}>{row.cells[1]}</td>
+        </tr>
+      );
+    }
+    if (row.kind === "footer") {
+      return (
+        <tr key={key} className="quotePreviewFooterRow">
+          <td colSpan={9}>{row.cells[0]}</td>
+        </tr>
+      );
+    }
+    if (row.kind === "signature") {
+      return (
+        <tr key={key} className="quotePreviewSignatureRow">
+          <td colSpan={2}>{row.cells[0]}</td>
+          <td colSpan={5}>{row.cells[2]}</td>
+          <td colSpan={2}>{row.cells[7]}</td>
+        </tr>
+      );
+    }
+    return (
+      <tr key={key} className={`quotePreview${capitalizePreviewKind(row.kind)}Row`}>
+        {row.cells.map((cell, cellIndex) => (
+          <td key={`${key}-${cellIndex}`}>{cell}</td>
+        ))}
+      </tr>
+    );
+  }
+
+  if (quotePreviewPage) {
+    const { preview, mapping } = quotePreviewPage;
+    const projectInfo = preview.projectInfo;
+    const summaryRows = preview.summaryRows;
+    return (
+      <main className="quotePreviewPage">
+        <section className="quotePreviewHero">
+          <div>
+            <p>预算预览</p>
+            <h1>整装预算报价系统</h1>
+            <span>当前预算：{activeQuoteModeOption.label}</span>
+          </div>
+          <div className="quotePreviewActions">
+            <button className="secondaryAction" type="button" onClick={() => setQuotePreviewPage(null)}>
+              返回修改
+            </button>
+            <button className="primaryAction" type="button" onClick={() => handleDownloadQuoteExcel(mapping)}>
+              <Download aria-hidden="true" size={18} />
+              下载预算表
+            </button>
+          </div>
+        </section>
+
+        <section className="quotePreviewStats" aria-label="预算摘要">
+          <div>
+            <span>方案名称</span>
+            <strong>{projectInfo.addressName}</strong>
+          </div>
+          <div>
+            <span>装修面积</span>
+            <strong>{projectInfo.decorationAreaM2.toFixed(2)} m2</strong>
+          </div>
+          <div>
+            <span>清单项</span>
+            <strong>{mapping.summary.item_count}</strong>
+          </div>
+          <div>
+            <span>预算合计</span>
+            <strong>{mapping.summary.total_amount.toFixed(2)} 元</strong>
+          </div>
+        </section>
+
+        {preview.riskRows.length > 0 && preview.riskRows.some((row) => row[1] !== "当前无待确认项") && (
+          <section className="quotePreviewNotice">
+            <strong>预算备注</strong>
+            {preview.riskRows
+              .filter((row) => row[1] !== "当前无待确认项")
+              .map((row, index) => (
+                <span key={`${row[0]}-${index}`}>{row[0]}：{row[1]}</span>
+              ))}
+          </section>
+        )}
+
+        <section className="quotePreviewSheet" aria-label="预算表预览">
+          <div className="quotePreviewSheetScroll">
+            <table>
+              <colgroup>
+                <col className="quotePreviewColNo" />
+                <col className="quotePreviewColName" />
+                <col className="quotePreviewColUnit" />
+                <col className="quotePreviewColQty" />
+                <col className="quotePreviewColPrice" />
+                <col className="quotePreviewColPrice" />
+                <col className="quotePreviewColPrice" />
+                <col className="quotePreviewColAmount" />
+                <col className="quotePreviewColNote" />
+              </colgroup>
+              <thead>
+                <tr className="quotePreviewTitleRow">
+                  <th colSpan={9}>{summaryRows[0][0]}</th>
+                </tr>
+                <tr className="quotePreviewMetaRow">
+                  <td colSpan={2}>地址名称：{projectInfo.addressName}</td>
+                  <td colSpan={4}>客户：{projectInfo.customerName}</td>
+                  <td colSpan={2}>装修面积：{projectInfo.decorationAreaM2.toFixed(2)}</td>
+                  <td>日期：{projectInfo.quoteDate}</td>
+                </tr>
+                <tr className="quotePreviewHeaderRow">
+                  <th>{summaryRows[2][0]}</th>
+                  <th>{summaryRows[2][1]}</th>
+                  <th>{summaryRows[2][2]}</th>
+                  <th>{summaryRows[2][3]}</th>
+                  <th colSpan={2}>{summaryRows[2][4]}</th>
+                  <th>{summaryRows[2][6]}</th>
+                  <th>{summaryRows[2][7]}</th>
+                  <th>{summaryRows[2][8]}</th>
+                </tr>
+                <tr className="quotePreviewSubHeaderRow">
+                  {summaryRows[3].map((cell, index) => (
+                    <th key={`${cell}-${index}`}>{cell}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>{preview.bodyRows.map(renderQuotePreviewBodyRow)}</tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main>
       <input ref={inputRef} hidden className="fileInput" type="file" accept=".dxf,.dwg" onChange={handleFileChange} />
@@ -1340,7 +1505,7 @@ export function UploadWorkbench({
       <section className="topbar">
         <div className="brandBlock">
           <p>设计师预算工作台</p>
-          <h1>全友整装预算报价系统</h1>
+          <h1>整装预算报价系统</h1>
           <div className="workflowSteps" aria-label="预算流程">
             <span>方案上传</span>
             <span>完整性复核</span>

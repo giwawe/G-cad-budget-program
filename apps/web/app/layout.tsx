@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "CAD 算量校验器",
-  description: "DXF 空间工程量准确性验证工具",
+  title: "整装预算报价系统",
+  description: "支持 DXF/DWG 方案解析的整装预算报价工作台",
 };
 
 export default function RootLayout({
@@ -17,4 +17,3 @@ export default function RootLayout({
     </html>
   );
 }
-

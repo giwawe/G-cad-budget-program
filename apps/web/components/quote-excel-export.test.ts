@@ -5,10 +5,16 @@ const uploadWorkbenchSource = readFileSync(new URL("./upload-workbench.tsx", imp
 const hydropowerPanelSource = readFileSync(new URL("./hydropower-review-panel.tsx", import.meta.url), "utf8");
 const drawingReviewSource = readFileSync(new URL("./drawing-review.tsx", import.meta.url), "utf8");
 const hydropowerReviewPanelSource = readFileSync(new URL("./hydropower-review-panel.tsx", import.meta.url), "utf8");
+const appPageSource = readFileSync(new URL("../app/page.tsx", import.meta.url), "utf8");
 
+assert.ok(appPageSource.includes("HomeGateway"), "app home should render the animated landing gateway before the workbench");
 assert.ok(uploadWorkbenchSource.includes("buildQuoteExcelHtml"), "workbench should build Excel draft content from generated quote mapping");
+assert.ok(uploadWorkbenchSource.includes("buildQuoteExcelPreview"), "workbench should build the budget preview from the same Excel template rows");
 assert.ok(uploadWorkbenchSource.includes("quoteExcelFileName"), "workbench should use the Excel draft filename helper");
 assert.ok(uploadWorkbenchSource.includes("下载 Excel 草稿"), "quote mapping panel should expose an Excel draft download button");
+assert.ok(uploadWorkbenchSource.includes("quotePreviewPage"), "budget export should open a dedicated preview view before download");
+assert.ok(uploadWorkbenchSource.includes("返回修改"), "budget preview should let designers return to the workbench without losing state");
+assert.ok(uploadWorkbenchSource.includes("下载预算表"), "budget preview should expose the final Excel download action");
 assert.ok(uploadWorkbenchSource.includes("预算导出"), "top toolbar should expose a visible budget export button");
 assert.ok(uploadWorkbenchSource.includes('accept=".dxf,.dwg"'), "designer upload input should accept DXF and DWG files");
 assert.ok(uploadWorkbenchSource.includes("空间命名规范"), "top toolbar should expose a designer space naming guide download");
