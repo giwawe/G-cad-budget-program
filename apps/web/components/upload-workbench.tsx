@@ -955,7 +955,7 @@ export function UploadWorkbench({
     setHydropowerOverride({ ...hydropowerEstimate, reviewStatus: "confirmed" });
     setGeneratedQuoteMapping(null);
     setGeneratedHealthFixList(null);
-    setMessage("水电点位已确认，预算导出会使用当前点位数量。");
+    setMessage("水电点位已确认，预算表会使用当前点位数量。");
   }
 
   function handleHydropowerPointQuantityChange(id: string, quantity: number) {
@@ -1054,7 +1054,7 @@ export function UploadWorkbench({
 
   function handleChangeManualQuoteItemPrice(itemName: string, value: string) {
     setManualQuoteItemPriceInputs((current) => ({ ...current, [itemName]: value }));
-    setMessage(value.trim() ? `${itemName} 单价已调整，本次预算导出会使用该单价。` : `${itemName} 单价已恢复为报价规则默认值。`);
+    setMessage(value.trim() ? `${itemName} 单价已调整，本次预算表会使用该单价。` : `${itemName} 单价已恢复为报价规则默认值。`);
   }
 
   function handleUseManualQuoteSuggestion(itemName: string, quantity: number) {
@@ -1076,7 +1076,7 @@ export function UploadWorkbench({
 
   function handleConfirmProjectInfo() {
     setProjectInfoConfirmedAt(new Date().toLocaleString("zh-CN", { hour12: false }));
-    setMessage("方案信息已确认，预算导出会使用当前抬头信息。");
+    setMessage("方案信息已确认，预算表会使用当前抬头信息。");
   }
 
   function handleChangeQuoteMode(nextMode: QuoteMode) {
@@ -1487,7 +1487,7 @@ export function UploadWorkbench({
           <div className="workflowSteps" aria-label="预算流程">
             <span>方案上传</span>
             <span>完整性复核</span>
-            <span>预算导出</span>
+            <span>查看预算</span>
           </div>
         </div>
         <div className="topbarActions mainActions">
@@ -1501,7 +1501,7 @@ export function UploadWorkbench({
             </button>
             <button className="primaryAction" type="button" disabled={rows.length === 0 || isUploading || isComparing} onClick={handleDownloadQuoteExcelDraft}>
               <Download aria-hidden="true" size={18} />
-              预算导出
+              查看预算
             </button>
             <button className="secondaryAction" type="button" disabled={isUploading || isComparing} onClick={() => handleOpenTrainingResource(TRAINING_RESOURCE_URLS.trainingPpt)}>
               <Presentation aria-hidden="true" size={18} />
@@ -1637,7 +1637,7 @@ export function UploadWorkbench({
         <div className="templateHeader">
           <div>
             <strong>预算输出模式</strong>
-            <span>预算导出时生效；报价规则单价仍统一维护。</span>
+            <span>查看和下载预算时生效；报价规则单价仍统一维护。</span>
           </div>
           <div className="quoteModeStatus" aria-label="当前报价输出模式">
             <span>当前</span>
@@ -1831,7 +1831,7 @@ export function UploadWorkbench({
         <div className="templateHeader">
           <div>
             <strong>方案报价可选项</strong>
-            <span>设计师可选择是否加入本次总预算；面积、单价和总价会按报价表口径带入预算导出。入户门、推拉门和窗台石仍由方案自动识别。</span>
+            <span>设计师可选择是否加入本次总预算；面积、单价和总价会按报价表口径带入预算表。入户门、推拉门和窗台石仍由方案自动识别。</span>
           </div>
           <div className="quoteRulesActions">
             <button className="panelToggleButton" type="button" onClick={() => handleToggleWorkbenchPanel("manualQuote")}>
@@ -2164,7 +2164,7 @@ export function UploadWorkbench({
             <div className="curtainReadiness">
               <strong>方案报价可选项 {MANUAL_QUOTE_OPTION_ITEMS.length} 项</strong>
               <span>
-                当前已调整 {manualQuoteEditedCount} 项；数量和本次单价只写入预算导出，不改变报价映射 JSON 的自动合计。
+                当前已调整 {manualQuoteEditedCount} 项；数量和本次单价只写入预算表，不改变报价映射 JSON 的自动合计。
               </span>
             </div>
             <div className="curtainReadiness">

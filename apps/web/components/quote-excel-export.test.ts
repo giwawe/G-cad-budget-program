@@ -17,7 +17,7 @@ assert.ok(uploadWorkbenchSource.includes("下载 Excel 草稿"), "quote mapping 
 assert.ok(uploadWorkbenchSource.includes("quotePreviewPage"), "budget export should open a dedicated preview view before download");
 assert.ok(uploadWorkbenchSource.includes("返回修改"), "budget preview should let designers return to the workbench without losing state");
 assert.ok(uploadWorkbenchSource.includes("下载预算表"), "budget preview should expose the final Excel download action");
-assert.ok(uploadWorkbenchSource.includes("预算导出"), "top toolbar should expose a visible budget export button");
+assert.ok(uploadWorkbenchSource.includes("查看预算"), "top toolbar should expose a visible budget preview button");
 assert.ok(uploadWorkbenchSource.includes('accept=".dxf,.dwg"'), "designer upload input should accept DXF and DWG files");
 assert.ok(uploadWorkbenchSource.includes("空间命名规范"), "top toolbar should expose a designer space naming guide download");
 assert.ok(uploadWorkbenchSource.includes("画图规范"), "top toolbar should expose a designer drawing guide download");
