@@ -55,6 +55,7 @@ npm run dev:web
 ## 文档
 
 - `docs/cad-quote-drawing-spec-v1.md`
+- `docs/v1.1-deployment.md`
 - `docs/mvp-requirements.md`
 - `docs/superpowers/specs/2026-06-18-dxf-space-quantity-validation-design.md`
 - `docs/superpowers/plans/2026-06-18-dxf-space-quantity-validation.md`

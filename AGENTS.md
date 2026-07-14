@@ -368,6 +368,7 @@ DXF 规范见 `docs/cad-quote-drawing-spec-v1.md`。关键图层：
 - 不要提交日志、截图、构建产物、临时文件。
 - 如果构建后继续本地试用，建议按上面的 `apps\web` 目录启动方式重启 `3010` 前端 dev server，避免旧 chunk 或缓存状态干扰。
 - 后端 Python 代码变更后需要重启 `8010`，uvicorn 当前常用命令未带 `--reload`。
+- V1.1 内网部署脚本位于 `deploy/`，说明见 `docs/v1.1-deployment.md`。`register-scheduled-tasks.ps1` 会注册 `CAD Budget API` 和 `CAD Budget Web` 两个任务计划程序，默认以 SYSTEM 身份开机启动；PowerShell 脚本保持 ASCII 输出，避免 Windows PowerShell 5.1 执行 UTF-8 中文字符串时解析异常。
 
 ## 设计取向
 
