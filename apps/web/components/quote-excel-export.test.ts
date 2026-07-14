@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 const uploadWorkbenchSource = readFileSync(new URL("./upload-workbench.tsx", import.meta.url), "utf8");
 const hydropowerPanelSource = readFileSync(new URL("./hydropower-review-panel.tsx", import.meta.url), "utf8");
 const drawingReviewSource = readFileSync(new URL("./drawing-review.tsx", import.meta.url), "utf8");
 const hydropowerReviewPanelSource = readFileSync(new URL("./hydropower-review-panel.tsx", import.meta.url), "utf8");
 const appPageSource = readFileSync(new URL("../app/page.tsx", import.meta.url), "utf8");
+const trainingPageSource = readFileSync(new URL("../app/training/page.tsx", import.meta.url), "utf8");
+const designerTrainingPpt = new URL("../public/training/designer-training-v1.1.pptx", import.meta.url);
 
 assert.ok(appPageSource.includes("HomeGateway"), "app home should render the animated landing gateway before the workbench");
 assert.ok(uploadWorkbenchSource.includes("buildQuoteExcelHtml"), "workbench should build Excel draft content from generated quote mapping");
@@ -19,8 +21,20 @@ assert.ok(uploadWorkbenchSource.includes("预算导出"), "top toolbar should ex
 assert.ok(uploadWorkbenchSource.includes('accept=".dxf,.dwg"'), "designer upload input should accept DXF and DWG files");
 assert.ok(uploadWorkbenchSource.includes("空间命名规范"), "top toolbar should expose a designer space naming guide download");
 assert.ok(uploadWorkbenchSource.includes("画图规范"), "top toolbar should expose a designer drawing guide download");
-assert.ok(uploadWorkbenchSource.includes("handleDownloadSpaceNamingGuide"), "space naming guide should be downloadable from the workbench");
-assert.ok(uploadWorkbenchSource.includes("handleDownloadDrawingSpecGuide"), "drawing guide should be downloadable from the workbench");
+assert.ok(uploadWorkbenchSource.includes("培训PPT"), "top toolbar should expose a designer training PPT download");
+assert.ok(uploadWorkbenchSource.includes("规范资料"), "designer reference downloads should be grouped away from the primary action buttons");
+assert.ok(uploadWorkbenchSource.includes('className="resourceMenu"'), "designer reference downloads should render inside the resource menu");
+assert.ok(uploadWorkbenchSource.includes("handleOpenTrainingResource"), "designer resources should open the browsing page from the workbench");
+assert.ok(uploadWorkbenchSource.includes("/training#space-naming"), "space naming guide should open in the training resource page");
+assert.ok(uploadWorkbenchSource.includes("/training#drawing-spec"), "drawing guide should open in the training resource page");
+assert.ok(uploadWorkbenchSource.includes("/training#training-ppt"), "designer training PPT should open in the training resource page");
+assert.ok(trainingPageSource.includes("/training/designer-training-v1.1.pptx"), "designer training PPT should be served from the public folder");
+assert.ok(trainingPageSource.includes("培训资料中心"), "training page should present a browsing-first resource hub");
+assert.ok(trainingPageSource.includes("下载 Word"), "training page should provide Word downloads after browsing");
+assert.ok(trainingPageSource.includes("下载 PPT"), "training page should provide PPT download after browsing");
+assert.ok(trainingPageSource.includes("buildSpaceNamingGuideWordHtml"), "training page should generate the space naming Word document");
+assert.ok(trainingPageSource.includes("buildDrawingSpecGuideWordHtml"), "training page should generate the drawing guide Word document");
+assert.ok(existsSync(designerTrainingPpt), "designer training PPT file should exist in the public training folder");
 assert.ok(uploadWorkbenchSource.includes("handleDownloadQuoteExcelDraft"), "Excel draft export should be available before the quote mapping panel is shown");
 assert.ok(uploadWorkbenchSource.includes("mainActionsBudgetStatus"), "top toolbar budget mode should be shown in a separate status row");
 assert.ok(uploadWorkbenchSource.includes("mainActionButtons"), "top toolbar action buttons should be grouped separately from the budget hint");

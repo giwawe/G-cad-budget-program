@@ -1,7 +1,7 @@
 "use client";
 
 import { ChangeEvent, Fragment, useEffect, useMemo, useRef, useState } from "react";
-import { Download, FileUp, Loader2, ReceiptText, Settings2 } from "lucide-react";
+import { BookOpen, Download, FileUp, Loader2, Presentation, ReceiptText, Settings2 } from "lucide-react";
 import { DrawingReview } from "@/components/drawing-review";
 import { HydropowerReviewPanel } from "@/components/hydropower-review-panel";
 import { QuantityTable } from "@/components/quantity-table";
@@ -57,8 +57,6 @@ import {
 } from "@/lib/quote-mapping";
 import { shouldResetSavedQuoteRules } from "@/lib/quote-rule-storage";
 import { buildReviewSnapshot, parseReviewSnapshot, reviewSnapshotFileName } from "@/lib/review-snapshot";
-import { buildDrawingSpecGuideMarkdown, drawingSpecGuideFileName } from "@/lib/drawing-spec-guide";
-import { buildSpaceNamingGuideMarkdown, spaceNamingGuideFileName } from "@/lib/space-naming-guide";
 import type { CalibrationComparison, CeilingFinishType, CurtainWallWidthSource, DrawingGeometry, HydropowerEstimate, QuantityRow, QuantitySummary, ReviewStatus } from "@/lib/types";
 
 const DEFAULT_DOOR_HEIGHT_M = 2.1;
@@ -71,6 +69,11 @@ const ALUMINUM_WINDOW_ITEM_NAME = "铝合金封门窗";
 const ALUMINUM_WINDOW_UNIT_PRICE = 600;
 const MANUAL_QUOTE_OPTION_ITEMS = [{ itemName: ALUMINUM_WINDOW_ITEM_NAME, unit: "M2", hint: "按窗户实际面积，默认不计价" }];
 const DESIGNER_HIDDEN_HEALTH_CHECK_IDS = new Set<QuantityHealthCheck["id"]>(["hydropower-auto-estimated"]);
+const TRAINING_RESOURCE_URLS = {
+  trainingPpt: "/training#training-ppt",
+  spaceNaming: "/training#space-naming",
+  drawingSpec: "/training#drawing-spec",
+};
 const QUOTE_MODE_OPTIONS: { value: QuoteMode; label: string; hint: string }[] = [
   { value: "hard", label: "硬装（半包）", hint: "只输出施工和硬装基础项" },
   { value: "full", label: "整装（全包）", hint: "输出全部已接入报价项" },
@@ -943,34 +946,9 @@ export function UploadWorkbench({
     setMessage(`已生成报价规则模板：${downloadName}`);
   }
 
-  function handleDownloadSpaceNamingGuide() {
-    const downloadName = spaceNamingGuideFileName(fileName);
-    const content = buildSpaceNamingGuideMarkdown();
-    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = downloadName;
-    document.body.append(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
-    setMessage(`已生成空间命名规范：${downloadName}`);
-  }
-
-  function handleDownloadDrawingSpecGuide() {
-    const downloadName = drawingSpecGuideFileName(fileName);
-    const content = buildDrawingSpecGuideMarkdown();
-    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = downloadName;
-    document.body.append(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
-    setMessage(`已生成画图规范：${downloadName}`);
+  function handleOpenTrainingResource(url: string) {
+    window.open(url, "_blank", "noopener,noreferrer");
+    setMessage("已打开培训资料中心，可在页面内浏览并下载 Word/PPT。");
   }
 
   function handleHydropowerConfirm() {
@@ -1525,14 +1503,23 @@ export function UploadWorkbench({
               <Download aria-hidden="true" size={18} />
               预算导出
             </button>
-            <button className="secondaryAction" type="button" disabled={isUploading || isComparing} onClick={handleDownloadSpaceNamingGuide}>
-              <Download aria-hidden="true" size={18} />
-              空间命名规范
+            <button className="secondaryAction" type="button" disabled={isUploading || isComparing} onClick={() => handleOpenTrainingResource(TRAINING_RESOURCE_URLS.trainingPpt)}>
+              <Presentation aria-hidden="true" size={18} />
+              培训PPT
             </button>
-            <button className="secondaryAction" type="button" disabled={isUploading || isComparing} onClick={handleDownloadDrawingSpecGuide}>
-              <Download aria-hidden="true" size={18} />
-              画图规范
-            </button>
+            <details className="resourceMenu">
+              <summary className="resourceMenuSummary">规范资料</summary>
+              <div className="resourceMenuPanel">
+                <button className="secondaryAction" type="button" disabled={isUploading || isComparing} onClick={() => handleOpenTrainingResource(TRAINING_RESOURCE_URLS.spaceNaming)}>
+                  <BookOpen aria-hidden="true" size={18} />
+                  空间命名规范
+                </button>
+                <button className="secondaryAction" type="button" disabled={isUploading || isComparing} onClick={() => handleOpenTrainingResource(TRAINING_RESOURCE_URLS.drawingSpec)}>
+                  <BookOpen aria-hidden="true" size={18} />
+                  画图规范
+                </button>
+              </div>
+            </details>
           </div>
         </div>
       </section>
