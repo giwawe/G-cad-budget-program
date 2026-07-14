@@ -37,7 +37,10 @@ $training = Test-Url -Name "Training page" -Url "$WebBaseUrl/training" -MinimumB
 $ppt = Test-Url -Name "Training PPT" -Url "$WebBaseUrl/training/designer-training-v1.1.pptx" -MinimumBytes 10000
 
 if ($homeResponse -and $homeResponse.Content) {
-  $markerIndex = $homeResponse.Content.IndexOf("app/layout.css")
+  $markerIndex = $homeResponse.Content.IndexOf("/_next/static/css/")
+  if ($markerIndex -lt 0) {
+    $markerIndex = $homeResponse.Content.IndexOf("app/layout.css")
+  }
   $hrefNeedle = "href=" + [char]34
   $hrefIndex = if ($markerIndex -ge 0) { $homeResponse.Content.LastIndexOf($hrefNeedle, $markerIndex) } else { -1 }
   if ($hrefIndex -ge 0) {
