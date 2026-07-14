@@ -9,6 +9,11 @@ from fastapi import HTTPException
 
 
 SUPPORTED_CAD_EXTENSIONS = {".dxf", ".dwg"}
+ODAFCCANDIDATE_PATHS = (
+    Path(r"D:\ODA\ODAFileConverter\ODAFileConverter.exe"),
+    Path(r"C:\Program Files\ODA\ODAFileConverter\ODAFileConverter.exe"),
+    Path(r"C:\Program Files (x86)\ODA\ODAFileConverter\ODAFileConverter.exe"),
+)
 
 
 @dataclass(frozen=True)
@@ -62,8 +67,15 @@ def convert_dwg_to_dxf(content: bytes) -> bytes:
 
 
 def _configure_odafc_from_environment() -> None:
-    executable_path = os.environ.get("ODA_FILE_CONVERTER_PATH") or os.environ.get("ODAFC_EXEC_PATH")
+    executable_path = os.environ.get("ODA_FILE_CONVERTER_PATH") or os.environ.get("ODAFC_EXEC_PATH") or _find_odafc_executable()
     if not executable_path:
         return
-    ezdxf.options.set("odafc-addon", "win_exec_path", executable_path)
-    ezdxf.options.set("odafc-addon", "unix_exec_path", executable_path)
+    ezdxf.options.set("odafc-addon", "win_exec_path", str(executable_path))
+    ezdxf.options.set("odafc-addon", "unix_exec_path", str(executable_path))
+
+
+def _find_odafc_executable() -> Path | None:
+    for candidate_path in ODAFCCANDIDATE_PATHS:
+        if candidate_path.exists():
+            return candidate_path
+    return None

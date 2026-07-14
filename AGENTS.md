@@ -121,7 +121,7 @@ gh api repos/giwawe/G-cad-budget-program/git/ref/heads/main --jq '.object.sha'
 - `POST /api/parse-dxf-review`：上传 DXF/DWG，返回算量行、图形 review 数据和汇总；DWG 会先转换为临时 DXF。
 - `POST /api/compare-dxf-calibration`：上传 DXF/DWG 与校准 JSON，返回系统算量、汇总和差异对比；DWG 会先转换为临时 DXF。
 
-DWG 支持依赖服务器安装并配置 ODA File Converter。默认读取 `ezdxf.addons.odafc` 的系统路径；如需指定可执行文件，设置 `ODA_FILE_CONVERTER_PATH` 或 `ODAFC_EXEC_PATH`。转换器缺失时接口返回 422，并提示设计师安装转换器或先从 CAD 另存/导出 DXF。
+DWG 支持依赖服务器安装并配置 ODA File Converter。默认读取 `ezdxf.addons.odafc` 的系统路径；如需指定可执行文件，设置 `ODA_FILE_CONVERTER_PATH` 或 `ODAFC_EXEC_PATH`。本机当前安装在 `D:\ODA\ODAFileConverter\ODAFileConverter.exe`，后端也会自动识别该 D 盘候选路径。转换器缺失时接口返回 422，并提示设计师安装转换器或先从 CAD 另存/导出 DXF。
 
 `compare-dxf-calibration` 的校准 JSON 可参考 `server/tests/fixtures/test-case.golden.json`，前端也可以导出校准模板。
 
