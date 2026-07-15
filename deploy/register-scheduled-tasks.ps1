@@ -8,6 +8,7 @@ param(
   [int]$WebPort = 3010,
   [int]$ApiPort = 8010,
   [string]$OdaFileConverterPath = "D:\ODA\ODAFileConverter\ODAFileConverter.exe",
+  [int]$WatchdogMinutes = 1,
   [switch]$CreateFirewallRules
 )
 
@@ -78,10 +79,16 @@ if ($RunAs -eq "SYSTEM") {
 }
 
 if ($TriggerType -eq "Startup") {
-  $trigger = New-ScheduledTaskTrigger -AtStartup
+  $primaryTrigger = New-ScheduledTaskTrigger -AtStartup
 } else {
-  $trigger = New-ScheduledTaskTrigger -AtLogOn
+  $primaryTrigger = New-ScheduledTaskTrigger -AtLogOn
 }
+$watchdogTrigger = New-ScheduledTaskTrigger `
+  -Once `
+  -At (Get-Date).Date `
+  -RepetitionInterval (New-TimeSpan -Minutes $WatchdogMinutes) `
+  -RepetitionDuration (New-TimeSpan -Days 3650)
+$triggers = @($primaryTrigger, $watchdogTrigger)
 
 $settings = New-ScheduledTaskSettingsSet `
   -MultipleInstances IgnoreNew `
@@ -93,15 +100,13 @@ $apiArgs = @(
   "-ProjectRoot", (Quote-Argument $resolvedRoot),
   "-HostName", "0.0.0.0",
   "-Port", [string]$ApiPort,
-  "-OdaFileConverterPath", (Quote-Argument $OdaFileConverterPath),
-  "-Foreground"
+  "-OdaFileConverterPath", (Quote-Argument $OdaFileConverterPath)
 )
 $webArgs = @(
   "-ProjectRoot", (Quote-Argument $resolvedRoot),
   "-HostName", "0.0.0.0",
   "-Port", [string]$WebPort,
-  "-BuildIfMissing",
-  "-Foreground"
+  "-BuildIfMissing"
 )
 
 $apiTaskName = "$TaskPrefix API"
@@ -110,7 +115,7 @@ $webTaskName = "$TaskPrefix Web"
 Register-ScheduledTask `
   -TaskName $apiTaskName `
   -Action (New-TaskActionForScript -ScriptPath $apiScript -ExtraArguments $apiArgs) `
-  -Trigger $trigger `
+  -Trigger $triggers `
   -Principal $principal `
   -Settings $settings `
   -Description "CAD Budget V1.1 API autostart" `
@@ -119,7 +124,7 @@ Register-ScheduledTask `
 Register-ScheduledTask `
   -TaskName $webTaskName `
   -Action (New-TaskActionForScript -ScriptPath $webScript -ExtraArguments $webArgs) `
-  -Trigger $trigger `
+  -Trigger $triggers `
   -Principal $principal `
   -Settings $settings `
   -Description "CAD Budget V1.1 Web autostart" `
@@ -131,7 +136,7 @@ if ($CreateFirewallRules) {
 }
 
 Write-Host "Registered scheduled tasks: $apiTaskName / $webTaskName"
-Write-Host "Run as: $RunAs; Trigger: $TriggerType"
+Write-Host "Run as: $RunAs; Trigger: $TriggerType; Watchdog: every $WatchdogMinutes minute(s)"
 Write-Host "Start now with:"
 Write-Host "  Start-ScheduledTask -TaskName '$apiTaskName'"
 Write-Host "  Start-ScheduledTask -TaskName '$webTaskName'"

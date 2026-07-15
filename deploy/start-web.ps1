@@ -14,6 +14,21 @@ function Test-PortListening {
   return $null -ne $connection
 }
 
+function Wait-PortListening {
+  param(
+    [int]$LocalPort,
+    [int]$TimeoutSeconds = 30
+  )
+  $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+  do {
+    if (Test-PortListening -LocalPort $LocalPort) {
+      return $true
+    }
+    Start-Sleep -Seconds 1
+  } while ((Get-Date) -lt $deadline)
+  return $false
+}
+
 $resolvedRoot = (Resolve-Path $ProjectRoot).Path
 $webRoot = Join-Path $resolvedRoot "apps\web"
 $nodePath = "node"
@@ -82,8 +97,7 @@ Start-Process `
   -RedirectStandardError $stderrPath `
   -WindowStyle Hidden
 
-Start-Sleep -Seconds 3
-if (Test-PortListening -LocalPort $Port) {
+if (Wait-PortListening -LocalPort $Port -TimeoutSeconds 30) {
   Write-Host "Web started: http://$HostName`:$Port"
   Write-Host "Logs: $stdoutPath / $stderrPath"
 } else {
